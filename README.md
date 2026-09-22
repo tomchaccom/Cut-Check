@@ -7,6 +7,16 @@
 학생은 문법을 타이핑하는 대신 논리 블록을 조립하고, **자기가 정한 방법이 세 장의 입력에서
 끝까지 버티는지** 확인합니다.
 
+**화면 세 개**
+
+| | | |
+|---|---|---|
+| [`index.html`](index.html) | 학생 화면 | 미션 3개 · 졸업 과제 |
+| [`teacher.html`](teacher.html) | 선생님 화면 | 개입 순서 · 위험군 · 칭찬 타이밍 |
+| [`philosophy.html`](philosophy.html) | 철학 한 장 | 리뷰·심사에 그대로 쓰는 페이지 |
+
+**문서**
+
 - [설계 철학 전문](docs/philosophy.md)
 - [커리큘럼과 지원 페이딩](docs/curriculum.md)
 
@@ -103,6 +113,7 @@ GitHub Pages를 켜면 `index.html`이 그대로 데모가 됩니다.
 
 ```bash
 node test/engine.test.js
+node test/hangul.test.js
 ```
 
 미션별 정답 순서가 통과하는지, 반례가 실제로 깨지는지, 블록을 빠뜨렸을 때
@@ -120,14 +131,22 @@ node test/engine.test.js
 ```
 .
 ├── index.html            학생 화면
-├── styles.css
+├── teacher.html          선생님 화면
+├── philosophy.html       철학 한 장 (리뷰·심사용)
+├── styles.css            공통 토큰 + 학생 화면
+├── teacher.css
+├── philosophy.css
 ├── js/
+│   ├── hangul.js         조사 계산
 │   ├── blocks.js         논리 블록 카탈로그
 │   ├── missions.js       미션 데이터 (브리프·보기·반례 입력)
 │   ├── engine.js         실행 엔진 + Python 변환
-│   └── app.js            화면 조립
+│   ├── app.js            학생 화면 조립
+│   ├── classroom.js      교실 목업 데이터
+│   └── teacher.js        선생님 화면 조립
 ├── test/
-│   └── engine.test.js    엔진 검증
+│   ├── engine.test.js    엔진 검증
+│   └── hangul.test.js    조사 검증
 └── docs/
     ├── philosophy.md     설계 철학 전문
     └── curriculum.md     커리큘럼과 지원 페이딩
@@ -137,9 +156,9 @@ node test/engine.test.js
 
 ## 다음에 증명해야 할 것
 
-1. **졸업 과제** — "이 논리를 깨뜨릴 입력을 직접 만들어라". 지원 페이딩의 종착점.
-2. **교사 화면 분리** — 증상 진술 큐, 성공 조건 선택 분포(하드코딩 위험군), 칭찬 타이밍.
-3. **현장 검증** — 증상 진술 완성률, 교사 개입당 소요 시간.
+1. **현장 검증** — 증상 진술 완성률, 교사 개입당 소요 시간. 지표는 아래.
+2. **사전 설문** — 학생이 어디서 막히는지, "안 될 때 가장 먼저 하는 행동"의 분포.
+3. **미션 04 이후** — 추상화(변수·함수) 단계. 지금은 03까지.
 
 ### 측정 지표
 

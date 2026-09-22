@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 왜 쪼개는 능력인가</title>
+<meta name="description" content="문제를 쪼개는 능력이 중학생에게 왜 필요한지, 그 철학이 화면 어디에 박혀 있는지.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="philosophy.css">
+</head>
+<body>
+<div class="wrap">
+<div class="doc">
+
+  <div class="topbar">
+    <div class="logo">
+      <span class="mark">C&amp;C</span>
+      <div><b>Cut &amp; Check</b><small>자르고, 세 번 확인한다</small></div>
+    </div>
+  </div>
+
+  <header class="phero">
+    <span class="kicker">설계 철학</span>
+    <h1>시작은 대신해주고,<br>판단은 하나도 대신하지 않는다.</h1>
+    <p class="lede">기존 코딩 교육은 이 둘을 반대로 합니다. 빈 편집기를 던져놓고 시작을 안 도와주면서,
+      가이드 코드를 보여주며 판단은 대신해줍니다. Cut &amp; Check는 그 순서를 뒤집은 제품입니다.</p>
+    <div class="links">
+      <a href="index.html">학생 화면 보기</a>
+      <a class="alt" href="teacher.html">선생님 화면 보기</a>
+    </div>
+  </header>
+
+  <!-- 1 -->
+  <section class="sec">
+    <span class="secnum">01</span>
+    <h2>왜 문제를 쪼개는 능력이 필요한가</h2>
+    <p>교육 서비스가 흔히 하는 주장은 “코딩하면 논리력이 좋아진다”입니다.
+      저희는 이 주장을 쓰지 않습니다. 광역 전이(far transfer)는 연구적으로 근거가 약하고,
+      반박당하면 서비스 전체가 흔들립니다. 대신 <strong>증명할 수 있는 것부터</strong> 쌓습니다.</p>
+
+    <div class="claim">
+      <h3><span class="n">근거 1</span> 분해는 효율 장치가 아니라 자존감 보호 장치다</h3>
+      <p>중1이 프로그램을 못 만들었을 때 실제로 하는 말은 “3번째 단계가 틀렸어요”가 아니라
+        <strong>“저 이거 못하겠어요”</strong>입니다. 문제를 통째로 붙들고 실패하면 원인이 자기 자신이 되고,
+        능력 탓으로 귀인하는 순간 그 학생은 그 과목을 떠납니다.</p>
+
+      <div class="swap">
+        <div class="side bad">
+          <span class="lab">쪼개지 않았을 때</span>
+          <p class="said">“저 이거 못하겠어요”</p>
+          <p class="note2">사람에 대한 판결. 고칠 수 있는 게 없습니다.</p>
+        </div>
+        <div class="mid">→</div>
+        <div class="side good">
+          <span class="lab">쪼갰을 때</span>
+          <p class="said">“세 번째 주문서에서<br>내 기준이 안 맞았어요”</p>
+          <p class="note2">방법에 대한 정보. 이건 고칠 수 있습니다.</p>
+        </div>
+      </div>
+
+      <p>분해는 <strong>실패를 고칠 수 있는 크기로 만드는 기술</strong>입니다.
+        이게 가장 방어 가능한 근거이고, 코드가 아닌 어디서든 통합니다.</p>
+    </div>
+
+    <div class="claim">
+      <h3><span class="n">근거 2</span> 쪼개지 않으면 내가 틀렸는지 확인할 방법이 없다</h3>
+      <p>“주문서를 정리한다”는 계획은 맞는지 틀린지 판정할 수 없습니다. 너무 커서 걸릴 곳이 없습니다.
+        “쉼표로 자른다”는 판정할 수 있습니다 — 쉼표가 없는 주문서를 넣어보면 되니까요.
+        <strong>조각을 내는 행위가 곧 검증 지점을 만드는 행위</strong>입니다. 조각이 없으면 검증도 없고,
+        검증이 없으면 남는 건 “왠지 될 것 같다”뿐입니다. 아이들이 코드를 아무 데나 바꿔보며 헤매는
+        이유가 정확히 이것입니다.</p>
+    </div>
+
+    <div class="claim">
+      <h3><span class="n">근거 3</span> 컴퓨터는 아이가 만날 수 있는 가장 정직한 청중이다</h3>
+      <p>사람에게 “주문서 좀 정리해줘”라고 하면 알아서 합니다. 듣는 사람이 빈칸을 메워주니까요.
+        그래서 아이는 <strong>자기 설명에 구멍이 있다는 걸 평생 모를 수 있습니다.</strong>
+        컴퓨터는 눈치가 없습니다. 안 적은 건 안 합니다. 부모도 교사도 친구도 다 빈칸을 메워주는
+        세상에서, 아이가 이런 청중을 만나기는 어렵습니다.</p>
+    </div>
+
+    <div class="pull">
+      Python은 이 훈련을 시키는 가장 값싼 장치일 뿐, 목적이 아닙니다.
+      <small>우리가 기르는 건 “모호한 요청을 검증 가능한 단계로 바꾸는 능력” 하나입니다.
+        이 능력에는 이름이 있습니다 — 명세화(specification). 그리고 이건 자동으로 전이되지 않고,
+        다른 도메인에서 명시적으로 다시 시켜야만 전이됩니다. 그래서 커리큘럼의 마지막 미션은
+        반드시 코드가 아닌 세계입니다. 옵션이 아니라 철학의 증명 장치입니다.</small>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="sec">
+    <span class="secnum">02</span>
+    <h2>지원의 경계선</h2>
+    <p>“어디까지 도와줄 것인가”의 답은 고정값이 아닙니다. 먼저 막막함을 두 종류로 갈라야 합니다.</p>
+    <div class="tablewrap">
+      <table class="t">
+        <thead><tr><th>종류</th><th>정체</th><th>처리</th></tr></thead>
+        <tbody>
+          <tr><td>시작 지점의 막막함<br><span style="font-weight:400;color:var(--ink-3)">“뭘 눌러야 하지”</span></td>
+              <td>사고가 아니라 빈 편집기라는 UI가 만든 비용</td>
+              <td><strong>전부 제거합니다.</strong></td></tr>
+          <tr><td>판단의 막막함<br><span style="font-weight:400;color:var(--ink-3)">“어떤 기준으로 나누지”</span></td>
+              <td>학습 대상 그 자체</td>
+              <td><strong>하나도 건드리지 않습니다.</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>블록 상자가 존재한다는 것만으로 첫 번째는 구조적으로 해결됩니다. 학생 앞에 백지가 없고,
+      선택지가 유한하고, 틀린 걸 골라도 지울 수 있습니다. 교사가 가이드 코드를 줘야 했던 이유는
+      학생이 부족해서가 아니라 <strong>빈 화면에서 첫 글자를 칠 근거가 없었기 때문</strong>이고,
+      우리는 그 화면을 쓰지 않습니다.</p>
+
+    <div class="pull">
+      학생이 막막해야 하는 유일한 지점은 “어떤 블록”이 아니라 “왜 이 순서”다.
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="sec">
+    <span class="secnum">03</span>
+    <h2>한 미션이 도는 방식</h2>
+    <div class="loopwrap">
+      <svg viewBox="0 0 700 260" role="img" aria-label="정하기, 선언, 조립, 3장 검증, 자기 판정, 반례 자작으로 이어지는 학습 순환">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans KR, sans-serif" font-size="13" font-weight="600">
+          <!-- 윗줄 -->
+          <g>
+            <rect x="8" y="34" width="120" height="54" rx="14" fill="#DDE9FF"/>
+            <text x="68" y="57" text-anchor="middle" fill="#2B6FE0" font-size="11">1 정하기</text>
+            <text x="68" y="76" text-anchor="middle" fill="#182338">성공이 뭔지</text>
+          </g>
+          <g>
+            <rect x="158" y="34" width="120" height="54" rx="14" fill="#DDE9FF"/>
+            <text x="218" y="57" text-anchor="middle" fill="#2B6FE0" font-size="11">2 선언하기</text>
+            <text x="218" y="76" text-anchor="middle" fill="#182338">어디서 자를지</text>
+          </g>
+          <g>
+            <rect x="308" y="34" width="120" height="54" rx="14" fill="#D6F5E8"/>
+            <text x="368" y="57" text-anchor="middle" fill="#0E9E6E" font-size="11">3 조립하기</text>
+            <text x="368" y="76" text-anchor="middle" fill="#182338">순서 만들기</text>
+          </g>
+          <g>
+            <rect x="458" y="34" width="120" height="54" rx="14" fill="#D6F5E8"/>
+            <text x="518" y="57" text-anchor="middle" fill="#0E9E6E" font-size="11">4 버텨보기</text>
+            <text x="518" y="76" text-anchor="middle" fill="#182338">3장 동시 실행</text>
+          </g>
+          <!-- 아랫줄 -->
+          <g>
+            <rect x="458" y="158" width="120" height="54" rx="14" fill="#FEEECF"/>
+            <text x="518" y="181" text-anchor="middle" fill="#DB8409" font-size="11">5 판정하기</text>
+            <text x="518" y="200" text-anchor="middle" fill="#182338">내 기준으로</text>
+          </g>
+          <g>
+            <rect x="290" y="158" width="138" height="54" rx="14" fill="#E6E2FF"/>
+            <text x="359" y="181" text-anchor="middle" fill="#6B5CE7" font-size="11">6 깨뜨리기</text>
+            <text x="359" y="200" text-anchor="middle" fill="#182338">반례를 직접 설계</text>
+          </g>
+          <g>
+            <rect x="8" y="158" width="262" height="54" rx="14" fill="none" stroke="#BFD0EC" stroke-width="2" stroke-dasharray="5 5"/>
+            <text x="139" y="181" text-anchor="middle" fill="#8593AD" font-size="11">다음 미션 · 지원을 한 칸 걷어냄</text>
+            <text x="139" y="200" text-anchor="middle" fill="#4C5A75" font-size="12">보기 → 직접 쓰기 → 반례 자작</text>
+          </g>
+        </g>
+        <g stroke="#8593AD" stroke-width="2" fill="none" color="#8593AD" marker-end="url(#ar)">
+          <path d="M132 61 H152"/>
+          <path d="M282 61 H302"/>
+          <path d="M432 61 H452"/>
+          <path d="M518 92 V152"/>
+          <path d="M454 185 H434"/>
+          <path d="M286 185 H276"/>
+        </g>
+        <g font-family="IBM Plex Sans KR, sans-serif" font-size="11" fill="#8593AD">
+          <text x="600" y="66">정답 확인</text>
+          <text x="600" y="82">단계는 없음</text>
+        </g>
+      </svg>
+      <p class="loopcap">3번과 4번 사이에 “정답 확인” 단계가 없다는 점이 중요합니다.
+        플랫폼은 맞았는지 알려주지 않고 결과만 보여줍니다. 판정은 5번에서 학생이 자기 기준으로 합니다.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="sec">
+    <span class="secnum">04</span>
+    <h2>“안 되는데요”는 게으름이 아니라 어휘의 부재다</h2>
+    <p>학생이 에러를 안 읽는 이유는 두 가지입니다. 첫째, Traceback은 영어고 학생의 행동이 아니라
+      인터프리터 내부를 설명합니다. 둘째, 더 근본적으로 — <strong>학생은 무엇이 나올 줄 알았는지
+      자기도 모릅니다.</strong> 예측을 안 했으니 “예상과 다르다”는 문장을 만들 수 없고,
+      남는 말이 “안 돼요” 하나뿐입니다.</p>
+    <p>훈계로 고쳐지지 않습니다. 말할 문장을 쥐여줘야 합니다. 그래서 도움 요청 버튼을 누르면
+      선생님에게 바로 가지 않고 <strong>증상 진술</strong>을 통과합니다.</p>
+
+    <div class="pull">
+      “나는 <span style="color:var(--blue)">여러 조각으로 나뉜 목록</span>이 나올 줄 알았는데,
+      실제로는 <span style="color:var(--coral)">안 잘린 한 덩어리</span>가 나왔어요.”
+      <small>버튼 두 번, 30초. 이 문장이 완성되는 순간 학생은 자기도 모르게 디버깅의 절반을 했고,
+        교사는 화면을 처음부터 읽지 않고도 답할 수 있습니다. 교사 1명이 26명을 감당할 수 있는 건
+        여기서부터입니다.</small>
+    </div>
+
+    <p>에러 메시지도 우리가 번역합니다. <code>AttributeError: 'list' object has no attribute 'split'</code>
+      대신 <strong>“3번 블록은 한 덩어리 글자를 기다리는데, 앞에서 이미 목록이 넘어왔어요.”</strong>
+      위치와 사실만 말하고, 고치는 법은 말하지 않습니다.</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="sec">
+    <span class="secnum">05</span>
+    <h2>인정은 사람의 일, 증거는 기계의 일</h2>
+    <p>격려의 효과는 <strong>그게 사람에게서 왔다는 데서</strong> 나옵니다. AI가 대신하면 그 자산을 태웁니다.
+      그래서 규칙이 도출됩니다 — AI는 칭찬하지 않고 질문과 반례만 냅니다. 대신 AI는 교사에게
+      <strong>칭찬할 순간</strong>을 알려줍니다.</p>
+    <p>포인트·연속 출석·“+40 포인트” 토스트는 이 철학과 정면으로 충돌하므로 전부 뺐습니다.
+      보상은 수업 안의 자율성(BGM 선택권, 문제 순서 선택권)으로 대체합니다.</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="sec">
+    <span class="secnum">06</span>
+    <h2>원칙이 화면 어디에 박혀 있는가</h2>
+    <p>원칙 하나하나가 특정 UI로 구현돼 있습니다. 반대로 말하면 <strong>그 UI를 빼는 순간 철학도
+      사라집니다.</strong></p>
+    <div class="tablewrap">
+      <table class="t">
+        <thead><tr><th>원칙</th><th>화면 구현</th><th>빼면 생기는 일</th></tr></thead>
+        <tbody>
+          <tr><td>문제 정의 = 종료 조건 정하기</td><td>업무 요청은 일부러 모호하게. 성공 조건을 고르기 전엔 다음 단계가 잠김</td><td>문제 정의가 “완료”로 찍힌 채 시작되고 학생은 받아쓰기만 함</td></tr>
+          <tr><td>분해는 나누기가 아니라 기준 정하기</td><td>자를 기준 + “왜 그걸 골랐나요?” 필수</td><td><code>split(",")</code>이 버튼 한 번 누르기가 되고 사고는 0이 됨</td></tr>
+          <tr><td>시작 비용 0, 판단 대행 0</td><td>빈 화면 없음. 틀린 순서로도 실행됨</td><td>교사가 가이드 코드를 띄우고 수업이 필사가 됨</td></tr>
+          <tr><td>한 번 맞히는 건 통과가 아니다</td><td>실행 = 입력 3장 동시. 마지막 한 장은 반드시 반례</td><td>하드코딩이 걸러지지 않음</td></tr>
+          <tr><td>피드백은 평가가 아니라 거울</td><td>학생이 고른 성공 조건을 결과 옆에 다시 띄우고 자기가 판정</td><td>채점 주체가 플랫폼이 되고 학생은 정답 추측을 시작함</td></tr>
+          <tr><td>“안 돼요”는 어휘의 부재</td><td>도움 요청이 증상 진술 폼으로 대체</td><td>교사가 화면을 처음부터 읽어야 하고 26명을 감당 못 함</td></tr>
+          <tr><td>인정은 사람, 증거는 기계</td><td>에러는 위치만. AI는 칭찬하지 않고 되묻기만 함</td><td>사람의 격려가 싸구려가 됨</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="sec">
+    <span class="secnum">07</span>
+    <h2>의도적으로 넣지 않은 것</h2>
+    <p>선언 목록보다 거절 목록이 철학을 더 잘 증명합니다.</p>
+    <ul class="plain">
+      <li><span class="x">✕</span><span><strong>포인트 · 연속 출석 · “좋아요!” 팝업</strong> — 칭찬을 기계에 넘기면 사람의 격려가 싸구려가 된다</span></li>
+      <li><span class="x">✕</span><span><strong>정답 순서 대조 채점</strong> — 채점하는 순간 학생은 우리 답을 추측하기 시작한다</span></li>
+      <li><span class="x">✕</span><span><strong>다음 블록 추천</strong> — 판단 대행의 가장 흔한 형태</span></li>
+      <li><span class="x">✕</span><span><strong>힌트·코드 보기 먼저 열기</strong> — 증상을 말하기 전에 주면 말할 이유가 사라진다</span></li>
+      <li><span class="x">✕</span><span><strong>방법을 지시하는 체크리스트</strong> — “쉼표를 기준으로 나누기”는 요구사항이 아니라 정답 공개다</span></li>
+      <li><span class="x">✕</span><span><strong>공백을 알아서 봐주는 비교</strong> — 봐주면 학생은 앞뒤 공백이라는 개념을 평생 만나지 못한다</span></li>
+      <li><span class="x">✕</span><span><strong>교사 화면의 정답률·순위</strong> — 숫자를 띄우면 교사는 그 숫자로 줄을 세우고, 학생은 다시 결과를 맞히러 간다</span></li>
+    </ul>
+  </section>
+
+  <!-- 8 -->
+  <section class="sec">
+    <span class="secnum">08</span>
+    <h2>무엇으로 검증할 것인가</h2>
+    <p>현장에서 이 철학이 작동하는지는 네 숫자로 봅니다. 정답률은 그중에 없습니다.</p>
+    <div class="tablewrap">
+      <table class="t">
+        <thead><tr><th>지표</th><th>정의</th><th>왜 보는가</th></tr></thead>
+        <tbody>
+          <tr><td>증상 진술 완성률</td><td>도움 요청 중 기대값·실제값을 둘 다 채운 비율</td><td>초반엔 20%도 안 나올 것. 이 숫자가 올라가는 게 제품이 일한다는 직접 증거</td></tr>
+          <tr><td>위험군 비율</td><td>1단계에서 하드코딩·요행 보기를 고른 비율</td><td>맞히기 전에 무엇을 성공이라 생각했는지 — 결과만 채점하는 도구는 못 보는 정보</td></tr>
+          <tr><td>교사 개입당 소요 시간</td><td>호출부터 해결까지</td><td>학교 도입의 실질 세일즈 포인트</td></tr>
+          <tr><td>반례 자작 성공률</td><td>졸업 과제에서 자기 논리를 깨뜨리는 입력을 만든 비율</td><td>명세화 능력 획득 여부</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="endnote">
+      <span class="k">한 문단으로 말해야 할 때</span>
+      Cut &amp; Check는 Python을 가르치지 않습니다. 모호한 요청을 <strong>검증할 수 있는 단계로
+      바꾸는 법</strong>을 가르칩니다. 우리가 믿는 건 하나입니다 — 문제를 쪼갤 줄 아는 아이는
+      실패했을 때 “나는 못한다”가 아니라 “세 번째가 틀렸다”고 말합니다. 그 차이가 그 아이가
+      이 과목에 남을지를 결정합니다. 그래서 우리는 시작은 대신해주고, 판단은 하나도 대신하지 않습니다.
+    </div>
+  </section>
+
+</div>
+</div>
+</body>
+</html>
