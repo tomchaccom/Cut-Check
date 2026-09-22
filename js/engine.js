@@ -72,7 +72,9 @@
     }
 
     if (st.type === 'none') {
-      return err(-1, '데이터를 받는 블록이 없어서 아무것도 흐르지 않았어요.');
+      /* 원인을 짚어주면 안 된다 — '블록이 없어서' 는 학생이 찾아야 할 결론이다.
+       * 상태만 말한다. (js/llmguard.js 의 DIAGNOSE 규칙이 이걸 잡아냈다) */
+      return err(-1, '아직 어떤 블록에도 값이 흐르지 않았어요.');
     }
     return { err: 0, type: st.type, value: st.value, saved: st.saved, shown: st.shown };
   }

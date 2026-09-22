@@ -23,6 +23,7 @@
 - [커리큘럼과 지원 페이딩](docs/curriculum.md)
 - [설문과 관찰 설계](docs/survey.md) — 문항마다 검증하는 가설을 붙였습니다
 - [3분 시연 대본과 예상 반박](docs/demo.md) — 리뷰·발표에 그대로 씁니다
+- [LLM을 붙일 때의 계약](docs/llm.md) — 규칙을 문서가 아니라 검사기로 박아뒀습니다
 
 ---
 
@@ -127,6 +128,7 @@ GitHub Pages를 켜면 `index.html`이 그대로 데모가 됩니다.
 ```bash
 node test/engine.test.js     # 미션별 정답 순서 통과 / 반례가 실제로 깨지는지 / 에러가 몇 번 블록을 짚는지
 node test/hangul.test.js     # 조사 계산
+node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
 
 # 화면 연기 테스트 (playwright 필요)
 python3 -m http.server 8123 &
@@ -157,6 +159,8 @@ node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합, JS 에
 ├── philosophy.css
 ├── js/
 │   ├── hangul.js         조사 계산
+│   ├── asks.js           AI 되묻기 문장 (나중에 LLM 이 대체)
+│   ├── llmguard.js       LLM 출력 검사기 — 칭찬·해법·진단·코드를 거부
 │   ├── store.js          학생 행동 기록 (localStorage)
 │   ├── blocks.js         논리 블록 카탈로그
 │   ├── missions.js       미션 데이터 (브리프·보기·반례 입력)
@@ -169,6 +173,7 @@ node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합, JS 에
 ├── test/
 │   ├── engine.test.js    엔진 검증
 │   ├── hangul.test.js    조사 검증
+│   ├── llmguard.test.js  출력 검사기 + 실제 사용 문장 전부 검사
 │   └── smoke.js          화면 연기 테스트
 └── docs/
     ├── philosophy.md     설계 철학 전문
