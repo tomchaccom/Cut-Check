@@ -98,6 +98,8 @@
         brokeOwn: false,
         revised: 0,
         lastRevision: null,
+        cause: null,
+        handle: null,
         idleSec: 0
       };
 
@@ -120,6 +122,10 @@
         } else if (e.type === 'help') {
           s.asked = true;
           s.symptom = { exp: e.exp, act: e.act || '', blk: e.blk || '' };
+        } else if (e.type === 'cause') {
+          s.cause = e.cause;
+        } else if (e.type === 'handle') {
+          s.handle = e.choice;
         } else if (e.type === 'revise') {
           s.revised++;
           s.lastRevision = e;

@@ -458,7 +458,9 @@
       }
     });
     no.addEventListener('click', function () {
-      msg.textContent = '좋아요. 몇 번째가, 왜 깨졌는지 선생님께 한 문장으로 말해보세요.';
+      msg.textContent = '';
+      no.disabled = true;
+      askCause(j);
       openGraduation(true);
     });
 
@@ -565,6 +567,85 @@
     qbox.prepend(q);
     rec({ type: 'help', exp: H.exp, act: H.act, blk: H.blk });
   });
+
+  /* ── 원인 구분 ──────────────────────────────────────
+   * 깨졌다고 해서 늘 학생 논리가 틀린 게 아니다.
+   * "사과 바나나 우유" 는 애초에 형식이 다른 주문서다.
+   * 여기서 "네 기준이 틀렸다"는 인상만 주고 넘어가면 우리가 거짓말을 하는 거고,
+   * 학생은 '어떤 입력이 와도 다 처리해야 한다'는 잘못된 규범을 배운다.
+   *
+   * 실무 개발자가 매일 하는 판단이 이거다 — 내 로직이 틀렸나, 입력이 이상한가.
+   * 중1도 할 수 있는 판단이고, 여기서 하지 않으면 영영 안 한다. */
+  var CAUSES = [
+    { v: '내 기준이 이 주문서에는 안 맞았다', next: false },
+    { v: '이 주문서가 형식이 다른 것 같다', next: true },
+    { v: '둘 다인 것 같다', next: true }
+  ];
+  var HANDLES = [
+    { v: '그냥 넘어간다 (결과가 이상해도 어쩔 수 없다)' },
+    { v: '멈추고 “형식이 다른 주문서예요”라고 알려준다' },
+    { v: '알아서 다른 기준으로 한 번 더 잘라본다' }
+  ];
+
+  function askCause(host) {
+    var wrap = el('div', 'cause');
+    wrap.appendChild(el('span', 'lab', '깨진 건 확인했어요. 그럼 무엇이 문제였을까요?'));
+    var box = el('div', 'picks');
+    wrap.appendChild(box);
+    var follow = el('div');
+    wrap.appendChild(follow);
+    host.appendChild(wrap);
+
+    CAUSES.forEach(function (c) {
+      var b = el('button', 'pick');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', 'false');
+      b.appendChild(el('span', 'dot'));
+      b.appendChild(el('span', null, c.v));
+      b.addEventListener('click', function () {
+        box.querySelectorAll('[aria-pressed]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+        rec({ type: 'cause', cause: c.v });
+        follow.innerHTML = '';
+        if (c.next) askHandle(follow);
+        else {
+          var p2 = el('p', 'msg', '그럼 기준을 다시 정해볼 수 있어요. 위의 “기준을 다시 정할래요”를 눌러보세요.');
+          follow.appendChild(p2);
+        }
+      });
+      box.appendChild(b);
+    });
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function askHandle(host) {
+    host.appendChild(el('span', 'lab', '그럼 형식이 다른 주문서가 왔을 때, 프로그램은 뭐라고 해야 할까요?'));
+    var box = el('div', 'picks');
+    host.appendChild(box);
+    var out = el('p', 'msg');
+    host.appendChild(out);
+
+    HANDLES.forEach(function (h) {
+      var b = el('button', 'pick');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', 'false');
+      b.appendChild(el('span', 'dot'));
+      b.appendChild(el('span', null, h.v));
+      b.addEventListener('click', function () {
+        box.querySelectorAll('[aria-pressed]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+        rec({ type: 'handle', choice: h.v });
+        /* 어느 것도 정답이라고 말하지 않는다. 셋 다 실무에서 실제로 쓰는 방식이다.
+         * 대신 각 선택이 무엇을 포기하는지만 사실로 알려준다. */
+        out.textContent = {
+          0: '그러면 잘못된 결과가 조용히 흘러갑니다. 나중에 누가 그걸 발견하게 될까요?',
+          1: '그러면 쓰는 사람이 뭘 고쳐야 할지 알게 됩니다. 대신 프로그램은 거기서 멈춥니다.',
+          2: '그러면 대부분 자동으로 넘어갑니다. 대신 프로그램이 마음대로 판단한 걸 아무도 모릅니다.'
+        }[HANDLES.indexOf(h)];
+      });
+      box.appendChild(b);
+    });
+  }
 
   /* ── 졸업 과제: 반례를 직접 만들기 ──────────────── */
   /* 자기 판정을 끝낸 학생만 연다.

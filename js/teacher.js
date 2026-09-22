@@ -168,6 +168,13 @@
     }
     g.appendChild(b3);
 
+    if (s.cause) {
+      var b6 = el('div', 'dbox');
+      b6.appendChild(el('span', 'k', '깨진 원인을 이렇게 봤어요'));
+      b6.appendChild(el('div', 'v', s.cause + (s.handle ? ' → ' + s.handle : '')));
+      g.appendChild(b6);
+    }
+
     if (s.revised) {
       var b5 = el('div', 'dbox');
       b5.appendChild(el('span', 'k', '스스로 고친 횟수'));
@@ -202,6 +209,7 @@
     if (s.define.trap === 'hardcode') return '“주문서가 다르게 오면 그때도 성공이라고 할 수 있을까?”';
     if (s.define.trap === 'luck') return '“오류가 안 났는데 결과가 틀렸으면, 그건 성공일까?”';
     if (s.symptom && !s.symptom.act) return '“실행 버튼 누르기 전에 뭐가 나올 것 같았어?”';
+    if (s.cause && s.cause.indexOf('형식이 다른') === 0) return '입력 탓으로 판단한 학생입니다. 틀린 판단이 아니에요 — “그럼 그런 주문서가 또 오면 프로그램은 뭘 해야 할까?”로 이어가주세요.';
     if (s.why.weak) return '“그 기준이 다음 주문서에도 있을까? 어떻게 확신해?”';
     if (!s.asked && s.stage < 4) return '“지금 어디까지 확인해봤어?” — 답을 주지 말고 마지막으로 확인한 지점을 먼저 물어보세요.';
     if (s.revised) return '결과를 보고 스스로 기준을 고쳤습니다. 이게 정답을 맞힌 것보다 중요한 순간이에요. 지금 한마디 해주세요 — 문구는 제안하지 않습니다. 선생님 말이어야 효과가 있습니다.';
