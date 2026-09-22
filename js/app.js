@@ -610,6 +610,14 @@
     bar.appendChild(b);
   });
 
+  /* 미션 04 는 상호작용이 달라서 별도 화면이다 */
+  var m4 = el('a', 'mbtn');
+  m4.href = 'abstract.html';
+  m4.style.textDecoration = 'none';
+  m4.appendChild(el('span', 'n', '미션 04'));
+  m4.appendChild(el('span', 't', '추상화 →'));
+  bar.appendChild(m4);
+
   loadMission(CC.MISSIONS[0].id);
   CC.log = LOG;
 })(window.CC = window.CC || {});

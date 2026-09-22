@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 미션 04 추상화</title>
+<meta name="description" content="두 업무에서 같은 구조를 알아보고, 달라지는 값만 밖으로 빼내는 미션.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="abstract.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="logo">
+      <span class="mark">C&amp;C</span>
+      <div><b>Cut &amp; Check</b><small>자르고, 세 번 확인한다</small></div>
+    </div>
+    <div class="head-tools">
+      <button class="tbtn" id="notes-toggle" aria-pressed="false">설계 의도 보기</button>
+      <a class="tbtn" href="index.html" style="text-decoration:none">미션 01–03</a>
+      <a class="tbtn" href="teacher.html" style="text-decoration:none">선생님 화면 →</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <span class="badge">미션 04 · 추상화</span>
+    <h1>두 번 한 일은 한 번으로 줄일 수 있다</h1>
+    <p class="sub">지난 두 미션에서 한 일을 나란히 놓고 보겠습니다. 뭐가 같고 뭐가 다를까요?</p>
+  </div>
+
+  <div style="max-width:780px">
+
+    <!-- 1 -->
+    <section class="step" id="s1">
+      <div class="step-head">
+        <span class="step-n">1</span>
+        <div><h2>이 둘은 같은 일일까?</h2><p class="why">추상화는 변수를 배우는 게 아니라, 같은 구조를 알아보는 거예요.</p></div>
+      </div>
+      <div class="step-body">
+        <div class="jobs" id="jobs"></div>
+        <div class="note"><b>의도</b><span>두 업무는 학생이 미션 02와 03에서 실제로 해본 일입니다. 처음 보는 예시를 들고 오면 “원래 비슷한 걸 골라왔겠지”로 끝나요. 자기가 한 일이어야 같은 구조라는 게 몸으로 옵니다.</span></div>
+        <p class="q">둘을 나란히 보니 어때요?</p>
+        <div class="picks" id="same-picks"></div>
+        <div class="note"><b>경계</b><span>어떤 답을 골라도 통과시킵니다. 여기서 막으면 정답 있는 문항이 되고, 학생은 이 화면 전체를 다시 “맞히는 문제”로 분류해요.</span></div>
+        <div class="row"><button class="btn" id="s1go" disabled>이걸로 정할래요</button></div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="step locked" id="s2">
+      <div class="step-head">
+        <span class="step-n">2</span>
+        <div><h2>무엇이 달라지나요?</h2><p class="why">달라지는 것만 밖으로 빼면, 나머지는 한 번만 쓰면 돼요.</p></div>
+      </div>
+      <p class="lockmsg">1단계를 정하면 열려요.</p>
+      <div class="step-body">
+        <p class="q">두 업무를 비교해서, <b>달라지는 것</b>만 골라주세요.</p>
+        <div class="slots" id="slots"></div>
+        <div class="note"><b>핵심 장치</b><span>여기서 고른 것만 변수가 됩니다. 덜 고르면 그 값은 첫 번째 업무의 값으로 굳어서 두 번째 업무에서 무너져요. 무엇을 빠뜨렸는지는 알려주지 않습니다 — 4단계 결과가 증거입니다.</span></div>
+        <div class="row"><button class="btn" id="s2go" disabled>이걸로 정할래요</button></div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="step locked" id="s3">
+      <div class="step-head">
+        <span class="step-n">3</span>
+        <div><h2>이름을 붙여요</h2><p class="why">이름을 못 붙이면 아직 그게 뭔지 모르는 거예요.</p></div>
+      </div>
+      <p class="lockmsg">달라지는 것을 고르면 열려요.</p>
+      <div class="step-body">
+        <p class="q">밖으로 뺀 값마다 이름을 지어주세요.</p>
+        <div class="names" id="names"></div>
+        <div class="fnrow">
+          <span class="lab">이 일 전체를 한 마디로 뭐라고 부를까요?</span>
+          <p class="sub">여기 쓴 이름이 그대로 함수 이름이 됩니다. 영어여도 되고 한글이어도 돼요.</p>
+          <input type="text" id="fn-name" placeholder="예: 걸리는_것_찾기">
+        </div>
+        <div class="note"><b>의도</b><span>이름은 우리가 제안하지 않습니다. 좋은 이름 후보를 띄우는 순간 학생은 고르기만 하고, “이게 무슨 일인지” 정리하는 과정을 건너뜁니다. 이름을 못 붙이는 것 자체가 아직 구조를 못 봤다는 신호예요.</span></div>
+        <div class="row"><button class="btn" id="s3go" disabled>이 이름으로 할래요</button></div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="step locked" id="s4">
+      <div class="step-head">
+        <span class="step-n">4</span>
+        <div><h2>같은 함수로 두 번</h2><p class="why">한 번만 쓴 함수가 두 업무를 다 해내면 성공이에요.</p></div>
+      </div>
+      <p class="lockmsg">이름을 지으면 열려요.</p>
+      <div class="step-body">
+        <p class="q">내가 만든 함수에 두 업무를 차례로 넣어봅니다.</p>
+        <div class="row"><button class="btn go" id="s4go">두 업무 모두 돌려보기</button></div>
+        <div id="results"></div>
+        <div class="note"><b>경계</b><span>무엇을 빠뜨렸는지 문장으로 말해주지 않습니다. 대신 학생이 만든 함수를 그대로 코드로 보여줘요. 굳어버린 값이 코드 안에 따옴표로 박혀 있는 게 보입니다. 그게 설명보다 빠릅니다.</span></div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="foot">
+    <span><b>이 미션이 가르치는 것</b> 두 일에서 같은 구조를 알아보기 · 달라지는 값만 밖으로 빼기 · 이름 붙이기</span>
+    <span><b>가르치지 않는 것</b> def 문법 · 매개변수라는 용어</span>
+  </div>
+</div>
+
+<script src="js/hangul.js"></script>
+<script src="js/store.js"></script>
+<script src="js/abstract.js"></script>
+</body>
+</html>
