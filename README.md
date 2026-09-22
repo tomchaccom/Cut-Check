@@ -124,8 +124,12 @@ GitHub Pages를 켜면 `index.html`이 그대로 데모가 됩니다.
 ### 엔진 검증
 
 ```bash
-node test/engine.test.js
-node test/hangul.test.js
+node test/engine.test.js     # 미션별 정답 순서 통과 / 반례가 실제로 깨지는지 / 에러가 몇 번 블록을 짚는지
+node test/hangul.test.js     # 조사 계산
+
+# 화면 연기 테스트 (playwright 필요)
+python3 -m http.server 8123 &
+node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합, JS 에러와 가로 스크롤만 검사
 ```
 
 미션별 정답 순서가 통과하는지, 반례가 실제로 깨지는지, 블록을 빠뜨렸을 때
@@ -163,7 +167,8 @@ node test/hangul.test.js
 │   └── teacher.js        선생님 화면 조립
 ├── test/
 │   ├── engine.test.js    엔진 검증
-│   └── hangul.test.js    조사 검증
+│   ├── hangul.test.js    조사 검증
+│   └── smoke.js          화면 연기 테스트
 └── docs/
     ├── philosophy.md     설계 철학 전문
     ├── curriculum.md     커리큘럼과 지원 페이딩
