@@ -213,6 +213,7 @@
     $('#pin-sep').innerHTML = '<span class="t">자를 기준</span>아직 안 정했어요';
     $('#crit-goal').textContent = M.goalLabel;
     S.confirmedSep = '';
+    S.confirmedSucc = '';
     renderRevisions();
     unmarkAll();
 
@@ -294,6 +295,7 @@
   /* ── 단계 확정 ─────────────────────────────────── */
   $('#s1go').addEventListener('click', function () {
     if (!S.succ) return;
+    var prevSucc = S.confirmedSucc;
     $('#pin-succ').className = 'pin set';
     $('#pin-succ').innerHTML = '<span class="t">성공이란</span>' + esc(S.succ);
     $('#s1').classList.add('done');
@@ -301,7 +303,18 @@
     mark('succ');
     this.disabled = true;
     this.textContent = '정했어요';
-    rec({ type: 'define', trap: S.succTrap, text: S.succ });
+
+    if (prevSucc && prevSucc !== S.succ) {
+      /* 성공 조건을 고친 것 — 기준을 고친 것보다 한 단계 더 깊은 수정이다.
+       * 문제 자체를 다시 정의한 거니까. */
+      S.revisions.push({ from: '성공 조건', to: '다시 정함' });
+      rec({ type: 'redefine', from: prevSucc, to: S.succ, trap: S.succTrap });
+      renderRevisions();
+    } else {
+      rec({ type: 'define', trap: S.succTrap, text: S.succ });
+    }
+    S.confirmedSucc = S.succ;
+
     $('#s2').scrollIntoView({ behavior: 'smooth', block: 'center' });
     focusStep('#s2');
   });
@@ -340,6 +353,21 @@
   /* ── 수정 루프 ─────────────────────────────────────
    * 학습 순환에 '수정하기'가 있는데 제품에 없으면 그 순환은 거짓말이다.
    * 깨진 걸 보고 기준을 고쳐서 다시 돌릴 수 있어야 한다. */
+  /* 문제 정의도 고칠 수 있어야 한다.
+   * 실무에서 요구사항을 다시 쓰는 순간이 제일 중요한데,
+   * 그걸 못 하게 막아두면 '성공은 처음에 한 번 정하면 끝' 이라는 잘못된 규범이 남는다. */
+  function reopenDefine() {
+    $('#s1').classList.remove('done');
+    $('#s1go').disabled = !S.succ;
+    $('#s1go').textContent = '이걸로 다시 정할래요';
+    $('#resultbox').hidden = true;
+    $('#resultbox').innerHTML = '';
+    $('#xraybox').hidden = true;
+    $('#xraybtn').disabled = true;
+    $('#s1').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s1');
+  }
+
   function reopenCut() {
     $('#s2').classList.remove('done');
     $('#s2go').disabled = false;
@@ -645,9 +673,13 @@
    * 실무 개발자가 매일 하는 판단이 이거다 — 내 로직이 틀렸나, 입력이 이상한가.
    * 중1도 할 수 있는 판단이고, 여기서 하지 않으면 영영 안 한다. */
   var CAUSES = [
-    { v: '내 기준이 이 주문서에는 안 맞았다', next: false },
-    { v: '이 주문서가 형식이 다른 것 같다', next: true },
-    { v: '둘 다인 것 같다', next: true }
+    { v: '내 기준이 이 주문서에는 안 맞았다', next: 'cut' },
+    { v: '이 주문서가 형식이 다른 것 같다', next: 'handle' },
+    /* 성공 조건 자체를 의심하는 선택지. 하드코딩 보기를 고른 학생이
+     * 스스로 빠져나올 수 있는 유일한 문이다. 이게 없으면
+     * 그 학생은 '내가 정한 성공은 맞는데 프로그램이 이상하다' 에 갇힌다. */
+    { v: '내가 정한 성공이 이번 결과에만 맞는 것 같다', next: 'redefine' },
+    { v: '둘 다인 것 같다', next: 'handle' }
   ];
   var HANDLES = [
     { v: '그냥 넘어간다 (결과가 이상해도 어쩔 수 없다)' },
@@ -675,10 +707,20 @@
         b.setAttribute('aria-pressed', 'true');
         rec({ type: 'cause', cause: c.v });
         follow.innerHTML = '';
-        if (c.next) askHandle(follow);
-        else {
-          var p2 = el('p', 'msg', '그럼 기준을 다시 정해볼 수 있어요. 위의 “기준을 다시 정할래요”를 눌러보세요.');
-          follow.appendChild(p2);
+        if (c.next === 'handle') {
+          askHandle(follow);
+        } else if (c.next === 'redefine') {
+          follow.appendChild(el('p', 'msg',
+            '성공을 정한 건 3분 전의 나예요. 그때 판단을 지금 바꿔도 됩니다.'));
+          var rb = el('button', 'btn', '성공을 다시 정할래요');
+          rb.type = 'button';
+          rb.addEventListener('click', reopenDefine);
+          var row = el('div', 'row');
+          row.appendChild(rb);
+          follow.appendChild(row);
+        } else {
+          follow.appendChild(el('p', 'msg',
+            '그럼 기준을 다시 정해볼 수 있어요. 위의 “기준을 다시 정할래요”를 눌러보세요.'));
         }
       });
       box.appendChild(b);

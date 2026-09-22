@@ -97,6 +97,7 @@
         breaks: 0,
         brokeOwn: false,
         revised: 0,
+        redefined: 0,
         lastRevision: null,
         cause: null,
         handle: null,
@@ -144,6 +145,9 @@
         } else if (e.type === 'revise') {
           s.revised++;
           s.lastRevision = e;
+        } else if (e.type === 'redefine') {
+          s.redefined++;
+          s.define = { text: e.to, trap: e.trap };
         } else if (e.type === 'break') {
           s.breaks++;
           if (e.broke) s.brokeOwn = true;

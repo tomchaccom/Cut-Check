@@ -245,6 +245,7 @@
     if (s.cause && s.cause.indexOf('형식이 다른') === 0) return '입력 탓으로 판단한 학생입니다. 틀린 판단이 아니에요 — “그럼 그런 주문서가 또 오면 프로그램은 뭘 해야 할까?”로 이어가주세요.';
     if (s.why.weak) return '“그 기준이 다음 주문서에도 있을까? 어떻게 확신해?”';
     if (!s.asked && s.stage < 4) return '“지금 어디까지 확인해봤어?” — 답을 주지 말고 마지막으로 확인한 지점을 먼저 물어보세요.';
+    if (s.redefined) return '성공 조건 자체를 다시 정했습니다. 문제를 다시 정의한 거라 이 수업에서 제일 깊은 수정이에요. 지금 한마디 해주세요 — 문구는 제안하지 않습니다.';
     if (s.revised) return '결과를 보고 스스로 기준을 고쳤습니다. 이게 정답을 맞힌 것보다 중요한 순간이에요. 지금 한마디 해주세요 — 문구는 제안하지 않습니다. 선생님 말이어야 효과가 있습니다.';
     if (s.selfFound) return '스스로 깨진 곳을 찾아냈습니다. 지금 한마디 해주세요. 문구는 제안하지 않습니다 — 선생님 말이어야 효과가 있습니다.';
     return '“왜 그 순서로 놓았는지 설명해줄래?”';
@@ -312,6 +313,9 @@
     return C.STAGES[s.stage] + ' 단계에서 멈춘 채 호출이 없어요';
   });
   rowList('#praise', '#p-praise', C.praise(), 'warm', function (s) {
+    if (s.redefined) {
+      return '결과를 보고 <b>성공 조건 자체를 다시 정함</b> — 문제를 다시 정의한 거예요';
+    }
     if (s.revised) {
       return '결과를 보고 <b>자를 기준을 스스로 고침</b>' +
         (s.lastRevision ? ' (' + esc(s.lastRevision.from) + ' → ' + esc(s.lastRevision.to) + ')' : '');

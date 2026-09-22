@@ -91,6 +91,7 @@
         idleSec: idleSec,
         selfFound: selfFound,
         revised: revised ? 1 : 0,
+        redefined: 0,
         lastRevision: revised ? { from: '쉼표', to: '띄어쓰기' } : null,
         counterPassed: counterPassed,
         blocks: stage >= 2
@@ -125,8 +126,10 @@
     /* 칭찬 타이밍 — 스스로 깨진 곳을 찾아냈거나, 보고 나서 기준을 고친 순간.
      * 고친 쪽이 더 강한 신호다. 정답을 맞힌 것보다 중요하다. */
     praise: function () {
-      return this.students.filter(function (s) { return s.selfFound || s.revised; })
-        .sort(function (a, b) { return (b.revised || 0) - (a.revised || 0); });
+      return this.students.filter(function (s) { return s.selfFound || s.revised || s.redefined; })
+        .sort(function (a, b) {
+          return ((b.redefined || 0) * 2 + (b.revised || 0)) - ((a.redefined || 0) * 2 + (a.revised || 0));
+        });
     },
     /* 위험군 — 성공을 이번 결과로 정의했거나, 오류만 없으면 된다고 정의한 학생 */
     risky: function () {
