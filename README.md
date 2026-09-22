@@ -24,6 +24,7 @@
 - [커리큘럼과 지원 페이딩](docs/curriculum.md)
 - [설문과 관찰 설계](docs/survey.md) — 문항마다 검증하는 가설을 붙였습니다
 - [45분 수업 지도안](docs/lesson.md) — 교사가 **하지 말아야 할 말** 목록이 핵심입니다
+- [리뷰 요청 메시지 초안](docs/review-request.md) — 그대로 복사해서 보내면 됩니다
 - [3분 시연 대본과 예상 반박](docs/demo.md) — 리뷰·발표에 그대로 씁니다
 - [LLM을 붙일 때의 계약](docs/llm.md) — 규칙을 문서가 아니라 검사기로 박아뒀습니다
 
@@ -182,6 +183,7 @@ node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합. JS 에
     ├── philosophy.md     설계 철학 전문
     ├── curriculum.md     커리큘럼과 지원 페이딩
     ├── lesson.md         45분 수업 지도안
+    ├── review-request.md 리뷰 요청 메시지 초안
     ├── survey.md         사전·사후 설문, 교사 인터뷰, 관찰 프로토콜
     └── demo.md           3분 시연 대본과 예상 반박
 ```
