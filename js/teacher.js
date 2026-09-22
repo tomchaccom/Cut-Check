@@ -174,6 +174,14 @@
     }
     g.appendChild(b3);
 
+    if (s.made) {
+      var b10 = el('div', 'dbox');
+      b10.appendChild(el('span', 'k', '이 학생이 만든 미션'));
+      b10.appendChild(el('div', 'v', '“' + s.made.brief + '”'));
+      b10.appendChild(el('div', 'v', '자료: ' + s.made.inputs.join(' / ') + ' · 함정 ' + s.made.traps + '개'));
+      g.appendChild(b10);
+    }
+
     if (s.abstractOk !== null && s.abstractOk !== undefined) {
       var b8 = el('div', 'dbox' + (s.abstractOk ? '' : ' flag'));
       b8.appendChild(el('span', 'k', '미션 04 · 추상화'));
@@ -266,6 +274,18 @@
   });
 
   /* ── 실시간 연결 안내 ────────────────────────────── */
+  var MISSION_NAME = {
+    m1: '미션 01 분해', m2: '미션 02 반복과 조건', m3: '미션 03 다른 세계에서',
+    m6: '미션 06 세어보기'
+  };
+
+  function headline() {
+    var h = document.querySelector('#class-label');
+    if (h && me && me.mission && MISSION_NAME[me.mission]) {
+      h.textContent = '2학년 3반 · ' + MISSION_NAME[me.mission];
+    }
+  }
+
   function liveBanner() {
     var host = $('#livebar');
     if (!host) return;
@@ -298,6 +318,7 @@
   }
 
   /* ── 초기 렌더 ───────────────────────────────────── */
+  headline();
   liveBanner();
   tiles();
   rowList('#ready', '#p-ready', C.ready(), 'hot', function (s) {

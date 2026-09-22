@@ -106,6 +106,8 @@
         abstractPicked: null,
         reviewComments: 0,
         reviewGuess: null,
+        made: null,
+        mission: null,
         idleSec: 0
       };
 
@@ -122,12 +124,15 @@
         } else if (e.type === 'run') {
           s.stage = Math.max(s.stage, 3);
           s.allpass = e.allpass;
+          if (e.mission) s.mission = e.mission;
         } else if (e.type === 'judge') {
           s.stage = Math.max(s.stage, 4);
           if (e.found) s.selfFound = true;
         } else if (e.type === 'help') {
           s.asked = true;
           s.symptom = { exp: e.exp, act: e.act || '', blk: e.blk || '' };
+        } else if (e.type === 'make-submit') {
+          s.made = e;
         } else if (e.type === 'abstract-slots') {
           s.abstractPicked = e.picked;
         } else if (e.type === 'abstract-run') {
