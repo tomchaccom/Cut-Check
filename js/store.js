@@ -96,6 +96,8 @@
         selfFound: false,
         breaks: 0,
         brokeOwn: false,
+        revised: 0,
+        lastRevision: null,
         idleSec: 0
       };
 
@@ -118,6 +120,9 @@
         } else if (e.type === 'help') {
           s.asked = true;
           s.symptom = { exp: e.exp, act: e.act || '', blk: e.blk || '' };
+        } else if (e.type === 'revise') {
+          s.revised++;
+          s.lastRevision = e;
         } else if (e.type === 'break') {
           s.breaks++;
           if (e.broke) s.brokeOwn = true;

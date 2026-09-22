@@ -76,6 +76,8 @@
 
       var idleSec = Math.floor(r() * 600);
       var selfFound = stage >= 3 && r() < 0.28;
+      /* 결과를 보고 기준을 고친 학생 — 이 제품에서 가장 강한 학습 신호 */
+      var revised = stage >= 3 && r() < 0.22;
       var counterPassed = stage >= 3 && r() < 0.42;
 
       return {
@@ -88,6 +90,8 @@
         asked: asked,
         idleSec: idleSec,
         selfFound: selfFound,
+        revised: revised ? 1 : 0,
+        lastRevision: revised ? { from: '쉼표', to: '띄어쓰기' } : null,
         counterPassed: counterPassed,
         blocks: stage >= 2
           ? (r() < 0.5 ? ['input', 'cut', 'save'] : ['input', 'cut', 'loop', 'check'])
@@ -118,9 +122,11 @@
         return !s.asked && s.stage < 4 && s.idleSec > 240;
       }).sort(function (a, b) { return b.idleSec - a.idleSec; });
     },
-    /* 칭찬 타이밍 — 스스로 깨진 곳을 찾아낸 순간 */
+    /* 칭찬 타이밍 — 스스로 깨진 곳을 찾아냈거나, 보고 나서 기준을 고친 순간.
+     * 고친 쪽이 더 강한 신호다. 정답을 맞힌 것보다 중요하다. */
     praise: function () {
-      return this.students.filter(function (s) { return s.selfFound; });
+      return this.students.filter(function (s) { return s.selfFound || s.revised; })
+        .sort(function (a, b) { return (b.revised || 0) - (a.revised || 0); });
     },
     /* 위험군 — 성공을 이번 결과로 정의했거나, 오류만 없으면 된다고 정의한 학생 */
     risky: function () {

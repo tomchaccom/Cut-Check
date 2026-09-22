@@ -168,6 +168,14 @@
     }
     g.appendChild(b3);
 
+    if (s.revised) {
+      var b5 = el('div', 'dbox');
+      b5.appendChild(el('span', 'k', '스스로 고친 횟수'));
+      b5.appendChild(el('div', 'v', s.revised + '번' +
+        (s.lastRevision ? ' · 마지막 ' + s.lastRevision.from + ' → ' + s.lastRevision.to : '')));
+      g.appendChild(b5);
+    }
+
     if (s.symptom) {
       var b4 = el('div', 'dbox');
       b4.appendChild(el('span', 'k', '학생이 쓴 증상'));
@@ -196,6 +204,7 @@
     if (s.symptom && !s.symptom.act) return '“실행 버튼 누르기 전에 뭐가 나올 것 같았어?”';
     if (s.why.weak) return '“그 기준이 다음 주문서에도 있을까? 어떻게 확신해?”';
     if (!s.asked && s.stage < 4) return '“지금 어디까지 확인해봤어?” — 답을 주지 말고 마지막으로 확인한 지점을 먼저 물어보세요.';
+    if (s.revised) return '결과를 보고 스스로 기준을 고쳤습니다. 이게 정답을 맞힌 것보다 중요한 순간이에요. 지금 한마디 해주세요 — 문구는 제안하지 않습니다. 선생님 말이어야 효과가 있습니다.';
     if (s.selfFound) return '스스로 깨진 곳을 찾아냈습니다. 지금 한마디 해주세요. 문구는 제안하지 않습니다 — 선생님 말이어야 효과가 있습니다.';
     return '“왜 그 순서로 놓았는지 설명해줄래?”';
   }
@@ -255,7 +264,11 @@
     return C.STAGES[s.stage] + ' 단계에서 멈춘 채 호출이 없어요';
   });
   rowList('#praise', '#p-praise', C.praise(), 'warm', function (s) {
-    return '세 번째 입력에서 <b>깨진 곳을 스스로 찾아냄</b>';
+    if (s.revised) {
+      return '결과를 보고 <b>자를 기준을 스스로 고침</b>' +
+        (s.lastRevision ? ' (' + esc(s.lastRevision.from) + ' → ' + esc(s.lastRevision.to) + ')' : '');
+    }
+    return '<b>깨진 곳을 스스로 찾아냄</b>';
   });
   risk();
   funnel();

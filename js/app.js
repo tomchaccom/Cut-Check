@@ -32,7 +32,8 @@
       sep: '', sepName: '', why: '',
       blocks: [], bad: -1,
       ran: false, allpass: false,
-      brk: { text: '', guess: '', tries: [] }
+      brk: { text: '', guess: '', tries: [] },
+      revisions: []
     };
   }
 
@@ -186,6 +187,8 @@
     $('#pin-sep').className = 'pin blank';
     $('#pin-sep').innerHTML = '<span class="t">자를 기준</span>아직 안 정했어요';
     $('#crit-goal').textContent = M.goalLabel;
+    S.confirmedSep = '';
+    renderRevisions();
     unmarkAll();
 
     // 4단계
@@ -231,6 +234,7 @@
   });
 
   $('#s2go').addEventListener('click', function () {
+    var prev = S.confirmedSep;
     $('#pin-sep').className = 'pin set';
     $('#pin-sep').innerHTML = '<span class="t">자를 기준</span>' + esc(S.sepName) + ' — ' + esc(S.why);
     $('#s2').classList.add('done');
@@ -238,9 +242,54 @@
     mark('sep');
     this.disabled = true;
     this.textContent = '정했어요';
-    rec({ type: 'cut', sepName: S.sepName, why: S.why, weak: isWeakWhy(S.why) });
+
+    if (prev && prev !== S.sepName) {
+      /* 결과를 보고 기준을 고친 것 — 이 제품에서 가장 강한 학습 신호다.
+       * 정답을 맞힌 것보다 이게 더 중요하다. */
+      S.revisions.push({ from: prev, to: S.sepName, why: S.why });
+      rec({ type: 'revise', from: prev, to: S.sepName, why: S.why });
+      renderRevisions();
+    } else {
+      rec({ type: 'cut', sepName: S.sepName, why: S.why, weak: isWeakWhy(S.why) });
+    }
+    S.confirmedSep = S.sepName;
+
+    /* 기준이 바뀌었으니 이전 결과는 무효다. 지우고 다시 돌리게 한다. */
+    $('#resultbox').hidden = true;
+    $('#resultbox').innerHTML = '';
+    $('#xraybox').hidden = true;
+    $('#xraybtn').disabled = true;
+    renderStack();
     $('#s3').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
+
+  /* ── 수정 루프 ─────────────────────────────────────
+   * 학습 순환에 '수정하기'가 있는데 제품에 없으면 그 순환은 거짓말이다.
+   * 깨진 걸 보고 기준을 고쳐서 다시 돌릴 수 있어야 한다. */
+  function reopenCut() {
+    $('#s2').classList.remove('done');
+    $('#s2go').disabled = false;
+    $('#s2go').textContent = '이 기준으로 다시 할래요';
+    $('#sep-free').readOnly = false;
+    $('#why-free').readOnly = false;
+    $('#s2').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function renderRevisions() {
+    var box = $('#revisions');
+    if (!box) return;
+    if (!S.revisions.length) {
+      box.innerHTML = '<p class="pin blank"><span class="t">고친 기록</span>아직 없어요</p>';
+      return;
+    }
+    box.innerHTML = '';
+    S.revisions.forEach(function (r, i) {
+      var d = el('div', 'pin set');
+      d.appendChild(el('span', 't', (i + 1) + '번째 수정'));
+      d.appendChild(document.createTextNode(r.from + ' → ' + r.to));
+      box.appendChild(d);
+    });
+  }
 
   $('#succ-own').addEventListener('input', function () {
     S.succ = this.value.trim();
@@ -377,8 +426,10 @@
     var jr = el('div', 'row');
     var yes = el('button', 'btn ghost', '모두 지켰어요');
     var no = el('button', 'btn ghost', '깨진 게 있어요');
-    yes.type = no.type = 'button';
-    jr.appendChild(yes); jr.appendChild(no);
+    var again = el('button', 'btn ghost', '기준을 다시 정할래요');
+    yes.type = no.type = again.type = 'button';
+    again.addEventListener('click', reopenCut);
+    jr.appendChild(yes); jr.appendChild(no); jr.appendChild(again);
     j.appendChild(jr);
     var msg = el('p', 'msg');
     j.appendChild(msg);
