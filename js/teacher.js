@@ -168,6 +168,13 @@
     }
     g.appendChild(b3);
 
+    if (s.wrap) {
+      var b7 = el('div', 'dbox');
+      b7.appendChild(el('span', 'k', '오늘 이 학생이 말할 문장'));
+      b7.appendChild(el('div', 'v', s.wrap));
+      g.appendChild(b7);
+    }
+
     if (s.cause) {
       var b6 = el('div', 'dbox');
       b6.appendChild(el('span', 'k', '깨진 원인을 이렇게 봤어요'));

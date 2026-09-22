@@ -11,7 +11,7 @@
 
 | | | |
 |---|---|---|
-| [`index.html`](index.html) | 학생 화면 | 미션 3개 · 졸업 과제 |
+| [`index.html`](index.html) | 학생 화면 | 미션 3개 · 졸업 과제 · 마무리 한 문장 |
 | [`teacher.html`](teacher.html) | 선생님 화면 | 개입 순서 · 위험군 · 칭찬 타이밍 |
 | [`abstract.html`](abstract.html) | 미션 04 · 추상화 | 두 업무에서 같은 구조 알아보기 |
 | [`review.html`](review.html) | 미션 05 · 동료 검토 | 남의 논리 읽기 · 답 없이 코멘트하기 |

@@ -136,6 +136,27 @@
           <div id="brk-log" aria-live="polite"></div>
         </div>
       </section>
+
+      <!-- 5 ─ 마무리 한 문장 -->
+      <section class="step locked" id="s5" tabindex="-1">
+        <div class="step-head">
+          <span class="step-n">5</span>
+          <div><h2>오늘 한 문장</h2><p class="why">깨진 곳을 말하는 게 부끄러운 일이 아니라는 걸 확인하고 끝내요.</p></div>
+        </div>
+        <p class="lockmsg">내 성공 조건을 스스로 판정하면 열려요.</p>
+        <div class="step-body">
+          <p class="q">둘 중 하나를 골라서 채워주세요.</p>
+          <div class="picks" id="wrap-picks">
+            <button class="pick" type="button" aria-pressed="false" data-v="broke"><span class="dot"></span><span>오늘 내 방법이 깨진 곳은 <b>___</b> 였어요.</span></button>
+            <button class="pick" type="button" aria-pressed="false" data-v="changed"><span class="dot"></span><span>오늘 나는 <b>___</b> 를 바꿨어요.</span></button>
+            <button class="pick" type="button" aria-pressed="false" data-v="learned"><span class="dot"></span><span>오늘 새로 알게 된 건 <b>___</b> 예요.</span></button>
+          </div>
+          <input type="text" id="wrap-input" placeholder="빈칸에 들어갈 말">
+          <div class="note"><b>의도</b><span>정답 발표가 아닙니다. 교실 전체가 한 바퀴 돌면서 “깨졌다”는 말을 소리 내어 해보는 게 목적이에요. 이 3분을 빼면 “고쳐도 된다”는 메시지가 말로만 남습니다.</span></div>
+          <div class="row"><button class="btn" id="wrap-go" disabled>이걸로 말할래요</button></div>
+          <div id="wrap-out" aria-live="polite"></div>
+        </div>
+      </section>
     </div>
 
     <div>

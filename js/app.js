@@ -210,7 +210,17 @@
       x.setAttribute('aria-pressed', 'false');
     });
 
+    // 5단계
+    $('#wrap-input').value = '';
+    $('#wrap-out').innerHTML = '';
+    $('#wrap-go').disabled = true;
+    W.kind = '';
+    $('#wrap-picks').querySelectorAll('[aria-pressed]').forEach(function (x) {
+      x.setAttribute('aria-pressed', 'false');
+    });
+
     // 잠금
+    $('#s5').classList.add('locked');
     $('#s4').classList.add('locked');
     $('#s4').classList.remove('done');
     $('#s1').classList.remove('done');
@@ -650,6 +660,7 @@
     rec({ type: 'judge', found: !!found });
     mark('judge');
     $('#s4').classList.remove('locked');
+    $('#s5').classList.remove('locked');
     $('#s4').scrollIntoView({ behavior: 'smooth', block: 'center' });
     focusStep('#s4');
   }
@@ -730,6 +741,44 @@
       x.setAttribute('aria-pressed', 'false');
     });
     brkCheck();
+  });
+
+  /* ── 마무리 한 문장 ────────────────────────────────
+   * 수업 지도안에 '절대 자르지 않는 것' 으로 적어둔 순서다.
+   * 이게 없으면 '고쳐도 된다' 는 메시지가 교사의 말로만 남는다.
+   * 정답 발표가 아니라, 깨졌다는 말을 소리 내어 해보는 자리다. */
+  var W = { kind: '' };
+  var WRAP = {
+    broke: '오늘 내 방법이 깨진 곳은 “{}” 였어요.',
+    changed: '오늘 나는 “{}” 를 바꿨어요.',
+    learned: '오늘 새로 알게 된 건 “{}” 예요.'
+  };
+
+  $('#wrap-picks').querySelectorAll('[aria-pressed]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      $('#wrap-picks').querySelectorAll('[aria-pressed]').forEach(function (x) {
+        x.setAttribute('aria-pressed', 'false');
+      });
+      b.setAttribute('aria-pressed', 'true');
+      W.kind = b.dataset.v;
+      checkWrap();
+    });
+  });
+  $('#wrap-input').addEventListener('input', checkWrap);
+  function checkWrap() {
+    $('#wrap-go').disabled = !(W.kind && $('#wrap-input').value.trim().length > 0);
+  }
+
+  $('#wrap-go').addEventListener('click', function () {
+    var text = WRAP[W.kind].replace('{}', $('#wrap-input').value.trim());
+    var card = el('div', 'wrapcard');
+    card.appendChild(el('span', 'k', '오늘 내가 말할 문장'));
+    card.appendChild(el('p', 'line', text));
+    card.appendChild(el('p', 'after', '선생님 화면에도 올라갔어요. 수업 끝에 이 문장을 소리 내서 말해보세요.'));
+    var box = $('#wrap-out');
+    box.innerHTML = '';
+    box.appendChild(card);
+    rec({ type: 'wrap', kind: W.kind, text: text });
   });
 
   /* ── 초기화 ────────────────────────────────────── */

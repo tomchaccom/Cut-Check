@@ -100,6 +100,7 @@
         lastRevision: null,
         cause: null,
         handle: null,
+        wrap: null,
         idleSec: 0
       };
 
@@ -122,6 +123,8 @@
         } else if (e.type === 'help') {
           s.asked = true;
           s.symptom = { exp: e.exp, act: e.act || '', blk: e.blk || '' };
+        } else if (e.type === 'wrap') {
+          s.wrap = e.text;
         } else if (e.type === 'cause') {
           s.cause = e.cause;
         } else if (e.type === 'handle') {
