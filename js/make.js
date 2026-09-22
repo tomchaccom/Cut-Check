@@ -147,7 +147,7 @@
       var c = el('div', 'rescard' + (i === 2 ? ' counter' : ''));
       c.appendChild(el('div', 'nm', i === 2 ? '3번 · 내가 만든 반례' : (i + 1) + '번 자료'));
       c.appendChild(el('div', 'src', S.inputs[i]));
-      c.appendChild(el('div', 'arrow', '↓ 내가 정한 기준 "' + (S.sep === ' ' ? '띄어쓰기' : S.sep) + '" 으로 자르면'));
+      c.appendChild(el('div', 'arrow', '↓ 내가 정한 기준 ' + (S.sep === ' ' ? '띄어쓰기' : '"' + S.sep + '"') + '(으)로 자르면'));
       var items = el('div', 'items');
       if (r.err) {
         items.appendChild(el('span', 'item one', '멈췄어요'));
@@ -228,7 +228,7 @@
     card.appendChild(ins);
 
     card.appendChild(el('p', 'after',
-      '다음 시간에 친구가 이 미션을 풉니다. 친구가 세 번째에서 걸리면, 그건 네가 만든 함정이에요.'));
+      '다음 시간에 친구가 이 미션을 풉니다. 친구가 세 번째에서 걸리면, 그건 내가 만든 함정이에요.'));
     box.appendChild(card);
 
     if (CC.store) {

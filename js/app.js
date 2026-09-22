@@ -529,7 +529,7 @@
       d.appendChild(el('span', 'ic', '!'));
       var dt = el('span');
       dt.appendChild(el('b', null, firstErr.msg));
-      dt.appendChild(el('span', 'quiet', '어디서 멈췄는지만 알려줄게요. 어떻게 고칠지는 네가 정하는 거예요.'));
+      dt.appendChild(el('span', 'quiet', '어디서 멈췄는지만 알려줄게요. 어떻게 고칠지는 직접 정하는 거예요.'));
       d.appendChild(dt);
       box.appendChild(d);
     } else {
@@ -609,6 +609,17 @@
     box.hidden = false;
   });
 
+  /* '모르겠어요' 는 기대값이 아니라 기대를 못 했다는 뜻이다.
+   * 그대로 문장 틀에 박으면 "모르겠어요가 나올 줄 알았는데" 가 된다. */
+  function sayLine(exp, act) {
+    if (exp === '모르겠어요') {
+      return '뭐가 나올지는 아직 못 정했대요. 실제로는 <b>' + esc(act) + '</b>' +
+        CC.particle(act, '이/가') + ' 나왔고요.';
+    }
+    return '<b>' + esc(exp) + '</b>' + CC.particle(exp, '이/가') + ' 나올 줄 알았는데 <b>' +
+      esc(act) + '</b>' + CC.particle(act, '이/가') + ' 나왔대요.';
+  }
+
   /* ── 도움 요청 ─────────────────────────────────── */
   var H = { exp: '', act: '', blk: '' };
   var ASK = CC.ASKS;
@@ -658,8 +669,7 @@
   $('#h-send').addEventListener('click', function () {
     var q = el('div', 'qi fresh');
     q.innerHTML = '<div class="who"><span>민서 (나)</span><em>방금</em></div>' +
-      '<p class="say"><b>' + esc(H.exp) + '</b>' + CC.particle(H.exp, '이/가') + ' 나올 줄 알았는데 <b>' +
-      esc(H.act) + '</b>' + CC.particle(H.act, '이/가') + ' 나왔대요.' +
+      '<p class="say">' + sayLine(H.exp, H.act) +
       (H.blk ? ' 의심 블록: <b>' + esc(H.blk) + '</b>' : '') + '</p>' +
       '<span class="tag t-need">' + (H.act ? '선생님이 바로 답해줄 수 있어요' : '실제로 뭐가 나왔는지 더 적어야 해요') + '</span>';
     var qbox = $('#queue');
@@ -825,7 +835,7 @@
     /* 판정은 결과 사실만 말한다. 어떻게 더 잘 깨뜨릴지는 알려주지 않는다. */
     var verdict = el('p', 'failline');
     if (broke && guessed) {
-      verdict.textContent = '예상대로 깨졌어요. 네가 만든 입력이 네 방법의 빈틈을 정확히 찔렀습니다.';
+      verdict.textContent = '예상대로 깨졌어요. 3장에서는 안 나왔던 결과가 나왔습니다.';
       verdict.style.color = 'var(--green)';
       mark('graduate');
     } else if (broke && !guessed) {
@@ -835,7 +845,7 @@
       verdict.textContent = '예상대로 버텼어요. 아직 빈틈을 못 찾았다는 뜻이기도 해요.';
       verdict.style.color = 'var(--ink-2)';
     } else {
-      verdict.textContent = '깨질 거라고 했는데 버텼어요. 네 방법이 생각보다 튼튼한 걸까요, 아니면 이 입력이 약했을까요?';
+      verdict.textContent = '깨질 거라고 했는데 버텼어요. 방법이 튼튼한 걸까요, 이 입력이 약한 걸까요?';
       verdict.style.color = 'var(--ink-2)';
     }
     card.appendChild(verdict);

@@ -78,7 +78,6 @@
       var selfFound = stage >= 3 && r() < 0.28;
       /* 결과를 보고 기준을 고친 학생 — 이 제품에서 가장 강한 학습 신호 */
       var revised = stage >= 3 && r() < 0.22;
-      var counterPassed = stage >= 3 && r() < 0.42;
 
       return {
         id: 'st' + i,
@@ -93,7 +92,6 @@
         revised: revised ? 1 : 0,
         redefined: 0,
         lastRevision: revised ? { from: '쉼표', to: '띄어쓰기' } : null,
-        counterPassed: counterPassed,
         blocks: stage >= 2
           ? (r() < 0.5 ? ['input', 'cut', 'save'] : ['input', 'cut', 'loop', 'check'])
           : []

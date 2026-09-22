@@ -224,11 +224,13 @@
   /* 질문형만 허용한다. 답을 주면 상대는 생각할 기회를 잃는다.
    * 금지 예시도 화면에 같이 두되 고를 수 없게 한다 —
    * 왜 안 되는지 보여주지 않으면 학생은 규칙을 이해하지 못하고 회피만 배운다. */
+  /* 조사를 문장에 박아두면 '왜 쉼표으로' 같은 게 나온다.
+   * 값에 따라 계산해야 한다 (CLAUDE.md 화면 문구 규칙). */
   var TEMPLATES = [
-    { t: '{블록}에서 뭐가 나올 줄 알았어?', slot: 'block' },
-    { t: '{입력}을 넣으면 어떻게 될 것 같아?', slot: 'input' },
-    { t: '왜 {기준}으로 자르기로 했어?', slot: 'sep' },
-    { t: '성공이 뭐라고 정했었는지 다시 말해줄래?', slot: null }
+    { build: function (c) { return c.block + '에서 뭐가 나올 줄 알았어?'; } },
+    { build: function (c) { return CC.josa(c.input, '을/를') + ' 넣으면 어떻게 될 것 같아?'; } },
+    { build: function (c) { return '왜 ' + CC.josa(c.sep, '으로/로') + ' 자르기로 했어?'; } },
+    { build: function () { return '성공이 뭐라고 정했었는지 다시 말해줄래?'; } }
   ];
   var BANNED = [
     '여기가 틀렸어. 자르기 블록을 넣어.',
@@ -236,24 +238,26 @@
     '그냥 내 거 보고 똑같이 해.'
   ];
 
-  function fill(t) {
-    return t
-      .replace('{블록}', S.where && /^\d/.test(S.where) ? S.where.split(' · ')[1] : '그 블록')
-      .replace('{입력}', '“사과 바나나 우유”')
-      .replace('{기준}', S.peer.sepName);
+  function ctx() {
+    return {
+      block: S.where && /^\d/.test(S.where) ? S.where.split(' · ')[1] : '그 블록',
+      input: '“사과 바나나 우유”',
+      sep: S.peer.sepName
+    };
   }
 
   function renderTemplates() {
     var box = $('#templates');
     box.innerHTML = '';
+    var c = ctx();
     TEMPLATES.forEach(function (tp) {
-      var b = el('button', 'tmpl', fill(tp.t));
+      var b = el('button', 'tmpl', tp.build(c));
       b.type = 'button';
       b.setAttribute('aria-pressed', 'false');
       b.addEventListener('click', function () {
         box.querySelectorAll('[aria-pressed]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
         b.setAttribute('aria-pressed', 'true');
-        S.comment = fill(tp.t);
+        S.comment = tp.build(c);
         $('#own-comment').value = '';
         checkComment();
       });
@@ -289,7 +293,9 @@
       $('#sendbtn').disabled = true;
       return;
     }
-    msg.textContent = own ? '좋아요. 질문이네요.' : '';
+    /* 칭찬하지 않는다. 물음표로 끝났다는 사실만 말한다.
+     * (감사에서 잡힘 — '좋아요' 는 우리가 llmguard 로 LLM 에게 금지한 단어다) */
+    msg.textContent = own ? '물음표로 끝났어요. 보낼 수 있어요.' : '';
     msg.className = 'hintline';
     $('#sendbtn').disabled = !(v && isQuestion);
   }

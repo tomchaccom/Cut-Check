@@ -92,25 +92,23 @@
     });
   }
 
-  var SAME_OPTS = [
-    { v: '완전히 다른 일이다', ok: false },
-    { v: '값만 다르고, 하는 일은 똑같다', ok: true },
-    { v: '잘 모르겠다', ok: false }
-  ];
+  /* 정답 표시를 두지 않는다. 1단계는 어떤 답이든 통과시키므로 ok 필드가 필요 없고,
+   * 남겨두면 언젠가 채점으로 자란다. */
+  var SAME_OPTS = ['완전히 다른 일이다', '값만 다르고, 하는 일은 똑같다', '잘 모르겠다'];
 
   function renderSame() {
     var box = $('#same-picks');
     box.innerHTML = '';
-    SAME_OPTS.forEach(function (o) {
+    SAME_OPTS.forEach(function (v) {
       var b = el('button', 'pick');
       b.type = 'button';
       b.setAttribute('aria-pressed', 'false');
       b.appendChild(el('span', 'dot'));
-      b.appendChild(el('span', null, o.v));
+      b.appendChild(el('span', null, v));
       b.addEventListener('click', function () {
         box.querySelectorAll('[aria-pressed]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
         b.setAttribute('aria-pressed', 'true');
-        S.same = o.v;
+        S.same = v;
         $('#s1go').disabled = false;
       });
       box.appendChild(b);
@@ -299,8 +297,9 @@
         '두 일에서 같은 구조를 알아보고, 달라지는 값만 밖으로 뺀 겁니다. 이게 추상화예요.'));
     } else {
       vt.appendChild(el('b', null, '한 업무에서 결과가 무너졌어요.'));
+      /* 왜 무너졌는지를 말해주지 않는다 — 아래 코드에 따옴표로 박혀 있는 걸 학생이 찾는다. */
       vt.appendChild(el('span', 'quiet',
-        '밖으로 빼지 않은 값은 첫 번째 업무의 값으로 굳어 있어요. 무엇이 굳었는지는 아래 코드에 그대로 적혀 있습니다.'));
+        '두 번째 업무의 결과가 달라졌어요. 아래 코드에서 따옴표로 박혀 있는 값을 찾아보세요.'));
     }
     verdict.appendChild(vt);
     box.appendChild(verdict);
