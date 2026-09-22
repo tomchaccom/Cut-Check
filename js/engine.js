@@ -21,6 +21,13 @@
   function run(blocks, cfg, text) {
     var st = { type: 'none', value: null, opened: false, tested: false, saved: false, shown: false };
     var n = function (i) { return (i + 1) + '번 블록'; };
+    /* 중간 상태를 남긴다.
+     * 마지막 값만 보여주면 "세 장 다 빈 목록" 같은, 단서 없는 실패가 생긴다.
+     * 학생이 자기 기준으로 자른 직후의 조각을 볼 수 있어야 증거가 된다. */
+    var trace = [];
+    var snap = function (i, id) {
+      trace.push({ i: i, id: id, type: st.type, value: Array.isArray(st.value) ? st.value.slice() : st.value });
+    };
 
     for (var i = 0; i < blocks.length; i++) {
       var id = blocks[i];
@@ -69,6 +76,7 @@
         if (st.type === 'none') return err(i, n(i) + '이 보여줄 값을 못 받았어요.');
         st.shown = true;
       }
+      snap(i, id);
     }
 
     if (st.type === 'none') {
@@ -76,7 +84,7 @@
        * 상태만 말한다. (js/llmguard.js 의 DIAGNOSE 규칙이 이걸 잡아냈다) */
       return err(-1, '아직 어떤 블록에도 값이 흐르지 않았어요.');
     }
-    return { err: 0, type: st.type, value: st.value, saved: st.saved, shown: st.shown };
+    return { err: 0, type: st.type, value: st.value, saved: st.saved, shown: st.shown, trace: trace };
   }
 
   function err(at, msg) { return { err: 1, at: at, msg: msg }; }

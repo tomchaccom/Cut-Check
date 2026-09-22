@@ -67,6 +67,18 @@
     }
   }
 
+  /* 앞뒤 공백을 눈에 보이게 그린다.
+   * "우유" 와 " 우유" 가 화면에서 똑같이 보이면, 그 차이는 영원히 안 배운다. */
+  function chip(v, cls) {
+    var sp = el('span', 'item' + (cls ? ' ' + cls : ''));
+    var t = String(v);
+    var lead = t.match(/^\s+/), tail = t.match(/\s+$/);
+    if (lead) sp.appendChild(el('i', 'ws', '␣'.repeat(lead[0].length)));
+    sp.appendChild(document.createTextNode(t.trim() || '(빈 값)'));
+    if (tail) sp.appendChild(el('i', 'ws', '␣'.repeat(tail[0].length)));
+    return sp;
+  }
+
   function mark(k) {
     var li = document.querySelector('.crit li[data-c="' + k + '"]');
     if (li) li.classList.add('on');
@@ -121,7 +133,7 @@
 
     // 2단계
     $('#sample-lab').textContent = M.cut.sampleLabel;
-    $('#sample-txt').textContent = M.cut.sample;
+    renderSample();
     $('#cut-q').textContent = M.cut.q;
     $('#why-q').textContent = M.cut.whyQ;
 
@@ -145,6 +157,9 @@
       sepFree.oninput = function () {
         S.sep = sepFree.value;
         S.sepName = sepFree.value === ' ' ? '띄어쓰기' : '"' + sepFree.value + '"';
+        $('#sample-txt').querySelectorAll('.ch').forEach(function (x) {
+          x.setAttribute('aria-pressed', x.dataset.ch === sepFree.value ? 'true' : 'false');
+        });
         checkS2();
       };
     } else {
@@ -237,6 +252,43 @@
 
   function checkS2() {
     $('#s2go').disabled = !(S.sep !== '' && S.why);
+  }
+
+  /* 기준을 직접 써야 하는 미션(support 3)에서, 샘플의 글자를 눌러도 고를 수 있게 한다.
+   *
+   * 왜 필요한가 — 실험 계획서의 구분자는 '→' 인데 한글 키보드로 이걸 치려면
+   * 한자키를 눌러야 한다. 그건 판단이 아니라 타이핑 비용이고,
+   * 우리 원칙상 타이핑 비용은 0으로 만들어야 하는 쪽이다.
+   * 어디서 자를지 고르는 판단은 그대로 학생에게 남는다. */
+  function renderSample() {
+    var box = $('#sample-txt');
+    box.innerHTML = '';
+    if (!M.cut.free) {
+      box.textContent = M.cut.sample;
+      box.classList.remove('pickable');
+      $('#samplehint').hidden = true;
+      return;
+    }
+    box.classList.add('pickable');
+    $('#samplehint').hidden = false;
+    M.cut.sample.split('').forEach(function (ch) {
+      var b = el('button', 'ch');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', ch === ' ' ? '띄어쓰기' : ch);
+      b.textContent = ch === ' ' ? '␣' : ch;
+      b.dataset.ch = ch;
+      b.addEventListener('click', function () {
+        box.querySelectorAll('.ch').forEach(function (x) {
+          x.setAttribute('aria-pressed', x.dataset.ch === ch ? 'true' : 'false');
+        });
+        S.sep = ch;
+        S.sepName = ch === ' ' ? '띄어쓰기' : '"' + ch + '"';
+        $('#sep-free').value = ch;
+        checkS2();
+      });
+      box.appendChild(b);
+    });
   }
 
   /* ── 단계 확정 ─────────────────────────────────── */
@@ -404,6 +456,19 @@
       c.appendChild(el('div', 'nm', x.inp.name));
       c.appendChild(el('div', 'src', x.inp.v));
       c.appendChild(el('div', 'arrow', '↓ 내가 만든 순서를 지나면'));
+      /* 자른 직후 — 걸러내기가 있는 미션에서는 이 줄이 없으면
+       * 결과가 빈 목록일 때 학생이 볼 단서가 하나도 없다. */
+      var cutStep = !x.r.err && x.r.trace
+        ? x.r.trace.filter(function (t) { return t.id === 'cut' || t.id === 'trim'; }).pop()
+        : null;
+      if (cutStep && M.targets) {
+        var mid = el('div', 'items mid');
+        mid.appendChild(el('span', 'midlab', '자른 조각'));
+        cutStep.value.forEach(function (v) { mid.appendChild(chip(v, 'plain')); });
+        c.appendChild(mid);
+        c.appendChild(el('div', 'arrow', '↓ 걸러내면'));
+      }
+
       var items = el('div', 'items');
 
       if (x.r.err) {
@@ -413,15 +478,13 @@
           items.appendChild(el('span', 'item none', '빈 목록'));
         } else {
           var lonely = x.r.value.length < 2 && !M.targets;
-          x.r.value.forEach(function (v) {
-            items.appendChild(el('span', 'item' + (lonely ? ' one' : ''), v));
-          });
+          x.r.value.forEach(function (v) { items.appendChild(chip(v, lonely ? 'one' : '')); });
         }
-        var cnt = el('span', 'count', '조각 ' + x.r.value.length + '개');
+        var cnt = el('span', 'count', (M.targets ? '걸린 것 ' : '조각 ') + x.r.value.length + '개');
         if (x.r.value.length < 2 && !M.targets) cnt.className = 'count warn';
         items.appendChild(cnt);
       } else {
-        items.appendChild(el('span', 'item one', String(x.r.value)));
+        items.appendChild(chip(String(x.r.value), 'one'));
         items.appendChild(el('span', 'count warn', '조각 1개'));
       }
       c.appendChild(items);
