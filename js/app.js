@@ -30,7 +30,8 @@
       succ: '', succTrap: null,
       sep: '', sepName: '', why: '',
       blocks: [], bad: -1,
-      ran: false, allpass: false
+      ran: false, allpass: false,
+      brk: { text: '', guess: '', tries: [] }
     };
   }
 
@@ -186,7 +187,18 @@
     $('#crit-goal').textContent = M.goalLabel;
     unmarkAll();
 
+    // 4단계
+    $('#brk-input').value = '';
+    $('#brk-input').placeholder = M.cut.sample + ' 처럼 새로 써보세요';
+    $('#brk-log').innerHTML = '';
+    $('#brk-run').disabled = true;
+    $('#brk-guess').querySelectorAll('[aria-pressed]').forEach(function (x) {
+      x.setAttribute('aria-pressed', 'false');
+    });
+
     // 잠금
+    $('#s4').classList.add('locked');
+    $('#s4').classList.remove('done');
     $('#s1').classList.remove('done');
     $('#s2').classList.add('locked');
     $('#s2').classList.remove('done');
@@ -366,15 +378,16 @@
 
     yes.addEventListener('click', function () {
       if (allpass) {
-        msg.textContent = M.inputs.length + '장을 모두 버텼어요. 다음엔 이 방법을 깨뜨릴 입력을 직접 만들어 보게 돼요.';
-        mark('judge');
+        msg.textContent = M.inputs.length + '장을 모두 버텼어요. 이제 이 방법을 깨뜨릴 입력을 직접 만들어 볼 차례예요.';
+        openGraduation();
       } else {
+        /* 틀렸다고 말하지 않는다. 다시 볼 곳만 가리킨다. */
         msg.textContent = M.counterHint;
       }
     });
     no.addEventListener('click', function () {
       msg.textContent = '좋아요. 몇 번째가, 왜 깨졌는지 선생님께 한 문장으로 말해보세요.';
-      mark('judge');
+      openGraduation();
     });
 
     box.hidden = false;
@@ -477,6 +490,94 @@
     if (!qbox.dataset.used) { qbox.innerHTML = ''; qbox.dataset.used = '1'; }
     qbox.prepend(q);
     LOG.push({ type: 'help', exp: H.exp, act: H.act, blk: H.blk });
+  });
+
+  /* ── 졸업 과제: 반례를 직접 만들기 ──────────────── */
+  /* 자기 판정을 끝낸 학생만 연다.
+   * 모두 버텼다고 판정했든 깨졌다고 인정했든 상관없다 —
+   * 중요한 건 '내 기준으로 결과를 판정해본 적이 있는가'다. */
+  function openGraduation() {
+    mark('judge');
+    $('#s4').classList.remove('locked');
+    $('#s4').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function brkCheck() {
+    $('#brk-run').disabled = !(S.brk.text.length > 0 && S.brk.guess);
+  }
+  $('#brk-input').addEventListener('input', function () {
+    S.brk.text = this.value.trim();
+    brkCheck();
+  });
+  $('#brk-guess').querySelectorAll('[aria-pressed]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      $('#brk-guess').querySelectorAll('[aria-pressed]').forEach(function (x) {
+        x.setAttribute('aria-pressed', 'false');
+      });
+      b.setAttribute('aria-pressed', 'true');
+      S.brk.guess = b.dataset.v;
+      brkCheck();
+    });
+  });
+
+  $('#brk-run').addEventListener('click', function () {
+    var cfg = {
+      sep: S.sep,
+      targets: M.targets ? M.targets.list : [],
+      sample: M.cut.sample,
+      textVar: M.vars.textVar, listVar: M.vars.listVar, targetVar: M.vars.targetVar
+    };
+    var input = { name: '내가 만든 주문서', v: S.brk.text };
+    var r = CC.engine.run(S.blocks, cfg, input.v);
+    var broke = r.err ? true : !M.goal(r, input);
+    var guessed = S.brk.guess === (broke ? 'break' : 'hold');
+
+    S.brk.tries.push({ text: S.brk.text, broke: broke, guessed: guessed });
+
+    var card = el('div', 'rescard' + (broke ? ' counter' : ''));
+    card.appendChild(el('div', 'nm', S.brk.tries.length + '번째 시도 · 내가 만든 입력'));
+    card.appendChild(el('div', 'src', S.brk.text));
+    card.appendChild(el('div', 'arrow', '↓ 내가 만든 순서를 지나면'));
+    var items = el('div', 'items');
+    if (r.err) {
+      items.appendChild(el('span', 'item one', '멈췄어요'));
+    } else if (r.type === 'list') {
+      if (!r.value.length) items.appendChild(el('span', 'item none', '빈 목록'));
+      else r.value.forEach(function (v) { items.appendChild(el('span', 'item' + (broke ? ' one' : ''), v)); });
+      items.appendChild(el('span', 'count' + (broke ? ' warn' : ''), '조각 ' + r.value.length + '개'));
+    } else {
+      items.appendChild(el('span', 'item one', String(r.value)));
+    }
+    card.appendChild(items);
+
+    /* 판정은 결과 사실만 말한다. 어떻게 더 잘 깨뜨릴지는 알려주지 않는다. */
+    var verdict = el('p', 'failline');
+    if (broke && guessed) {
+      verdict.textContent = '예상대로 깨졌어요. 네가 만든 입력이 네 방법의 빈틈을 정확히 찔렀습니다.';
+      verdict.style.color = 'var(--green)';
+      mark('graduate');
+    } else if (broke && !guessed) {
+      verdict.textContent = '버틸 거라고 했는데 깨졌어요. 왜 버틸 거라고 생각했는지 다시 짚어보세요.';
+      mark('graduate');
+    } else if (!broke && guessed) {
+      verdict.textContent = '예상대로 버텼어요. 아직 빈틈을 못 찾았다는 뜻이기도 해요.';
+      verdict.style.color = 'var(--ink-2)';
+    } else {
+      verdict.textContent = '깨질 거라고 했는데 버텼어요. 네 방법이 생각보다 튼튼한 걸까요, 아니면 이 입력이 약했을까요?';
+      verdict.style.color = 'var(--ink-2)';
+    }
+    card.appendChild(verdict);
+    $('#brk-log').prepend(card);
+
+    LOG.push({ type: 'break', text: S.brk.text, broke: broke, guessed: guessed });
+
+    $('#brk-input').value = '';
+    S.brk.text = '';
+    S.brk.guess = '';
+    $('#brk-guess').querySelectorAll('[aria-pressed]').forEach(function (x) {
+      x.setAttribute('aria-pressed', 'false');
+    });
+    brkCheck();
   });
 
   /* ── 초기화 ────────────────────────────────────── */

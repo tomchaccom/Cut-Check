@@ -111,6 +111,30 @@
           <div id="resultbox" hidden></div>
         </div>
       </section>
+
+      <!-- 4 ─ 졸업 과제 -->
+      <section class="step locked" id="s4">
+        <div class="step-head">
+          <span class="step-n">4</span>
+          <div><h2>이걸 깨뜨려 봐</h2><p class="why">남이 준 반례를 통과하는 건 절반이에요. 나머지 절반은 내가 반례를 만드는 거예요.</p></div>
+        </div>
+        <p class="lockmsg">3장을 돌려보고, 내 성공 조건을 지켰는지 스스로 판정하면 열려요.</p>
+        <div class="step-body">
+          <p class="q">내가 만든 순서가 무너질 만한 주문서를 직접 써보세요.</p>
+          <input type="text" id="brk-input" placeholder="여기에 새 주문서를 써보세요">
+          <div class="note"><b>의도</b><span>반례를 스스로 만들 수 있으면 그 학생은 명세화 능력을 획득한 겁니다. 그리고 그 능력은 Python 밖에서도 그대로 쓰여요. 지원 페이딩의 종착점입니다.</span></div>
+
+          <p class="q">넣기 전에 — 어떻게 될 것 같아요?</p>
+          <div class="chips" id="brk-guess">
+            <button class="chip" type="button" aria-pressed="false" data-v="break">내 방법이 깨질 거예요</button>
+            <button class="chip" type="button" aria-pressed="false" data-v="hold">그래도 버틸 거예요</button>
+          </div>
+          <div class="note"><b>경계</b><span>예측을 먼저 받는 이유가 있습니다. 예측 없이 실행한 학생은 결과를 봐도 “다르다”는 문장을 만들 수 없어요. 바로 이 지점이 “안 되는데요”가 태어나는 곳입니다.</span></div>
+
+          <div class="row"><button class="btn go" id="brk-run" disabled>넣어보기</button></div>
+          <div id="brk-log"></div>
+        </div>
+      </section>
     </div>
 
     <div>
@@ -131,6 +155,7 @@
           <li data-c="run"><span class="m"></span><span>3장으로 한 번에 확인했다</span></li>
           <li data-c="allpass"><span class="m"></span><span id="crit-goal">3장 모두에서 내 성공 조건을 지켰다</span></li>
           <li data-c="judge"><span class="m"></span><span>어디서 깨졌는지 내가 찾아냈다</span></li>
+          <li data-c="graduate"><span class="m"></span><span>내 방법을 깨뜨릴 입력을 직접 만들었다</span></li>
         </ul>
         <div class="note"><b>경계</b><span>방법을 지시하는 문장은 전부 결과 조건으로 바꿨습니다. “쉼표를 기준으로 나누기”는 요구사항이 아니라 정답 공개예요.</span></div>
       </section>
