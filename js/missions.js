@@ -63,12 +63,22 @@
         { name: '띄어쓰기만 있는 주문서', v: '사과 바나나 우유', counter: true }
       ],
 
-      /* 통과 조건은 "방법"이 아니라 "결과"로만 적는다. */
+      /* 통과 조건은 "방법"이 아니라 "결과"로만 적는다.
+       *
+       * 주의: 졸업 과제에서는 학생이 직접 만든 입력이 들어온다.
+       * 미션이 정해둔 구분자로 정답을 계산하면 학생이 만든 입력을 오판한다.
+       * 그래서 구분자에 의존하지 않는 기준을 쓴다 —
+       * "더 쪼갤 수 있어 보이는 조각이 남아 있으면 덜 잘린 것이다". */
       goal: function (res, input) {
         if (res.err || res.type !== 'list') return false;
-        return res.value.length >= 2;
+        var SEPS = [',', ' ', '/', '-', '·', '→', '|'];
+        var underSplit = res.value.some(function (piece) {
+          var t = String(piece).trim();
+          return SEPS.some(function (sp) { return t.indexOf(sp) !== -1; });
+        });
+        return !underSplit;
       },
-      goalLabel: '주문서마다 상품이 2개 이상으로 나뉘었는가',
+      goalLabel: '조각 안에 더 쪼갤 게 남지 않았는가',
       counterHint: '세 번째 주문서를 한 번만 더 볼까요? 상품이 몇 개로 세어졌나요?'
     },
 
@@ -120,11 +130,12 @@
         { name: '주의 재료가 하나도 없는 주문서', v: '사과, 바나나, 물', counter: true }
       ],
 
+      /* 구분자에 의존하지 않는다 — 원문에 실제로 들어 있는 주의 재료가 기준이다.
+       * 졸업 과제에서 학생이 다른 구분자로 입력을 만들어도 옳게 판정된다. */
       goal: function (res, input) {
         if (res.err || res.type !== 'list') return false;
         var targets = ['우유', '땅콩', '새우'];
-        var expected = input.v.split(',').map(function (s) { return s.trim(); })
-          .filter(function (s) { return targets.indexOf(s) !== -1; });
+        var expected = targets.filter(function (t) { return input.v.indexOf(t) !== -1; });
         var got = res.value.map(function (s) { return String(s).trim(); });
         return got.length === expected.length &&
           expected.every(function (s) { return got.indexOf(s) !== -1; });
@@ -182,8 +193,7 @@
       goal: function (res, input) {
         if (res.err || res.type !== 'list') return false;
         var targets = ['알코올램프 켜기', '산 다루기', '칼로 자르기'];
-        var expected = input.v.split('→').map(function (s) { return s.trim(); })
-          .filter(function (s) { return targets.indexOf(s) !== -1; });
+        var expected = targets.filter(function (t) { return input.v.indexOf(t) !== -1; });
         var got = res.value.map(function (s) { return String(s).trim(); });
         return got.length === expected.length &&
           expected.every(function (s) { return got.indexOf(s) !== -1; });

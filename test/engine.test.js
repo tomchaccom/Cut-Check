@@ -62,5 +62,25 @@ t('준비 줄이 먼저 나옴', py[0].startsWith('allergy =') && py[1]==='found
 t('for 다음 줄은 들여쓰기됨', py[6].startsWith('    '));
 t('if 다음 줄은 두 번 들여쓰기됨', py[7].startsWith('        '));
 
+
+/* ── 졸업 과제: 학생이 직접 만든 입력도 옳게 판정되는가 ────────
+ * 미션이 정해둔 구분자로 정답을 계산하면 학생이 만든 입력을 오판한다.
+ * 이 검사가 실제로 버그를 잡았다. */
+console.log('\n[졸업 과제 판정]');
+const g1 = cfgOf(m1, ',');
+t('m1 · 쉼표 없는 입력을 넣으면 깨진 것으로 판정',
+  m1.goal(CC.engine.run(['input','cut','trim','save'], g1, '사과 바나나 우유'), {v:'사과 바나나 우유'}) === false);
+t('m1 · 상품 하나짜리 입력은 깨진 게 아님',
+  m1.goal(CC.engine.run(['input','cut','trim','save'], g1, '사과'), {v:'사과'}) === true);
+t('m1 · 쉼표로 잘 잘리는 입력은 통과',
+  m1.goal(CC.engine.run(['input','cut','trim','save'], g1, '사과,배,감'), {v:'사과,배,감'}) === true);
+
+const g2 = cfgOf(m2, ',');
+const s2ok = ['input','cut','trim','loop','check','collect'];
+t('m2 · 가운뎃점으로 만든 입력은 깨진 것으로 판정 (우유가 원문에 있는데 못 찾음)',
+  m2.goal(CC.engine.run(s2ok, g2, '사과·우유·빵'), {v:'사과·우유·빵'}) === false);
+t('m2 · 주의 재료가 없는 입력은 빈 목록이 정답',
+  m2.goal(CC.engine.run(s2ok, g2, '사과, 배, 감'), {v:'사과, 배, 감'}) === true);
+
 console.log('\n' + (fail ? `실패 ${fail}건` : '전체 통과'));
 process.exit(fail?1:0);
