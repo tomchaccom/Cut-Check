@@ -15,6 +15,7 @@
 | [`teacher.html`](teacher.html) | 선생님 화면 | 개입 순서 · 위험군 · 칭찬 타이밍 |
 | [`abstract.html`](abstract.html) | 미션 04 · 추상화 | 두 업무에서 같은 구조 알아보기 |
 | [`review.html`](review.html) | 미션 05 · 동료 검토 | 남의 논리 읽기 · 답 없이 코멘트하기 |
+| [`make.html`](make.html) | 졸업 시험 · 미션 만들기 | 함정을 심고 반례를 설계한다 |
 | [`philosophy.html`](philosophy.html) | 철학 한 장 | 리뷰·심사에 그대로 쓰는 페이지 |
 
 **문서**
@@ -138,7 +139,7 @@ node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그
 
 # 화면 연기 테스트 (playwright 필요)
 python3 -m http.server 8123 &
-node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합. JS 에러 · 가로 스크롤 · 금지 단어
+node test/smoke.js           # 6개 화면 × 3폭 × 2테마 = 30조합. JS 에러 · 가로 스크롤 · 금지 단어
 ```
 
 미션별 정답 순서가 통과하는지, 반례가 실제로 깨지는지, 블록을 빠뜨렸을 때
@@ -159,6 +160,7 @@ node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합. JS 에
 ├── index.html            학생 화면 (미션 01–03)
 ├── abstract.html         미션 04 · 추상화
 ├── review.html           미션 05 · 동료 검토
+├── make.html             졸업 시험 · 내 미션 만들기
 ├── teacher.html          선생님 화면
 ├── philosophy.html       철학 한 장 (리뷰·심사용)
 ├── styles.css            공통 토큰 + 학생 화면
@@ -175,6 +177,7 @@ node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합. JS 에
 │   ├── app.js            학생 화면 조립
 │   ├── abstract.js       미션 04 화면 조립
 │   ├── review.js         미션 05 화면 조립
+│   ├── make.js           미션 만들기 화면 조립
 │   ├── classroom.js      교실 목업 데이터
 │   └── teacher.js        선생님 화면 조립
 ├── test/

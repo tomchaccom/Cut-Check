@@ -81,6 +81,7 @@
 index.html      학생 화면 (미션 01–03)
 abstract.html   미션 04 · 추상화
 review.html     미션 05 · 동료 검토
+make.html       졸업 시험 · 내 미션 만들기
 teacher.html    선생님 화면
 philosophy.html 철학 한 장 (리뷰·심사용)
 

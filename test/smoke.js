@@ -11,7 +11,7 @@
  *   node test/smoke.js
  */
 const { chromium } = require('playwright');
-const PAGES = ['index.html','teacher.html','abstract.html','review.html','philosophy.html'];
+const PAGES = ['index.html','teacher.html','abstract.html','review.html','make.html','philosophy.html'];
 (async () => {
   const b = await chromium.launch({ /* 로컬 환경에 맞게 지우거나 바꾸세요 */ });
   let bad = 0;
@@ -49,6 +49,6 @@ const PAGES = ['index.html','teacher.html','abstract.html','review.html','philos
       }
     }
   }
-  console.log(bad ? `\n문제 ${bad}건` : '\n5개 화면 × 3폭 × 2테마 = 30조합 전부 통과 (JS 에러 · 가로 스크롤 · 금지 단어 없음)');
+  console.log(bad ? `\n문제 ${bad}건` : '\n6개 화면 × 3폭 × 2테마 = 36조합 전부 통과 (JS 에러 · 가로 스크롤 · 금지 단어 없음)');
   await b.close();
 })();

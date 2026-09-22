@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 내 미션 만들기</title>
+<meta name="description" content="학생이 직접 미션을 만든다. 함정을 심고 반례를 설계하는 졸업 시험.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="make.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="logo">
+      <span class="mark">C&amp;C</span>
+      <div><b>Cut &amp; Check</b><small>자르고, 세 번 확인한다</small></div>
+    </div>
+    <div class="head-tools">
+      <button class="tbtn" id="notes-toggle" aria-pressed="false">설계 의도 보기</button>
+      <a class="tbtn" href="index.html" style="text-decoration:none">미션 01–03</a>
+      <a class="tbtn" href="review.html" style="text-decoration:none">미션 05</a>
+      <a class="tbtn" href="teacher.html" style="text-decoration:none">선생님 화면 →</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <span class="badge">졸업 시험 · 내 미션 만들기</span>
+    <h1>이번엔 네가 문제를 낸다</h1>
+    <p class="sub">함정을 만들 줄 안다는 건 함정을 알아본다는 뜻이에요. 다음 시간에 친구가 이 미션을 풉니다.</p>
+  </div>
+
+  <div style="max-width:800px">
+
+    <section class="step" id="s1" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">1</span>
+        <div><h2>업무 요청 쓰기</h2><p class="why">푸는 사람이 정할 게 남아 있어야 해요.</p></div>
+      </div>
+      <div class="step-body">
+        <p class="q">어떤 일을 시킬 건가요? 방법은 빼고 써주세요.</p>
+        <input type="text" id="brief" placeholder="예: 인턴님, 이 명단 좀 정리해주세요. 한 명씩 볼 수 있게요.">
+        <p class="hintline" id="brief-warn"></p>
+        <div class="note"><b>의도</b><span>“쉼표로 나눠서” 라고 쓰면 푸는 사람이 정할 게 없어집니다. 방법 단어가 들어가면 알려주긴 하지만 막지는 않아요 — 막으면 규칙을 우회하는 법만 배우고 왜 안 되는지는 안 배웁니다.</span></div>
+        <div class="row"><button class="btn" id="s1go" disabled>적었어요</button></div>
+      </div>
+    </section>
+
+    <section class="step locked" id="s2" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">2</span>
+        <div><h2>자료 3장과 자를 기준</h2><p class="why">세 번째는 반드시 반례여야 해요.</p></div>
+      </div>
+      <p class="lockmsg">업무 요청을 쓰면 열려요.</p>
+      <div class="step-body">
+        <div class="fieldrow"><span class="lab">자를 기준</span><input type="text" id="sep" class="short" maxlength="3" placeholder=","></div>
+        <div class="fieldrow"><span class="lab">1번 자료</span><input type="text" id="in1" placeholder="기준으로 잘 나뉘는 자료"></div>
+        <div class="fieldrow"><span class="lab">2번 자료</span><input type="text" id="in2" placeholder="개수가 다른 자료"></div>
+        <div class="fieldrow"><span class="lab">3번 자료</span><input type="text" id="in3" placeholder="이 기준으로는 안 나뉘는 자료 (반례)"></div>
+        <div class="note"><b>핵심</b><span>반례가 이 미션의 전부입니다. 세 번째 자료가 앞의 두 장과 같은 방식으로 잘리면, 그건 그냥 세 번째 자료지 반례가 아니에요.</span></div>
+        <div class="row"><button class="btn" id="s2go" disabled>만들었어요</button></div>
+      </div>
+    </section>
+
+    <section class="step locked" id="s3" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">3</span>
+        <div><h2>성공 조건 보기 만들기</h2><p class="why">하나는 함정이어야 고르는 사람이 고민해요.</p></div>
+      </div>
+      <p class="lockmsg">자료를 만들면 열려요.</p>
+      <div class="step-body">
+        <p class="q">보기 세 개를 쓰고, 함정인 것에 표시해주세요.</p>
+        <div id="opts"></div>
+        <p class="hintline" id="opts-msg"></p>
+        <div class="note"><b>의도</b><span>함정은 “이번 자료에만 맞는 문장” 입니다. 학생이 함정을 직접 만들어보면, 다음부터 남이 만든 함정을 알아봅니다. 이게 이 화면을 졸업 시험으로 두는 이유예요.</span></div>
+        <div class="row"><button class="btn" id="s3go" disabled>만들었어요</button></div>
+      </div>
+    </section>
+
+    <section class="step locked" id="s4" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">4</span>
+        <div><h2>내 반례가 진짜 깨뜨리나</h2><p class="why">내가 만든 미션을 내가 먼저 돌려봅니다.</p></div>
+      </div>
+      <p class="lockmsg">보기를 만들면 열려요.</p>
+      <div class="step-body">
+        <div class="row" style="margin-top:0"><button class="btn go" id="s4go">세 장 다 돌려보기</button></div>
+        <div id="check" aria-live="polite"></div>
+        <div class="note"><b>경계</b><span>잘 만들었는지 판정하지 않습니다. 실제로 돌려서 무슨 일이 일어났는지만 보여줘요. 반례가 안 깨뜨리면 “아직 안 깨뜨려요” 라고만 하고, 어떻게 고칠지는 말하지 않습니다.</span></div>
+      </div>
+    </section>
+
+    <section class="step locked" id="s5" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">5</span>
+        <div><h2>내기</h2><p class="why">다음 시간에 친구가 풉니다.</p></div>
+      </div>
+      <p class="lockmsg">반례가 작동하면 열려요.</p>
+      <div class="step-body">
+        <div class="row" style="margin-top:0"><button class="btn" id="s5go">이 미션을 낼래요</button></div>
+        <div id="out" aria-live="polite"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="foot">
+    <span><b>이 화면이 재는 것</b> 함정을 만들 줄 아는가 · 반례를 설계할 줄 아는가</span>
+    <span><b>재지 않는 것</b> 문제를 얼마나 예쁘게 썼는가</span>
+  </div>
+</div>
+
+<script src="js/hangul.js"></script>
+<script src="js/store.js"></script>
+<script src="js/blocks.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/make.js"></script>
+</body>
+</html>

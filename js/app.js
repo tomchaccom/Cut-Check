@@ -917,8 +917,15 @@
   m5.href = 'review.html';
   m5.style.textDecoration = 'none';
   m5.appendChild(el('span', 'n', '미션 05'));
-  m5.appendChild(el('span', 't', '동료 검토 →'));
+  m5.appendChild(el('span', 't', '동료 검토'));
   bar.appendChild(m5);
+
+  var mk = el('a', 'mbtn');
+  mk.href = 'make.html';
+  mk.style.textDecoration = 'none';
+  mk.appendChild(el('span', 'n', '졸업 시험'));
+  mk.appendChild(el('span', 't', '미션 만들기 →'));
+  bar.appendChild(mk);
 
   loadMission(CC.MISSIONS[0].id);
   CC.log = LOG;

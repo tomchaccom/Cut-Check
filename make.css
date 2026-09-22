@@ -1,0 +1,34 @@
+/* Cut & Check — 미션 만들기 */
+
+.fieldrow { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.fieldrow .lab { font-weight: 700; font-size: 14.5px; min-width: 96px; }
+.fieldrow input { flex: 1; min-width: 180px; width: auto; }
+.fieldrow input.short { flex: none; width: 110px; text-align: center; font-family: var(--mono); }
+
+.optrow { display: flex; gap: 9px; align-items: center; margin-top: 9px; }
+.optrow input { flex: 1; }
+.trap { background: var(--surface-2); border: 2px solid var(--line-strong); border-radius: 11px;
+  padding: 10px 14px; font-weight: 700; font-size: 13.5px; color: var(--ink-3); flex: none; }
+.trap[aria-pressed="true"] { background: var(--coral); border-color: var(--coral); color: #fff; }
+
+.verdict { margin-top: 14px; border-radius: 15px; padding: 15px 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+.verdict.ok { background: var(--green-soft); }
+.verdict.bad { background: var(--coral-soft); }
+.verdict .ic { width: 28px; height: 28px; border-radius: 10px; color: #fff; display: grid; place-items: center; flex: none; font-weight: 800; }
+.verdict.ok .ic { background: var(--green); }
+.verdict.bad .ic { background: var(--coral); }
+.verdict b { display: block; font-weight: 700; }
+.verdict.ok b { color: var(--green); }
+.verdict.bad b { color: var(--coral); }
+.verdict .quiet { display: block; font-size: 13.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
+
+.madecard { background: var(--amber-soft); border-radius: 16px; padding: 18px; margin-top: 14px; }
+.madecard .k { font-size: 11.5px; font-weight: 700; color: var(--amber); display: block; }
+.madecard .brief { font-family: var(--disp); font-size: 18px; font-weight: 700; margin-top: 7px; line-height: 1.45; }
+.madeopts { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.madeopts li { background: var(--surface); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+.madeopts li.trap { background: var(--coral-soft); }
+.madeopts li em { font-style: normal; font-size: 11.5px; font-weight: 700; color: var(--coral); margin-left: 6px; }
+.madeins { margin-top: 12px; font-family: var(--mono); font-size: 13.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
+.madeins .counter { color: var(--coral); font-weight: 500; }
+.madecard .after { font-size: 13px; color: var(--ink-2); margin-top: 13px; line-height: 1.55; }
