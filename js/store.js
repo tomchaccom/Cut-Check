@@ -101,6 +101,10 @@
         cause: null,
         handle: null,
         wrap: null,
+        abstractOk: null,
+        abstractPicked: null,
+        reviewComments: 0,
+        reviewGuess: null,
         idleSec: 0
       };
 
@@ -123,6 +127,14 @@
         } else if (e.type === 'help') {
           s.asked = true;
           s.symptom = { exp: e.exp, act: e.act || '', blk: e.blk || '' };
+        } else if (e.type === 'abstract-slots') {
+          s.abstractPicked = e.picked;
+        } else if (e.type === 'abstract-run') {
+          s.abstractOk = e.allOk;
+        } else if (e.type === 'review-guess') {
+          s.reviewGuess = e;
+        } else if (e.type === 'review-comment') {
+          s.reviewComments++;
         } else if (e.type === 'wrap') {
           s.wrap = e.text;
         } else if (e.type === 'cause') {

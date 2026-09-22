@@ -23,6 +23,12 @@
   if (me) C.students = [me].concat(C.students);
   var J = function (w, pair) { return CC.particle(w, pair); };
 
+  /* 미션 04 슬롯 id → 사람이 읽는 이름. 교사 화면에 내부 id 가 새어나가면 안 된다. */
+  var SLOT_LABEL = {
+    text: '들어오는 자료', sep: '자를 기준', targets: '찾을 목록',
+    loop: '하나씩 꺼내기', check: '조건 확인', collect: '걸린 것만 모으기'
+  };
+
   function mmss(sec) {
     var m = Math.floor(sec / 60);
     return m < 1 ? '방금' : m + '분째';
@@ -168,6 +174,26 @@
     }
     g.appendChild(b3);
 
+    if (s.abstractOk !== null && s.abstractOk !== undefined) {
+      var b8 = el('div', 'dbox' + (s.abstractOk ? '' : ' flag'));
+      b8.appendChild(el('span', 'k', '미션 04 · 추상화'));
+      b8.appendChild(el('div', 'v', s.abstractOk
+        ? '함수 하나로 두 업무를 다 해냈어요'
+        : '값 하나를 안 빼서 두 번째 업무가 무너졌어요' +
+          (s.abstractPicked ? ' (밖으로 뺀 것: ' + s.abstractPicked.map(function (k) {
+            return SLOT_LABEL[k] || k;
+          }).join(', ') + ')' : '')));
+      g.appendChild(b8);
+    }
+
+    if (s.reviewComments) {
+      var b9 = el('div', 'dbox');
+      b9.appendChild(el('span', 'k', '미션 05 · 동료 검토'));
+      b9.appendChild(el('div', 'v', '질문형 코멘트 ' + s.reviewComments + '개를 보냈어요' +
+        (s.reviewGuess ? ' · 예측: ' + (s.reviewGuess.guess === 'hold' ? '버틸 것' : '깨질 것') : '')));
+      g.appendChild(b9);
+    }
+
     if (s.wrap) {
       var b7 = el('div', 'dbox');
       b7.appendChild(el('span', 'k', '오늘 이 학생이 말할 문장'));
@@ -248,6 +274,13 @@
       host.appendChild(el('span', 'dot'));
       host.appendChild(el('span', 'txt',
         '학생 화면에서 들어온 진짜 기록이 아래 목록 맨 앞에 섞여 있어요. 목업 25명 + 실제 1명.'));
+      /* 실제 기록이 어느 칸에도 안 들어가는 경우가 있다 (미션 04·05 만 해본 경우 등).
+       * 그때도 열어볼 수 있어야 시연이 끊기지 않는다. */
+      var open = el('button', 'tbtn', '내 기록 열기');
+      open.type = 'button';
+      open.addEventListener('click', function () { openDetail(me); });
+      host.appendChild(open);
+
       var b = el('button', 'tbtn', '내 기록 지우기');
       b.type = 'button';
       b.addEventListener('click', function () { CC.store.clear(); location.reload(); });
