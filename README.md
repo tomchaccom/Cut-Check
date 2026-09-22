@@ -188,7 +188,8 @@ node test/smoke.js           # 7개 화면 × 3폭 × 2테마 = 30조합. JS 에
 │   ├── engine.test.js    엔진 검증
 │   ├── hangul.test.js    조사 검증
 │   ├── llmguard.test.js  출력 검사기 + 실제 사용 문장 전부 검사
-│   └── smoke.js          화면 연기 테스트
+│   ├── smoke.js          화면 연기 테스트
+│   └── robust.js         자유 입력 안전성 검사
 └── docs/
     ├── philosophy.md     설계 철학 전문
     ├── curriculum.md     커리큘럼과 지원 페이딩

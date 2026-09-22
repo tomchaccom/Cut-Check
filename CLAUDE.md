@@ -113,9 +113,13 @@ node test/engine.test.js     # 반례가 실제로 깨지는지, 에러가 몇 �
 node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
 node test/smoke.js           # 7개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
+node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 ```
 
-넷 다 통과해야 커밋한다.
+다섯 다 통과해야 커밋한다.
+
+학생의 자유 입력(직접 쓴 성공 조건, 마무리 문장, 만든 미션)은 **반드시 교사 화면에
+그대로 올라간다.** 새 자유 입력 칸을 만들면 `test/robust.js` 경로에 추가한다.
 
 ---
 
