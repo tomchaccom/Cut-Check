@@ -469,10 +469,13 @@
   $('#h-send').addEventListener('click', function () {
     var q = el('div', 'qi fresh');
     q.innerHTML = '<div class="who"><span>민서 (나)</span><em>방금</em></div>' +
-      '<p class="say"><b>' + esc(H.exp) + '</b>이 나올 줄 알았는데 <b>' + esc(H.act) + '</b>이 나왔대요.' +
+      '<p class="say"><b>' + esc(H.exp) + '</b>' + CC.particle(H.exp, '이/가') + ' 나올 줄 알았는데 <b>' +
+      esc(H.act) + '</b>' + CC.particle(H.act, '이/가') + ' 나왔대요.' +
       (H.blk ? ' 의심 블록: <b>' + esc(H.blk) + '</b>' : '') + '</p>' +
-      '<span class="tag t-need">바로 답해줄 수 있음</span>';
-    $('#queue').prepend(q);
+      '<span class="tag t-need">' + (H.act ? '선생님이 바로 답해줄 수 있어요' : '실제로 뭐가 나왔는지 더 적어야 해요') + '</span>';
+    var qbox = $('#queue');
+    if (!qbox.dataset.used) { qbox.innerHTML = ''; qbox.dataset.used = '1'; }
+    qbox.prepend(q);
     LOG.push({ type: 'help', exp: H.exp, act: H.act, blk: H.blk });
   });
 

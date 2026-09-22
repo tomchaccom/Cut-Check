@@ -24,6 +24,7 @@
     <div class="head-tools">
       <button class="tbtn" id="notes-toggle" aria-pressed="false">설계 의도 보기</button>
       <button class="tbtn" id="reset">처음부터</button>
+      <a class="tbtn" href="teacher.html" style="text-decoration:none">선생님 화면 →</a>
     </div>
   </div>
 
@@ -135,21 +136,12 @@
       </section>
 
       <section class="card">
-        <span class="eyebrow">선생님 화면 · 2학년 3반</span>
-        <h3 style="margin-top:3px">지금 누구부터 갈까</h3>
+        <span class="eyebrow">선생님께 보낸 말</span>
+        <h3 style="margin-top:3px">내가 뭐라고 불렀나</h3>
         <div class="queue" id="queue">
-          <div class="qi">
-            <div class="who"><span>현우</span><em>4분 전</em></div>
-            <p class="say"><b>상품 목록</b>이 나올 줄 알았는데 <b>한 덩어리</b>가 나왔대요. 의심 블록: <b>2 · 기준으로 자르기</b></p>
-            <span class="tag t-need">바로 답해줄 수 있음</span>
-          </div>
-          <div class="qi">
-            <div class="who"><span>지우</span><em>9분 전</em></div>
-            <p class="say">세 번째 주문서에서 <b>깨진 곳을 스스로 찾아냄</b>. 고치기 2번 시도 중.</p>
-            <span class="tag t-ready">칭찬할 타이밍</span>
-          </div>
+          <div class="qi"><p class="say" style="margin-top:0">아직 부른 적 없어요. 막히면 <b>안 되는데요</b> 버튼을 눌러 보세요.</p></div>
         </div>
-        <div class="note"><b>핵심</b><span>“학생이 막혔다”는 교사가 이미 압니다. 팔리는 정보는 <em>무엇을 기대했는지</em>예요. 그리고 칭찬은 AI가 아니라 사람이 합니다.</span></div>
+        <div class="note"><b>경계</b><span>학생 화면에는 반 전체 현황을 띄우지 않습니다. 옆자리가 어디까지 갔는지 보이는 순간, 이 수업은 다시 속도 경쟁이 됩니다. 교사 화면은 따로 있습니다.</span></div>
       </section>
     </div>
   </div>
@@ -179,7 +171,7 @@
         <button class="opt" type="button" aria-pressed="false" data-v="안 잘린 한 덩어리">안 잘린 한 덩어리</button>
         <button class="opt" type="button" aria-pressed="false" data-v="덜 잘린 목록">덜 잘린 목록</button>
         <button class="opt" type="button" aria-pressed="false" data-v="전부 다 나온 목록">전부 다 나온 목록</button>
-        <button class="opt" type="button" aria-pressed="false" data-v="아무것도 안 나옴">아무것도 안 나옴</button>
+        <button class="opt" type="button" aria-pressed="false" data-v="빈 목록">빈 목록</button>
       </div>
     </div>
     <div class="qline">
@@ -195,6 +187,7 @@
   </form>
 </dialog>
 
+<script src="js/hangul.js"></script>
 <script src="js/blocks.js"></script>
 <script src="js/missions.js"></script>
 <script src="js/engine.js"></script>

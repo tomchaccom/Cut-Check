@@ -1,0 +1,15 @@
+global.window = {};
+require('../js/hangul.js');
+const { josa, particle } = global.window.CC;
+let fail=0;
+const t=(a,b)=>{const ok=a===b;console.log((ok?'  ok  ':'  FAIL')+` ${a} (기대 ${b})`);if(!ok)fail++;};
+t(josa('개수','이/가'), '개수가');
+t(josa('목록','이/가'), '목록가'.replace('가','이'));
+t(josa('한 덩어리','이/가'), '한 덩어리가');
+t(josa('빨간 오류 글씨','이/가'), '빨간 오류 글씨가');
+t(josa('우유','을/를'), '우유를');
+t(josa('땅콩','을/를'), '땅콩을');
+t(particle('아무것도 안 나옴','이/가'), '이');
+t(particle('모르겠어요','이/가'), '가');
+console.log(fail?`\n실패 ${fail}건`:'\n전체 통과');
+process.exit(fail?1:0);
