@@ -200,6 +200,68 @@
       },
       goalLabel: '계획서마다 위험한 단계만 정확히 뽑아냈는가',
       counterHint: '세 번째 계획서에는 위험한 단계가 없어요. 그때 뭐라고 나왔나요?'
+    },
+
+    /* ------------------------------------------------------------------ */
+    /* 블록을 늘리는 규칙(docs/semester.md)을 실제로 적용한 첫 미션.
+     *   count  — 목록을 숫자로 바꾼다. 형태가 바뀌는 새 판단이라 추가한다.
+     *   unique — "같은 게 두 번 있으면 하나인가 둘인가" 라는 새 판단을 데려온다.
+     * 둘 다 없으면 이 미션은 성립하지 않는다. 그게 추가 자격이다. */
+    {
+      id: 'm6',
+      no: '06',
+      stage: '세어보기',
+      support: 2,
+      domain: 'code',
+      title: '몇 명이 신청했는지 알려줘라',
+      team: '학생회 총무',
+      brief: '인턴님, 동아리 신청서 받은 거 몇 명인지 알려주세요.',
+
+      define: {
+        q: '이 일이 제대로 끝났다는 걸 어떻게 알 수 있을까요?',
+        options: [
+          { v: '화면에 3 이라고 뜨면 성공이다', trap: 'hardcode' },
+          { v: '이름이 몇 번 적혀 있든 서로 다른 사람 수를 셀 수 있으면 성공이다', trap: null },
+          { v: '숫자가 나오면 성공이다', trap: 'luck' }
+        ]
+      },
+
+      cut: {
+        q: '이름과 이름 사이를 무엇으로 자를까요?',
+        sampleLabel: '오늘 받은 신청서',
+        sample: '민수, 지우, 현우',
+        chips: [
+          { v: ',', n: '쉼표', g: ',' },
+          { v: ' ', n: '띄어쓰기', g: '␣' },
+          { v: '/', n: '빗금', g: '/' }
+        ],
+        whyQ: '왜 그 기준으로 정했는지 한 문장으로 쓰세요.',
+        whyFree: true
+      },
+
+      library: ['input', 'cut', 'trim', 'unique', 'count', 'save', 'loop', 'show'],
+      vars: { textVar: 'form', listVar: 'names' },
+
+      inputs: [
+        { name: '오늘 신청서', v: '민수, 지우, 현우' },
+        { name: '신청이 늘어난 날', v: '민수, 지우, 현우, 하은, 소윤' },
+        { name: '같은 이름이 두 번 적힌 신청서', v: '민수, 지우, 민수', counter: true }
+      ],
+
+      /* 세는 대상이 무엇인지가 이 미션의 전부다.
+       * "서로 다른 사람 수" 가 기준이므로 중복은 하나로 센다.
+       * 구분자에 의존하지 않게, 원문에서 직접 계산한다. */
+      goal: function (res, input) {
+        if (res.err || res.type !== 'number') return false;
+        var names = String(input.v).split(/[,/\s]+/)
+          .map(function (x) { return x.trim(); })
+          .filter(function (x) { return x.length > 0; });
+        var uniq = [];
+        names.forEach(function (x) { if (uniq.indexOf(x) === -1) uniq.push(x); });
+        return res.value === uniq.length;
+      },
+      goalLabel: '신청서마다 서로 다른 사람 수가 나왔는가',
+      counterHint: '세 번째 신청서를 한 번만 더 볼까요? 이름을 하나씩 짚어보면 몇 명인가요?'
     }
   ];
 

@@ -49,6 +49,18 @@
       icon: '⊕',
       arg: 'append()'
     },
+    unique: {
+      kind: 'action',
+      label: '같은 건 하나로',
+      icon: '≡',
+      arg: 'set'
+    },
+    count: {
+      kind: 'output',
+      label: '개수 세기',
+      icon: '#',
+      arg: 'len()'
+    },
     show: {
       kind: 'output',
       label: '화면에 보여주기',

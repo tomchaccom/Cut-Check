@@ -40,7 +40,7 @@
 
       } else if (id === 'cut') {
         if (st.type === 'none') return err(i, n(i) + '이 자를 데이터를 아직 못 받았어요.');
-        if (st.type === 'list') return err(i, n(i) + '은 한 덩어리 글자를 기다리는데, 앞에서 이미 목록이 넘어왔어요.');
+        if (st.type !== 'text') return err(i, n(i) + '은 한 덩어리 글자를 기다리는데, 앞에서 다른 게 넘어왔어요.');
         st.value = String(st.value).split(cfg.sep);
         st.type = 'list';
 
@@ -69,6 +69,19 @@
          * 결과가 빈 목록으로 나오는 것 자체가 증거이고, 해법은 알려주지 않는다. */
         var targets = cfg.targets || [];
         st.value = st.value.filter(function (v) { return targets.indexOf(String(v)) !== -1; });
+        st.opened = false;
+        st.tested = false;
+
+      } else if (id === 'unique') {
+        if (st.type !== 'list') return err(i, n(i) + '은 목록을 기다리는데, 지금 넘어온 건 목록이 아니에요.');
+        var seen = [];
+        st.value.forEach(function (v) { if (seen.indexOf(v) === -1) seen.push(v); });
+        st.value = seen;
+
+      } else if (id === 'count') {
+        if (st.type !== 'list') return err(i, n(i) + '은 셀 목록이 필요한데, 지금 넘어온 건 목록이 아니에요.');
+        st.value = st.value.length;
+        st.type = 'number';
         st.opened = false;
         st.tested = false;
 
@@ -134,8 +147,13 @@
       } else if (id === 'collect') {
         push('found.append(one)');
         depth = Math.max(0, depth - 2);
+      } else if (id === 'unique') {
+        push(listVar + ' = list(dict.fromkeys(' + listVar + '))');
+      } else if (id === 'count') {
+        push('how_many = len(' + listVar + ')');
       } else if (id === 'show') {
-        push('print(' + (blocks.indexOf('collect') !== -1 ? 'found' : listVar) + ')');
+        push('print(' + (blocks.indexOf('count') !== -1 ? 'how_many'
+          : blocks.indexOf('collect') !== -1 ? 'found' : listVar) + ')');
       }
     });
 

@@ -82,5 +82,28 @@ t('m2 · 가운뎃점으로 만든 입력은 깨진 것으로 판정 (우유가 
 t('m2 · 주의 재료가 없는 입력은 빈 목록이 정답',
   m2.goal(CC.engine.run(s2ok, g2, '사과, 배, 감'), {v:'사과, 배, 감'}) === true);
 
+/* ── 미션 06: 블록을 늘리는 규칙이 실제로 작동하는가 ──────────
+ * count 와 unique 를 추가한 근거는 '새로운 판단을 데려온다' 였다.
+ * 그 판단이 없으면 이 미션이 실제로 깨져야 한다. 안 깨지면 블록을 넣을 이유가 없었던 것이다. */
+console.log('\n[미션 06 · 세어보기]');
+const m6 = CC.mission('m6');
+const g6 = { sep: ',', targets: [] };
+const naive = ['input','cut','trim','count'];
+const withUnique = ['input','cut','trim','unique','count'];
+
+m6.inputs.forEach(inp => {
+  const r = CC.engine.run(naive, g6, inp.v);
+  const ok = m6.goal(r, inp);
+  t(`같은 건 하나로 없이 · ${inp.name} → ${r.value} / goal=${ok}`, inp.counter ? !ok : ok);
+});
+m6.inputs.forEach(inp => {
+  const r = CC.engine.run(withUnique, g6, inp.v);
+  t(`같은 건 하나로 포함 · ${inp.name} → ${r.value}`, m6.goal(r, inp));
+});
+t('숫자가 된 뒤에는 자르기가 막힌다',
+  (() => { const r = CC.engine.run(['input','cut','count','cut'], g6, 'a,b'); return r.err === 1 && r.at === 3; })());
+t('숫자가 된 뒤에는 반복도 막힌다',
+  (() => { const r = CC.engine.run(['input','cut','count','loop'], g6, 'a,b'); return r.err === 1 && r.at === 3; })());
+
 console.log('\n' + (fail ? `실패 ${fail}건` : '전체 통과'));
 process.exit(fail?1:0);

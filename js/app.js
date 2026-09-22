@@ -489,12 +489,13 @@
       var cutStep = !x.r.err && x.r.trace
         ? x.r.trace.filter(function (t) { return t.id === 'cut' || t.id === 'trim'; }).pop()
         : null;
-      if (cutStep && M.targets) {
+      var isNumber = !x.r.err && x.r.type === 'number';
+      if (cutStep && (M.targets || isNumber)) {
         var mid = el('div', 'items mid');
         mid.appendChild(el('span', 'midlab', '자른 조각'));
         cutStep.value.forEach(function (v) { mid.appendChild(chip(v, 'plain')); });
         c.appendChild(mid);
-        c.appendChild(el('div', 'arrow', '↓ 걸러내면'));
+        c.appendChild(el('div', 'arrow', isNumber ? '↓ 세면' : '↓ 걸러내면'));
       }
 
       var items = el('div', 'items');
@@ -511,6 +512,9 @@
         var cnt = el('span', 'count', (M.targets ? '걸린 것 ' : '조각 ') + x.r.value.length + '개');
         if (x.r.value.length < 2 && !M.targets) cnt.className = 'count warn';
         items.appendChild(cnt);
+      } else if (x.r.type === 'number') {
+        items.appendChild(el('span', 'bignum', String(x.r.value)));
+        items.appendChild(el('span', 'count', '명'));
       } else {
         items.appendChild(chip(String(x.r.value), 'one'));
         items.appendChild(el('span', 'count warn', '조각 1개'));
@@ -893,39 +897,38 @@
   });
   $('#reset').addEventListener('click', function () { loadMission(M.id); });
 
+  /* 미션 바는 커리큘럼 순서로 그린다.
+   * 같은 화면 안의 미션과 별도 화면 미션이 섞여 있어서, 배열 순서에 맡기면
+   * 01·02·03·06·04·05 처럼 뒤엉킨다. 순서를 여기서 한 번만 정한다. */
   var bar = $('#missionbar');
-  CC.MISSIONS.forEach(function (m) {
-    var b = el('button', 'mbtn');
-    b.type = 'button';
-    b.dataset.id = m.id;
-    b.setAttribute('aria-pressed', 'false');
-    b.appendChild(el('span', 'n', '미션 ' + m.no));
-    b.appendChild(el('span', 't', m.stage));
-    b.addEventListener('click', function () { loadMission(m.id); });
-    bar.appendChild(b);
+  var ORDER = [
+    { m: 'm1' }, { m: 'm2' }, { m: 'm3' },
+    { href: 'abstract.html', n: '미션 04', t: '추상화' },
+    { href: 'review.html', n: '미션 05', t: '동료 검토' },
+    { m: 'm6' },
+    { href: 'make.html', n: '졸업 시험', t: '미션 만들기 →' }
+  ];
+
+  ORDER.forEach(function (o) {
+    if (o.m) {
+      var mm = CC.mission(o.m);
+      var b = el('button', 'mbtn');
+      b.type = 'button';
+      b.dataset.id = mm.id;
+      b.setAttribute('aria-pressed', 'false');
+      b.appendChild(el('span', 'n', '미션 ' + mm.no));
+      b.appendChild(el('span', 't', mm.stage));
+      b.addEventListener('click', function () { loadMission(mm.id); });
+      bar.appendChild(b);
+    } else {
+      var a = el('a', 'mbtn');
+      a.href = o.href;
+      a.style.textDecoration = 'none';
+      a.appendChild(el('span', 'n', o.n));
+      a.appendChild(el('span', 't', o.t));
+      bar.appendChild(a);
+    }
   });
-
-  /* 미션 04 는 상호작용이 달라서 별도 화면이다 */
-  var m4 = el('a', 'mbtn');
-  m4.href = 'abstract.html';
-  m4.style.textDecoration = 'none';
-  m4.appendChild(el('span', 'n', '미션 04'));
-  m4.appendChild(el('span', 't', '추상화'));
-  bar.appendChild(m4);
-
-  var m5 = el('a', 'mbtn');
-  m5.href = 'review.html';
-  m5.style.textDecoration = 'none';
-  m5.appendChild(el('span', 'n', '미션 05'));
-  m5.appendChild(el('span', 't', '동료 검토'));
-  bar.appendChild(m5);
-
-  var mk = el('a', 'mbtn');
-  mk.href = 'make.html';
-  mk.style.textDecoration = 'none';
-  mk.appendChild(el('span', 'n', '졸업 시험'));
-  mk.appendChild(el('span', 't', '미션 만들기 →'));
-  bar.appendChild(mk);
 
   loadMission(CC.MISSIONS[0].id);
   CC.log = LOG;
