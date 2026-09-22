@@ -79,7 +79,7 @@
     if (M.transfer) $('#transfer-t').textContent = M.transferNote;
 
     // 1단계
-    $('#brief-av').textContent = M.team.slice(0, 2);
+    $('#brief-av').textContent = '▤';
     $('#brief-from').textContent = M.team + ' · 업무 요청';
     $('#brief-q').textContent = M.brief;
     $('#define-q').textContent = M.define.q;

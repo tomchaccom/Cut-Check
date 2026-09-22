@@ -43,6 +43,8 @@
 }
 
 * { box-sizing: border-box; }
+/* display 를 지정한 요소에도 hidden 이 먹도록. flex 로 만든 배너가 hidden 인데도 보이는 버그를 막는다. */
+[hidden] { display: none !important; }
 body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.65; margin: 0; }
 .wrap { max-width: 1160px; margin: 0 auto; padding-inline: 18px; padding-block: 24px 70px; }
 h1, h2, h3 { font-family: var(--disp); margin: 0; text-wrap: balance; letter-spacing: -.015em; }
