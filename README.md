@@ -19,6 +19,7 @@
 
 **문서**
 
+- [작업 규칙 (CLAUDE.md)](CLAUDE.md) — 기능을 붙이기 전에 읽는 문서
 - [설계 철학 전문](docs/philosophy.md)
 - [커리큘럼과 지원 페이딩](docs/curriculum.md)
 - [설문과 관찰 설계](docs/survey.md) — 문항마다 검증하는 가설을 붙였습니다
@@ -132,7 +133,7 @@ node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그
 
 # 화면 연기 테스트 (playwright 필요)
 python3 -m http.server 8123 &
-node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합, JS 에러와 가로 스크롤만 검사
+node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합. JS 에러 · 가로 스크롤 · 금지 단어
 ```
 
 미션별 정답 순서가 통과하는지, 반례가 실제로 깨지는지, 블록을 빠뜨렸을 때
@@ -149,6 +150,7 @@ node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합, JS 에
 
 ```
 .
+├── CLAUDE.md             작업 규칙 — 만들면 안 되는 것 목록
 ├── index.html            학생 화면 (미션 01–03)
 ├── abstract.html         미션 04 · 추상화
 ├── review.html           미션 05 · 동료 검토
