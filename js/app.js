@@ -57,6 +57,16 @@
     });
   }
 
+
+  /* 단계가 열리면 스크롤만 하지 말고 초점도 옮긴다.
+   * 키보드나 스크린리더 사용자는 스크롤만으론 '뭐가 열렸는지'를 알 수 없다. */
+  function focusStep(sel) {
+    var n = document.querySelector(sel);
+    if (n && !n.classList.contains('locked')) {
+      try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); }
+    }
+  }
+
   function mark(k) {
     var li = document.querySelector('.crit li[data-c="' + k + '"]');
     if (li) li.classList.add('on');
@@ -231,6 +241,7 @@
     this.textContent = '정했어요';
     rec({ type: 'define', trap: S.succTrap, text: S.succ });
     $('#s2').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s2');
   });
 
   $('#s2go').addEventListener('click', function () {
@@ -261,6 +272,7 @@
     $('#xraybtn').disabled = true;
     renderStack();
     $('#s3').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s3');
   });
 
   /* ── 수정 루프 ─────────────────────────────────────
@@ -273,6 +285,7 @@
     $('#sep-free').readOnly = false;
     $('#why-free').readOnly = false;
     $('#s2').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s2');
   }
 
   function renderRevisions() {
@@ -562,6 +575,7 @@
     mark('judge');
     $('#s4').classList.remove('locked');
     $('#s4').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s4');
   }
 
   function brkCheck() {

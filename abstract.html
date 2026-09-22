@@ -35,7 +35,7 @@
   <div style="max-width:780px">
 
     <!-- 1 -->
-    <section class="step" id="s1">
+    <section class="step" id="s1" tabindex="-1">
       <div class="step-head">
         <span class="step-n">1</span>
         <div><h2>이 둘은 같은 일일까?</h2><p class="why">추상화는 변수를 배우는 게 아니라, 같은 구조를 알아보는 거예요.</p></div>
@@ -51,7 +51,7 @@
     </section>
 
     <!-- 2 -->
-    <section class="step locked" id="s2">
+    <section class="step locked" id="s2" tabindex="-1">
       <div class="step-head">
         <span class="step-n">2</span>
         <div><h2>무엇이 달라지나요?</h2><p class="why">달라지는 것만 밖으로 빼면, 나머지는 한 번만 쓰면 돼요.</p></div>
@@ -66,7 +66,7 @@
     </section>
 
     <!-- 3 -->
-    <section class="step locked" id="s3">
+    <section class="step locked" id="s3" tabindex="-1">
       <div class="step-head">
         <span class="step-n">3</span>
         <div><h2>이름을 붙여요</h2><p class="why">이름을 못 붙이면 아직 그게 뭔지 모르는 거예요.</p></div>
@@ -86,7 +86,7 @@
     </section>
 
     <!-- 4 -->
-    <section class="step locked" id="s4">
+    <section class="step locked" id="s4" tabindex="-1">
       <div class="step-head">
         <span class="step-n">4</span>
         <div><h2>같은 함수로 두 번</h2><p class="why">한 번만 쓴 함수가 두 업무를 다 해내면 성공이에요.</p></div>
@@ -95,7 +95,7 @@
       <div class="step-body">
         <p class="q">내가 만든 함수에 두 업무를 차례로 넣어봅니다.</p>
         <div class="row"><button class="btn go" id="s4go">두 업무 모두 돌려보기</button></div>
-        <div id="results"></div>
+        <div id="results" aria-live="polite"></div>
         <div class="note"><b>경계</b><span>무엇을 빠뜨렸는지 문장으로 말해주지 않습니다. 대신 학생이 만든 함수를 그대로 코드로 보여줘요. 굳어버린 값이 코드 안에 따옴표로 박혀 있는 게 보입니다. 그게 설명보다 빠릅니다.</span></div>
       </div>
     </section>

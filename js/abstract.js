@@ -19,6 +19,16 @@
     return e;
   };
 
+
+  /* 단계가 열리면 스크롤만 하지 말고 초점도 옮긴다.
+   * 키보드나 스크린리더 사용자는 스크롤만으론 '뭐가 열렸는지'를 알 수 없다. */
+  function focusStep(sel) {
+    var n = document.querySelector(sel);
+    if (n && !n.classList.contains('locked')) {
+      try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); }
+    }
+  }
+
   /* 같은 구조를 가진 두 업무. 미션 02 와 03 에서 학생이 이미 한 일이다. */
   var JOBS = [
     {
@@ -116,6 +126,7 @@
     this.textContent = '정했어요';
     if (CC.store) CC.store.push({ type: 'abstract-same', text: S.same });
     $('#s2').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s2');
   });
 
   /* ── 2단계: 무엇이 달라지나 ───────────────────────── */
@@ -160,6 +171,7 @@
     renderNames();
     if (CC.store) CC.store.push({ type: 'abstract-slots', picked: Object.keys(S.picked) });
     $('#s3').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s3');
   });
 
   /* ── 3단계: 이름 붙이기 ──────────────────────────── */
@@ -201,6 +213,7 @@
     this.textContent = '정했어요';
     if (CC.store) CC.store.push({ type: 'abstract-name', fn: S.fnName, names: S.names });
     $('#s4').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    focusStep('#s4');
   });
 
   /* ── 4단계: 같은 함수로 두 번 ─────────────────────── */

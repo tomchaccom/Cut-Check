@@ -41,7 +41,7 @@
   <div class="cols">
     <div>
       <!-- 1 ─ 문제 정의 -->
-      <section class="step" id="s1">
+      <section class="step" id="s1" tabindex="-1">
         <div class="step-head">
           <span class="step-n">1</span>
           <div><h2>언제 끝난 걸까?</h2><p class="why">일을 시작하기 전에, 성공이 뭔지부터 정해요.</p></div>
@@ -62,7 +62,7 @@
       </section>
 
       <!-- 2 ─ 분해 기준 -->
-      <section class="step locked" id="s2">
+      <section class="step locked" id="s2" tabindex="-1">
         <div class="step-head">
           <span class="step-n">2</span>
           <div><h2>어디서 자를까?</h2><p class="why">자르는 건 쉬워요. 어디서 자를지 정하는 게 진짜 실력이에요.</p></div>
@@ -89,7 +89,7 @@
       </section>
 
       <!-- 3 ─ 조립과 검증 -->
-      <section class="step locked" id="s3">
+      <section class="step locked" id="s3" tabindex="-1">
         <div class="step-head">
           <span class="step-n">3</span>
           <div><h2>순서를 만들어요</h2><p class="why">컴퓨터는 눈치가 없어요. 순서를 내가 정해줘야 해요.</p></div>
@@ -109,12 +109,12 @@
             <div class="note"><b>경계</b><span>변형 입력은 보너스가 아니라 기본 실행 단위입니다. 한 장만 맞히는 건 통과가 아니에요. 그리고 코드 보기는 실행한 뒤에만 열립니다 — 먼저 열면 정답을 베껴 쓰는 창이 됩니다.</span></div>
           </div>
           <div id="xraybox" hidden></div>
-          <div id="resultbox" hidden></div>
+          <div id="resultbox" hidden aria-live="polite"></div>
         </div>
       </section>
 
       <!-- 4 ─ 졸업 과제 -->
-      <section class="step locked" id="s4">
+      <section class="step locked" id="s4" tabindex="-1">
         <div class="step-head">
           <span class="step-n">4</span>
           <div><h2>이걸 깨뜨려 봐</h2><p class="why">남이 준 반례를 통과하는 건 절반이에요. 나머지 절반은 내가 반례를 만드는 거예요.</p></div>
@@ -133,7 +133,7 @@
           <div class="note"><b>경계</b><span>예측을 먼저 받는 이유가 있습니다. 예측 없이 실행한 학생은 결과를 봐도 “다르다”는 문장을 만들 수 없어요. 바로 이 지점이 “안 되는데요”가 태어나는 곳입니다.</span></div>
 
           <div class="row"><button class="btn go" id="brk-run" disabled>넣어보기</button></div>
-          <div id="brk-log"></div>
+          <div id="brk-log" aria-live="polite"></div>
         </div>
       </section>
     </div>
