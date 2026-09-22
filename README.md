@@ -19,6 +19,7 @@
 
 - [설계 철학 전문](docs/philosophy.md)
 - [커리큘럼과 지원 페이딩](docs/curriculum.md)
+- [설문과 관찰 설계](docs/survey.md) — 문항마다 검증하는 가설을 붙였습니다
 
 ---
 
@@ -149,7 +150,8 @@ node test/hangul.test.js
 │   └── hangul.test.js    조사 검증
 └── docs/
     ├── philosophy.md     설계 철학 전문
-    └── curriculum.md     커리큘럼과 지원 페이딩
+    ├── curriculum.md     커리큘럼과 지원 페이딩
+    └── survey.md         사전·사후 설문, 교사 인터뷰, 관찰 프로토콜
 ```
 
 ---
