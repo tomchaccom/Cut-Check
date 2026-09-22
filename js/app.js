@@ -24,6 +24,7 @@
   var M = null;            // 현재 미션
   var S = {};              // 현재 미션의 학생 상태
   var LOG = [];            // 교사 화면으로 갈 신호 (성공조건 선택, 도움 요청 등)
+  var rec = function (ev) { LOG.push(ev); if (CC.store) CC.store.push(ev); };
 
   function resetState() {
     S = {
@@ -205,6 +206,12 @@
     $('#s3').classList.add('locked');
   }
 
+  /* 이유가 약한지 — 교사 화면이 이 학생을 찾아낼 수 있게 표시한다.
+   * 학생에게는 절대 보여주지 않는다. 보여주는 순간 정답 있는 문항이 된다. */
+  function isWeakWhy(text) {
+    return /그냥|모르|보여서/.test(text || '');
+  }
+
   function checkS2() {
     $('#s2go').disabled = !(S.sep !== '' && S.why);
   }
@@ -219,7 +226,7 @@
     mark('succ');
     this.disabled = true;
     this.textContent = '정했어요';
-    LOG.push({ type: 'define', trap: S.succTrap, text: S.succ });
+    rec({ type: 'define', trap: S.succTrap, text: S.succ });
     $('#s2').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
@@ -231,6 +238,7 @@
     mark('sep');
     this.disabled = true;
     this.textContent = '정했어요';
+    rec({ type: 'cut', sepName: S.sepName, why: S.why, weak: isWeakWhy(S.why) });
     $('#s3').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
@@ -379,7 +387,7 @@
     yes.addEventListener('click', function () {
       if (allpass) {
         msg.textContent = M.inputs.length + '장을 모두 버텼어요. 이제 이 방법을 깨뜨릴 입력을 직접 만들어 볼 차례예요.';
-        openGraduation();
+        openGraduation(false);
       } else {
         /* 틀렸다고 말하지 않는다. 다시 볼 곳만 가리킨다. */
         msg.textContent = M.counterHint;
@@ -387,12 +395,14 @@
     });
     no.addEventListener('click', function () {
       msg.textContent = '좋아요. 몇 번째가, 왜 깨졌는지 선생님께 한 문장으로 말해보세요.';
-      openGraduation();
+      openGraduation(true);
     });
 
     box.hidden = false;
     renderStack();
     mark('run');
+    rec({ type: 'blocks', blocks: S.blocks.slice() });
+    rec({ type: 'run', allpass: allpass, mission: M.id });
     if (allpass) mark('allpass');
     $('#xraybtn').disabled = false;
     box.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -489,14 +499,15 @@
     var qbox = $('#queue');
     if (!qbox.dataset.used) { qbox.innerHTML = ''; qbox.dataset.used = '1'; }
     qbox.prepend(q);
-    LOG.push({ type: 'help', exp: H.exp, act: H.act, blk: H.blk });
+    rec({ type: 'help', exp: H.exp, act: H.act, blk: H.blk });
   });
 
   /* ── 졸업 과제: 반례를 직접 만들기 ──────────────── */
   /* 자기 판정을 끝낸 학생만 연다.
    * 모두 버텼다고 판정했든 깨졌다고 인정했든 상관없다 —
    * 중요한 건 '내 기준으로 결과를 판정해본 적이 있는가'다. */
-  function openGraduation() {
+  function openGraduation(found) {
+    rec({ type: 'judge', found: !!found });
     mark('judge');
     $('#s4').classList.remove('locked');
     $('#s4').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -569,7 +580,7 @@
     card.appendChild(verdict);
     $('#brk-log').prepend(card);
 
-    LOG.push({ type: 'break', text: S.brk.text, broke: broke, guessed: guessed });
+    rec({ type: 'break', text: S.brk.text, broke: broke, guessed: guessed });
 
     $('#brk-input').value = '';
     S.brk.text = '';

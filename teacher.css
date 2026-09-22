@@ -46,7 +46,7 @@
 .trow { display: flex; gap: 11px; align-items: center; width: 100%; text-align: left; background: none; border: none; border-radius: 11px; padding: 9px 10px; color: var(--ink); }
 .trow:hover { background: var(--surface-2); }
 .trow .av { width: 30px; height: 30px; border-radius: 10px; background: var(--surface-3); color: var(--ink-2); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
-.trow .who { font-weight: 700; font-size: 14px; flex: none; width: 46px; }
+.trow .who { font-weight: 700; font-size: 14px; flex: none; min-width: 46px; white-space: nowrap; }
 .trow .say { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
 .trow .say b { color: var(--ink); font-weight: 700; }
 .trow .meta { margin-left: auto; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; flex: none; font-variant-numeric: tabular-nums; }
@@ -83,3 +83,13 @@
 .saybox { margin-top: 16px; background: var(--violet-soft); border-radius: 14px; padding: 14px 15px; font-size: 14px; line-height: 1.6; }
 .saybox .k { font-size: 11.5px; font-weight: 700; color: var(--violet); display: block; margin-bottom: 5px; }
 .scrim { position: fixed; inset: 0; background: rgba(20,30,50,.35); z-index: 19; }
+
+/* 실시간 연결 안내 */
+.livebar { border-radius: 14px; padding: 12px 15px; font-size: 13.5px; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; line-height: 1.55; }
+.livebar.on { background: var(--green-soft); color: var(--ink); }
+.livebar.off { background: var(--surface-2); color: var(--ink-2); }
+.livebar .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); flex: none; }
+.livebar .txt { flex: 1; min-width: 180px; }
+.livebar .tbtn { padding: 5px 12px; font-size: 12px; }
+.trow .who.live { color: var(--green); }
+.trow.hot .av, .trow.warm .av, .trow.calm .av { transition: none; }

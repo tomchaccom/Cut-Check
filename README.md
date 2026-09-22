@@ -110,6 +110,11 @@ open index.html          # 또는 브라우저로 드래그
 
 GitHub Pages를 켜면 `index.html`이 그대로 데모가 됩니다.
 
+> **학생 화면 → 선생님 화면 연결을 보려면 로컬 서버로 여세요.**
+> `python3 -m http.server` 로 띄우고 `localhost:8000` 으로 접속하면, 학생 화면에서
+> 고른 성공 조건과 증상 진술이 선생님 화면 맨 앞에 **실제 기록**으로 섞여 보입니다.
+> `file://` 로 직접 열면 브라우저가 저장을 막아 목업 26명만 보입니다 (화면이 그렇게 안내합니다).
+
 ### 엔진 검증
 
 ```bash
@@ -139,6 +144,7 @@ node test/hangul.test.js
 ├── philosophy.css
 ├── js/
 │   ├── hangul.js         조사 계산
+│   ├── store.js          학생 행동 기록 (localStorage)
 │   ├── blocks.js         논리 블록 카탈로그
 │   ├── missions.js       미션 데이터 (브리프·보기·반례 입력)
 │   ├── engine.js         실행 엔진 + Python 변환

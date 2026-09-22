@@ -16,6 +16,11 @@
     return e;
   };
   var C = CC.classroom;
+
+  /* 학생 화면이 남긴 진짜 기록을 목업 교실 맨 앞에 끼운다.
+   * 시연할 때 "내가 방금 한 게 저기 뜬다"가 보여야 한다. */
+  var me = CC.store ? CC.store.fold('나') : null;
+  if (me) C.students = [me].concat(C.students);
   var J = function (w, pair) { return CC.particle(w, pair); };
 
   function mmss(sec) {
@@ -57,8 +62,10 @@
     list.forEach(function (s) {
       var r = el('button', 'trow ' + tone);
       r.type = 'button';
-      r.appendChild(el('span', 'av', s.name.charAt(0)));
-      r.appendChild(el('span', 'who', s.name));
+      r.appendChild(el('span', 'av', s.live ? '●' : s.name.charAt(0)));
+      var who = el('span', 'who', s.name);
+      if (s.live) who.className = 'who live';
+      r.appendChild(who);
       var say = el('span', 'say');
       say.innerHTML = sayFn(s);
       r.appendChild(say);
@@ -80,7 +87,8 @@
     var groups = [
       { key: 'hardcode', lab: '이번 결과를 성공으로 정의함', tip: '입력이 바뀌면 무너집니다' },
       { key: 'luck', lab: '오류만 없으면 성공으로 정의함', tip: '무엇이 나와야 하는지 정하지 않았습니다' },
-      { key: null, lab: '입력이 바뀌어도 되는 조건으로 정의함', tip: '' }
+      { key: null, lab: '입력이 바뀌어도 되는 조건으로 정의함', tip: '' },
+      { key: 'own', lab: '직접 쓴 문장', tip: '분류하지 않습니다. 읽어보고 판단해주세요 — 자동 분류하는 순간 학생이 쓴 말을 우리가 채점하는 게 됩니다.' }
     ];
     groups.forEach(function (g) {
       var members = C.students.filter(function (s) { return s.define.trap === g.key; });
@@ -206,7 +214,33 @@
     this.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
 
+  /* ── 실시간 연결 안내 ────────────────────────────── */
+  function liveBanner() {
+    var host = $('#livebar');
+    if (!host) return;
+    if (me) {
+      host.className = 'livebar on';
+      host.innerHTML = '';
+      host.appendChild(el('span', 'dot'));
+      host.appendChild(el('span', 'txt',
+        '학생 화면에서 들어온 진짜 기록이 아래 목록 맨 앞에 섞여 있어요. 목업 25명 + 실제 1명.'));
+      var b = el('button', 'tbtn', '내 기록 지우기');
+      b.type = 'button';
+      b.addEventListener('click', function () { CC.store.clear(); location.reload(); });
+      host.appendChild(b);
+    } else if (CC.store && !CC.store.available()) {
+      host.className = 'livebar off';
+      host.textContent = '이 브라우저는 file:// 에서 저장을 막고 있어서 학생 화면과 연결되지 않습니다. ' +
+        '로컬 서버(python3 -m http.server)나 GitHub Pages 에서는 실제 기록이 섞여 보여요. 지금은 목업 26명입니다.';
+    } else {
+      host.className = 'livebar off';
+      host.textContent = '아직 학생 화면에서 들어온 기록이 없습니다. 학생 화면을 한 번 진행하고 돌아오면 ' +
+        '맨 앞에 실제 기록이 섞여 보여요. 지금은 목업 26명입니다.';
+    }
+  }
+
   /* ── 초기 렌더 ───────────────────────────────────── */
+  liveBanner();
   tiles();
   rowList('#ready', '#p-ready', C.ready(), 'hot', function (s) {
     return '<b>' + esc(s.symptom.exp) + '</b>' + J(s.symptom.exp, '이/가') + ' 나올 줄 알았는데 <b>' +
