@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 수업 준비물</title>
+<meta name="description" content="좌석표·관찰 기록지·마무리 문장 수합지. 인쇄해서 쓰는 종이.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#161d26; --ink-2:#4a5566; --ink-3:#8b95a3; --line:#c9d0da; --line-2:#e6eaf0;
+    --sans:"IBM Plex Sans KR",system-ui,sans-serif;
+    --disp:"Gothic A1","IBM Plex Sans KR",system-ui,sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { background:#eef1f5; color:var(--ink); font-family:var(--sans); font-size:14px; margin:0; line-height:1.6; }
+  .bar { position:sticky; top:env(safe-area-inset-top, 0px); background:#fff; border-bottom:1px solid var(--line);
+    padding:12px 18px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .bar b { font-family:var(--disp); font-weight:800; font-size:16px; }
+  .bar .hint { font-size:12.5px; color:var(--ink-3); }
+  .bar a, .bar button { font:inherit; font-size:12.5px; font-weight:600; text-decoration:none;
+    background:#fff; border:2px solid var(--line); border-radius:999px; padding:6px 14px; color:var(--ink-2); cursor:pointer; }
+  .sheets { max-width:900px; margin:0 auto; padding-inline:18px; padding-block:22px 60px; }
+  .sheet { background:#fff; border-radius:10px; padding:26px 28px; margin-bottom:20px; box-shadow:0 2px 10px rgba(20,30,50,.07); }
+  .sheet h1 { font-family:var(--disp); font-size:19px; font-weight:800; margin:0; }
+  .sheet .sub { font-size:12.5px; color:var(--ink-3); margin-top:3px; }
+  .meta { display:flex; gap:22px; flex-wrap:wrap; font-size:13px; color:var(--ink-2); margin-top:14px; }
+  .meta span { border-bottom:1px solid var(--line); padding:0 40px 2px 0; }
+
+  .seats { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:16px; }
+  @media (max-width:640px){ .seats { grid-template-columns:repeat(3,1fr); } }
+  .seat { border:1px solid var(--line); border-radius:7px; height:62px; padding:5px 7px; font-size:11px; color:var(--ink-3); }
+
+  table { width:100%; border-collapse:collapse; margin-top:16px; font-size:13px; }
+  th { text-align:left; font-size:11px; letter-spacing:.06em; color:var(--ink-3); font-weight:700;
+    border-bottom:2px solid var(--line); padding:0 8px 6px 0; }
+  td { border-bottom:1px solid var(--line-2); padding:0; height:34px; }
+  td.tick { color:var(--ink-3); font-size:11px; padding-right:8px; white-space:nowrap; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-2); margin-top:12px; }
+  .legend b { font-family:var(--disp); }
+  .rule { font-size:12.5px; color:var(--ink-2); background:#f4f6fa; border-radius:8px; padding:11px 13px; margin-top:14px; line-height:1.55; }
+  .rule b { color:var(--ink); }
+  ol.says { margin:16px 0 0; padding-left:20px; font-size:13px; color:var(--ink-3); }
+  ol.says li { height:32px; border-bottom:1px solid var(--line-2); }
+
+  @media print {
+    body { background:#fff; font-size:11.5px; }
+    .bar { display:none; }
+    .sheets { max-width:none; padding:0; }
+    .sheet { box-shadow:none; border-radius:0; padding:0 0 12px; margin:0; page-break-after:always; }
+    .sheet:last-child { page-break-after:auto; }
+    .rule { background:none; border:1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div>
+    <b>수업 준비물</b>
+    <span class="hint">3장 · A4 세로 · 흑백 인쇄</span>
+  </div>
+  <div>
+    <a href="index.html">학생 화면</a>
+    <button type="button" onclick="window.print()">인쇄</button>
+  </div>
+</div>
+
+<div class="sheets">
+
+  <section class="sheet">
+    <h1>좌석표</h1>
+    <p class="sub">화면에는 별칭만 올라갑니다. 누가 누군지는 이 종이에만 있습니다.</p>
+    <div class="meta"><span>날짜</span><span>학급</span><span>미션</span></div>
+    <div class="seats" id="seats"></div>
+    <div class="rule">
+      <b>이 종이를 교탁 밖으로 내보내지 않습니다.</b>
+      서버에는 이름·학번을 저장하지 않습니다. 화면의 별칭과 실제 학생을 잇는 건 이 종이 한 장뿐이고,
+      수업이 끝나면 폐기합니다.
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h1>관찰 기록지</h1>
+    <p class="sub">네 가지만 적습니다. 많이 적으려 하면 아무것도 못 적습니다.</p>
+    <div class="legend">
+      <span><b>호출</b> 학생이 부른 시각 + <b>첫마디를 그대로</b></span>
+      <span><b>정지</b> 30초 이상 아무 조작 없음</span>
+      <span><b>자기발견</b> 스스로 알아낸 순간</span>
+      <span><b>포기</b> 화면에서 시선을 뗀 시각</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:56px">시각</th><th style="width:70px">구분</th><th style="width:70px">좌석</th><th>첫마디를 그대로</th></tr></thead>
+      <tbody id="obs"></tbody>
+    </table>
+    <div class="rule">
+      <b>첫마디를 그대로 적는 게 핵심입니다.</b> "안 되는데요"가 몇 번 나오는지,
+      그리고 수업이 진행되면서 그 첫마디가 <b>길어지는지</b>가 이 제품의 가장 정직한 증거입니다.
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h1>마무리 한 문장</h1>
+    <p class="sub">수업 끝 3분. 한 사람씩 한 문장만 말합니다.</p>
+    <div class="rule">
+      “오늘 내 방법이 깨진 곳은 ____ 였어요.” / “오늘 나는 ____ 를 바꿨어요.”<br>
+      깨진 곳을 말하는 게 부끄러운 일이 아니라는 걸 교실 전체가 한 바퀴 돌면서 확인합니다.
+      <b>이 3분을 빼지 않습니다.</b> 빼면 “고쳐도 된다”는 말이 선생님 말로만 남습니다.
+    </div>
+    <ol class="says" id="says"></ol>
+  </section>
+
+</div>
+
+<script>
+  var seats = document.getElementById('seats');
+  for (var i = 1; i <= 30; i++) {
+    var d = document.createElement('div');
+    d.className = 'seat';
+    d.textContent = i + '.';
+    seats.appendChild(d);
+  }
+  var obs = document.getElementById('obs');
+  for (var j = 0; j < 22; j++) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td class="tick">:</td><td></td><td></td><td></td>';
+    obs.appendChild(tr);
+  }
+  var says = document.getElementById('says');
+  for (var k = 0; k < 26; k++) says.appendChild(document.createElement('li'));
+</script>
+</body>
+</html>

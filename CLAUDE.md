@@ -83,6 +83,7 @@ abstract.html   미션 04 · 추상화
 review.html     미션 05 · 동료 검토
 make.html       졸업 시험 · 내 미션 만들기
 teacher.html    선생님 화면
+print.html      수업 준비물 (인쇄용)
 philosophy.html 철학 한 장 (리뷰·심사용)
 
 js/hangul.js    조사 계산
@@ -107,7 +108,7 @@ python3 -m http.server 8123 &
 node test/engine.test.js     # 반례가 실제로 깨지는지, 에러가 몇 번 블록을 짚는지
 node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
-node test/smoke.js           # 5개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
+node test/smoke.js           # 7개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 ```
 
 넷 다 통과해야 커밋한다.
