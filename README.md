@@ -22,6 +22,7 @@
 - [작업 규칙 (CLAUDE.md)](CLAUDE.md) — 기능을 붙이기 전에 읽는 문서
 - [설계 철학 전문](docs/philosophy.md)
 - [커리큘럼과 지원 페이딩](docs/curriculum.md)
+- [한 학기(15차시) 설계](docs/semester.md) — 블록을 언제 늘릴지 규칙까지 정했습니다
 - [설문과 관찰 설계](docs/survey.md) — 문항마다 검증하는 가설을 붙였습니다
 - [45분 수업 지도안](docs/lesson.md) — 교사가 **하지 말아야 할 말** 목록이 핵심입니다
 - [이 제품이 실패할 수 있는 지점](docs/risks.md) — 심사에서 나올 질문을 먼저 적어뒀습니다
@@ -184,6 +185,7 @@ node test/smoke.js           # 5개 화면 × 3폭 × 2테마 = 30조합. JS 에
 └── docs/
     ├── philosophy.md     설계 철학 전문
     ├── curriculum.md     커리큘럼과 지원 페이딩
+    ├── semester.md       한 학기 15차시 설계
     ├── lesson.md         45분 수업 지도안
     ├── review-request.md 리뷰 요청 메시지 초안
     ├── risks.md          한계와 위험 10가지
