@@ -1,0 +1,40 @@
+/* Cut & Check — 미션 05 동료 검토 */
+
+.peers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+@media (max-width: 680px) { .peers { grid-template-columns: 1fr; } }
+.peercard { display: flex; gap: 11px; align-items: center; text-align: left;
+  background: var(--surface-2); border: 2px solid transparent; border-radius: 15px; padding: 13px 14px; color: var(--ink); }
+.peercard:hover { border-color: var(--line-strong); }
+.peercard[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); }
+.peercard .av { width: 34px; height: 34px; border-radius: 11px; background: var(--surface);
+  display: grid; place-items: center; font-weight: 700; flex: none; }
+.peercard .mid { display: block; }
+.peercard b { font-size: 14px; font-weight: 700; display: block; }
+.peercard small { font-size: 12px; color: var(--ink-3); }
+
+.submission { margin-top: 14px; background: var(--surface-2); border-radius: 16px; padding: 16px; }
+.submission h3 { font-size: 16px; font-weight: 800; }
+.subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 12px 0; }
+.subbox { background: var(--surface); border-radius: 12px; padding: 12px 13px; }
+.subbox .k { font-size: 11.5px; font-weight: 700; color: var(--ink-3); display: block; margin-bottom: 4px; }
+.subbox .v { font-size: 14px; line-height: 1.5; }
+
+/* 코멘트 템플릿 */
+.tmpls { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.tmpl { text-align: left; background: var(--surface-2); border: 2px solid transparent; border-radius: 13px;
+  padding: 12px 14px; font-size: 14.5px; color: var(--ink); display: flex; gap: 10px; align-items: flex-start; }
+.tmpl:hover { border-color: var(--line-strong); }
+.tmpl[aria-pressed="true"] { border-color: var(--green); background: var(--green-soft); }
+.tmpl.bad { background: var(--coral-soft); color: var(--ink-3); cursor: not-allowed; text-decoration: line-through; }
+.tmpl.bad .x { color: var(--coral); font-weight: 800; flex: none; text-decoration: none; }
+
+.bannedwrap { margin-top: 18px; }
+.bannedwrap .lab { font-size: 13.5px; font-weight: 700; color: var(--coral); display: block; }
+.bannedwrap .sub { font-size: 13px; color: var(--ink-2); margin-top: 3px; line-height: 1.55; }
+
+.hintline.warn { color: var(--coral); font-weight: 600; }
+
+.sentcard { background: var(--green-soft); border-radius: 15px; padding: 15px 16px; margin-top: 12px; }
+.sentcard .k { font-size: 11.5px; font-weight: 700; color: var(--green); display: block; }
+.sentcard .msgline { font-family: var(--disp); font-size: 17px; font-weight: 700; margin-top: 6px; line-height: 1.45; }
+.sentcard .after { font-size: 13px; color: var(--ink-2); margin-top: 8px; line-height: 1.55; }

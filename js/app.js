@@ -680,8 +680,15 @@
   m4.href = 'abstract.html';
   m4.style.textDecoration = 'none';
   m4.appendChild(el('span', 'n', '미션 04'));
-  m4.appendChild(el('span', 't', '추상화 →'));
+  m4.appendChild(el('span', 't', '추상화'));
   bar.appendChild(m4);
+
+  var m5 = el('a', 'mbtn');
+  m5.href = 'review.html';
+  m5.style.textDecoration = 'none';
+  m5.appendChild(el('span', 'n', '미션 05'));
+  m5.appendChild(el('span', 't', '동료 검토 →'));
+  bar.appendChild(m5);
 
   loadMission(CC.MISSIONS[0].id);
   CC.log = LOG;

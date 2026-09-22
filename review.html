@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 미션 05 동료 검토</title>
+<meta name="description" content="남의 논리를 읽고 어디서 깨지는지 찾은 뒤, 답을 주지 않고 코멘트하는 법을 배우는 미션.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="review.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="logo">
+      <span class="mark">C&amp;C</span>
+      <div><b>Cut &amp; Check</b><small>자르고, 세 번 확인한다</small></div>
+    </div>
+    <div class="head-tools">
+      <button class="tbtn" id="notes-toggle" aria-pressed="false">설계 의도 보기</button>
+      <a class="tbtn" href="index.html" style="text-decoration:none">미션 01–03</a>
+      <a class="tbtn" href="abstract.html" style="text-decoration:none">미션 04</a>
+      <a class="tbtn" href="teacher.html" style="text-decoration:none">선생님 화면 →</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <span class="badge">미션 05 · 동료 검토</span>
+    <h1>남의 논리는 훨씬 잘 보인다</h1>
+    <p class="sub">내 코드의 구멍은 안 보여도, 친구 코드의 구멍은 보입니다. 그 눈을 빌려서 내 눈을 기르는 미션이에요.</p>
+  </div>
+
+  <div style="max-width:800px">
+
+    <!-- 1 -->
+    <section class="step" id="s1" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">1</span>
+        <div><h2>누구 걸 볼까요?</h2><p class="why">세 사람이 같은 업무를 다르게 풀었어요.</p></div>
+      </div>
+      <div class="step-body">
+        <div class="peers" id="peers"></div>
+        <div class="submission" id="submission" hidden></div>
+        <div class="note"><b>의도</b><span>세 제출물은 서로 <em>다른 종류로</em> 잘못돼 있습니다. 빠진 블록 / 성공 조건이 이번 결과에 묶임 / 순서 뒤바뀜. 같은 종류로 세 개를 만들면 학생은 두 번째부터 읽지 않아요.</span></div>
+        <div class="row"><button class="btn" id="s1go" disabled>이 사람 걸 볼래요</button></div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="step locked" id="s2" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">2</span>
+        <div><h2>돌려보기 전에 적어두기</h2><p class="why">먼저 예측해야 결과를 보고 배울 게 생겨요.</p></div>
+      </div>
+      <p class="lockmsg">제출물을 고르면 열려요.</p>
+      <div class="step-body">
+        <p class="q">이 순서, 주문서 3장을 다 버틸까요?</p>
+        <div class="chips" id="guess">
+          <button class="chip" type="button" aria-pressed="false" data-v="hold">세 장 다 버틸 거예요</button>
+          <button class="chip" type="button" aria-pressed="false" data-v="break">어디선가 깨질 거예요</button>
+        </div>
+        <p class="q">깨진다면 어디서일 것 같아요?</p>
+        <div class="opts" id="where"></div>
+        <div class="note"><b>경계</b><span>맞히는 게 목적이 아닙니다. 예측을 적어두지 않으면 결과를 봐도 “아 그렇구나”로 끝나요. 적어둔 예측과 결과의 차이가 학습이 일어나는 자리입니다.</span></div>
+        <div class="row"><button class="btn" id="s2go" disabled>적었어요</button></div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="step locked" id="s3" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">3</span>
+        <div><h2>돌려보기</h2><p class="why">내 예측과 실제를 나란히 놓습니다.</p></div>
+      </div>
+      <p class="lockmsg">예측을 적으면 열려요.</p>
+      <div class="step-body">
+        <div class="row" style="margin-top:0"><button class="btn go" id="runbtn">이 사람 순서를 3장으로 돌려보기</button></div>
+        <div id="results" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="step locked" id="s4" tabindex="-1">
+      <div class="step-head">
+        <span class="step-n">4</span>
+        <div><h2>코멘트 쓰기</h2><p class="why">답을 알려주면 친구가 생각할 기회를 잃어요.</p></div>
+      </div>
+      <p class="lockmsg">돌려보면 열려요.</p>
+      <div class="step-body">
+        <p class="q">이 중에서 고르거나, 직접 써보세요.</p>
+        <div class="tmpls" id="templates"></div>
+
+        <div class="bannedwrap">
+          <span class="lab">이런 코멘트는 보낼 수 없어요</span>
+          <p class="sub">틀린 말이라서가 아니라, <b>답이라서</b> 못 보냅니다. 답을 받은 사람은 고치기만 하고 왜 그런지는 모른 채 넘어가요.</p>
+          <div class="tmpls" id="banned"></div>
+        </div>
+
+        <p class="q">직접 쓰기</p>
+        <input type="text" id="own-comment" placeholder="물음표로 끝나야 보낼 수 있어요">
+        <p class="hintline" id="comment-msg"></p>
+        <div class="note"><b>핵심</b><span>우리가 학생에게 답을 안 주기로 했으면 학생끼리도 답을 주지 않아야 합니다. 안 그러면 이 수업의 규칙은 “어른만 안 알려주고 친구는 알려주는” 이상한 규칙이 돼요.</span></div>
+        <div class="row"><button class="btn" id="sendbtn" disabled>코멘트 보내기</button></div>
+        <div id="sent" aria-live="polite"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="foot">
+    <span><b>이 미션이 가르치는 것</b> 남의 논리에서 깨진 곳 찾기 · 답을 주지 않고 코멘트하기</span>
+    <span><b>제약</b> 코멘트는 물음표로 끝나야 보내진다</span>
+  </div>
+</div>
+
+<script src="js/hangul.js"></script>
+<script src="js/store.js"></script>
+<script src="js/blocks.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/review.js"></script>
+</body>
+</html>
