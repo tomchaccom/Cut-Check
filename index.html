@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 조각공방</title>
+<meta name="description" content="자르고, 세 번 확인한다. 중학생을 위한 컴퓨팅 사고력 학습 프로토타입.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="logo">
+      <span class="mark">C&amp;C</span>
+      <div>
+        <b>Cut &amp; Check</b>
+        <small>자르고, 세 번 확인한다</small>
+      </div>
+    </div>
+    <div class="head-tools">
+      <button class="tbtn" id="notes-toggle" aria-pressed="false">설계 의도 보기</button>
+      <button class="tbtn" id="reset">처음부터</button>
+    </div>
+  </div>
+
+  <div class="missionbar" id="missionbar"></div>
+
+  <div class="hero">
+    <span class="badge" id="hero-badge"></span>
+    <h1 id="hero-title"></h1>
+    <p class="sub">정답을 맞히는 게 아니라, 내가 정한 방법이 끝까지 버티는지 확인하는 미션이에요.</p>
+    <div class="transfer" id="transfer" hidden><span class="ic">↔</span><span id="transfer-t"></span></div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <!-- 1 ─ 문제 정의 -->
+      <section class="step" id="s1">
+        <div class="step-head">
+          <span class="step-n">1</span>
+          <div><h2>언제 끝난 걸까?</h2><p class="why">일을 시작하기 전에, 성공이 뭔지부터 정해요.</p></div>
+        </div>
+        <div class="step-body">
+          <div class="brief">
+            <span class="av" id="brief-av"></span>
+            <div><span class="from" id="brief-from"></span><q id="brief-q"></q></div>
+          </div>
+          <div class="note"><b>의도</b><span>요청을 일부러 모호하게 둡니다. “쉼표로 나눠서 목록으로 만드세요”라고 쓰는 순간 분해가 이미 끝나버려서, 학생은 받아쓰기만 하게 돼요.</span></div>
+
+          <p class="q" id="define-q"></p>
+          <div class="picks" id="succ-picks"></div>
+          <textarea id="succ-own" hidden placeholder="내 말로 써보세요."></textarea>
+          <div class="note"><b>경계</b><span>어느 게 정답인지 알려주지 않습니다. 고른 문장을 저장해뒀다가 실행 결과 옆에 그대로 다시 꺼내 보여줄 뿐이에요. 하드코딩·요행 보기를 고른 학생이 곧 위험군이고, 그 분포가 교사에게 갑니다.</span></div>
+          <div class="row"><button class="btn" id="s1go" disabled>이걸로 정할래요</button></div>
+        </div>
+      </section>
+
+      <!-- 2 ─ 분해 기준 -->
+      <section class="step locked" id="s2">
+        <div class="step-head">
+          <span class="step-n">2</span>
+          <div><h2>어디서 자를까?</h2><p class="why">자르는 건 쉬워요. 어디서 자를지 정하는 게 진짜 실력이에요.</p></div>
+        </div>
+        <p class="lockmsg">성공을 먼저 정하면 열려요.</p>
+        <div class="step-body">
+          <div class="sample">
+            <span class="lab" id="sample-lab"></span>
+            <span class="txt" id="sample-txt"></span>
+          </div>
+          <div class="targetbox" id="targetbox" hidden>
+            <span class="lab" id="target-lab"></span>
+            <div class="items" id="target-items"></div>
+          </div>
+          <p class="q" id="cut-q"></p>
+          <div class="chips" id="sep-chips"></div>
+          <input type="text" id="sep-free" hidden>
+          <p class="q" id="why-q"></p>
+          <div class="picks" id="why-picks"></div>
+          <input type="text" id="why-free" hidden placeholder="한 문장이면 충분해요">
+          <div class="note"><b>경계</b><span>미션이 올라갈수록 보기를 걷어냅니다. 1단계는 기준도 이유도 보기, 2단계는 이유를 직접 쓰기, 3단계는 기준까지 직접 쓰기. 지원은 끄는 게 아니라 단계적으로 걷어내는 겁니다.</span></div>
+          <div class="row"><button class="btn" id="s2go" disabled>이 기준으로 할래요</button></div>
+        </div>
+      </section>
+
+      <!-- 3 ─ 조립과 검증 -->
+      <section class="step locked" id="s3">
+        <div class="step-head">
+          <span class="step-n">3</span>
+          <div><h2>순서를 만들어요</h2><p class="why">컴퓨터는 눈치가 없어요. 순서를 내가 정해줘야 해요.</p></div>
+        </div>
+        <p class="lockmsg">자를 기준을 정하면 열려요.</p>
+        <div class="step-body">
+          <div class="stack" id="stack"></div>
+          <div class="lib">
+            <span class="eyebrow">블록 상자 · 아무거나 먼저 놓아도 괜찮아요</span>
+            <div class="libgrid" id="lib"></div>
+          </div>
+          <div class="note"><b>의도</b><span>빈 화면이 없으니 “뭘 쳐야 할지 모르겠어요”가 생기지 않습니다. 순서가 틀려도, 블록이 모자라도 실행 버튼은 눌립니다. 막는 순간 다시 선생님을 부르게 돼요.</span></div>
+          <div class="runbar">
+            <button class="btn go" id="run">3장으로 돌려보기</button>
+            <button class="btn ghost small" id="xraybtn">코드로 보기</button>
+            <button class="btn help" id="helpbtn">안 되는데요</button>
+            <div class="note"><b>경계</b><span>변형 입력은 보너스가 아니라 기본 실행 단위입니다. 한 장만 맞히는 건 통과가 아니에요. 그리고 코드 보기는 실행한 뒤에만 열립니다 — 먼저 열면 정답을 베껴 쓰는 창이 됩니다.</span></div>
+          </div>
+          <div id="xraybox" hidden></div>
+          <div id="resultbox" hidden></div>
+        </div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card">
+        <span class="eyebrow">내가 정한 것</span>
+        <h3 style="margin-top:3px">채점표는 내가 써요</h3>
+        <div class="pin blank" id="pin-succ"><span class="t">성공이란</span>아직 안 정했어요</div>
+        <div class="pin blank" id="pin-sep"><span class="t">자를 기준</span>아직 안 정했어요</div>
+        <div class="note"><b>거울</b><span>플랫폼의 피드백은 평가가 아니라 거울입니다. 3분 전 내 판단을 지금 결과 옆에 나란히 놓는 것만으로 상당수는 스스로 찾아냅니다.</span></div>
+      </section>
+
+      <section class="card">
+        <span class="eyebrow">오늘의 통과 조건</span>
+        <h3 style="margin-top:3px">결과보다 방법을 봐요</h3>
+        <ul class="crit" id="crit">
+          <li data-c="succ"><span class="m"></span><span>성공이 무엇인지 내가 정했다</span></li>
+          <li data-c="sep"><span class="m"></span><span>자를 기준과 이유를 말했다</span></li>
+          <li data-c="run"><span class="m"></span><span>3장으로 한 번에 확인했다</span></li>
+          <li data-c="allpass"><span class="m"></span><span id="crit-goal">3장 모두에서 내 성공 조건을 지켰다</span></li>
+          <li data-c="judge"><span class="m"></span><span>어디서 깨졌는지 내가 찾아냈다</span></li>
+        </ul>
+        <div class="note"><b>경계</b><span>방법을 지시하는 문장은 전부 결과 조건으로 바꿨습니다. “쉼표를 기준으로 나누기”는 요구사항이 아니라 정답 공개예요.</span></div>
+      </section>
+
+      <section class="card">
+        <span class="eyebrow">선생님 화면 · 2학년 3반</span>
+        <h3 style="margin-top:3px">지금 누구부터 갈까</h3>
+        <div class="queue" id="queue">
+          <div class="qi">
+            <div class="who"><span>현우</span><em>4분 전</em></div>
+            <p class="say"><b>상품 목록</b>이 나올 줄 알았는데 <b>한 덩어리</b>가 나왔대요. 의심 블록: <b>2 · 기준으로 자르기</b></p>
+            <span class="tag t-need">바로 답해줄 수 있음</span>
+          </div>
+          <div class="qi">
+            <div class="who"><span>지우</span><em>9분 전</em></div>
+            <p class="say">세 번째 주문서에서 <b>깨진 곳을 스스로 찾아냄</b>. 고치기 2번 시도 중.</p>
+            <span class="tag t-ready">칭찬할 타이밍</span>
+          </div>
+        </div>
+        <div class="note"><b>핵심</b><span>“학생이 막혔다”는 교사가 이미 압니다. 팔리는 정보는 <em>무엇을 기대했는지</em>예요. 그리고 칭찬은 AI가 아니라 사람이 합니다.</span></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span><b>버린 것</b> 포인트 · 연속 출석 · “좋아요!” 팝업 · 정답 순서 대조 채점 · 힌트 먼저 보기</span>
+    <span><b>지킨 것</b> 시작 비용 0 · 판단 대행 0</span>
+  </div>
+</div>
+
+<dialog id="helpdlg">
+  <form method="dialog" class="dlg">
+    <h3>무엇이 안 되나요?</h3>
+    <p class="lead">“안 돼요”라고만 하면 선생님도 뭘 봐야 할지 몰라요. 두 개만 고르고 부르면 훨씬 빨리 도와줄 수 있어요.</p>
+    <div class="qline">
+      <span class="lab">나는 이게 나올 줄 알았어요</span>
+      <div class="opts" id="o-exp">
+        <button class="opt" type="button" aria-pressed="false" data-v="여러 조각으로 나뉜 목록">여러 조각으로 나뉜 목록</button>
+        <button class="opt" type="button" aria-pressed="false" data-v="걸러진 것만 있는 목록">걸러진 것만 있는 목록</button>
+        <button class="opt" type="button" aria-pressed="false" data-v="개수">개수</button>
+        <button class="opt" type="button" aria-pressed="false" data-v="모르겠어요">모르겠어요</button>
+      </div>
+    </div>
+    <div class="qline">
+      <span class="lab">그런데 실제로는 이게 나왔어요</span>
+      <div class="opts" id="o-act">
+        <button class="opt" type="button" aria-pressed="false" data-v="안 잘린 한 덩어리">안 잘린 한 덩어리</button>
+        <button class="opt" type="button" aria-pressed="false" data-v="덜 잘린 목록">덜 잘린 목록</button>
+        <button class="opt" type="button" aria-pressed="false" data-v="전부 다 나온 목록">전부 다 나온 목록</button>
+        <button class="opt" type="button" aria-pressed="false" data-v="아무것도 안 나옴">아무것도 안 나옴</button>
+      </div>
+    </div>
+    <div class="qline">
+      <span class="lab">이 블록이 의심돼요 <span style="font-weight:500;color:var(--ink-3);font-size:12.5px">(모르면 넘겨도 돼요)</span></span>
+      <div class="opts" id="o-blk"></div>
+    </div>
+    <div class="askback" id="askback" hidden><span class="av">?</span><span id="askback-t"></span></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ghost" value="cancel">닫기</button>
+      <button class="btn" id="h-send" value="send" disabled>선생님께 보내기</button>
+    </div>
+    <div class="note" style="display:flex"><b>경계</b><span>AI는 칭찬하지 않고 답도 주지 않습니다. 학생이 고른 문장을 되물을 뿐이에요. 인정은 사람의 일, 증거는 기계의 일.</span></div>
+  </form>
+</dialog>
+
+<script src="js/blocks.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
