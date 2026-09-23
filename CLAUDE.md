@@ -81,8 +81,10 @@
 
 ## 파일 구조
 
+화면 7개와 **세 층**으로 나뉜 코드. 층의 경계가 이 저장소에서 제일 중요한 규칙이다.
+
 ```
-index.html      학생 화면 (미션 01–03)
+index.html      학생 화면 (미션 01·02·03·06 + 졸업 과제)
 abstract.html   미션 04 · 추상화
 review.html     미션 05 · 동료 검토
 make.html       졸업 시험 · 내 미션 만들기
@@ -90,17 +92,58 @@ teacher.html    선생님 화면
 print.html      수업 준비물 (인쇄용)
 philosophy.html 철학 한 장 (리뷰·심사용)
 
-js/hangul.js    조사 계산
-js/store.js     학생 행동 기록 (localStorage). 정답 여부는 저장하지 않는다
-js/blocks.js    논리 블록 카탈로그
-js/missions.js  미션 데이터
-js/engine.js    실행 엔진 + Python 변환
-js/asks.js      AI 되묻기 문장
-js/llmguard.js  LLM 출력 검사기
+js/core/   판단의 규칙. 저장소도 네트워크도 화면도 모른다
+  events.js     이벤트 계약 + "저장하지 않기로 한 필드" 차단
+  fold.js       이벤트 → 학생 한 명 (순수 함수)
+  engine.js     실행 엔진 + Python 변환
+  blocks.js     논리 블록 카탈로그
+  missions.js   미션 데이터
+  hangul.js     조사 계산
+  llmguard.js   LLM 출력 검사기
+  asks.js       AI 되묻기 문장
+
+js/data/   바깥 세계. 여기만 localStorage 와 fetch 를 안다
+  config.js     apiBase 가 비면 로컬, 있으면 서버
+  api.js        local / http 어댑터
+  store.js      오프라인 우선 기록 + 발신함
+
+js/ui/     화면. DOM 만 만진다
+  app.js  teacher.js  abstract.js  review.js  make.js  classroom.js
 ```
+
+### 층을 넘지 않는다
+
+| 층 | 알아도 되는 것 | 알면 안 되는 것 |
+|---|---|---|
+| `core` | 순수 자바스크립트 | `localStorage` · `fetch` · `document` · `window` |
+| `data` | `core`, 브라우저 저장소, 네트워크 | `document` |
+| `ui` | `core`, `data`, DOM | 서버가 있는지 없는지 |
+
+`test/layer.test.js` 가 이걸 자동으로 검사한다. `core` 안에서 `localStorage` 를
+한 번 쓰는 순간 테스트가 깨진다 — 말이 아니라 테스트가 경계를 지킨다.
+
+**접기(fold)는 한 곳에만 있는다.** 서버의 `board` 응답도 같은 접기를 하므로,
+규칙이 두 군데 생기면 반드시 갈라지고, 갈라진 날 교사 화면은 학생이 한 것과
+다른 걸 보여준다. 서버는 `js/core/fold.js` 를 옮겨 쓰지 않고 **옮겨 심는다**.
+
+### 새 이벤트를 더할 때
+
+1. `js/core/events.js` 의 `T` 에 상수를 더한다. 화면에서 문자열을 직접 쓰지 않는다 —
+   오타는 에러 없이 통과해서 교사 화면에서만 사라지고, 그 버그는 수업 중에 발견된다.
+2. `js/core/fold.js` 의 `apply()` 에 `case` 를 더한다.
+3. `NEVER` 목록에 걸리는 필드를 담지 않는다. 점수·정답률·순위는
+   문서가 아니라 `events.make()` 가 예외로 거절한다.
+4. `type` 을 더하는 건 스키마 버전을 올리지 않는다. 기존 `type` 의 **의미가 바뀔 때만** 올린다.
+
+### 서버를 붙일 때
+
+`js/data/config.js` 의 `apiBase` 한 줄. 화면 코드는 하나도 안 바뀐다.
+**서버를 필수로 만들지 않는다** — 학교 와이파이는 끊기고, 끊긴 순간 학생이 누른 게
+사라지면 그 수업은 거기서 끝난다. 서버는 기록의 조건이 아니라 기록의 사본이다.
 
 빌드도 의존성도 없다. 정적 파일만 쓴다. **번들러를 도입하지 않는다** —
 교사가 파일을 열어보고 고칠 수 있어야 한다.
+**ES 모듈(import/export)도 쓰지 않는다** — `file://` 에서 CORS 로 막힌다.
 
 ---
 
@@ -112,11 +155,13 @@ python3 -m http.server 8123 &
 node test/engine.test.js     # 반례가 실제로 깨지는지, 에러가 몇 번 블록을 짚는지
 node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
+node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
 node test/smoke.js           # 7개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 ```
 
-다섯 다 통과해야 커밋한다.
+여섯 다 통과해야 커밋한다.
+브라우저 경로가 다르면 `CC_CHROME=/path/to/chrome node test/smoke.js`.
 
 학생의 자유 입력(직접 쓴 성공 조건, 마무리 문장, 만든 미션)은 **반드시 교사 화면에
 그대로 올라간다.** 새 자유 입력 칸을 만들면 `test/robust.js` 경로에 추가한다.
