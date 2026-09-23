@@ -1,6 +1,6 @@
 // 엔진 검증: 미션별 정답 순서가 실제로 통과하는지, 반례가 실제로 깨지는지
 global.window = {};
-require('../js/blocks.js'); require('../js/missions.js'); require('../js/engine.js');
+require('../js/core/blocks.js'); require('../js/core/missions.js'); require('../js/core/engine.js');
 const CC = global.window.CC;
 let fail = 0;
 function t(name, cond){ console.log((cond?'  ok  ':'  FAIL') + ' ' + name); if(!cond) fail++; }

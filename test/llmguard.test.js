@@ -3,7 +3,7 @@
  * 이 검사기의 일은 통과시키는 게 아니라 막는 것이다.
  */
 global.window = {};
-require('../js/llmguard.js');
+require('../js/core/llmguard.js');
 const { check, guard } = global.window.CC.llmguard;
 let fail = 0;
 function t(name, cond) { console.log((cond ? '  ok  ' : '  FAIL') + ' ' + name); if (!cond) fail++; }
@@ -50,10 +50,10 @@ console.log('\n' + (fail ? `실패 ${fail}건` : '전체 통과'));
 /* ── 우리가 실제로 쓰는 문장이 규칙을 지키는가 ──────────────
  * 이 검사가 이 파일에서 제일 중요하다. 우리 손으로 쓴 문장이 규칙을 못 지키면
  * 모델에게 지키라고 할 자격이 없다. */
-require('../js/asks.js');
-require('../js/blocks.js');
-require('../js/missions.js');
-require('../js/engine.js');
+require('../js/core/asks.js');
+require('../js/core/blocks.js');
+require('../js/core/missions.js');
+require('../js/core/engine.js');
 const CC = global.window.CC;
 
 console.log('\n[실제 사용 문장 검사]');

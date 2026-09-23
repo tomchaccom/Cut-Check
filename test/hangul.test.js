@@ -1,5 +1,5 @@
 global.window = {};
-require('../js/hangul.js');
+require('../js/core/hangul.js');
 const { josa, particle } = global.window.CC;
 let fail=0;
 const t=(a,b)=>{const ok=a===b;console.log((ok?'  ok  ':'  FAIL')+` ${a} (기대 ${b})`);if(!ok)fail++;};

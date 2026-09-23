@@ -1,0 +1,120 @@
+/* Cut & Check — 이벤트 → 학생 한 명 (순수 함수)
+ *
+ * 이벤트 목록을 교사 화면이 쓰는 학생 객체 하나로 접는다.
+ * 저장소도 네트워크도 모른다. 입력이 같으면 출력이 같다.
+ *
+ * 왜 store.js 에서 떼어냈는가 —
+ *   서버의 board 응답도 결국 같은 접기를 한다.
+ *   접는 규칙이 클라이언트와 서버 두 군데에 따로 있으면 반드시 갈라지고,
+ *   갈라진 그날 교사 화면은 학생이 한 것과 다른 걸 보여준다.
+ *   그래서 접기는 한 곳에만 있어야 한다. 서버는 이 파일을 그대로 포팅한다
+ *   (docs/server.md 의 "fold 는 옮겨 쓰지 않고 옮겨 심는다").
+ *
+ * 여기서 파생하는 값은 전부 "무엇을 했는가"이고,
+ * "얼마나 잘했는가"는 한 개도 만들지 않는다.
+ */
+(function (CC) {
+  'use strict';
+
+  function empty(id, name) {
+    return {
+      id: id || 'me',
+      name: name || '나',
+      live: true,
+      stage: 0,
+      define: { text: '아직 안 정함', trap: null },
+      why: { text: '아직 안 정함', weak: false },
+      blocks: [],
+      symptom: null,
+      asked: false,
+      selfFound: false,
+      breaks: 0,
+      brokeOwn: false,
+      revised: 0,
+      redefined: 0,
+      lastRevision: null,
+      cause: null,
+      handle: null,
+      wrap: null,
+      abstractOk: null,
+      abstractPicked: null,
+      reviewComments: 0,
+      reviewGuess: null,
+      made: null,
+      mission: null,
+      idleSec: 0
+    };
+  }
+
+  /* 한 이벤트를 학생 객체에 적용한다. 순서에 의존하지 않도록
+   * stage 는 항상 max 로만 올린다 — 이벤트가 늦게 도착해도 되돌아가지 않는다. */
+  function apply(s, e) {
+    switch (e.type) {
+      case 'define':
+        s.define = { text: e.text, trap: e.trap };
+        s.stage = Math.max(s.stage, 1); break;
+      case 'cut':
+        s.why = { text: e.why, weak: !!e.weak };
+        s.sep = e.sepName;
+        s.stage = Math.max(s.stage, 2); break;
+      case 'blocks':
+        s.blocks = e.blocks; break;
+      case 'run':
+        s.stage = Math.max(s.stage, 3);
+        s.allpass = e.allpass;
+        if (e.mission) s.mission = e.mission; break;
+      case 'judge':
+        s.stage = Math.max(s.stage, 4);
+        if (e.found) s.selfFound = true; break;
+      case 'help':
+        s.asked = true;
+        s.symptom = { exp: e.exp, act: e.act || '', blk: e.blk || '' }; break;
+      case 'make-submit': s.made = e; break;
+      case 'abstract-slots': s.abstractPicked = e.picked; break;
+      case 'abstract-run': s.abstractOk = e.allOk; break;
+      case 'review-guess': s.reviewGuess = e; break;
+      case 'review-comment': s.reviewComments++; break;
+      case 'wrap': s.wrap = e.text; break;
+      case 'cause': s.cause = e.cause; break;
+      case 'handle': s.handle = e.choice; break;
+      case 'revise':
+        s.revised++;
+        s.lastRevision = e; break;
+      case 'redefine':
+        s.redefined++;
+        s.define = { text: e.to, trap: e.trap }; break;
+      case 'break':
+        s.breaks++;
+        if (e.broke) s.brokeOwn = true; break;
+      default: /* 모르는 type 은 무시한다 — 구버전 화면이 새 서버를 만나도 안 죽는다 */ break;
+    }
+    return s;
+  }
+
+  /* 이벤트 목록 하나 → 학생 하나 */
+  function fold(evs, opt) {
+    opt = opt || {};
+    if (!evs || !evs.length) return null;
+    var s = empty(opt.id, opt.name);
+    evs.forEach(function (e) { apply(s, e); });
+    var last = evs[evs.length - 1].t || 0;
+    s.idleSec = Math.max(0, Math.round(((opt.now || Date.now()) - last) / 1000));
+    return s;
+  }
+
+  /* 여러 학생의 이벤트를 한 번에 — 서버 board 응답이 이 모양이다.
+   * evs 각각에 sid(좌석 id)가 붙어 있다고 가정한다. 이름은 서버가 모른다. */
+  function foldMany(evs, opt) {
+    opt = opt || {};
+    var bySid = {};
+    (evs || []).forEach(function (e) {
+      var k = e.sid || 'me';
+      (bySid[k] = bySid[k] || []).push(e);
+    });
+    return Object.keys(bySid).map(function (k) {
+      return fold(bySid[k], { id: k, name: (opt.names && opt.names[k]) || k, now: opt.now });
+    });
+  }
+
+  CC.fold = { fold: fold, foldMany: foldMany, empty: empty, apply: apply };
+})(window.CC = window.CC || {});

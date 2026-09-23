@@ -11,9 +11,17 @@
  *   node test/smoke.js
  */
 const { chromium } = require('playwright');
+
+/* 브라우저 실행 파일 찾기 — 환경마다 경로가 달라서 한 군데서 처리한다.
+ * CC_CHROME 환경변수가 있으면 그걸 쓰고, 없으면 playwright 기본값을 쓴다. */
+function launchOpts() {
+  const p = process.env.CC_CHROME;
+  return p ? { executablePath: p } : {};
+}
+
 const PAGES = ['index.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html'];
 (async () => {
-  const b = await chromium.launch({ /* 로컬 환경에 맞게 지우거나 바꾸세요 */ });
+  const b = await chromium.launch(launchOpts());
   let bad = 0;
   for (const w of [400, 900, 1280]) {
     for (const f of PAGES) {
