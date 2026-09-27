@@ -47,7 +47,18 @@
 
     /* 졸업 시험 · 내 미션 만들기 */
     MAKE_CHECK: 'make-check',
-    MAKE_SUBMIT: 'make-submit'
+    MAKE_SUBMIT: 'make-submit',
+
+    /* 문장형 미션 */
+    S_DEFINE: 's-define',          /* 성공 조건 선택 { choice, reason } */
+    S_REDEFINE: 's-redefine',      /* 성공 조건 재선택 { from, to, reason } */
+    S_METHOD: 's-method',          /* 방법 확정 { slots, reason } */
+    S_REMETHOD: 's-remethod',      /* 방법 수정 { fromSlots, toSlots, reason } */
+    S_PREDICT: 's-predict',        /* 실행 전 예상 { dataId, predicted } */
+    S_RUN: 's-run',                /* 자료 실행 { dataId, slots, result } */
+    S_JUDGE: 's-judge',            /* 학생 판정 { runId, verdict, basis } */
+    S_HELP: 's-help',              /* 도움 요청 { expected, stuck, runId } */
+    S_WRAP: 's-wrap'               /* 마무리 문장 { text } */
   };
 
   /* 여기 없는 값은 저장하지 않기로 한 것이다.

@@ -265,7 +265,175 @@
     }
   ];
 
+  /* ── 문장형 미션 ──────────────────────────────────
+   * 블록 팔레트를 선택형 빈칸 문장으로 교체한 미션.
+   * 학생은 성공 조건과 처리 방법을 정하고,
+   * 자료를 실행한 뒤 자기 기준을 지켰는지 판단한다.
+   *
+   * type: 'sentence' 인 미션은 engine.runSentence() 로 실행한다.
+   */
+  var SENTENCE_MISSIONS = [
+    {
+      id: 'sm1',
+      no: '01',
+      type: 'sentence',
+      stage: '분해',
+      title: '창고에 주문서가 들어왔어요',
+      brief: '창고에 주문서가 들어왔어요. 상품이 몇 개인지 알려주세요.',
+
+      define: {
+        q: '나는 주문서에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '주문된 상품의 전체 개수', key: 'total' },
+          { v: '서로 다른 상품 이름의 개수', key: 'unique' }
+        ]
+      },
+
+      method: {
+        sentences: [
+          {
+            template: '주문서를 {sep} 기준으로 나눈다.',
+            slot: 'sep',
+            options: ['쉼표', '공백', '줄바꿈']
+          },
+          {
+            template: '같은 이름은 {dedup}.',
+            slot: 'dedup',
+            options: ['각각 남긴다', '하나만 남긴다']
+          },
+          {
+            template: '{output}을 출력한다.',
+            slot: 'output',
+            options: ['남은 항목의 개수', '항상 숫자 3']
+          }
+        ]
+      },
+
+      inputs: [
+        { id: 'd01', name: '주문서 01', v: '사과,바나나,우유' },
+        { id: 'd02', name: '주문서 02', v: '빵,치즈,주스' },
+        { id: 'd03', name: '주문서 03', v: '사과,바나나,우유,사과,빵' }
+      ],
+
+      /* 개발·강사용 검증 표. 학생에게는 보여주지 않는다.
+       * 세 자료에서 세 대표 방법의 기대 출력:
+       *   쉼표+각각 남기기+개수  → 3, 3, 5
+       *   쉼표+하나만 남기기+개수 → 3, 3, 4
+       *   항상 숫자 3            → 3, 3, 3
+       */
+      verify: [
+        { input: '사과,바나나,우유',         total: 3, unique: 3 },
+        { input: '빵,치즈,주스',             total: 3, unique: 3 },
+        { input: '사과,바나나,우유,사과,빵',  total: 5, unique: 4 }
+      ]
+    },
+
+    /* ── sm2: 출석부 ────────────────────────────────── */
+    {
+      id: 'sm2',
+      no: '02',
+      type: 'sentence',
+      stage: '출석 확인',
+      title: '오늘 수업에 몇 명이 왔나요',
+      brief: '선생님이 출석부를 보내셨어요. 오늘 수업에 온 학생이 몇 명인지 알려주세요.',
+
+      define: {
+        q: '나는 출석부에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '이름이 적힌 전체 횟수', key: 'total' },
+          { v: '서로 다른 학생 수', key: 'unique' }
+        ]
+      },
+
+      method: {
+        sentences: [
+          {
+            template: '출석부를 {sep} 기준으로 나눈다.',
+            slot: 'sep',
+            options: ['쉼표', '공백', '줄바꿈']
+          },
+          {
+            template: '같은 이름은 {dedup}.',
+            slot: 'dedup',
+            options: ['각각 남긴다', '하나만 남긴다']
+          },
+          {
+            template: '{output}을 출력한다.',
+            slot: 'output',
+            options: ['남은 항목의 개수', '항상 숫자 3']
+          }
+        ]
+      },
+
+      inputs: [
+        { id: 'd01', name: '월요일 출석부', v: '민수,지우,현우' },
+        { id: 'd02', name: '화요일 출석부', v: '서연,도윤,하은,민준' },
+        { id: 'd03', name: '수요일 출석부', v: '민수,지우,민수,현우,지우' }
+      ],
+
+      verify: [
+        { input: '민수,지우,현우',             total: 3, unique: 3 },
+        { input: '서연,도윤,하은,민준',         total: 4, unique: 4 },
+        { input: '민수,지우,민수,현우,지우',     total: 5, unique: 3 }
+      ]
+    },
+
+    /* ── sm3: 급식 메뉴 ─────────────────────────────── */
+    {
+      id: 'sm3',
+      no: '03',
+      type: 'sentence',
+      stage: '메뉴 정리',
+      title: '이번 주 급식 메뉴를 정리해주세요',
+      brief: '영양사 선생님이 이번 주 급식 메뉴를 보내셨어요. 메뉴가 몇 가지인지 정리해주세요.',
+
+      define: {
+        q: '나는 메뉴판에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '적힌 메뉴의 전체 개수', key: 'total' },
+          { v: '서로 다른 메뉴의 가짓수', key: 'unique' }
+        ]
+      },
+
+      method: {
+        sentences: [
+          {
+            template: '메뉴판을 {sep} 기준으로 나눈다.',
+            slot: 'sep',
+            options: ['쉼표', '공백', '줄바꿈']
+          },
+          {
+            template: '같은 메뉴는 {dedup}.',
+            slot: 'dedup',
+            options: ['각각 남긴다', '하나만 남긴다']
+          },
+          {
+            template: '{output}을 출력한다.',
+            slot: 'output',
+            options: ['남은 항목의 개수', '항상 숫자 3']
+          }
+        ]
+      },
+
+      inputs: [
+        { id: 'd01', name: '월요일 메뉴', v: '밥,국,김치' },
+        { id: 'd02', name: '화요일 메뉴', v: '비빔밥,미역국,깍두기,요구르트' },
+        { id: 'd03', name: '일주일 메뉴 합산', v: '밥,국,김치,비빔밥,국,밥,깍두기' }
+      ],
+
+      verify: [
+        { input: '밥,국,김치',                         total: 3, unique: 3 },
+        { input: '비빔밥,미역국,깍두기,요구르트',          total: 4, unique: 4 },
+        { input: '밥,국,김치,비빔밥,국,밥,깍두기',         total: 7, unique: 5 }
+      ]
+    }
+  ];
+
   CC.MISSIONS = MISSIONS;
+  CC.SENTENCE_MISSIONS = SENTENCE_MISSIONS;
+  CC.sentenceMission = function (id) {
+    return SENTENCE_MISSIONS.filter(function (m) { return m.id === id; })[0] || null;
+  };
   CC.mission = function (id) {
     return MISSIONS.filter(function (m) { return m.id === id; })[0] || MISSIONS[0];
   };

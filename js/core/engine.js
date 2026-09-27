@@ -160,5 +160,58 @@
     return lines;
   }
 
-  CC.engine = { run: run, toPython: toPython };
+  /* ── 문장형 실행 엔진 ──────────────────────────────
+   *
+   * 문장 입력 미션에서 학생의 슬롯 선택(slots)과 입력 텍스트로
+   * 결정적인 결과를 반환한다. 같은 입력·같은 슬롯은 항상 같은 출력.
+   *
+   * slots 형태 (미션 01 기준):
+   *   { sep: '쉼표' | '공백' | '줄바꿈',
+   *     dedup: '각각 남긴다' | '하나만 남긴다',
+   *     output: '남은 항목의 개수' | '항상 숫자 3' }
+   *
+   * 반환:
+   *   성공 → { err: 0, type: 'number', value: <숫자>, steps: [...] }
+   *   검증 실패 → { err: 1, msg: '...' }
+   */
+  function runSentence(slots, text) {
+    /* 필수 슬롯 검증 — 빈 슬롯은 실행하지 않고 구체적으로 안내한다 */
+    if (!slots) return err(-1, '방법이 아직 정해지지 않았어요.');
+    if (!slots.sep) return err(-1, '나누는 기준을 선택해 주세요.');
+    if (!slots.dedup) return err(-1, '같은 이름 처리 방법을 선택해 주세요.');
+    if (!slots.output) return err(-1, '출력할 값을 선택해 주세요.');
+
+    var steps = [];
+    var SEP_MAP = { '쉼표': ',', '공백': ' ', '줄바꿈': '\n' };
+    var sep = SEP_MAP[slots.sep];
+    if (sep === undefined) return err(-1, '알 수 없는 나누기 기준이에요: ' + slots.sep);
+
+    /* 1단계: 나누기 */
+    var items = String(text).split(sep);
+    steps.push({ step: '나누기', sep: slots.sep, result: items.slice() });
+
+    /* 2단계: 중복 처리 */
+    if (slots.dedup === '하나만 남긴다') {
+      var seen = [];
+      items.forEach(function (v) { if (seen.indexOf(v) === -1) seen.push(v); });
+      items = seen;
+    }
+    /* '각각 남긴다' → 그대로 */
+    steps.push({ step: '중복 처리', dedup: slots.dedup, result: items.slice() });
+
+    /* 3단계: 출력 계산 */
+    var value;
+    if (slots.output === '항상 숫자 3') {
+      value = 3;
+    } else if (slots.output === '남은 항목의 개수') {
+      value = items.length;
+    } else {
+      return err(-1, '알 수 없는 출력 방법이에요: ' + slots.output);
+    }
+    steps.push({ step: '출력', output: slots.output, result: value });
+
+    return { err: 0, type: 'number', value: value, steps: steps };
+  }
+
+  CC.engine = { run: run, toPython: toPython, runSentence: runSentence };
 })(window.CC = window.CC || {});

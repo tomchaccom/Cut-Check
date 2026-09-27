@@ -84,7 +84,8 @@
 화면 7개와 **세 층**으로 나뉜 코드. 층의 경계가 이 저장소에서 제일 중요한 규칙이다.
 
 ```
-index.html      학생 화면 (미션 01·02·03·06 + 졸업 과제)
+index.html      학생 화면 (미션 01·02·03·06 + 졸업 과제, 블록 기반)
+sentence.html   학생 화면 (문장형 미션 01, 선택형 빈칸)
 abstract.html   미션 04 · 추상화
 review.html     미션 05 · 동료 검토
 make.html       졸업 시험 · 내 미션 만들기
@@ -108,7 +109,7 @@ js/data/   바깥 세계. 여기만 localStorage 와 fetch 를 안다
   store.js      오프라인 우선 기록 + 발신함
 
 js/ui/     화면. DOM 만 만진다
-  app.js  teacher.js  abstract.js  review.js  make.js  classroom.js
+  app.js  teacher.js  abstract.js  review.js  make.js  classroom.js  sentence.js
 ```
 
 ### 층을 넘지 않는다

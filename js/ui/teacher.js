@@ -228,12 +228,55 @@
       var b4 = el('div', 'dbox');
       b4.appendChild(el('span', 'k', '학생이 쓴 증상'));
       b4.appendChild(el('div', 'v', s.symptom.act
-        ? '“' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았는데 ' +
+        ? '”' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았는데 ' +
           CC.josa(s.symptom.act, '이/가') + ' 나왔어요”' +
           (s.symptom.blk ? ' · 의심 블록 ' + s.symptom.blk : '')
-        : '“' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았어요” — 실제로 뭐가 나왔는지는 못 골랐습니다'));
+        : '”' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았어요” — 실제로 뭐가 나왔는지는 못 골랐습니다'));
       g.appendChild(b4);
     }
+
+    /* 문장형 미션 데이터 */
+    if (s.sDefine) {
+      var bs1 = el('div', 'dbox');
+      bs1.appendChild(el('span', 'k', '문장형 · 성공 조건'));
+      bs1.appendChild(el('div', 'v', s.sDefine.choice + (s.sDefineVer > 1 ? ' (수정 ' + (s.sDefineVer - 1) + '회)' : '')));
+      g.appendChild(bs1);
+    }
+    if (s.sMethod) {
+      var bs2 = el('div', 'dbox');
+      bs2.appendChild(el('span', 'k', '문장형 · 현재 방법'));
+      var sl = s.sMethod.slots;
+      bs2.appendChild(el('div', 'v',
+        (sl.sep || '-') + '로 나누고, ' + (sl.dedup || '-') + ', ' + (sl.output || '-') +
+        (s.sMethodVer > 1 ? ' (수정 ' + (s.sMethodVer - 1) + '회)' : '')));
+      g.appendChild(bs2);
+    }
+    if (s.sRuns.length) {
+      var bs3 = el('div', 'dbox');
+      bs3.appendChild(el('span', 'k', '문장형 · 실행 기록'));
+      bs3.appendChild(el('div', 'v', '실행 ' + s.sRuns.length + '회'));
+      g.appendChild(bs3);
+    }
+    if (s.sJudges.length) {
+      var bs4 = el('div', 'dbox');
+      bs4.appendChild(el('span', 'k', '문장형 · 최근 판정'));
+      var lastJ = s.sJudges[s.sJudges.length - 1];
+      bs4.appendChild(el('div', 'v', lastJ.verdict + (lastJ.basis ? ' — ' + lastJ.basis : '')));
+      g.appendChild(bs4);
+    }
+    if (s.sHelps) {
+      var bs5 = el('div', 'dbox flag');
+      bs5.appendChild(el('span', 'k', '문장형 · 도움 요청'));
+      bs5.appendChild(el('div', 'v', s.sHelps + '회'));
+      g.appendChild(bs5);
+    }
+    if (s.sWrap) {
+      var bs6 = el('div', 'dbox');
+      bs6.appendChild(el('span', 'k', '문장형 · 마무리'));
+      bs6.appendChild(el('div', 'v', s.sWrap));
+      g.appendChild(bs6);
+    }
+
     d.appendChild(g);
 
     /* 교사가 할 말을 대신 써주지 않는다. 물어볼 질문만 고른다. */

@@ -105,5 +105,71 @@ t('숫자가 된 뒤에는 자르기가 막힌다',
 t('숫자가 된 뒤에는 반복도 막힌다',
   (() => { const r = CC.engine.run(['input','cut','count','loop'], g6, 'a,b'); return r.err === 1 && r.at === 3; })());
 
+/* ── 문장형 실행 엔진 (runSentence) ──────────────────────────
+ * 명세: 세 대표 방법의 출력이 검증 표와 일치해야 한다.
+ *   쉼표+각각 남기기+개수  → 3, 3, 5
+ *   쉼표+하나만 남기기+개수 → 3, 3, 4
+ *   항상 숫자 3            → 3, 3, 3
+ */
+console.log('\n[문장형 엔진] 세 대표 방법');
+const sm1 = CC.sentenceMission('sm1');
+const DATA = sm1.inputs;
+
+// 방법 1: 쉼표 + 각각 남기기 + 남은 항목의 개수
+const m1slots = { sep: '쉼표', dedup: '각각 남긴다', output: '남은 항목의 개수' };
+const m1expect = [3, 3, 5];
+DATA.forEach((inp, i) => {
+  const r = CC.engine.runSentence(m1slots, inp.v);
+  t(`전체 개수 · ${inp.name} → ${r.value} (기대 ${m1expect[i]})`, r.err === 0 && r.value === m1expect[i]);
+});
+
+// 방법 2: 쉼표 + 하나만 남기기 + 남은 항목의 개수
+const m2slots = { sep: '쉼표', dedup: '하나만 남긴다', output: '남은 항목의 개수' };
+const m2expect = [3, 3, 4];
+DATA.forEach((inp, i) => {
+  const r = CC.engine.runSentence(m2slots, inp.v);
+  t(`서로 다른 이름 · ${inp.name} → ${r.value} (기대 ${m2expect[i]})`, r.err === 0 && r.value === m2expect[i]);
+});
+
+// 방법 3: 항상 숫자 3
+const m3slots = { sep: '쉼표', dedup: '각각 남긴다', output: '항상 숫자 3' };
+DATA.forEach((inp) => {
+  const r = CC.engine.runSentence(m3slots, inp.v);
+  t(`항상 3 · ${inp.name} → ${r.value}`, r.err === 0 && r.value === 3);
+});
+
+console.log('\n[문장형 엔진] 빈 슬롯 검증');
+t('sep 비어있으면 오류', CC.engine.runSentence({ sep: '', dedup: '각각 남긴다', output: '남은 항목의 개수' }, 'a,b').err === 1);
+t('dedup 비어있으면 오류', CC.engine.runSentence({ sep: '쉼표', dedup: '', output: '남은 항목의 개수' }, 'a,b').err === 1);
+t('output 비어있으면 오류', CC.engine.runSentence({ sep: '쉼표', dedup: '각각 남긴다', output: '' }, 'a,b').err === 1);
+t('slots가 null이면 오류', CC.engine.runSentence(null, 'a,b').err === 1);
+
+// ── sm2: 출석부
+console.log('\n[문장형 엔진] sm2 출석부');
+const sm2 = CC.sentenceMission('sm2');
+t('sm2 존재', !!sm2);
+const att_total = { sep: '쉼표', dedup: '각각 남긴다', output: '남은 항목의 개수' };
+const att_unique = { sep: '쉼표', dedup: '하나만 남긴다', output: '남은 항목의 개수' };
+// 수요일: 민수,지우,민수,현우,지우 → 전체 5, 서로 다른 3
+t('출석부 수요일 전체=5', CC.engine.runSentence(att_total, sm2.inputs[2].v).value === 5);
+t('출석부 수요일 서로 다른=3', CC.engine.runSentence(att_unique, sm2.inputs[2].v).value === 3);
+
+// ── sm3: 급식 메뉴
+console.log('\n[문장형 엔진] sm3 급식 메뉴');
+const sm3s = CC.sentenceMission('sm3');
+t('sm3 존재', !!sm3s);
+const menu_total = { sep: '쉼표', dedup: '각각 남긴다', output: '남은 항목의 개수' };
+const menu_unique = { sep: '쉼표', dedup: '하나만 남긴다', output: '남은 항목의 개수' };
+// 일주일 합산: 밥,국,김치,비빔밥,국,밥,깍두기 → 전체 7, 서로 다른 5
+t('메뉴 합산 전체=7', CC.engine.runSentence(menu_total, sm3s.inputs[2].v).value === 7);
+t('메뉴 합산 서로 다른=5', CC.engine.runSentence(menu_unique, sm3s.inputs[2].v).value === 5);
+
+console.log('\n[문장형 엔진] 자료 03 차이 확인');
+const d03 = '사과,바나나,우유,사과,빵';
+const r_total = CC.engine.runSentence({ sep: '쉼표', dedup: '각각 남긴다', output: '남은 항목의 개수' }, d03);
+const r_unique = CC.engine.runSentence({ sep: '쉼표', dedup: '하나만 남긴다', output: '남은 항목의 개수' }, d03);
+const r_hard = CC.engine.runSentence({ sep: '쉼표', dedup: '각각 남긴다', output: '항상 숫자 3' }, d03);
+t('자료 03 전체=5, 서로 다른=4, 항상=3 → 셋 다 다름', r_total.value === 5 && r_unique.value === 4 && r_hard.value === 3);
+
 console.log('\n' + (fail ? `실패 ${fail}건` : '전체 통과'));
 process.exit(fail?1:0);

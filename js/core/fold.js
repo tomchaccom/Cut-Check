@@ -42,7 +42,17 @@
       reviewGuess: null,
       made: null,
       mission: null,
-      idleSec: 0
+      idleSec: 0,
+
+      /* 문장형 미션 */
+      sDefine: null,         /* { choice, reason } */
+      sMethod: null,         /* { slots, reason } */
+      sRuns: [],             /* [{ dataId, result, t }] */
+      sJudges: [],           /* [{ runId, verdict, basis, t }] */
+      sHelps: 0,
+      sWrap: null,
+      sMethodVer: 0,
+      sDefineVer: 0
     };
   }
 
@@ -86,6 +96,29 @@
       case 'break':
         s.breaks++;
         if (e.broke) s.brokeOwn = true; break;
+
+      /* 문장형 미션 */
+      case 's-define':
+        s.sDefine = { choice: e.choice, reason: e.reason };
+        s.sDefineVer++; break;
+      case 's-redefine':
+        s.sDefine = { choice: e.to, reason: e.reason };
+        s.sDefineVer++; break;
+      case 's-method':
+        s.sMethod = { slots: e.slots, reason: e.reason };
+        s.sMethodVer++; break;
+      case 's-remethod':
+        s.sMethod = { slots: e.toSlots, reason: e.reason };
+        s.sMethodVer++; break;
+      case 's-run':
+        s.sRuns.push({ dataId: e.dataId, result: e.result, t: e.t }); break;
+      case 's-judge':
+        s.sJudges.push({ runId: e.runId, verdict: e.verdict, basis: e.basis, t: e.t }); break;
+      case 's-help':
+        s.sHelps++; break;
+      case 's-wrap':
+        s.sWrap = e.text; break;
+
       default: /* 모르는 type 은 무시한다 — 구버전 화면이 새 서버를 만나도 안 죽는다 */ break;
     }
     return s;

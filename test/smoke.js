@@ -19,7 +19,7 @@ function launchOpts() {
   return p ? { executablePath: p } : {};
 }
 
-const PAGES = ['index.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html'];
+const PAGES = ['index.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html','sentence.html'];
 (async () => {
   const b = await chromium.launch(launchOpts());
   let bad = 0;

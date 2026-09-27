@@ -63,6 +63,39 @@ t('좌석별로 갈라서 접는다', many.length === 2);
 t('좌석 id 만 쓰고 이름은 서버가 모른다', many.every(x => x.id === x.name));
 t('함정 선택이 보존된다', many.filter(x => x.define.trap === 'luck').length === 1);
 
+// ── 문장형 이벤트와 접기
+console.log('\n[문장형] 이벤트와 접기');
+const sev1 = CC.events.make(T.S_DEFINE, { choice: '전체 개수', reason: '모든 상품을 세야 하니까' });
+t('문장형 성공 조건 이벤트 생성', sev1.type === 's-define' && sev1.choice === '전체 개수');
+
+const sev2 = CC.events.make(T.S_METHOD, { slots: { sep: '쉼표', dedup: '각각 남긴다', output: '남은 항목의 개수' }, reason: '쉼표가 보여서' });
+t('문장형 방법 이벤트 생성', sev2.type === 's-method' && sev2.slots.sep === '쉼표');
+
+const sev3 = CC.events.make(T.S_RUN, { dataId: 'd01', slots: sev2.slots, result: { err: 0, value: 3 } });
+t('문장형 실행 이벤트 생성', sev3.type === 's-run');
+
+const sev4 = CC.events.make(T.S_JUDGE, { runId: 0, verdict: '지켰다', basis: '3개가 맞으니까' });
+t('문장형 판정 이벤트 생성', sev4.type === 's-judge');
+
+const sev5 = CC.events.make(T.S_WRAP, { text: '처음에는 전체 개수라고 생각했다.' });
+t('문장형 마무리 이벤트 생성', sev5.type === 's-wrap');
+
+const slog = [sev1, sev2, sev3, sev4, sev5];
+const sf = CC.fold.fold(slog, { now: now });
+t('문장형 접기 — 성공 조건', sf.sDefine && sf.sDefine.choice === '전체 개수');
+t('문장형 접기 — 방법', sf.sMethod && sf.sMethod.slots.sep === '쉼표');
+t('문장형 접기 — 실행 기록', sf.sRuns.length === 1);
+t('문장형 접기 — 판정', sf.sJudges.length === 1 && sf.sJudges[0].verdict === '지켰다');
+t('문장형 접기 — 마무리', sf.sWrap === '처음에는 전체 개수라고 생각했다.');
+t('문장형 접기 — 버전', sf.sDefineVer === 1 && sf.sMethodVer === 1);
+
+// 재정의 시 버전 올라감
+const slog2 = slog.concat([
+  CC.events.make(T.S_REDEFINE, { from: '전체 개수', to: '서로 다른 이름', reason: '중복이 있으니까' })
+]);
+const sf2 = CC.fold.fold(slog2, { now: now });
+t('문장형 재정의 후 버전 증가', sf2.sDefineVer === 2 && sf2.sDefine.choice === '서로 다른 이름');
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
 ['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'llmguard.js', 'asks.js']
