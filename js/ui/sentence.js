@@ -594,7 +594,28 @@
     });
   }
 
+  /* ── 생성된 미션 로드 ────────────────────────────── */
+  function loadGeneratedMissions() {
+    var saved = [];
+    try { saved = JSON.parse(localStorage.getItem('cutcheck.generated') || '[]'); } catch (e) {}
+    saved.forEach(function (m) {
+      /* 이미 추가된 건 건너뛰기 */
+      if (CC.SENTENCE_MISSIONS.some(function (x) { return x.id === m.id; })) return;
+      CC.SENTENCE_MISSIONS.push(m);
+
+      var b = el('button', 'm-btn');
+      b.type = 'button';
+      b.dataset.id = m.id;
+      b.setAttribute('aria-pressed', 'false');
+      b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
+      b.appendChild(el('span', 'm-title', m.title));
+      b.addEventListener('click', function () { loadMission(m.id); });
+      bar.appendChild(b);
+    });
+  }
+
   /* ── 첫 미션 로드 ──────────────────────────────── */
+  loadGeneratedMissions();
   loadMission(CC.SENTENCE_MISSIONS[0].id);
   initAuth();
 
