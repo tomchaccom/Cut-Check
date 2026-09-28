@@ -700,12 +700,21 @@ dialog::backdrop {
 #save-status.error { color: var(--coral); }
 
 /* ── 반응형 ──────────────────────────────────────── */
+/* 터치 영역·접근성 보강 */
+.tbtn { min-height: 44px; display: inline-flex; align-items: center; }
+.reason.inline { min-height: 44px; }
+.steps-nav span.done::before { content: "\2713 "; }
+.steps-nav span.current { font-weight: 800; }
+
 @media (max-width: 600px) {
   .page { padding: 14px 12px 60px; }
   .step-title { font-size: 19px; }
   .sentence-frame { font-size: 15px; padding: 12px 14px; }
-  .toptools { display: none; }
+  .toptools { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
+  .toptools .tbtn { padding: 4px 8px; font-size: 11px; min-height: 36px; }
   .steps-nav span { padding: 4px 7px; font-size: 12px; }
   .current-config { flex-direction: column; }
   .config-item { min-width: 0; }
+  .main-tabs { font-size: 13px; }
+  .mission-grid { grid-template-columns: 1fr; }
 }

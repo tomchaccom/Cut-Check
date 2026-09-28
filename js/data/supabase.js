@@ -136,6 +136,17 @@
         .then(function (r) { return r.data || []; });
     },
 
+    /* ── 교실 학생 목록 ────────────────────────── */
+    getClassroomStudents: function (classroomId) {
+      if (!sb) return Promise.resolve([]);
+      return sb.from('enrollments')
+        .select('student_id, profiles(id, name)')
+        .eq('classroom_id', classroomId)
+        .then(function (r) {
+          return (r.data || []).map(function (e) { return e.profiles; }).filter(Boolean);
+        });
+    },
+
     /* ── 이벤트 (학생 기록) ──────────────────── */
     pushEvent: function (classroomId, missionId, event) {
       if (!sb) return Promise.resolve(null);

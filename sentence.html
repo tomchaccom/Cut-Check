@@ -29,10 +29,10 @@
       <span data-step="5">마무리</span>
     </nav>
     <div class="toptools">
+      <span class="tbtn" id="classroom-name" style="cursor:default;background:var(--green-soft);color:var(--green);border-color:var(--green)" hidden></span>
       <span class="tbtn" id="user-info" style="cursor:default" hidden></span>
-      <a class="tbtn" href="teacher.html" id="teacher-link" hidden>선생님 화면</a>
-      <button class="tbtn" id="logout-btn" hidden>로그아웃</button>
-      <a class="tbtn" href="auth.html" id="login-link">로그인</a>
+      <button class="tbtn" id="logout-btn" hidden aria-label="로그아웃">로그아웃</button>
+      <a class="tbtn" href="auth.html" id="login-link" aria-label="로그인 페이지로 이동">로그인</a>
     </div>
   </header>
 
@@ -52,7 +52,7 @@
 
   <!-- [미션 풀기] 패널 -->
   <section class="tab-panel" id="panel-play">
-    <button class="btn text" id="back-to-missions" hidden style="margin-bottom:12px">&larr; 미션 목록으로</button>
+    <button class="btn text" id="back-to-missions" hidden style="margin-bottom:12px" aria-label="미션 목록으로 돌아가기">&larr; 미션 목록으로</button>
     <nav class="mission-bar" id="mission-bar"></nav>
 
   <main class="content">
@@ -164,7 +164,7 @@
       <div class="step-actions">
         <button class="btn secondary" id="back-method">방법 수정</button>
         <button class="btn secondary" id="back-define2">성공 조건 수정</button>
-        <button class="btn text" id="help-btn">도움 요청</button>
+        <button class="btn text" id="help-btn" aria-label="도움 요청하기">도움 요청</button>
         <button class="btn primary" id="go-wrap" disabled>마무리로</button>
       </div>
     </section>

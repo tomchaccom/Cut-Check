@@ -21,9 +21,8 @@
     </div>
     <div class="toptools">
       <span class="tbtn" id="t-username" style="cursor:default" hidden></span>
-      <button class="tbtn" id="notes-toggle" aria-pressed="false">설계 의도</button>
-      <a class="tbtn" href="sentence.html">학생 화면</a>
-      <button class="tbtn" id="t-logout" hidden>로그아웃</button>
+      <button class="tbtn" id="notes-toggle" aria-pressed="false" aria-label="설계 의도 보기">설계 의도</button>
+      <button class="tbtn" id="t-logout" hidden aria-label="로그아웃">로그아웃</button>
     </div>
   </header>
 
@@ -31,6 +30,7 @@
   <section id="classroom-selector">
     <h2 style="font-size:20px;font-weight:800;margin-bottom:14px">내 교실</h2>
     <div class="mission-grid" id="classroom-cards"></div>
+    <div id="classroom-empty" class="empty-msg" hidden>아직 교실이 없어요. 아래에서 새 교실을 만드세요.</div>
     <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
       <input type="text" id="new-room-name" placeholder="새 교실 이름 (예: 2학년 3반)" style="flex:1;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);min-height:44px">
       <button class="btn primary" id="new-room-btn">만들기</button>
@@ -190,13 +190,23 @@ window.CC_SUPABASE = {
     CC.sb.myClassrooms().then(function (rooms) {
       var cards = $('#classroom-cards');
       cards.innerHTML = '';
+      if (!rooms.length) {
+        $('#classroom-empty').hidden = false;
+        return;
+      }
+      $('#classroom-empty').hidden = true;
       rooms.forEach(function (room) {
         var card = el('div', 'mission-card');
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
         card.appendChild(el('div', 'mc-stage', '참여 코드: ' + room.code));
         card.appendChild(el('div', 'mc-title', room.name));
         card.addEventListener('click', function () { selectRoom(room); });
+        card.addEventListener('keydown', function (e) { if (e.key === 'Enter') selectRoom(room); });
         cards.appendChild(card);
       });
+      /* 교실이 하나면 자동 선택 */
+      if (rooms.length === 1) selectRoom(rooms[0]);
     });
   }
 
@@ -226,23 +236,22 @@ window.CC_SUPABASE = {
   /* 학생 명단 로드 */
   function loadStudents() {
     if (!selectedRoom || !CC.sb.active()) return;
-    var sb = CC.sb.client();
-    sb.from('enrollments').select('student_id, profiles(id, name, role)')
-      .eq('classroom_id', selectedRoom.id)
-      .then(function (res) {
-        var list = $('#student-list');
-        list.innerHTML = '';
-        var students = (res.data || []).map(function (e) { return e.profiles; }).filter(Boolean);
-        if (!students.length) { $('#student-empty').hidden = false; return; }
-        $('#student-empty').hidden = true;
-        students.forEach(function (s) {
-          var row = el('div', 'mission-card');
-          row.style.cursor = 'default';
-          row.style.padding = '12px 16px';
-          row.appendChild(el('div', 'mc-title', s.name));
-          list.appendChild(row);
-        });
+    CC.sb.getClassroomStudents(selectedRoom.id).then(function (students) {
+      var list = $('#student-list');
+      list.innerHTML = '';
+      if (!students.length) { $('#student-empty').hidden = false; return; }
+      $('#student-empty').hidden = true;
+      students.forEach(function (s) {
+        var row = el('div', 'mission-card');
+        row.style.cursor = 'default';
+        row.style.padding = '12px 16px';
+        row.appendChild(el('div', 'mc-title', s.name));
+        list.appendChild(row);
       });
+      /* 교실 카드에 학생 수 반영 */
+      var label = $('#class-label');
+      if (label) label.textContent = selectedRoom.name + ' · 코드 ' + selectedRoom.code + ' · 학생 ' + students.length + '명';
+    });
   }
 
   /* 학생 이벤트 로드 → 대시보드에 반영 */

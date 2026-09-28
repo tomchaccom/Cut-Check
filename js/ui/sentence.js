@@ -573,8 +573,10 @@
     $('#missions-empty').hidden = true;
 
     missions.forEach(function (m) {
-      var mData = m.data || m; /* Supabase는 data 필드, 로컬은 직접 */
+      var mData = m.data || m;
       var card = el('div', 'mission-card');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
       card.appendChild(el('div', 'mc-stage', (mData.no || '') + ' · ' + (mData.stage || '')));
       card.appendChild(el('div', 'mc-title', mData.title || ''));
       card.appendChild(el('div', 'mc-brief', mData.brief || ''));
@@ -710,6 +712,12 @@
           return;
         }
         currentClassroomId = rooms[0].id;
+
+        /* 상단에 교실 이름 표시 */
+        if ($('#classroom-name')) {
+          $('#classroom-name').textContent = rooms[0].name;
+          $('#classroom-name').hidden = false;
+        }
 
         CC.sb.getMissions(currentClassroomId).then(function (missions) {
           if (missions.length) {
