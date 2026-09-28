@@ -56,7 +56,7 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
       'Authorization': 'Bearer ' + apiKey
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-haiku-4-5-20251001',
+      model: 'pickle-general',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }]
     })
