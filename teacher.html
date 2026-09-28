@@ -151,15 +151,18 @@ window.CC_SUPABASE = {
   var btn = $('#gen-btn');
   var result = $('#gen-result');
 
+  /* 유니코드 특수 문자 제거 — 붙여넣기 시 보이지 않는 U+2028 등이 섞이면 fetch가 깨진다 */
+  function clean(s) { return s.replace(/[\u2028\u2029\u200B-\u200F\uFEFF]/g, ' ').trim(); }
+
   btn.addEventListener('click', function () {
-    var lesson = $('#gen-lesson').value.trim();
-    var keyPoint = $('#gen-key').value.trim();
+    var lesson = clean($('#gen-lesson').value);
+    var keyPoint = clean($('#gen-key').value);
     if (!lesson) { result.innerHTML = '<span style="color:var(--coral)">수업 내용을 입력해주세요.</span>'; return; }
     if (!keyPoint) { result.innerHTML = '<span style="color:var(--coral)">핵심 포인트를 입력해주세요.</span>'; return; }
 
     btn.disabled = true;
     btn.textContent = '생성 중...';
-    result.innerHTML = '<span style="color:var(--ink-3)">Claude가 미션을 만들고 있어요...</span>';
+    result.innerHTML = '<span style="color:var(--ink-3)">미션을 만들고 있어요...</span>';
 
     fetch('/api/generate-mission', {
       method: 'POST',
