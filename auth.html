@@ -74,7 +74,15 @@
 
     <div class="auth-msg" id="auth-msg"></div>
 
-    <!-- 교실 참여 (로그인 후 학생) -->
+    <!-- 강사: 교실 만들기 -->
+    <div class="join-section" id="create-section" hidden>
+      <h3>교실 만들기</h3>
+      <div class="field"><label>교실 이름</label><input type="text" id="create-name" placeholder="예: 2학년 3반"></div>
+      <button class="auth-btn" id="create-btn" style="background:var(--green)">교실 만들기</button>
+      <div id="create-result" style="margin-top:12px"></div>
+    </div>
+
+    <!-- 학생: 교실 참여 -->
     <div class="join-section" id="join-section" hidden>
       <h3>교실 참여하기</h3>
       <div class="field"><label>참여 코드</label><input type="text" id="join-code" placeholder="강사에게 받은 코드" maxlength="6" style="text-transform:uppercase"></div>
@@ -126,15 +134,29 @@ window.CC_SUPABASE = {
   });
 
   function redirectByRole(profile) {
+    /* 폼 숨기기 */
+    $('#form-login').hidden = true;
+    $('#form-signup').hidden = true;
+    document.querySelector('.auth-tabs').hidden = true;
+
     if (profile.role === 'teacher') {
-      window.location.href = 'teacher.html';
-    } else {
-      /* 교실에 등록되어 있으면 바로 미션으로 */
+      /* 강사: 교실이 있으면 바로 이동, 없으면 만들기 표시 */
       CC.sb.myClassrooms().then(function (rooms) {
         if (rooms.length) {
-          window.location.href = 'sentence.html';
+          showMsg(profile.name + ' 선생님, 교실이 있어요. 이동합니다...', 'ok');
+          setTimeout(function () { window.location.href = 'teacher.html'; }, 800);
         } else {
-          /* 교실 참여 섹션 표시 */
+          $('#create-section').hidden = false;
+          showMsg(profile.name + ' 선생님 환영합니다. 교실을 만들어주세요.', 'ok');
+        }
+      });
+    } else {
+      /* 학생: 교실에 등록되어 있으면 바로 미션으로 */
+      CC.sb.myClassrooms().then(function (rooms) {
+        if (rooms.length) {
+          showMsg(profile.name + '님, 교실에 입장합니다...', 'ok');
+          setTimeout(function () { window.location.href = 'sentence.html'; }, 800);
+        } else {
           $('#join-section').hidden = false;
           showMsg(profile.name + '님 환영합니다. 교실에 참여해주세요.', 'ok');
         }
@@ -180,7 +202,32 @@ window.CC_SUPABASE = {
     }).catch(function (err) { showMsg(err.message, 'error'); });
   });
 
-  /* 교실 참여 */
+  /* 강사: 교실 만들기 */
+  $('#create-btn').addEventListener('click', function () {
+    var name = $('#create-name').value.trim();
+    if (!name) { showMsg('교실 이름을 입력해주세요.', 'error'); return; }
+    showMsg('교실 만드는 중...', '');
+    CC.sb.createClassroom(name)
+      .then(function (room) {
+        var res = $('#create-result');
+        res.innerHTML = '<div style="background:var(--green-soft);border:1px solid var(--green);border-radius:10px;padding:14px;margin-top:8px">' +
+          '<b>' + room.name + '</b> 교실이 만들어졌어요!<br>' +
+          '<span style="font-size:13px;color:var(--ink-2)">학생에게 이 참여 코드를 알려주세요:</span><br>' +
+          '<span style="font-size:28px;font-weight:800;letter-spacing:4px;color:var(--green)">' + room.code + '</span>' +
+          '</div>';
+        showMsg('', '');
+        /* 2초 후 이동 버튼 표시 */
+        var goBtn = document.createElement('button');
+        goBtn.className = 'auth-btn';
+        goBtn.textContent = '선생님 화면으로 이동';
+        goBtn.style.marginTop = '12px';
+        goBtn.addEventListener('click', function () { window.location.href = 'teacher.html'; });
+        res.appendChild(goBtn);
+      })
+      .catch(function (err) { showMsg(err.message, 'error'); });
+  });
+
+  /* 학생: 교실 참여 */
   $('#join-btn').addEventListener('click', function () {
     var code = $('#join-code').value.trim();
     if (!code) { showMsg('참여 코드를 입력해주세요.', 'error'); return; }
