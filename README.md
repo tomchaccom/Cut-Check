@@ -51,6 +51,8 @@ python3 -m http.server 8123
 
 ### 1단계: 요청 읽기
 
+![요청 읽기](docs/images/step1-request.png)
+
 미션을 고르고 업무 요청을 읽습니다. 첫 자료가 함께 보입니다.
 
 - 미션 01 · 주문서 — 상품이 몇 개인지
@@ -59,11 +61,15 @@ python3 -m http.server 8123
 
 ### 2단계: 성공 정하기
 
+![성공 정하기](docs/images/step2-define.png)
+
 > "나는 주문서에서 [주문된 상품의 전체 개수 / 서로 다른 상품 이름의 개수]가 나오면 성공이라고 생각한다."
 
 빈칸을 선택하고 이유를 적습니다. 두 해석 중 어느 것이 정답인지 시스템이 알려주지 않습니다.
 
 ### 3단계: 방법 쓰기
+
+![방법 쓰기](docs/images/step3-method.png)
 
 세 줄의 문장에서 처리 방법을 선택합니다:
 
@@ -74,6 +80,8 @@ python3 -m http.server 8123
 선택이 완료되면 방법 요약이 표시됩니다. "항상 숫자 3"은 하드코딩을 관찰하기 위한 의도적인 선택지입니다.
 
 ### 4단계: 자료별 실행·판정
+
+![자료별 실행·판정](docs/images/step4-run.png)
 
 자료 3장을 하나씩 실행합니다. 각 자료마다:
 
@@ -104,6 +112,8 @@ python3 -m http.server 8123
 ---
 
 ## 강사 사용 흐름
+
+![강사 대시보드](docs/images/teacher-dashboard.png)
 
 `localhost:8123/teacher.html` 에서 학생들의 활동을 봅니다.
 
@@ -207,6 +217,8 @@ node test/robust.js          # 학생 자유 입력 안전 검사
 
 | | |
 |---|---|
+| [docs/tech-spec.md](docs/tech-spec.md) | **테크스펙** — 아키텍처, 데이터 모델, API, 요구사항 |
+| [docs/user-flow.md](docs/user-flow.md) | **유저 플로우** — 학생·강사 전체 흐름 + 데이터 흐름 |
 | [docs/philosophy.md](docs/philosophy.md) | 설계 철학 전문 |
 | [docs/curriculum.md](docs/curriculum.md) | 미션 설계 원리 |
 | [docs/semester.md](docs/semester.md) | 한 학기 15차시 |
