@@ -363,32 +363,50 @@
     }
   }
 
-  /* ── 초기 렌더 ───────────────────────────────────── */
-  headline();
-  liveBanner();
-  tiles();
-  rowList('#ready', '#p-ready', C.ready(), 'hot', function (s) {
-    return '<b>' + esc(s.symptom.exp) + '</b>' + J(s.symptom.exp, '이/가') + ' 나올 줄 알았는데 <b>' +
-      esc(s.symptom.act) + '</b>' + J(s.symptom.act, '이/가') + ' 나왔대요' +
-      (s.symptom.blk ? ' · ' + esc(s.symptom.blk) : '');
-  });
-  rowList('#half', '#p-half', C.halfAsked(), 'warm', function (s) {
-    return '<b>' + esc(s.symptom.exp) + '</b>' + J(s.symptom.exp, '을/를') +
-      ' 기대했다고만 썼어요. 실제로 뭐가 나왔는지는 못 골랐습니다';
-  });
-  rowList('#quiet', '#p-quiet', C.quiet(), 'calm', function (s) {
-    return C.STAGES[s.stage] + ' 단계에서 멈춘 채 호출이 없어요';
-  });
-  rowList('#praise', '#p-praise', C.praise(), 'warm', function (s) {
-    if (s.redefined) {
-      return '결과를 보고 <b>성공 조건 자체를 다시 정함</b> — 문제를 다시 정의한 거예요';
+  /* ── 대시보드 렌더 (외부에서 호출 가능) ──────────── */
+  function renderDashboard() {
+    tiles();
+    rowList('#ready', '#p-ready', C.ready(), 'hot', function (s) {
+      return s.symptom
+        ? '<b>' + esc(s.symptom.exp) + '</b>' + J(s.symptom.exp, '이/가') + ' 나올 줄 알았는데 <b>' +
+          esc(s.symptom.act) + '</b>' + J(s.symptom.act, '이/가') + ' 나왔대요'
+        : '증상을 말하고 있어요';
+    });
+    rowList('#half', '#p-half', C.halfAsked(), 'warm', function (s) {
+      return s.symptom
+        ? '<b>' + esc(s.symptom.exp) + '</b>' + J(s.symptom.exp, '을/를') + ' 기대했다고만 썼어요'
+        : '';
+    });
+    rowList('#quiet', '#p-quiet', C.quiet(), 'calm', function (s) {
+      return C.STAGES[s.stage] + ' 단계에서 멈춘 채 호출이 없어요';
+    });
+    rowList('#praise', '#p-praise', C.praise(), 'warm', function (s) {
+      if (s.redefined) return '결과를 보고 <b>성공 조건 자체를 다시 정함</b>';
+      if (s.revised) return '결과를 보고 <b>기준을 스스로 고침</b>';
+      if (s.sDefineVer > 1) return '<b>성공 조건을 수정함</b> (' + (s.sDefineVer - 1) + '회)';
+      if (s.sMethodVer > 1) return '<b>방법을 수정함</b> (' + (s.sMethodVer - 1) + '회)';
+      if (s.sJudges.length) return '<b>자료를 판정함</b> (' + s.sJudges.length + '건)';
+      return '<b>깨진 곳을 스스로 찾아냄</b>';
+    });
+    risk();
+    funnel();
+
+    /* 문장형 활동이 있는 학생 별도 표시 */
+    var sActive = C.students.filter(function (s) { return s.sDefine || s.sRuns.length; });
+    if (sActive.length) {
+      var banner = document.querySelector('#livebar');
+      if (banner) {
+        banner.className = 'livebar on';
+        banner.innerHTML = '';
+        banner.appendChild(el('span', 'dot'));
+        banner.appendChild(el('span', 'txt', '실제 학생 ' + sActive.length + '명의 활동이 있어요.'));
+      }
     }
-    if (s.revised) {
-      return '결과를 보고 <b>자를 기준을 스스로 고침</b>' +
-        (s.lastRevision ? ' (' + esc(s.lastRevision.from) + ' → ' + esc(s.lastRevision.to) + ')' : '');
-    }
-    return '<b>깨진 곳을 스스로 찾아냄</b>';
-  });
-  risk();
-  funnel();
+  }
+
+  /* 외부에서 호출할 수 있게 노출 */
+  CC._renderDashboard = renderDashboard;
+
+  /* 초기 렌더 */
+  renderDashboard();
 })(window.CC = window.CC || {});

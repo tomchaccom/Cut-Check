@@ -23,6 +23,10 @@
   var rec = function (type, payload) {
     var ev = CC.events.make(type, payload);
     if (CC.store) CC.store.push(ev);
+    /* Supabase에도 저장 */
+    if (CC.sb && CC.sb.active() && currentClassroomId) {
+      CC.sb.pushEvent(currentClassroomId, currentMissionDbId, ev);
+    }
     return ev;
   };
 
@@ -99,36 +103,37 @@
     $('#reason-define').value = '';
     $('#go-method').disabled = true;
 
-    /* 화면 3: 방법 슬롯 재구성 */
-    M.method.sentences.forEach(function (sent) {
-      var sel = $('#slot-' + sent.slot);
-      sel.innerHTML = '<option value="">선택하기</option>';
-      sent.options.forEach(function (opt) {
-        var o = document.createElement('option');
-        o.value = opt;
-        o.textContent = opt;
-        sel.appendChild(o);
-      });
-      sel.value = '';
-    });
+    /* 화면 3: 방법 문장 전체를 미션 템플릿으로 재구성 */
+    var methodBox = document.querySelector('.method-sentences');
+    if (methodBox) {
+      methodBox.innerHTML = '';
+      M.method.sentences.forEach(function (sent, i) {
+        var parts = sent.template.split('{' + sent.slot + '}');
+        var p = el('p', 'sentence-frame');
+        p.appendChild(el('span', 'sent-num', String(i + 1)));
+        p.appendChild(document.createTextNode(parts[0] || ''));
 
-    /* 문장 템플릿 텍스트 갱신 — 슬롯 앞뒤 텍스트만 바꾼다 */
-    var sentEls = document.querySelectorAll('.method-sentences .sentence-frame');
-    M.method.sentences.forEach(function (sent, i) {
-      if (!sentEls[i]) return;
-      var parts = sent.template.split('{' + sent.slot + '}');
-      /* 기존 구조: sent-num + 텍스트 + slot-wrap + 텍스트 를 유지.
-       * childNodes 를 직접 조작해 select 를 보존한다. */
-      var nodes = sentEls[i].childNodes;
-      var textIdx = 0;
-      for (var n = 0; n < nodes.length; n++) {
-        if (nodes[n].nodeType === 3) { // text node
-          if (textIdx === 0) { nodes[n].textContent = '\n          ' + (parts[0] || ''); }
-          else { nodes[n].textContent = (parts[1] || '') + '\n        '; }
-          textIdx++;
-        }
-      }
-    });
+        var wrap = el('span', 'slot-wrap');
+        var sel = document.createElement('select');
+        sel.className = 'slot';
+        sel.id = 'slot-' + sent.slot;
+        sel.setAttribute('aria-label', sent.slot);
+        var defOpt = document.createElement('option');
+        defOpt.value = ''; defOpt.textContent = '선택하기';
+        sel.appendChild(defOpt);
+        sent.options.forEach(function (opt) {
+          var o = document.createElement('option');
+          o.value = opt; o.textContent = opt;
+          sel.appendChild(o);
+        });
+        sel.addEventListener('change', onSlotChange);
+        wrap.appendChild(sel);
+        p.appendChild(wrap);
+
+        p.appendChild(document.createTextNode(parts[1] || ''));
+        methodBox.appendChild(p);
+      });
+    }
 
     $('#reason-method').value = '';
     $('#method-summary').hidden = true;

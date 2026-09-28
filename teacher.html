@@ -107,8 +107,10 @@
         <div id="invite-code" style="font-size:36px;font-weight:800;letter-spacing:6px;color:var(--green);margin-bottom:16px">------</div>
         <button class="btn primary" id="copy-code-btn">코드 복사</button>
         <p id="copy-msg" style="margin-top:8px;font-size:13px;color:var(--green)"></p>
-        <p style="margin-top:20px;font-size:13px;color:var(--ink-3)">학생은 <a href="auth.html">auth.html</a>에서 가입 후 이 코드를 입력하면 교실에 참여합니다.</p>
       </section>
+      <h3 style="font-size:16px;font-weight:700;margin:20px 0 10px">등록된 학생</h3>
+      <div id="student-list"></div>
+      <div id="student-empty" class="empty-msg" hidden>아직 등록된 학생이 없어요.</div>
     </div>
   </div>
 
@@ -217,6 +219,60 @@ window.CC_SUPABASE = {
     $('#dash-divider').hidden = false;
     $('#dashboard').hidden = false;
     loadMissions();
+    loadStudents();
+    loadStudentEvents();
+  }
+
+  /* 학생 명단 로드 */
+  function loadStudents() {
+    if (!selectedRoom || !CC.sb.active()) return;
+    var sb = CC.sb.client();
+    sb.from('enrollments').select('student_id, profiles(id, name, role)')
+      .eq('classroom_id', selectedRoom.id)
+      .then(function (res) {
+        var list = $('#student-list');
+        list.innerHTML = '';
+        var students = (res.data || []).map(function (e) { return e.profiles; }).filter(Boolean);
+        if (!students.length) { $('#student-empty').hidden = false; return; }
+        $('#student-empty').hidden = true;
+        students.forEach(function (s) {
+          var row = el('div', 'mission-card');
+          row.style.cursor = 'default';
+          row.style.padding = '12px 16px';
+          row.appendChild(el('div', 'mc-title', s.name));
+          list.appendChild(row);
+        });
+      });
+  }
+
+  /* 학생 이벤트 로드 → 대시보드에 반영 */
+  function loadStudentEvents() {
+    if (!selectedRoom || !CC.sb.active()) return;
+    CC.sb.getClassroomEvents(selectedRoom.id).then(function (rows) {
+      if (!rows || !rows.length) return;
+
+      /* sid 별로 이벤트를 묶어서 fold */
+      var evs = rows.map(function (r) {
+        var ev = r.event || {};
+        ev.sid = r.student_id;
+        ev.t = ev.t || new Date(r.created_at).getTime();
+        return ev;
+      });
+
+      /* 이름 매핑 */
+      var names = {};
+      rows.forEach(function (r) {
+        if (r.profiles && r.profiles.name) names[r.student_id] = r.profiles.name;
+      });
+
+      var students = CC.fold.foldMany(evs, { names: names, now: Date.now() });
+
+      /* classroom 객체에 실제 학생 주입 */
+      CC.classroom.students = students;
+
+      /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
+      if (typeof CC._renderDashboard === 'function') CC._renderDashboard();
+    });
   }
 
   /* 코드 복사 */
