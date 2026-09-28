@@ -12,7 +12,7 @@
  */
 
 async function generateWithLLM(lesson, keyPoint, difficulty) {
-  var apiKey = process.env.PICKLE_API_KEY;
+  var apiKey = (process.env.PICKLE_API_KEY || '').replace(/[\s\u2028\u2029\u200B-\u200F\uFEFF]/g, '');
   if (!apiKey) throw new Error('PICKLE_API_KEY가 설정되지 않았습니다.');
 
   var diff = difficulty || 'medium';
