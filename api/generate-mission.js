@@ -65,7 +65,8 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
     '- inputs의 v: 쉼표(,)로만 구분, 공백 없이, 한국어만\n' +
     '- 세 번째 자료에 반드시 ' + dupHint + '의 중복 포함\n' +
     '- methodContext: "~를" 또는 "~을" 로 끝남 (예: "주문서를", "명단을")\n' +
-    '- 수업 내용과 연결되는 실생활 맥락';
+    '- 수업 내용과 연결되는 실생활 맥락\n' +
+    '- 한자, 일본어, 영어를 쓰지 않는다. 순한국어만 사용';
 
   var res = await fetch('https://llm.pcl.kr/v1/chat/completions', {
     method: 'POST',
@@ -95,6 +96,25 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
 
   /* ── 검증 및 교정 ──────────────────────────── */
   if (!p.inputs || p.inputs.length < 3) throw new Error('자료가 3개 미만');
+
+  /* 한자·일본어·특수 유니코드 제거 — LLM이 가끔 섞어서 생성함 */
+  function stripCJK(s) {
+    return String(s)
+      .replace(/[\u4E00-\u9FFF\u3400-\u4DBF]/g, '')  /* 한자 */
+      .replace(/[\u3040-\u309F\u30A0-\u30FF]/g, '')   /* 일본어 */
+      .replace(/[\uFF00-\uFFEF]/g, '')                 /* 전각 문자 */
+      .replace(/\s{2,}/g, ' ').trim();
+  }
+  p.title = stripCJK(p.title || '');
+  p.brief = stripCJK(p.brief || '');
+  if (p.defineQ) p.defineQ = stripCJK(p.defineQ);
+  if (p.methodContext) p.methodContext = stripCJK(p.methodContext);
+  if (p.itemName) p.itemName = stripCJK(p.itemName);
+  if (p.defineOptions) p.defineOptions.forEach(function (o) { o.v = stripCJK(o.v); });
+  p.inputs.forEach(function (inp) {
+    inp.name = stripCJK(inp.name);
+    inp.v = stripCJK(inp.v);
+  });
 
   /* 자료 이름이 플레이스홀더면 교정 */
   var stage = p.stage || '수업';
