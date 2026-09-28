@@ -15,12 +15,15 @@
     if (txt != null) e.textContent = txt;
     return e;
   };
+  /* Supabase 연결 시 실제 학생 데이터 사용. 미연결 시 목업 폴백. */
   var C = CC.classroom;
-
-  /* 학생 화면이 남긴 진짜 기록을 목업 교실 맨 앞에 끼운다.
-   * 시연할 때 "내가 방금 한 게 저기 뜬다"가 보여야 한다. */
-  var me = CC.store ? CC.store.fold('나') : null;
-  if (me) C.students = [me].concat(C.students);
+  if (CC.sb && CC.sb.active()) {
+    /* 목업 학생 제거 — 실제 데이터만 사용 */
+    C.students = [];
+  } else {
+    var me = CC.store ? CC.store.fold('나') : null;
+    if (me) C.students = [me].concat(C.students);
+  }
   var J = function (w, pair) { return CC.particle(w, pair); };
 
   /* 미션 04 슬롯 id → 사람이 읽는 이름. 교사 화면에 내부 id 가 새어나가면 안 된다. */

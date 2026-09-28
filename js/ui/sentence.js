@@ -72,8 +72,21 @@
     $('#brief').textContent = M.brief;
     $('#sample-data').textContent = M.inputs[0].v;
     $('#sample-label').textContent = M.inputs[0].name;
+    if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';
 
-    /* 화면 2: 성공 조건 select 재구성 */
+    /* 화면 2: 성공 조건 — 미션의 질문을 문장 틀에 반영 */
+    if ($('#define-prefix') && M.define.q) {
+      /* defineQ에서 "나는 ~에서 무엇이 나오면" 패턴 추출 */
+      var dq = M.define.q;
+      var qMatch = dq.match(/^(.*에서)\s/);
+      if (qMatch) {
+        $('#define-prefix').textContent = '나는 ' + qMatch[1];
+      } else {
+        $('#define-prefix').textContent = '나는 이 목록에서';
+      }
+    }
+
+    /* 성공 조건 select 재구성 */
     var defineSelect = $('#slot-define');
     defineSelect.innerHTML = '<option value="">선택하기</option>';
     M.define.options.forEach(function (o) {

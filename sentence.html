@@ -61,7 +61,7 @@
     <section class="step active" id="step1" tabindex="-1">
       <h2 class="step-title">요청을 읽어보세요</h2>
       <div class="request-card">
-        <span class="req-from">창고 관리팀 · 업무 요청</span>
+        <span class="req-from" id="req-from">업무 요청</span>
         <p class="req-text" id="brief"></p>
       </div>
       <div class="sample-box">
@@ -76,13 +76,13 @@
     <!-- 화면 2: 성공 정하기 -->
     <section class="step" id="step2" tabindex="-1">
       <h2 class="step-title">성공을 정해보세요</h2>
-      <p class="sentence-frame">나는 주문서에서
+      <p class="sentence-frame" id="define-frame"><span id="define-prefix">나는 이 목록에서</span>
         <span class="slot-wrap">
           <select class="slot" id="slot-define" aria-label="성공 조건">
             <option value="">선택하기</option>
           </select>
         </span>
-        가 나오면 성공이라고 생각한다.
+        <span id="define-suffix">가 나오면 성공이라고 생각한다.</span>
       </p>
       <label class="reason-label">이유
         <textarea class="reason" id="reason-define" placeholder="요청을 이렇게 이해한 이유를 적어보세요. '아직 설명하기 어렵다'도 괜찮아요." rows="2"></textarea>
