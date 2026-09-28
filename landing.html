@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut & Check — 자르고, 세 번 확인한다</title>
+<meta name="description" content="정답을 맞히는 게 아니라, 내가 정한 방법이 끝까지 버티는지 확인하는 수업 도구.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#F7F3ED; --surface:#FFFFFF; --surface-2:#FAF8F5; --ink:#2C2520; --ink-2:#6B5F54; --ink-3:#A09688;
+  --line:#E5DFD7; --green:#2E8B57; --green-soft:#E8F5EE; --coral:#C0392B; --coral-soft:#FDEDEB;
+  --sans:"IBM Plex Sans KR",system-ui,sans-serif; --disp:"Gothic A1",system-ui,sans-serif;
+}
+@media(prefers-color-scheme:dark){:root{
+  --paper:#1A1714;--surface:#252220;--surface-2:#2C2926;--ink:#F0EBE5;--ink-2:#BFAD9E;--ink-3:#8D7F72;
+  --line:#3A3632;--green:#5CB882;--green-soft:#1A2E22;--coral:#E07060;--coral-soft:#2E1A18;
+}}
+*{box-sizing:border-box;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.8}
+a{color:var(--green);text-decoration:none;font-weight:600}
+a:hover{text-decoration:underline}
+
+.page{max-width:780px;margin:0 auto;padding:40px 20px 80px}
+
+/* 히어로 */
+.hero{text-align:center;padding:60px 0 40px}
+.hero .mark{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:18px;background:var(--green);color:#fff;font-family:var(--disp);font-weight:800;font-size:26px;margin-bottom:16px}
+.hero h1{font-family:var(--disp);font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1.3}
+.hero .sub{font-size:18px;color:var(--ink-2);margin-top:10px;max-width:480px;margin-inline:auto}
+.hero .cta{display:inline-flex;gap:10px;margin-top:28px;flex-wrap:wrap;justify-content:center}
+.btn-cta{padding:14px 32px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;min-height:48px;transition:transform .1s}
+.btn-cta:hover{transform:translateY(-2px)}
+.btn-cta.primary{background:var(--green);color:#fff}
+.btn-cta.secondary{background:var(--surface);color:var(--ink);border:2px solid var(--line)}
+
+/* 핵심 원칙 */
+.principle{background:var(--green-soft);border:1px solid var(--green);border-radius:16px;padding:28px 32px;margin:40px 0;text-align:center}
+.principle blockquote{font-family:var(--disp);font-size:22px;font-weight:800;color:var(--green);margin-bottom:10px}
+.principle p{font-size:15px;color:var(--ink-2)}
+
+/* 섹션 */
+section{margin:48px 0}
+section h2{font-family:var(--disp);font-size:24px;font-weight:800;margin-bottom:16px}
+section h3{font-size:18px;font-weight:700;margin:20px 0 8px}
+
+/* 두 열 비교 */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media(max-width:600px){.compare{grid-template-columns:1fr}}
+.compare .col{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.compare .col h4{font-size:14px;font-weight:700;margin-bottom:10px}
+.compare .col.bad{border-color:var(--coral)}
+.compare .col.bad h4{color:var(--coral)}
+.compare .col.good{border-color:var(--green)}
+.compare .col.good h4{color:var(--green)}
+.compare ul{padding-left:18px;font-size:15px;color:var(--ink-2);line-height:1.7}
+
+/* 카드 그리드 */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card .num{font-family:var(--disp);font-size:28px;font-weight:800;color:var(--green)}
+.card .label{font-size:13px;color:var(--ink-3);font-weight:600;margin-top:2px}
+.card p{font-size:14px;color:var(--ink-2);margin-top:8px;line-height:1.6}
+
+/* 플로우 */
+.flow{display:flex;flex-direction:column;gap:0;margin:20px 0}
+.flow-step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.flow-step:last-child{border-bottom:none}
+.flow-step .step-n{width:36px;height:36px;border-radius:50%;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none}
+.flow-step .step-body h4{font-size:16px;font-weight:700;margin-bottom:4px}
+.flow-step .step-body p{font-size:14px;color:var(--ink-2)}
+
+/* 안 만든 것 */
+.not-built{background:var(--coral-soft);border:1px solid var(--coral);border-radius:14px;padding:24px;margin:20px 0}
+.not-built h3{color:var(--coral);font-size:16px;margin-bottom:12px}
+.not-built table{width:100%;font-size:14px;border-collapse:collapse}
+.not-built td{padding:6px 0;vertical-align:top;border-bottom:1px solid rgba(192,57,43,.15)}
+.not-built td:first-child{font-weight:600;white-space:nowrap;padding-right:12px;color:var(--coral)}
+.not-built td:last-child{color:var(--ink-2)}
+
+/* 인용 */
+.quote-block{background:var(--surface);border-left:4px solid var(--green);border-radius:0 12px 12px 0;padding:20px 24px;margin:20px 0;font-size:15px}
+.quote-block em{display:block;color:var(--ink-3);font-size:13px;margin-top:8px}
+
+/* 푸터 */
+.foot{margin-top:60px;padding-top:24px;border-top:1px solid var(--line);text-align:center;font-size:13px;color:var(--ink-3)}
+.foot a{color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- 히어로 -->
+  <div class="hero">
+    <div class="mark">C&C</div>
+    <h1>자르고, 세 번 확인한다</h1>
+    <p class="sub">정답을 맞히는 게 아니라, 내가 정한 방법이 끝까지 버티는지 확인하는 수업 도구.</p>
+    <div class="cta">
+      <a class="btn-cta primary" href="auth.html">시작하기</a>
+      <a class="btn-cta secondary" href="https://github.com/tomchaccom/Cut-Check">GitHub</a>
+    </div>
+  </div>
+
+  <!-- 핵심 원칙 -->
+  <div class="principle">
+    <blockquote>시작은 대신해주고, 판단은 하나도 대신하지 않는다.</blockquote>
+    <p>이 한 줄이 이 서비스의 모든 결정을 설명합니다.<br>기능을 붙이기 전에 묻습니다 — 이건 시작 비용을 줄이는 건가, 판단을 대신하는 건가?</p>
+  </div>
+
+  <!-- 문제 인식 -->
+  <section>
+    <h2>기존 코딩 교육의 문제</h2>
+    <div class="compare">
+      <div class="col bad">
+        <h4>기존 도구가 하는 것</h4>
+        <ul>
+          <li>빈 편집기를 던져놓고 → 문법 오류로 막힘</li>
+          <li>가이드 코드를 보여주고 → 베껴 쓰기가 됨</li>
+          <li>정답과 대조해서 채점 → 학생이 답을 추측</li>
+          <li>점수·배지·리더보드 → 속도 경쟁이 됨</li>
+          <li>AI가 "잘했어요!" → 사람의 인정이 싸구려가 됨</li>
+        </ul>
+      </div>
+      <div class="col good">
+        <h4>Cut & Check가 하는 것</h4>
+        <ul>
+          <li>선택형 빈칸 → 시작 비용 0</li>
+          <li>방법은 어디에도 안 적힘 → 직접 정함</li>
+          <li>시스템이 채점 안 함 → 학생이 판정</li>
+          <li>점수 없음, 저장조차 안 함</li>
+          <li>칭찬은 타이밍만 → 말은 선생님이 함</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 설계 의도 -->
+  <section>
+    <h2>설계 의도: 왜 이렇게 만들었는가</h2>
+
+    <h3>1. 분해는 효율이 아니라 자존감 보호 장치다</h3>
+    <p>중1이 프로그램을 못 만들었을 때 하는 말은 "3번째 단계가 틀렸어요"가 아니라 <strong>"저 이거 못하겠어요"</strong>입니다. 문제를 통째로 붙들고 실패하면, 실패의 원인이 자기 자신이 됩니다.</p>
+    <div class="quote-block">
+      "나는 못한다" → "세 번째 주문서에서 내 기준이 안 맞았다"<br>
+      앞 문장은 사람에 대한 판결이고, 뒤 문장은 방법에 대한 정보다. 고칠 수 있는 건 뒤쪽뿐이다.
+      <em>— 분해는 실패를 고칠 수 있는 크기로 만드는 기술이다.</em>
+    </div>
+
+    <h3>2. "안 되는데요"는 게으름이 아니라 어휘의 부재다</h3>
+    <p>학생이 에러를 안 읽는 이유 — 예측을 안 했으니 "예상과 다르다"는 문장을 만들 수 없습니다. 남는 말이 "안 돼요" 하나뿐입니다.</p>
+    <p>그래서 도움 요청 버튼을 누르면 바로 선생님에게 가지 않고, <strong>"무엇이 나올 줄 알았는지"</strong>와 <strong>"실제로 무엇이 나왔는지"</strong>를 먼저 고르게 합니다. 이 두 칸을 채우는 순간, 학생은 이미 디버깅의 절반을 한 것입니다.</p>
+
+    <h3>3. 고친 것은 실패가 아니라 가장 강한 학습 신호다</h3>
+    <p>결과를 보고 기준을 다시 정할 수 있습니다. 성공 조건 자체도 바꿀 수 있습니다. 고친 이력은 숨기지 않고 화면에 남깁니다.</p>
+    <div class="quote-block">
+      고친 게 부끄러운 일이 아니라는 걸 화면이 먼저 말해줘야 학생이 고친다.
+    </div>
+
+    <h3>4. 피드백은 평가가 아니라 거울이다</h3>
+    <p>이 도구의 모든 피드백은 학생이 3분 전에 정한 판단을 지금 결과 옆에 나란히 놓는 것뿐입니다. "틀렸어요"라고 말하지 않습니다. 결과를 보여주고, 학생이 판정합니다.</p>
+  </section>
+
+  <!-- 학생 흐름 -->
+  <section>
+    <h2>학생은 이렇게 씁니다</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <span class="step-n">1</span>
+        <div class="step-body">
+          <h4>요청 읽기</h4>
+          <p>모호한 업무 요청을 받습니다. 방법은 어디에도 안 적혀 있습니다.<br>"창고에 주문서가 들어왔어요. 상품이 몇 개인지 알려주세요."</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="step-n">2</span>
+        <div class="step-body">
+          <h4>성공 정하기</h4>
+          <p>"전체 개수"인지 "서로 다른 개수"인지 — 학생이 직접 정합니다. 어느 것이 정답인지 시스템이 알려주지 않습니다.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="step-n">3</span>
+        <div class="step-body">
+          <h4>방법 쓰기</h4>
+          <p>세 줄의 문장 빈칸을 채웁니다. 나누는 기준, 중복 처리, 출력 방식. 선택이 끝나면 방법 요약이 보입니다.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="step-n">4</span>
+        <div class="step-body">
+          <h4>자료별 실행·판정</h4>
+          <p>3장의 자료를 실행합니다. 각각 예상하고, 실행하고, "내 성공 조건을 지켰는가" 직접 판정합니다. 세 번째 자료에서 결과가 달라집니다.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="step-n">5</span>
+        <div class="step-body">
+          <h4>마무리</h4>
+          <p>"처음에는 ___라고 생각했다. 자료 ___에서 ___를 보았다. 그래서 ___." — 돌아보기 문장을 채웁니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 강사 흐름 -->
+  <section>
+    <h2>강사는 이렇게 씁니다</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="num">1</div>
+        <div class="label">교실 만들기</div>
+        <p>교실을 만들고 참여 코드를 학생에게 공유합니다.</p>
+      </div>
+      <div class="card">
+        <div class="num">2</div>
+        <div class="label">미션 생성</div>
+        <p>오늘 수업 내용과 핵심을 입력하면 AI가 맞춤 미션을 만듭니다.</p>
+      </div>
+      <div class="card">
+        <div class="num">3</div>
+        <div class="label">개입 순서 확인</div>
+        <p>정답률 대신 "지금 누구부터 가야 하는가"를 봅니다. 조용히 막힌 학생, 도움 요청, 칭찬 타이밍.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 안 만든 것 -->
+  <section>
+    <h2>의도적으로 만들지 않은 것</h2>
+    <p style="color:var(--ink-2);margin-bottom:16px">이 목록이 만든 것보다 중요합니다. 전부 한 번씩 "좋은 아이디어"로 제안됐다가 거절된 것들입니다.</p>
+    <div class="not-built">
+      <h3>코드가 거절합니다</h3>
+      <table>
+        <tr><td>점수 · 레벨</td><td>칭찬을 기계에 넘기면 사람의 격려가 싸구려가 된다</td></tr>
+        <tr><td>성공 팝업</td><td>인정은 사람의 일이다</td></tr>
+        <tr><td>정답 채점</td><td>채점하면 학생이 우리 답을 추측하기 시작한다</td></tr>
+        <tr><td>다음 행동 추천</td><td>판단 대행의 가장 흔한 형태</td></tr>
+        <tr><td>정답률 · 순위</td><td>숫자를 띄우면 교사가 줄을 세운다</td></tr>
+        <tr><td>AI 칭찬 문구</td><td>타이밍만 알려주고 말은 교사가 한다</td></tr>
+        <tr><td>반 전체 현황</td><td>옆자리 진도가 보이면 속도 경쟁이 된다</td></tr>
+      </table>
+    </div>
+    <p style="font-size:14px;color:var(--ink-3)"><code>score</code>, <code>rank</code>, <code>correct</code> 같은 필드를 저장하려 하면 코드가 예외를 던집니다. 화면에 금지 단어가 뜨면 테스트가 깨집니다. 문서에만 적힌 약속은 반드시 무너지기 때문에, 실행 가능한 형태로 옮겼습니다.</p>
+  </section>
+
+  <!-- 기술 -->
+  <section>
+    <h2>기술적 결정</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="label">번들러 없음</div>
+        <p>교사가 파일을 열어서 고칠 수 있어야 합니다. 정적 파일만 씁니다.</p>
+      </div>
+      <div class="card">
+        <div class="label">오프라인 우선</div>
+        <p>학교 와이파이는 끊깁니다. 서버가 죽어도 수업은 끝까지 갑니다. 서버는 기록의 조건이 아니라 기록의 사본입니다.</p>
+      </div>
+      <div class="card">
+        <div class="label">3계층 분리</div>
+        <p>core(순수 로직) / data(저장소) / ui(화면). core에서 localStorage를 한 번 쓰면 테스트가 깨집니다.</p>
+      </div>
+      <div class="card">
+        <div class="label">AI 미션 생성</div>
+        <p>강사가 수업 내용을 입력하면 LLM이 맞춤 미션을 생성합니다. 실행은 결정적 함수 — 같은 입력이면 같은 결과.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="principle">
+    <blockquote>파이썬 문법이 아니다. 모호한 요청을 검증 가능한 단계로 바꾸는 능력 하나다.</blockquote>
+    <p>이 능력은 3년 뒤 문법이 바뀌어도 남습니다.</p>
+  </div>
+
+  <div style="text-align:center;margin-top:40px">
+    <a class="btn-cta primary" href="auth.html">시작하기</a>
+  </div>
+
+  <div class="foot">
+    <p>Cut & Check · <a href="https://github.com/tomchaccom/Cut-Check">GitHub</a> · <a href="docs/tech-spec.md">테크스펙</a> · <a href="docs/philosophy.md">설계 철학</a></p>
+  </div>
+
+</div>
+</body>
+</html>
