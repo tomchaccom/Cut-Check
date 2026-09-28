@@ -165,8 +165,18 @@ window.CC_SUPABASE = {
       $('#signup-name').value,
       $('#signup-role').value
     ).then(function () {
-      showMsg('가입 완료! 이메일을 확인하거나 바로 로그인하세요.', 'ok');
-      $('#tab-login').click();
+      showMsg('가입 완료! 자동으로 로그인합니다...', 'ok');
+      return CC.sb.signIn($('#signup-email').value, $('#signup-pw').value);
+    }).then(function () {
+      return CC.sb.getProfile();
+    }).then(function (p) {
+      if (p) {
+        showMsg(p.name + '님 환영합니다!', 'ok');
+        setTimeout(function () { redirectByRole(p); }, 800);
+      } else {
+        showMsg('가입 완료! 로그인해주세요.', 'ok');
+        $('#tab-login').click();
+      }
     }).catch(function (err) { showMsg(err.message, 'error'); });
   });
 
