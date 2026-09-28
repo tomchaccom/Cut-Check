@@ -70,6 +70,9 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
   var data = await res.json();
   var text = data.choices[0].message.content;
 
+  /* LLM 응답에 유니코드 특수 문자(U+2028 줄 구분자 등)가 섞이면 깨진다. ASCII 범위 밖 제어 문자 제거 */
+  text = text.replace(/[\u2028\u2029\u0000-\u001F]/g, ' ');
+
   var match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('JSON 파싱 실패: ' + text.substring(0, 200));
   var parsed = JSON.parse(match[0]);
