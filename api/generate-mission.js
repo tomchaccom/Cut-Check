@@ -11,9 +11,9 @@
  * ANTHROPIC_API_KEY 환경변수 필수.
  */
 
-async function generateWithClaude(lesson, keyPoint, difficulty) {
-  var apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY가 설정되지 않았습니다.');
+async function generateWithLLM(lesson, keyPoint, difficulty) {
+  var apiKey = process.env.PICKLE_API_KEY;
+  if (!apiKey) throw new Error('PICKLE_API_KEY가 설정되지 않았습니다.');
 
   var diff = difficulty || 'medium';
   var dupHint = diff === 'easy' ? '1~2개' : diff === 'hard' ? '3~4개' : '2~3개';
@@ -49,15 +49,14 @@ async function generateWithClaude(lesson, keyPoint, difficulty) {
     '- 수업에서 배운 개념과 연결되는 실생활 맥락\n' +
     '- 한국어 항목만 사용';
 
-  var res = await fetch('https://api.anthropic.com/v1/messages', {
+  var res = await fetch('https://llm.pcl.kr/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
+      'Authorization': 'Bearer ' + apiKey
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'anthropic/claude-haiku-4-5-20251001',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }]
     })
@@ -65,11 +64,11 @@ async function generateWithClaude(lesson, keyPoint, difficulty) {
 
   if (!res.ok) {
     var errBody = await res.text();
-    throw new Error('Claude API 오류: ' + res.status + ' ' + errBody);
+    throw new Error('LLM API 오류: ' + res.status + ' ' + errBody);
   }
 
   var data = await res.json();
-  var text = data.content[0].text;
+  var text = data.choices[0].message.content;
 
   var match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('JSON 파싱 실패: ' + text.substring(0, 200));
@@ -152,7 +151,7 @@ module.exports = async function (req, res) {
     if (!body.lesson) return res.status(400).json({ error: '수업 내용(lesson)을 입력해주세요.' });
     if (!body.keyPoint) return res.status(400).json({ error: '핵심 포인트(keyPoint)를 입력해주세요.' });
 
-    var mission = await generateWithClaude(body.lesson, body.keyPoint, body.difficulty);
+    var mission = await generateWithLLM(body.lesson, body.keyPoint, body.difficulty);
     return res.status(200).json(mission);
   } catch (err) {
     return res.status(500).json({ error: err.message });
