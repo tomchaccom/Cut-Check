@@ -520,7 +520,82 @@
     }
   });
 
+  /* ── 인증 연동 ──────────────────────────────────── */
+  function initAuth() {
+    if (!CC.sb || !CC.sb.active()) {
+      /* Supabase 미설정 → 로컬 전용 모드 */
+      if ($('#login-link')) $('#login-link').hidden = true;
+      return;
+    }
+
+    CC.sb.getProfile().then(function (profile) {
+      if (!profile) return; /* 미로그인 상태 — 로그인 링크 표시 */
+
+      /* 로그인 상태 — UI 전환 */
+      if ($('#login-link')) $('#login-link').hidden = true;
+      if ($('#logout-btn')) $('#logout-btn').hidden = false;
+      if ($('#user-info')) {
+        $('#user-info').textContent = profile.name;
+        $('#user-info').hidden = false;
+      }
+
+      /* 강사면 미션 생성 버튼 표시 */
+      if (profile.role === 'teacher' && $('#gen-mission-btn')) {
+        $('#gen-mission-btn').hidden = false;
+      }
+    });
+
+    if ($('#logout-btn')) {
+      $('#logout-btn').addEventListener('click', function () {
+        CC.sb.signOut().then(function () { window.location.href = 'auth.html'; });
+      });
+    }
+  }
+
+  /* ── 미션 생성 (API 호출) ──────────────────────── */
+  if ($('#gen-mission-btn')) {
+    $('#gen-mission-btn').addEventListener('click', function () {
+      var btn = this;
+      btn.disabled = true;
+      btn.textContent = '생성 중...';
+
+      fetch('/api/generate-mission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ difficulty: 'medium' })
+      })
+      .then(function (res) { return res.json(); })
+      .then(function (mission) {
+        /* 생성된 미션을 목록에 추가 */
+        CC.SENTENCE_MISSIONS.push(mission);
+
+        /* 미션 바에 버튼 추가 */
+        var b = el('button', 'm-btn');
+        b.type = 'button';
+        b.dataset.id = mission.id;
+        b.setAttribute('aria-pressed', 'false');
+        b.appendChild(el('span', 'm-no', '미션 ' + mission.no + ' · ' + mission.stage));
+        b.appendChild(el('span', 'm-title', mission.title));
+        b.addEventListener('click', function () { loadMission(mission.id); });
+        bar.appendChild(b);
+
+        /* 바로 해당 미션 로드 */
+        loadMission(mission.id);
+
+        btn.disabled = false;
+        btn.textContent = '미션 생성';
+      })
+      .catch(function (err) {
+        console.error('미션 생성 실패:', err);
+        btn.disabled = false;
+        btn.textContent = '미션 생성';
+        alert('미션 생성에 실패했어요: ' + err.message);
+      });
+    });
+  }
+
   /* ── 첫 미션 로드 ──────────────────────────────── */
   loadMission(CC.SENTENCE_MISSIONS[0].id);
+  initAuth();
 
 })(window.CC = window.CC || {});

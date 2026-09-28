@@ -29,7 +29,11 @@
       <span data-step="5">마무리</span>
     </nav>
     <div class="toptools">
+      <span class="tbtn" id="user-info" style="cursor:default" hidden></span>
+      <button class="tbtn" id="gen-mission-btn" hidden>미션 생성</button>
       <a class="tbtn" href="teacher.html">선생님 화면</a>
+      <button class="tbtn" id="logout-btn" hidden>로그아웃</button>
+      <a class="tbtn" href="auth.html" id="login-link">로그인</a>
     </div>
   </header>
 
@@ -197,7 +201,9 @@
   </form>
 </dialog>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/data/config.js"></script>
+<script src="js/data/supabase.js"></script>
 <script src="js/core/events.js"></script>
 <script src="js/core/fold.js"></script>
 <script src="js/core/hangul.js"></script>

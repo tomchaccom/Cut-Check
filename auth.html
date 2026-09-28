@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 로그인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sentence.css">
+<style>
+.auth-page { max-width: 420px; margin: 60px auto; padding: 0 18px; }
+.auth-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 32px 28px; box-shadow: var(--shadow); }
+.auth-card h1 { font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.auth-card .sub { text-align: center; color: var(--ink-2); font-size: 14px; margin-bottom: 24px; }
+.auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line-strong); }
+.auth-tab { flex: 1; padding: 10px; text-align: center; font-weight: 600; font-size: 14px; background: var(--surface-2); color: var(--ink-3); border: none; cursor: pointer; transition: background .12s, color .12s; }
+.auth-tab.active { background: var(--green); color: #fff; }
+.field { display: block; margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+.field input, .field select { display: block; width: 100%; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; font-size: 15px; background: var(--surface); color: var(--ink); min-height: 44px; }
+.field input::placeholder { color: var(--ink-3); }
+.auth-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--green); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; min-height: 48px; transition: opacity .12s; }
+.auth-btn:disabled { opacity: .4; cursor: not-allowed; }
+.auth-btn:hover:not(:disabled) { background: #267A4D; }
+.auth-msg { margin-top: 14px; font-size: 13px; text-align: center; min-height: 20px; }
+.auth-msg.error { color: var(--coral); }
+.auth-msg.ok { color: var(--green); }
+.divider { text-align: center; color: var(--ink-3); font-size: 13px; margin: 20px 0; position: relative; }
+.divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 35%; height: 1px; background: var(--line); }
+.divider::before { left: 0; } .divider::after { right: 0; }
+.join-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+.join-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.logo-center { text-align: center; margin-bottom: 20px; }
+.logo-center .mark { width: 48px; height: 48px; border-radius: 14px; background: var(--green); color: #fff; display: inline-grid; place-items: center; font-family: var(--disp); font-weight: 800; font-size: 20px; }
+</style>
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="logo-center"><span class="mark">C&amp;C</span></div>
+
+  <div class="auth-card">
+    <h1>Cut &amp; Check</h1>
+    <p class="sub">자르고, 세 번 확인한다</p>
+
+    <!-- 탭 -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login">로그인</button>
+      <button class="auth-tab" id="tab-signup">회원가입</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <form id="form-login">
+      <div class="field"><label>이메일</label><input type="email" id="login-email" placeholder="email@example.com" required></div>
+      <div class="field"><label>비밀번호</label><input type="password" id="login-pw" placeholder="6자 이상" required minlength="6"></div>
+      <button class="auth-btn" type="submit">로그인</button>
+    </form>
+
+    <!-- 회원가입 폼 -->
+    <form id="form-signup" hidden>
+      <div class="field"><label>이름</label><input type="text" id="signup-name" placeholder="이름" required></div>
+      <div class="field"><label>이메일</label><input type="email" id="signup-email" placeholder="email@example.com" required></div>
+      <div class="field"><label>비밀번호</label><input type="password" id="signup-pw" placeholder="6자 이상" required minlength="6"></div>
+      <div class="field">
+        <label>역할</label>
+        <select id="signup-role">
+          <option value="student">학생</option>
+          <option value="teacher">강사</option>
+        </select>
+      </div>
+      <button class="auth-btn" type="submit">가입하기</button>
+    </form>
+
+    <div class="auth-msg" id="auth-msg"></div>
+
+    <!-- 교실 참여 (로그인 후 학생) -->
+    <div class="join-section" id="join-section" hidden>
+      <h3>교실 참여하기</h3>
+      <div class="field"><label>참여 코드</label><input type="text" id="join-code" placeholder="강사에게 받은 코드" maxlength="6" style="text-transform:uppercase"></div>
+      <button class="auth-btn" id="join-btn" style="background:var(--ink)">교실 입장</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/data/config.js"></script>
+<script src="js/data/supabase.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var msg = $('#auth-msg');
+
+  function showMsg(text, type) {
+    msg.textContent = text;
+    msg.className = 'auth-msg ' + (type || '');
+  }
+
+  /* 탭 전환 */
+  $('#tab-login').addEventListener('click', function () {
+    this.classList.add('active'); $('#tab-signup').classList.remove('active');
+    $('#form-login').hidden = false; $('#form-signup').hidden = true;
+    showMsg('');
+  });
+  $('#tab-signup').addEventListener('click', function () {
+    this.classList.add('active'); $('#tab-login').classList.remove('active');
+    $('#form-signup').hidden = false; $('#form-login').hidden = true;
+    showMsg('');
+  });
+
+  /* Supabase 미설정 안내 */
+  if (!CC.sb.active()) {
+    showMsg('Supabase가 설정되지 않았어요. CC_SUPABASE 설정을 확인하세요.', 'error');
+  }
+
+  /* 이미 로그인 상태면 리다이렉트 */
+  CC.sb.getProfile().then(function (p) {
+    if (p) redirectByRole(p);
+  });
+
+  function redirectByRole(profile) {
+    if (profile.role === 'teacher') {
+      window.location.href = 'teacher.html';
+    } else {
+      /* 교실에 등록되어 있으면 바로 미션으로 */
+      CC.sb.myClassrooms().then(function (rooms) {
+        if (rooms.length) {
+          window.location.href = 'sentence.html';
+        } else {
+          /* 교실 참여 섹션 표시 */
+          $('#join-section').hidden = false;
+          showMsg(profile.name + '님 환영합니다. 교실에 참여해주세요.', 'ok');
+        }
+      });
+    }
+  }
+
+  /* 로그인 */
+  $('#form-login').addEventListener('submit', function (e) {
+    e.preventDefault();
+    showMsg('로그인 중...', '');
+    CC.sb.signIn($('#login-email').value, $('#login-pw').value)
+      .then(function () { return CC.sb.getProfile(); })
+      .then(function (p) {
+        if (!p) { showMsg('프로필을 찾을 수 없어요.', 'error'); return; }
+        redirectByRole(p);
+      })
+      .catch(function (err) { showMsg(err.message, 'error'); });
+  });
+
+  /* 회원가입 */
+  $('#form-signup').addEventListener('submit', function (e) {
+    e.preventDefault();
+    showMsg('가입 중...', '');
+    CC.sb.signUp(
+      $('#signup-email').value,
+      $('#signup-pw').value,
+      $('#signup-name').value,
+      $('#signup-role').value
+    ).then(function () {
+      showMsg('가입 완료! 이메일을 확인하거나 바로 로그인하세요.', 'ok');
+      $('#tab-login').click();
+    }).catch(function (err) { showMsg(err.message, 'error'); });
+  });
+
+  /* 교실 참여 */
+  $('#join-btn').addEventListener('click', function () {
+    var code = $('#join-code').value.trim();
+    if (!code) { showMsg('참여 코드를 입력해주세요.', 'error'); return; }
+    showMsg('참여 중...', '');
+    CC.sb.joinClassroom(code)
+      .then(function (room) {
+        showMsg(room.name + ' 교실에 참여했어요!', 'ok');
+        setTimeout(function () { window.location.href = 'sentence.html'; }, 800);
+      })
+      .catch(function (err) { showMsg(err.message, 'error'); });
+  });
+})();
+</script>
+</body>
+</html>
