@@ -30,14 +30,30 @@
     </nav>
     <div class="toptools">
       <span class="tbtn" id="user-info" style="cursor:default" hidden></span>
-      <button class="tbtn" id="gen-mission-btn" hidden>미션 생성</button>
-      <a class="tbtn" href="teacher.html">선생님 화면</a>
+      <a class="tbtn" href="teacher.html" id="teacher-link" hidden>선생님 화면</a>
       <button class="tbtn" id="logout-btn" hidden>로그아웃</button>
       <a class="tbtn" href="auth.html" id="login-link">로그인</a>
     </div>
   </header>
 
-  <nav class="mission-bar" id="mission-bar"></nav>
+  <!-- 메인 탭 (로그인 시 표시) -->
+  <nav class="main-tabs" id="main-tabs" hidden>
+    <button class="main-tab active" data-panel="panel-missions">내 미션</button>
+    <button class="main-tab" data-panel="panel-play">미션 풀기</button>
+    <button class="main-tab" data-panel="panel-history">내 기록</button>
+  </nav>
+
+  <!-- [내 미션] 패널 -->
+  <section class="tab-panel active" id="panel-missions">
+    <h2 class="step-title">내 미션</h2>
+    <div class="mission-grid" id="mission-grid"></div>
+    <div class="empty-msg" id="missions-empty" hidden>등록된 미션이 없어요. 선생님이 미션을 만들면 여기에 표시됩니다.</div>
+  </section>
+
+  <!-- [미션 풀기] 패널 -->
+  <section class="tab-panel" id="panel-play">
+    <button class="btn text" id="back-to-missions" hidden style="margin-bottom:12px">&larr; 미션 목록으로</button>
+    <nav class="mission-bar" id="mission-bar"></nav>
 
   <main class="content">
 
@@ -174,6 +190,14 @@
     </section>
 
   </main>
+  </section><!-- /panel-play -->
+
+  <!-- [내 기록] 패널 -->
+  <section class="tab-panel" id="panel-history">
+    <h2 class="step-title">내 기록</h2>
+    <div id="history-list"></div>
+    <div class="empty-msg" id="history-empty" hidden>아직 기록이 없어요.</div>
+  </section>
 </div>
 
 <!-- 도움 요청 모달 -->

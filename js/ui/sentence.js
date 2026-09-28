@@ -520,29 +520,190 @@
     }
   });
 
+  /* ── 탭 전환 ────────────────────────────────────── */
+  var currentClassroomId = null;
+  var currentMissionDbId = null;
+
+  function switchTab(panelId) {
+    document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+    document.querySelectorAll('.main-tab').forEach(function (t) { t.classList.remove('active'); });
+    var panel = $('#' + panelId);
+    if (panel) panel.classList.add('active');
+    var tab = document.querySelector('.main-tab[data-panel="' + panelId + '"]');
+    if (tab) tab.classList.add('active');
+  }
+
+  document.querySelectorAll('.main-tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      switchTab(t.dataset.panel);
+      if (t.dataset.panel === 'panel-history') renderHistory();
+    });
+  });
+
+  if ($('#back-to-missions')) {
+    $('#back-to-missions').addEventListener('click', function () { switchTab('panel-missions'); });
+  }
+
+  /* ── 미션 카드 렌더링 ──────────────────────────── */
+  function renderMissionGrid(missions) {
+    var grid = $('#mission-grid');
+    grid.innerHTML = '';
+    if (!missions.length) {
+      $('#missions-empty').hidden = false;
+      return;
+    }
+    $('#missions-empty').hidden = true;
+
+    missions.forEach(function (m) {
+      var mData = m.data || m; /* Supabase는 data 필드, 로컬은 직접 */
+      var card = el('div', 'mission-card');
+      card.appendChild(el('div', 'mc-stage', (mData.no || '') + ' · ' + (mData.stage || '')));
+      card.appendChild(el('div', 'mc-title', mData.title || ''));
+      card.appendChild(el('div', 'mc-brief', mData.brief || ''));
+
+      /* 상태 판단 */
+      var statusEl = el('span', 'mc-status st-none', '미시작');
+      card.appendChild(statusEl);
+
+      card.addEventListener('click', function () {
+        /* 미션 데이터를 SENTENCE_MISSIONS에 추가 (없으면) */
+        if (!CC.SENTENCE_MISSIONS.some(function (x) { return x.id === mData.id; })) {
+          CC.SENTENCE_MISSIONS.push(mData);
+        }
+        /* 미션 바에도 추가 */
+        if (!bar.querySelector('[data-id="' + mData.id + '"]')) {
+          var b = el('button', 'm-btn');
+          b.type = 'button';
+          b.dataset.id = mData.id;
+          b.appendChild(el('span', 'm-no', (mData.no || '') + ' · ' + (mData.stage || '')));
+          b.appendChild(el('span', 'm-title', mData.title));
+          b.addEventListener('click', function () { loadMission(mData.id); });
+          bar.appendChild(b);
+        }
+        currentMissionDbId = m.id; /* DB id */
+        loadMission(mData.id);
+        switchTab('panel-play');
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  /* ── 내 기록 렌더링 ────────────────────────────── */
+  function renderHistory() {
+    var list = $('#history-list');
+    list.innerHTML = '';
+    var events = CC.store ? CC.store.all() : [];
+    if (!events.length) { $('#history-empty').hidden = false; return; }
+    $('#history-empty').hidden = true;
+
+    /* 이벤트에서 정보 추출 */
+    var defines = events.filter(function (e) { return e.type === 's-define' || e.type === 's-redefine'; });
+    var methods = events.filter(function (e) { return e.type === 's-method' || e.type === 's-remethod'; });
+    var runs = events.filter(function (e) { return e.type === 's-run'; });
+    var judges = events.filter(function (e) { return e.type === 's-judge'; });
+    var wraps = events.filter(function (e) { return e.type === 's-wrap'; });
+    var predicts = events.filter(function (e) { return e.type === 's-predict'; });
+
+    var item = el('div', 'history-item');
+    var header = el('div', 'history-header');
+    header.textContent = '활동 기록 (' + events.length + '개 이벤트)';
+    var statusSpan = el('span', 'h-status');
+    statusSpan.textContent = wraps.length ? '완료' : defines.length ? '진행중' : '미시작';
+    statusSpan.style.color = wraps.length ? 'var(--green)' : 'var(--ink-3)';
+    header.appendChild(statusSpan);
+    item.appendChild(header);
+
+    var body = el('div', 'history-body');
+
+    if (defines.length) {
+      var lastDef = defines[defines.length - 1];
+      var r = el('div', 'h-row');
+      r.innerHTML = '<span class="h-label">성공 조건</span> ' + esc(lastDef.choice || lastDef.to || '');
+      body.appendChild(r);
+    }
+    if (methods.length) {
+      var lastM = methods[methods.length - 1];
+      var sl = lastM.slots || lastM.toSlots || {};
+      var r2 = el('div', 'h-row');
+      r2.innerHTML = '<span class="h-label">방법</span> ' +
+        esc((sl.sep || '') + '로 나누고, ' + (sl.dedup || '') + ', ' + (sl.output || ''));
+      body.appendChild(r2);
+    }
+    if (defines.length > 1) {
+      var r3 = el('div', 'h-row');
+      r3.innerHTML = '<span class="h-label">성공 조건 수정</span> ' + (defines.length - 1) + '회';
+      body.appendChild(r3);
+    }
+    if (methods.length > 1) {
+      var r4 = el('div', 'h-row');
+      r4.innerHTML = '<span class="h-label">방법 수정</span> ' + (methods.length - 1) + '회';
+      body.appendChild(r4);
+    }
+
+    runs.forEach(function (run, i) {
+      var pred = predicts[i];
+      var judge = judges[i];
+      var r5 = el('div', 'h-row');
+      r5.innerHTML = '<span class="h-label">실행 ' + (i + 1) + '</span> ' +
+        esc(run.dataId) + ' → ' + (run.result && !run.result.err ? run.result.value : '오류') +
+        (pred ? ' (예상: ' + esc(pred.predicted) + ')' : '') +
+        (judge ? ' · 판정: ' + esc(judge.verdict) + (judge.basis ? ' — ' + esc(judge.basis) : '') : '');
+      body.appendChild(r5);
+    });
+
+    if (wraps.length) {
+      var r6 = el('div', 'h-row');
+      r6.innerHTML = '<span class="h-label">마무리</span> ' + esc(wraps[wraps.length - 1].text);
+      body.appendChild(r6);
+    }
+
+    item.appendChild(body);
+    list.appendChild(item);
+
+    header.addEventListener('click', function () { body.classList.toggle('open'); });
+  }
+
   /* ── 인증 연동 ──────────────────────────────────── */
   function initAuth() {
     if (!CC.sb || !CC.sb.active()) {
-      /* Supabase 미설정 → 로컬 전용 모드 */
+      /* Supabase 미설정 → 로컬 전용 모드: 탭 숨기고 바로 플레이 */
       if ($('#login-link')) $('#login-link').hidden = true;
+      if ($('#main-tabs')) $('#main-tabs').hidden = true;
+      switchTab('panel-play');
       return;
     }
 
     CC.sb.getProfile().then(function (profile) {
-      if (!profile) return; /* 미로그인 상태 — 로그인 링크 표시 */
+      if (!profile) return;
 
-      /* 로그인 상태 — UI 전환 */
+      /* 로그인 UI */
       if ($('#login-link')) $('#login-link').hidden = true;
       if ($('#logout-btn')) $('#logout-btn').hidden = false;
-      if ($('#user-info')) {
-        $('#user-info').textContent = profile.name;
-        $('#user-info').hidden = false;
-      }
+      if ($('#user-info')) { $('#user-info').textContent = profile.name; $('#user-info').hidden = false; }
+      if (profile.role === 'teacher' && $('#teacher-link')) $('#teacher-link').hidden = false;
+      if ($('#main-tabs')) $('#main-tabs').hidden = false;
+      if ($('#back-to-missions')) $('#back-to-missions').hidden = false;
 
-      /* 강사면 미션 생성 버튼 표시 */
-      if (profile.role === 'teacher' && $('#gen-mission-btn')) {
-        $('#gen-mission-btn').hidden = false;
-      }
+      /* 교실 미션 로드 */
+      CC.sb.myClassrooms().then(function (rooms) {
+        if (!rooms.length) {
+          switchTab('panel-missions');
+          return;
+        }
+        currentClassroomId = rooms[0].id;
+
+        CC.sb.getMissions(currentClassroomId).then(function (missions) {
+          if (missions.length) {
+            renderMissionGrid(missions);
+            switchTab('panel-missions');
+          } else {
+            /* 미션 없으면 기본 미션으로 */
+            renderMissionGrid(CC.SENTENCE_MISSIONS.map(function (m) { return { data: m }; }));
+            switchTab('panel-missions');
+          }
+        });
+      });
     });
 
     if ($('#logout-btn')) {
@@ -552,71 +713,33 @@
     }
   }
 
-  /* ── 미션 생성 (API 호출) ──────────────────────── */
-  if ($('#gen-mission-btn')) {
-    $('#gen-mission-btn').addEventListener('click', function () {
-      var btn = this;
-      btn.disabled = true;
-      btn.textContent = '생성 중...';
-
-      fetch('/api/generate-mission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ difficulty: 'medium' })
-      })
-      .then(function (res) { return res.json(); })
-      .then(function (mission) {
-        /* 생성된 미션을 목록에 추가 */
-        CC.SENTENCE_MISSIONS.push(mission);
-
-        /* 미션 바에 버튼 추가 */
-        var b = el('button', 'm-btn');
-        b.type = 'button';
-        b.dataset.id = mission.id;
-        b.setAttribute('aria-pressed', 'false');
-        b.appendChild(el('span', 'm-no', '미션 ' + mission.no + ' · ' + mission.stage));
-        b.appendChild(el('span', 'm-title', mission.title));
-        b.addEventListener('click', function () { loadMission(mission.id); });
-        bar.appendChild(b);
-
-        /* 바로 해당 미션 로드 */
-        loadMission(mission.id);
-
-        btn.disabled = false;
-        btn.textContent = '미션 생성';
-      })
-      .catch(function (err) {
-        console.error('미션 생성 실패:', err);
-        btn.disabled = false;
-        btn.textContent = '미션 생성';
-        alert('미션 생성에 실패했어요: ' + err.message);
-      });
-    });
-  }
-
-  /* ── 생성된 미션 로드 ────────────────────────────── */
+  /* ── 생성된 미션 로드 (로컬) ───────────────────── */
   function loadGeneratedMissions() {
     var saved = [];
     try { saved = JSON.parse(localStorage.getItem('cutcheck.generated') || '[]'); } catch (e) {}
     saved.forEach(function (m) {
-      /* 이미 추가된 건 건너뛰기 */
       if (CC.SENTENCE_MISSIONS.some(function (x) { return x.id === m.id; })) return;
       CC.SENTENCE_MISSIONS.push(m);
-
-      var b = el('button', 'm-btn');
-      b.type = 'button';
-      b.dataset.id = m.id;
-      b.setAttribute('aria-pressed', 'false');
-      b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
-      b.appendChild(el('span', 'm-title', m.title));
-      b.addEventListener('click', function () { loadMission(m.id); });
-      bar.appendChild(b);
     });
   }
 
-  /* ── 첫 미션 로드 ──────────────────────────────── */
+  /* ── 초기화 ────────────────────────────────────── */
   loadGeneratedMissions();
   loadMission(CC.SENTENCE_MISSIONS[0].id);
+
+  /* 미션 바 버튼 생성 */
+  CC.SENTENCE_MISSIONS.forEach(function (m) {
+    if (bar.querySelector('[data-id="' + m.id + '"]')) return;
+    var b = el('button', 'm-btn');
+    b.type = 'button';
+    b.dataset.id = m.id;
+    b.setAttribute('aria-pressed', m.id === CC.SENTENCE_MISSIONS[0].id ? 'true' : 'false');
+    b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
+    b.appendChild(el('span', 'm-title', m.title));
+    b.addEventListener('click', function () { loadMission(m.id); });
+    bar.appendChild(b);
+  });
+
   initAuth();
 
 })(window.CC = window.CC || {});
