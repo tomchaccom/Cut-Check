@@ -21,19 +21,18 @@
     client: function () { return sb; },
 
     /* ── 인증 ────────────────────────────────── */
+    /* 프로필은 DB 트리거(handle_new_user)가 자동 생성한다.
+     * 클라이언트는 메타데이터로 name/role만 넘긴다. */
     signUp: function (email, password, name, role) {
       if (!sb) return Promise.reject(new Error('Supabase 미설정'));
-      return sb.auth.signUp({ email: email, password: password })
-        .then(function (res) {
-          if (res.error) throw res.error;
-          /* 프로필 생성 */
-          return sb.from('profiles').insert({
-            id: res.data.user.id, name: name, role: role || 'student'
-          }).then(function (pRes) {
-            if (pRes.error) throw pRes.error;
-            return res.data;
-          });
-        });
+      return sb.auth.signUp({
+        email: email,
+        password: password,
+        options: { data: { name: name, role: role || 'student' } }
+      }).then(function (res) {
+        if (res.error) throw res.error;
+        return res.data;
+      });
     },
 
     signIn: function (email, password) {
