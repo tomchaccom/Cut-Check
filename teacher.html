@@ -8,27 +8,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="sentence.css">
 <link rel="stylesheet" href="teacher.css">
 </head>
 <body>
-<div class="wrap">
 
-  <div class="topbar">
-    <div class="logo">
+<div class="page" style="max-width:1100px">
+
+  <header class="topbar">
+    <div class="brand">
       <span class="mark">C&amp;C</span>
       <div><b>Cut &amp; Check</b><small>선생님 화면</small></div>
     </div>
-    <div class="head-tools">
+    <div class="toptools">
       <button class="tbtn" id="notes-toggle" aria-pressed="false">설계 의도 보기</button>
-      <a class="tbtn" href="sentence.html" style="text-decoration:none">학생 화면</a>
-      <a class="tbtn" href="print.html" style="text-decoration:none">수업 준비물</a>
-      <a class="tbtn" href="abstract.html" style="text-decoration:none">미션 04</a>
-      <a class="tbtn" href="review.html" style="text-decoration:none">미션 05</a>
-      <a class="tbtn" href="make.html" style="text-decoration:none">미션 만들기</a>
-      <a class="tbtn" href="philosophy.html" style="text-decoration:none">철학 →</a>
+      <a class="tbtn" href="sentence.html">학생 화면</a>
+      <a class="tbtn" href="print.html">수업 준비물</a>
     </div>
-  </div>
+  </header>
 
   <div class="t-head">
     <div>
@@ -52,7 +49,6 @@
           <span class="pill now" id="p-ready">0명</span>
         </div>
         <div class="rows" id="ready"></div>
-        <div class="note"><b>핵심</b><span>“안 되는데요”가 아니라 “<b>목록</b>이 나올 줄 알았는데 <b>한 덩어리</b>가 나왔어요”가 올라옵니다. 교사 1명이 26명을 감당할 수 있는 건 여기서부터예요.</span></div>
       </section>
 
       <section class="panel">
@@ -61,7 +57,6 @@
           <span class="pill soon" id="p-half">0명</span>
         </div>
         <div class="rows" id="half"></div>
-        <div class="note"><b>읽는 법</b><span>이 칸에 있는 학생은 <em>예측을 안 한 채 실행한</em> 겁니다. 코드를 봐주기 전에 “실행하기 전에 뭐가 나올 것 같았어?”를 먼저 물어야 하는 학생이에요.</span></div>
       </section>
 
       <section class="panel">
@@ -70,7 +65,6 @@
           <span class="pill calm" id="p-quiet">0명</span>
         </div>
         <div class="rows" id="quiet"></div>
-        <div class="note"><b>이 칸이 제일 중요합니다</b><span>손 드는 학생은 어차피 도움을 받습니다. 교실에서 놓치는 건 조용히 포기하는 쪽이에요. 이 명단은 다른 어떤 도구도 만들어주지 않습니다.</span></div>
       </section>
     </div>
 
@@ -81,8 +75,6 @@
           <span class="pill soon" id="p-praise">0명</span>
         </div>
         <div class="rows" id="praise"></div>
-        <div class="note"><b>읽는 법</b><span>“기준을 고침”이 “찾아냄”보다 강한 신호입니다. 자기 판단이 틀렸다는 걸 인정하고 바꾼 거니까요. 정답을 맞힌 것보다 이게 더 중요합니다.</span></div>
-        <div class="note"><b>경계</b><span>이 칭찬을 AI가 대신하지 않습니다. 격려의 효과는 그게 사람에게서 왔다는 데서 나오기 때문에, 기계가 대신하면 그 자산을 태웁니다. 시스템은 타이밍만 알려줍니다.</span></div>
       </section>
 
       <section class="panel">
@@ -90,7 +82,6 @@
           <div><h2>성공을 이렇게 정의했어요</h2><p class="lead">1단계에서 고른 문장. 여기가 하드코딩의 출발점입니다.</p></div>
         </div>
         <div class="riskgrid" id="risk"></div>
-        <div class="note"><b>우리만 가진 정보</b><span>결과만 채점하는 도구는 “정답을 맞혔다”까지만 압니다. 우리는 <em>맞히기 전에 무엇을 성공이라고 생각했는지</em>를 압니다. 하드코딩은 코드에서 찾는 것보다 여기서 찾는 게 훨씬 빠릅니다.</span></div>
       </section>
 
       <section class="panel">
