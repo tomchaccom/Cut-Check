@@ -36,28 +36,13 @@
     });
   }
 
-  /* ── 미션 바 ───────────────────────────────────── */
+  /* ── 미션 바 (로컬 모드에서만 표시) ──────────────── */
   var bar = $('#mission-bar');
-  CC.SENTENCE_MISSIONS.forEach(function (m) {
-    var b = el('button', 'm-btn');
-    b.type = 'button';
-    b.dataset.id = m.id;
-    b.setAttribute('aria-pressed', 'false');
-    b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
-    b.appendChild(el('span', 'm-title', m.title));
-    b.addEventListener('click', function () { loadMission(m.id); });
-    bar.appendChild(b);
-  });
 
   /* ── 미션 로드 ─────────────────────────────────── */
   function loadMission(id) {
     M = CC.sentenceMission(id);
     if (!M) return;
-
-    /* 미션 바 활성화 */
-    bar.querySelectorAll('.m-btn').forEach(function (b) {
-      b.setAttribute('aria-pressed', b.dataset.id === id ? 'true' : 'false');
-    });
 
     /* 상태 초기화 */
     state = {
@@ -602,21 +587,10 @@
       card.appendChild(statusEl);
 
       card.addEventListener('click', function () {
-        /* 미션 데이터를 SENTENCE_MISSIONS에 추가 (없으면) */
         if (!CC.SENTENCE_MISSIONS.some(function (x) { return x.id === mData.id; })) {
           CC.SENTENCE_MISSIONS.push(mData);
         }
-        /* 미션 바에도 추가 */
-        if (!bar.querySelector('[data-id="' + mData.id + '"]')) {
-          var b = el('button', 'm-btn');
-          b.type = 'button';
-          b.dataset.id = mData.id;
-          b.appendChild(el('span', 'm-no', (mData.no || '') + ' · ' + (mData.stage || '')));
-          b.appendChild(el('span', 'm-title', mData.title));
-          b.addEventListener('click', function () { loadMission(mData.id); });
-          bar.appendChild(b);
-        }
-        currentMissionDbId = m.id; /* DB id */
+        currentMissionDbId = m.id;
         loadMission(mData.id);
         switchTab('panel-play');
       });
@@ -706,7 +680,18 @@
       /* Supabase 미설정 → 로컬 전용 모드: 탭 숨기고 바로 플레이, 미션바 표시 */
       if ($('#login-link')) $('#login-link').hidden = true;
       if ($('#main-tabs')) $('#main-tabs').hidden = true;
-      if ($('#mission-bar')) $('#mission-bar').hidden = false;
+      bar.hidden = false;
+      CC.SENTENCE_MISSIONS.forEach(function (m) {
+        if (bar.querySelector('[data-id="' + m.id + '"]')) return;
+        var b = el('button', 'm-btn');
+        b.type = 'button';
+        b.dataset.id = m.id;
+        b.setAttribute('aria-pressed', m.id === CC.SENTENCE_MISSIONS[0].id ? 'true' : 'false');
+        b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
+        b.appendChild(el('span', 'm-title', m.title));
+        b.addEventListener('click', function () { loadMission(m.id); });
+        bar.appendChild(b);
+      });
       switchTab('panel-play');
       return;
     }
@@ -769,20 +754,6 @@
   /* ── 초기화 ────────────────────────────────────── */
   loadGeneratedMissions();
   loadMission(CC.SENTENCE_MISSIONS[0].id);
-
-  /* 미션 바 버튼 생성 */
-  CC.SENTENCE_MISSIONS.forEach(function (m) {
-    if (bar.querySelector('[data-id="' + m.id + '"]')) return;
-    var b = el('button', 'm-btn');
-    b.type = 'button';
-    b.dataset.id = m.id;
-    b.setAttribute('aria-pressed', m.id === CC.SENTENCE_MISSIONS[0].id ? 'true' : 'false');
-    b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
-    b.appendChild(el('span', 'm-title', m.title));
-    b.addEventListener('click', function () { loadMission(m.id); });
-    bar.appendChild(b);
-  });
-
   initAuth();
 
 })(window.CC = window.CC || {});
