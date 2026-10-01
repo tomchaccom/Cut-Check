@@ -53,7 +53,7 @@
   <!-- [미션 풀기] 패널 -->
   <section class="tab-panel" id="panel-play">
     <button class="btn text" id="back-to-missions" hidden style="margin-bottom:12px" aria-label="미션 목록으로 돌아가기">&larr; 미션 목록으로</button>
-    <nav class="mission-bar" id="mission-bar"></nav>
+    <nav class="mission-bar" id="mission-bar" hidden></nav>
 
   <main class="content">
 
@@ -169,23 +169,24 @@
       </div>
     </section>
 
-    <!-- 화면 5: 마무리 -->
+    <!-- 화면 5: 마무리 — 판정 돌아보기 + 자유 정리 -->
     <section class="step" id="step5" tabindex="-1">
-      <h2 class="step-title">오늘을 마무리해보세요</h2>
-      <div class="wrap-history" id="wrap-history">
-        <!-- JS에서 처음 선택·최근 선택·실행 기록 요약 -->
+      <h2 class="step-title">오늘을 돌아보세요</h2>
+
+      <!-- 판정 리뷰 -->
+      <div id="wrap-review"></div>
+
+      <!-- 한 줄 정리 -->
+      <div style="margin-top:24px">
+        <p class="review-guide">오늘 확인한 것 중에서 가장 기억에 남는 건 무엇인가요?</p>
+        <textarea id="wrap-text" class="reason" rows="3" placeholder="자유롭게 적어보세요. 한 줄이면 충분해요."></textarea>
       </div>
-      <div class="wrap-prompts">
-        <label class="wrap-line">처음에는 <textarea class="reason inline" id="wrap1" rows="1" placeholder="___"></textarea>라고 생각했다.</label>
-        <label class="wrap-line">자료 <textarea class="reason inline" id="wrap2" rows="1" placeholder="___"></textarea>에서 <textarea class="reason inline" id="wrap3" rows="1" placeholder="___"></textarea>를 보았다.</label>
-        <label class="wrap-line">그래서 <textarea class="reason inline" id="wrap4" rows="1" placeholder="___를 바꿨다 / 유지했다"></textarea>.</label>
-        <label class="wrap-line">아직 확인하지 못한 것은 <textarea class="reason inline" id="wrap5" rows="1" placeholder="___"></textarea>다.</label>
-      </div>
+
       <div class="step-actions">
-        <button class="btn primary" id="finish" disabled>수업 기록 마무리</button>
+        <button class="btn primary" id="finish" disabled>기록 저장</button>
       </div>
       <div id="wrap-done" hidden>
-        <p class="done-msg">기록이 저장되었어요. 세 자료를 확인했습니다.</p>
+        <p class="done-msg">기록이 저장되었어요.</p>
       </div>
     </section>
 

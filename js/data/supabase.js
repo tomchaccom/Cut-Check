@@ -136,6 +136,19 @@
         .then(function (r) { return r.data || []; });
     },
 
+    updateMission: function (missionId, missionData) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return sb.from('missions').update({ data: missionData })
+        .eq('id', missionId).select().single()
+        .then(function (r) { if (r.error) throw r.error; return r.data; });
+    },
+
+    deleteMission: function (missionId) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return sb.from('missions').delete().eq('id', missionId)
+        .then(function (r) { if (r.error) throw r.error; return r; });
+    },
+
     /* ── 교실 학생 목록 ────────────────────────── */
     getClassroomStudents: function (classroomId) {
       if (!sb) return Promise.resolve([]);

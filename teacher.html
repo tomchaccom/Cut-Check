@@ -294,6 +294,8 @@ window.CC_SUPABASE = {
   });
 
   /* 미션 목록 */
+  var editingMissionId = null;
+
   function loadMissions() {
     if (!selectedRoom) return;
     CC.sb.getMissions(selectedRoom.id).then(function (missions) {
@@ -307,6 +309,33 @@ window.CC_SUPABASE = {
         card.appendChild(el('div', 'mc-title', d.title || ''));
         card.appendChild(el('div', 'mc-brief', d.brief || ''));
         card.appendChild(el('div', 'mc-brief', '자료 ' + ((d.inputs || []).length) + '개'));
+
+        var actions = el('div');
+        actions.style.cssText = 'display:flex;gap:6px;margin-top:8px';
+
+        var editBtn = el('button', 'btn o', '수정');
+        editBtn.style.cssText = 'font-size:12px;padding:4px 10px';
+        editBtn.addEventListener('click', function () {
+          $('#gen-lesson').value = d.lesson || '';
+          $('#gen-key').value = d.keyPoint || '';
+          editingMissionId = m.id;
+          $('#gen-btn').textContent = '미션 수정';
+          $('#gen-result').innerHTML = '<span style="color:var(--ink-3)">기존 미션을 수정합니다. 내용을 고치고 버튼을 누르세요.</span>';
+          /* 미션 관리 탭으로 전환 */
+          document.querySelector('.main-tab[data-dtab="dtab-missions"]').click();
+          $('#gen-lesson').focus();
+        });
+
+        var delBtn = el('button', 'btn o', '삭제');
+        delBtn.style.cssText = 'font-size:12px;padding:4px 10px;color:var(--coral);border-color:var(--coral)';
+        delBtn.addEventListener('click', function () {
+          if (!confirm('"' + (d.title || '미션') + '"을 삭제할까요?')) return;
+          CC.sb.deleteMission(m.id).then(loadMissions).catch(function (e) { alert('삭제 실패: ' + e.message); });
+        });
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        card.appendChild(actions);
         list.appendChild(card);
       });
     });
@@ -334,10 +363,14 @@ window.CC_SUPABASE = {
       if (!r.ok) throw new Error(r.data.error || '생성 실패');
       var m = r.data;
 
-      /* Supabase에 저장 */
-      if (selectedRoom) {
+      /* Supabase에 저장 (수정 모드면 교체) */
+      if (editingMissionId && selectedRoom) {
+        CC.sb.updateMission(editingMissionId, m).then(loadMissions);
+      } else if (selectedRoom) {
         CC.sb.saveMission(selectedRoom.id, m).then(loadMissions);
       }
+      editingMissionId = null;
+      btn.textContent = '미션 생성';
       /* localStorage에도 저장 */
       var saved = []; try { saved = JSON.parse(localStorage.getItem('cutcheck.generated') || '[]'); } catch (e) {}
       saved.push(m); localStorage.setItem('cutcheck.generated', JSON.stringify(saved));

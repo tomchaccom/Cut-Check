@@ -481,41 +481,57 @@
   /* 마무리로 */
   $('#go-wrap').addEventListener('click', function () { renderWrapStep(); showStep(5); });
 
-  /* ── 화면 5 ────────────────────────────────────── */
+  /* ── 화면 5: 판정 돌아보기 + 자유 정리 ──────────── */
   function renderWrapStep() {
-    var hist = $('#wrap-history');
-    hist.innerHTML = '';
-    hist.appendChild(el('div', null)).innerHTML = '<b>성공 조건:</b> ' + esc(state.defineChoice);
-    hist.appendChild(el('div', null)).innerHTML = '<b>방법:</b> ' + esc(summarizeMethod());
+    var review = $('#wrap-review');
+    review.innerHTML = '';
+
+    /* 성공 조건 + 방법 요약 */
+    var summary = el('div', 'review-summary');
+    summary.innerHTML = '<b>성공 조건:</b> ' + esc(state.defineChoice) +
+      '<br><b>방법:</b> ' + esc(summarizeMethod());
+    review.appendChild(summary);
+
+    /* 자료별 판정 카드 */
     M.inputs.forEach(function (inp) {
       var latestRun = findLatestRun(inp.id, state.methodVer);
       if (!latestRun) return;
       var judge = findJudgeForRun(latestRun._idx);
-      var d = el('div');
-      d.style.marginTop = '6px';
-      d.innerHTML = '<b>' + esc(inp.name) + ':</b> 출력 ' +
-        (latestRun.result.err ? '중단' : latestRun.result.value) +
-        (judge ? ' · 판정: ' + esc(judge.verdict) : '');
-      hist.appendChild(d);
+      if (!judge) return;
+
+      var vClass = judge.verdict === '지켰다' ? 'kept' : judge.verdict === '지키지 못했다' ? 'missed' : 'unsure';
+      var vBadge = judge.verdict === '지켰다' ? 'v-kept' : judge.verdict === '지키지 못했다' ? 'v-missed' : 'v-unsure';
+
+      var card = el('div', 'review-card ' + vClass);
+
+      var header = el('div', 'rc-header');
+      header.appendChild(el('span', 'rc-name', inp.name));
+      var badge = el('span', 'rc-verdict ' + vBadge, judge.verdict);
+      header.appendChild(badge);
+      card.appendChild(header);
+
+      var detail = el('div', 'rc-detail');
+      detail.textContent = inp.v + ' → ' + (latestRun.result.err ? '실행 중단' : latestRun.result.value);
+      card.appendChild(detail);
+
+      if (judge.basis) {
+        var basis = el('div', 'rc-basis');
+        basis.textContent = '"' + judge.basis + '"';
+        card.appendChild(basis);
+      }
+
+      review.appendChild(card);
     });
   }
 
-  var wrapFields = ['wrap1', 'wrap2', 'wrap3', 'wrap4', 'wrap5'];
-  wrapFields.forEach(function (id) {
-    $('#' + id).addEventListener('input', function () {
-      var any = wrapFields.some(function (fid) { return $('#' + fid).value.trim().length > 0; });
-      $('#finish').disabled = !any;
-    });
+  /* 자유 정리 입력 */
+  $('#wrap-text').addEventListener('input', function () {
+    $('#finish').disabled = !this.value.trim();
   });
 
   $('#finish').addEventListener('click', function () {
-    var texts = {};
-    wrapFields.forEach(function (id) { texts[id] = $('#' + id).value.trim(); });
-    var combined = '처음에는 ' + (texts.wrap1 || '___') + '라고 생각했다. ' +
-      '자료 ' + (texts.wrap2 || '___') + '에서 ' + (texts.wrap3 || '___') + '를 보았다. ' +
-      '그래서 ' + (texts.wrap4 || '___') + '. ' +
-      '아직 확인하지 못한 것은 ' + (texts.wrap5 || '___') + '다.';
-    rec('s-wrap', { text: combined });
+    var text = $('#wrap-text').value.trim();
+    rec('s-wrap', { text: text });
     $('#finish').disabled = true;
     $('#finish').textContent = '저장됨';
     $('#wrap-done').hidden = false;
@@ -687,9 +703,10 @@
   /* ── 인증 연동 ──────────────────────────────────── */
   function initAuth() {
     if (!CC.sb || !CC.sb.active()) {
-      /* Supabase 미설정 → 로컬 전용 모드: 탭 숨기고 바로 플레이 */
+      /* Supabase 미설정 → 로컬 전용 모드: 탭 숨기고 바로 플레이, 미션바 표시 */
       if ($('#login-link')) $('#login-link').hidden = true;
       if ($('#main-tabs')) $('#main-tabs').hidden = true;
+      if ($('#mission-bar')) $('#mission-bar').hidden = false;
       switchTab('panel-play');
       return;
     }
