@@ -129,10 +129,10 @@
     $('#past-runs-list').innerHTML = '';
     $('#past-runs').hidden = true;
     $('#go-wrap').disabled = true;
-    $('#wrap-history').innerHTML = '';
-    ['wrap1', 'wrap2', 'wrap3', 'wrap4', 'wrap5'].forEach(function (id) { $('#' + id).value = ''; });
+    if ($('#wrap-review')) $('#wrap-review').innerHTML = '';
+    if ($('#wrap-text')) $('#wrap-text').value = '';
     $('#finish').disabled = true;
-    $('#finish').textContent = '수업 기록 마무리';
+    $('#finish').textContent = '기록 저장';
     $('#wrap-done').hidden = true;
 
     showStep(1);
