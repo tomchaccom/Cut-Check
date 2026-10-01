@@ -599,7 +599,7 @@
     });
   }
 
-  /* ── 내 기록 렌더링 ────────────────────────────── */
+  /* ── 내 기록 렌더링 (형식 A: 판단 중심) ──────────── */
   function renderHistory() {
     var list = $('#history-list');
     list.innerHTML = '';
@@ -607,71 +607,90 @@
     if (!events.length) { $('#history-empty').hidden = false; return; }
     $('#history-empty').hidden = true;
 
-    /* 이벤트에서 정보 추출 */
     var defines = events.filter(function (e) { return e.type === 's-define' || e.type === 's-redefine'; });
     var methods = events.filter(function (e) { return e.type === 's-method' || e.type === 's-remethod'; });
     var runs = events.filter(function (e) { return e.type === 's-run'; });
     var judges = events.filter(function (e) { return e.type === 's-judge'; });
     var wraps = events.filter(function (e) { return e.type === 's-wrap'; });
-    var predicts = events.filter(function (e) { return e.type === 's-predict'; });
 
-    var item = el('div', 'history-item');
-    var header = el('div', 'history-header');
-    header.textContent = '활동 기록 (' + events.length + '개 이벤트)';
-    var statusSpan = el('span', 'h-status');
-    statusSpan.textContent = wraps.length ? '완료' : defines.length ? '진행중' : '미시작';
-    statusSpan.style.color = wraps.length ? 'var(--green)' : 'var(--ink-3)';
-    header.appendChild(statusSpan);
-    item.appendChild(header);
+    if (!defines.length) { $('#history-empty').hidden = false; return; }
 
-    var body = el('div', 'history-body');
+    var card = el('div', 'record-card');
 
-    if (defines.length) {
-      var lastDef = defines[defines.length - 1];
-      var r = el('div', 'h-row');
-      r.innerHTML = '<span class="h-label">성공 조건</span> ' + esc(lastDef.choice || lastDef.to || '');
-      body.appendChild(r);
+    /* 미션 제목 (현재 미션 기준) */
+    var title = el('div', 'rc-title');
+    title.textContent = M ? M.title : '미션';
+    card.appendChild(title);
+
+    /* 성공 조건 */
+    var lastDef = defines[defines.length - 1];
+    var defSection = el('div', 'rc-section');
+    defSection.innerHTML = '<span class="rc-label">내가 정한 성공</span>' +
+      '<span class="rc-value">' + esc(lastDef.choice || lastDef.to || '') + '</span>';
+    if (defines.length > 1) {
+      defSection.innerHTML += '<span class="rc-change">처음에는 "' +
+        esc(defines[0].choice || defines[0].to || '') + '"라고 정했다가 바꿨다</span>';
     }
+    card.appendChild(defSection);
+
+    /* 방법 */
     if (methods.length) {
       var lastM = methods[methods.length - 1];
       var sl = lastM.slots || lastM.toSlots || {};
-      var r2 = el('div', 'h-row');
-      r2.innerHTML = '<span class="h-label">방법</span> ' +
-        esc((sl.sep || '') + '로 나누고, ' + (sl.dedup || '') + ', ' + (sl.output || ''));
-      body.appendChild(r2);
-    }
-    if (defines.length > 1) {
-      var r3 = el('div', 'h-row');
-      r3.innerHTML = '<span class="h-label">성공 조건 수정</span> ' + (defines.length - 1) + '회';
-      body.appendChild(r3);
-    }
-    if (methods.length > 1) {
-      var r4 = el('div', 'h-row');
-      r4.innerHTML = '<span class="h-label">방법 수정</span> ' + (methods.length - 1) + '회';
-      body.appendChild(r4);
+      var methSection = el('div', 'rc-section');
+      methSection.innerHTML = '<span class="rc-label">내가 정한 방법</span>' +
+        '<span class="rc-value">' + esc(sl.sep || '') + '로 나누고, ' +
+        esc(sl.dedup || '') + ', ' + esc(sl.output || '') + '</span>';
+      if (methods.length > 1) {
+        var firstM = methods[0].slots || {};
+        methSection.innerHTML += '<span class="rc-change">' + (methods.length - 1) + '번 수정했다</span>';
+      }
+      card.appendChild(methSection);
     }
 
+    /* 자료별 판정 */
+    var resultsSection = el('div', 'rc-results');
     runs.forEach(function (run, i) {
-      var pred = predicts[i];
       var judge = judges[i];
-      var r5 = el('div', 'h-row');
-      r5.innerHTML = '<span class="h-label">실행 ' + (i + 1) + '</span> ' +
-        esc(run.dataId) + ' → ' + (run.result && !run.result.err ? run.result.value : '오류') +
-        (pred ? ' (예상: ' + esc(pred.predicted) + ')' : '') +
-        (judge ? ' · 판정: ' + esc(judge.verdict) + (judge.basis ? ' — ' + esc(judge.basis) : '') : '');
-      body.appendChild(r5);
-    });
+      var dataName = run.dataId;
+      /* 미션 데이터에서 실제 이름 찾기 */
+      if (M && M.inputs) {
+        var found = M.inputs.filter(function (inp) { return inp.id === run.dataId; })[0];
+        if (found) dataName = found.name;
+      }
 
+      var row = el('div', 'rc-result-row');
+      var value = run.result && !run.result.err ? run.result.value : '오류';
+
+      if (judge) {
+        var vClass = judge.verdict === '지켰다' ? 'kept' : judge.verdict === '지키지 못했다' ? 'missed' : 'unsure';
+        var vIcon = judge.verdict === '지켰다' ? '✓' : judge.verdict === '지키지 못했다' ? '✗' : '?';
+        row.className = 'rc-result-row ' + vClass;
+        row.innerHTML = '<span class="rc-data-name">' + esc(dataName) + '</span>' +
+          '<span class="rc-arrow">→</span>' +
+          '<span class="rc-output">' + esc(String(value)) + '</span>' +
+          '<span class="rc-verdict-icon">' + vIcon + ' ' + esc(judge.verdict) + '</span>';
+        if (judge.basis) {
+          row.innerHTML += '<div class="rc-basis">"' + esc(judge.basis) + '"</div>';
+        }
+      } else {
+        row.innerHTML = '<span class="rc-data-name">' + esc(dataName) + '</span>' +
+          '<span class="rc-arrow">→</span>' +
+          '<span class="rc-output">' + esc(String(value)) + '</span>';
+      }
+      resultsSection.appendChild(row);
+    });
+    card.appendChild(resultsSection);
+
+    /* 마무리 */
     if (wraps.length) {
-      var r6 = el('div', 'h-row');
-      r6.innerHTML = '<span class="h-label">마무리</span> ' + esc(wraps[wraps.length - 1].text);
-      body.appendChild(r6);
+      var wrapSection = el('div', 'rc-wrap');
+      wrapSection.innerHTML = '<span class="rc-wrap-icon">💬</span>' +
+        '<span>' + esc(wraps[wraps.length - 1].text) + '</span>';
+      card.appendChild(wrapSection);
     }
 
-    item.appendChild(body);
-    list.appendChild(item);
-
-    header.addEventListener('click', function () { body.classList.toggle('open'); });
+    list.appendChild(card);
   }
 
   /* ── 인증 연동 ──────────────────────────────────── */
