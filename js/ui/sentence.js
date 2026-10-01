@@ -617,10 +617,16 @@
 
     var card = el('div', 'record-card');
 
-    /* 미션 제목 (현재 미션 기준) */
+    /* 미션 제목 + 원문 요청 */
     var title = el('div', 'rc-title');
     title.textContent = M ? M.title : '미션';
     card.appendChild(title);
+
+    if (M && M.brief) {
+      var briefEl = el('div', 'rc-brief');
+      briefEl.textContent = M.brief;
+      card.appendChild(briefEl);
+    }
 
     /* 성공 조건 */
     var lastDef = defines[defines.length - 1];
@@ -633,30 +639,46 @@
     }
     card.appendChild(defSection);
 
-    /* 방법 */
+    /* 방법 — 문장으로 풀어서 */
     if (methods.length) {
       var lastM = methods[methods.length - 1];
       var sl = lastM.slots || lastM.toSlots || {};
       var methSection = el('div', 'rc-section');
+      var methText = '';
+      if (M && M.method && M.method.sentences) {
+        methText = M.method.sentences.map(function (sent) {
+          var val = sl[sent.slot] || '';
+          return sent.template.replace('{' + sent.slot + '}', val);
+        }).join(' ');
+      } else {
+        methText = (sl.sep || '') + '로 나누고, ' + (sl.dedup || '') + ', ' + (sl.output || '');
+      }
       methSection.innerHTML = '<span class="rc-label">내가 정한 방법</span>' +
-        '<span class="rc-value">' + esc(sl.sep || '') + '로 나누고, ' +
-        esc(sl.dedup || '') + ', ' + esc(sl.output || '') + '</span>';
+        '<span class="rc-value">' + esc(methText) + '</span>';
       if (methods.length > 1) {
-        var firstM = methods[0].slots || {};
         methSection.innerHTML += '<span class="rc-change">' + (methods.length - 1) + '번 수정했다</span>';
       }
       card.appendChild(methSection);
     }
 
-    /* 자료별 판정 */
-    var resultsSection = el('div', 'rc-results');
+    /* 자료별 판정 — dataId별 마지막 run+judge만 표시 */
+    var latestByData = {};
     runs.forEach(function (run, i) {
-      var judge = judges[i];
-      var dataName = run.dataId;
-      /* 미션 데이터에서 실제 이름 찾기 */
+      latestByData[run.dataId] = { run: run, runIdx: i, judge: judges[i] };
+    });
+
+    var resultsSection = el('div', 'rc-results');
+    Object.keys(latestByData).forEach(function (dataId) {
+      var entry = latestByData[dataId];
+      var run = entry.run;
+      var judge = entry.judge;
+
+      /* 미션 데이터에서 이름과 원본 입력 찾기 */
+      var dataName = dataId;
+      var dataInput = '';
       if (M && M.inputs) {
-        var found = M.inputs.filter(function (inp) { return inp.id === run.dataId; })[0];
-        if (found) dataName = found.name;
+        var found = M.inputs.filter(function (inp) { return inp.id === dataId; })[0];
+        if (found) { dataName = found.name; dataInput = found.v; }
       }
 
       var row = el('div', 'rc-result-row');
@@ -666,17 +688,17 @@
         var vClass = judge.verdict === '지켰다' ? 'kept' : judge.verdict === '지키지 못했다' ? 'missed' : 'unsure';
         var vIcon = judge.verdict === '지켰다' ? '✓' : judge.verdict === '지키지 못했다' ? '✗' : '?';
         row.className = 'rc-result-row ' + vClass;
-        row.innerHTML = '<span class="rc-data-name">' + esc(dataName) + '</span>' +
-          '<span class="rc-arrow">→</span>' +
-          '<span class="rc-output">' + esc(String(value)) + '</span>' +
-          '<span class="rc-verdict-icon">' + vIcon + ' ' + esc(judge.verdict) + '</span>';
-        if (judge.basis) {
-          row.innerHTML += '<div class="rc-basis">"' + esc(judge.basis) + '"</div>';
-        }
+        row.innerHTML = '<div class="rc-row-top">' +
+          '<span class="rc-data-name">' + esc(dataName) + '</span>' +
+          '<span class="rc-verdict-icon">' + vIcon + ' ' + esc(judge.verdict) + '</span>' +
+          '</div>' +
+          (dataInput ? '<div class="rc-data-input">' + esc(dataInput) + '</div>' : '') +
+          '<div class="rc-row-result">결과: <b>' + esc(String(value)) + '</b></div>' +
+          (judge.basis ? '<div class="rc-basis">"' + esc(judge.basis) + '"</div>' : '');
       } else {
         row.innerHTML = '<span class="rc-data-name">' + esc(dataName) + '</span>' +
-          '<span class="rc-arrow">→</span>' +
-          '<span class="rc-output">' + esc(String(value)) + '</span>';
+          (dataInput ? '<div class="rc-data-input">' + esc(dataInput) + '</div>' : '') +
+          '<div class="rc-row-result">결과: <b>' + esc(String(value)) + '</b></div>';
       }
       resultsSection.appendChild(row);
     });
