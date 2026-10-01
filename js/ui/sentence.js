@@ -734,11 +734,17 @@
       });
     });
 
-    if ($('#logout-btn')) {
-      $('#logout-btn').addEventListener('click', function () {
+  }
+
+  /* 로그아웃 — initAuth 밖에서 항상 등록 */
+  if ($('#logout-btn')) {
+    $('#logout-btn').addEventListener('click', function () {
+      if (CC.sb && CC.sb.active()) {
         CC.sb.signOut().then(function () { window.location.href = 'auth.html'; });
-      });
-    }
+      } else {
+        window.location.href = 'auth.html';
+      }
+    });
   }
 
   /* ── 생성된 미션 로드 (로컬) ───────────────────── */
