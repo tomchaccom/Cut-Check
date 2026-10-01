@@ -697,7 +697,11 @@
     }
 
     CC.sb.getProfile().then(function (profile) {
-      if (!profile) return;
+      console.log('[CC] getProfile:', profile);
+      if (!profile) {
+        console.warn('[CC] 프로필 없음 — 로그인 필요');
+        return;
+      }
 
       /* 로그인 UI */
       if ($('#login-link')) $('#login-link').hidden = true;
@@ -709,7 +713,9 @@
 
       /* 교실 미션 로드 */
       CC.sb.myClassrooms().then(function (rooms) {
+        console.log('[CC] myClassrooms:', rooms);
         if (!rooms.length) {
+          console.warn('[CC] 교실 없음');
           switchTab('panel-missions');
           return;
         }
@@ -722,6 +728,7 @@
         }
 
         CC.sb.getMissions(currentClassroomId).then(function (missions) {
+          console.log('[CC] getMissions:', missions.length, '개');
           if (missions.length) {
             renderMissionGrid(missions);
             switchTab('panel-missions');
