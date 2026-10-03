@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut & Check — 데이터 검증 대시보드</title>
+<link rel="stylesheet" href="sentence.css">
+<style>
+.debug-page{max-width:1000px;margin:0 auto;padding:20px}
+.debug-section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+.debug-section h3{font-size:16px;font-weight:800;margin-bottom:10px}
+.debug-table{width:100%;border-collapse:collapse;font-size:13px;font-family:var(--mono)}
+.debug-table th{text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);font-size:11px;color:var(--ink-3)}
+.debug-table td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;max-width:300px;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.badge-ok{background:var(--green-soft);color:var(--green)}
+.badge-err{background:var(--coral-soft);color:var(--coral)}
+.badge-warn{background:var(--amber-soft);color:var(--amber)}
+.debug-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;margin-right:6px}
+.debug-btn:hover{background:var(--surface-2)}
+.debug-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.dot-ok{background:var(--green)}.dot-err{background:var(--coral)}.dot-warn{background:var(--amber)}.dot-off{background:var(--ink-3)}
+pre{background:var(--surface-2);border-radius:8px;padding:12px;font-size:12px;overflow-x:auto;max-height:300px;overflow-y:auto}
+#log{font-family:var(--mono);font-size:12px;line-height:1.6;max-height:400px;overflow-y:auto;background:var(--surface-2);border-radius:8px;padding:12px}
+.log-ok{color:var(--green)}.log-err{color:var(--coral)}.log-warn{color:var(--amber)}.log-info{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="debug-page">
+
+<header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+  <div>
+    <h1 style="font-size:22px;font-weight:800">데이터 검증 대시보드</h1>
+    <p style="font-size:13px;color:var(--ink-3)">학생 이벤트 → Supabase → 강사 화면 흐름 검증</p>
+  </div>
+  <div>
+    <button class="debug-btn primary" onclick="runAll()">전체 검증 실행</button>
+    <button class="debug-btn" onclick="document.getElementById('log').innerHTML=''">로그 지우기</button>
+  </div>
+</header>
+
+<!-- 연결 상태 -->
+<div class="debug-section">
+  <h3>연결 상태</h3>
+  <div id="conn-status" style="display:flex;gap:20px;flex-wrap:wrap">
+    <span><span class="status-dot dot-off" id="dot-sb"></span>Supabase</span>
+    <span><span class="status-dot dot-off" id="dot-auth"></span>인증</span>
+    <span><span class="status-dot dot-off" id="dot-db"></span>DB 접근</span>
+    <span><span class="status-dot dot-off" id="dot-api"></span>미션 생성 API</span>
+  </div>
+</div>
+
+<!-- 사용자 -->
+<div class="debug-section">
+  <h3>사용자 / 교실</h3>
+  <div id="user-info" style="font-size:14px">검증 실행 전</div>
+</div>
+
+<!-- 이벤트 저장 검증 -->
+<div class="debug-section">
+  <h3>student_events 테이블</h3>
+  <button class="debug-btn" onclick="checkEvents()">이벤트 조회</button>
+  <button class="debug-btn" onclick="testPushEvent()">테스트 이벤트 전송</button>
+  <div id="events-result" style="margin-top:10px"></div>
+</div>
+
+<!-- 미션 검증 -->
+<div class="debug-section">
+  <h3>missions 테이블</h3>
+  <button class="debug-btn" onclick="checkMissions()">미션 조회</button>
+  <button class="debug-btn" onclick="testGenerate()">미션 생성 테스트</button>
+  <div id="missions-result" style="margin-top:10px"></div>
+</div>
+
+<!-- fold 검증 -->
+<div class="debug-section">
+  <h3>fold 검증 (이벤트 → 학생 객체)</h3>
+  <button class="debug-btn" onclick="checkFold()">fold 실행</button>
+  <div id="fold-result" style="margin-top:10px"></div>
+</div>
+
+<!-- 교실 학생 -->
+<div class="debug-section">
+  <h3>교실 학생 목록</h3>
+  <button class="debug-btn" onclick="checkStudents()">학생 조회</button>
+  <div id="students-result" style="margin-top:10px"></div>
+</div>
+
+<!-- 로그 -->
+<div class="debug-section">
+  <h3>실행 로그</h3>
+  <div id="log"></div>
+</div>
+
+</div>
+
+<script>
+window.CC_SUPABASE = {
+  url: 'https://btmhdsdabulgevgmrwyq.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bWhkc2RhYnVsZ2V2Z21yd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NzUwNDIsImV4cCI6MjEwNjE1MTA0Mn0.mrDM6f9SXGA0YkWAkn5y0nC-nbdFsdyBwOQ1Fhk8FOY'
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/data/config.js"></script>
+<script src="js/data/supabase.js"></script>
+<script src="js/core/events.js"></script>
+<script src="js/core/fold.js"></script>
+<script src="js/core/hangul.js"></script>
+<script>
+var log = document.getElementById('log');
+function addLog(msg, cls) {
+  var d = document.createElement('div');
+  d.className = 'log-' + (cls || 'info');
+  d.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setDot(id, ok) {
+  var d = document.getElementById(id);
+  d.className = 'status-dot ' + (ok === true ? 'dot-ok' : ok === false ? 'dot-err' : 'dot-warn');
+}
+
+function badge(ok, text) {
+  return '<span class="badge badge-' + (ok ? 'ok' : 'err') + '">' + text + '</span>';
+}
+
+var classroomId = null;
+
+// 연결 확인
+async function checkConnection() {
+  addLog('Supabase 연결 확인...', 'info');
+  setDot('dot-sb', CC.sb.active());
+  addLog('Supabase: ' + (CC.sb.active() ? 'OK' : 'FAIL'), CC.sb.active() ? 'ok' : 'err');
+
+  var profile = await CC.sb.getProfile();
+  setDot('dot-auth', !!profile);
+  if (profile) {
+    addLog('인증: ' + profile.name + ' (' + profile.role + ')', 'ok');
+    document.getElementById('user-info').innerHTML =
+      '<b>' + profile.name + '</b> · ' + profile.role + ' · ' + profile.id;
+  } else {
+    addLog('인증: 로그인 안 됨', 'warn');
+    document.getElementById('user-info').textContent = '로그인 안 됨 — auth.html에서 로그인 후 다시 확인';
+  }
+
+  var rooms = await CC.sb.myClassrooms();
+  setDot('dot-db', rooms.length > 0);
+  if (rooms.length) {
+    classroomId = rooms[0].id;
+    addLog('교실: ' + rooms[0].name + ' (코드: ' + rooms[0].code + ', id: ' + rooms[0].id + ')', 'ok');
+    document.getElementById('user-info').innerHTML += '<br>교실: <b>' + rooms[0].name + '</b> · ' + rooms[0].code;
+  } else {
+    addLog('교실: 없음', 'warn');
+  }
+}
+
+// 이벤트 조회
+async function checkEvents() {
+  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
+  addLog('student_events 조회...', 'info');
+  var events = await CC.sb.getClassroomEvents(classroomId);
+  addLog('이벤트 수: ' + events.length, events.length ? 'ok' : 'warn');
+
+  var html = '<table class="debug-table"><tr><th>시각</th><th>학생</th><th>타입</th><th>내용</th></tr>';
+  events.slice(-20).forEach(function(e) {
+    var ev = e.event || {};
+    var name = (e.profiles && e.profiles.name) || e.student_id.substring(0,8);
+    var content = JSON.stringify(ev).substring(0, 80);
+    html += '<tr><td>' + new Date(e.created_at).toLocaleString('ko') + '</td>' +
+      '<td>' + name + '</td><td>' + (ev.type || '-') + '</td><td>' + content + '</td></tr>';
+  });
+  html += '</table>';
+  if (!events.length) html = '<p style="color:var(--ink-3)">이벤트 없음. 학생이 미션을 풀면 여기 표시됩니다.</p>';
+  document.getElementById('events-result').innerHTML = html;
+}
+
+// 테스트 이벤트 전송
+async function testPushEvent() {
+  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
+  addLog('테스트 이벤트 전송...', 'info');
+  var ev = CC.events.make('s-define', { choice: '[테스트] 검증용', reason: '데이터 흐름 테스트' });
+  try {
+    await CC.sb.pushEvent(classroomId, null, ev);
+    addLog('이벤트 전송 성공', 'ok');
+    checkEvents();
+  } catch(e) {
+    addLog('이벤트 전송 실패: ' + e.message, 'err');
+  }
+}
+
+// 미션 조회
+async function checkMissions() {
+  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
+  addLog('missions 조회...', 'info');
+  var missions = await CC.sb.getMissions(classroomId);
+  addLog('미션 수: ' + missions.length, missions.length ? 'ok' : 'warn');
+
+  var html = '<table class="debug-table"><tr><th>ID</th><th>제목</th><th>자료수</th><th>생성일</th></tr>';
+  missions.forEach(function(m) {
+    var d = m.data || {};
+    html += '<tr><td>' + m.id.substring(0,8) + '</td><td>' + (d.title || '-') + '</td>' +
+      '<td>' + ((d.inputs || []).length) + '</td><td>' + new Date(m.created_at).toLocaleString('ko') + '</td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('missions-result').innerHTML = html;
+}
+
+// 미션 생성 테스트
+async function testGenerate() {
+  addLog('미션 생성 API 호출...', 'info');
+  try {
+    var res = await fetch('/api/generate-mission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lesson: '검증 테스트', keyPoint: '데이터 흐름 확인' })
+    });
+    var data = await res.json();
+    if (res.ok) {
+      setDot('dot-api', true);
+      addLog('미션 생성 성공: ' + data.title, 'ok');
+      addLog('자료: ' + data.inputs.map(function(i){return i.name}).join(', '), 'info');
+      addLog('검증: ' + data.verify.map(function(v){return '전체='+v.total+'/서로다른='+v.unique}).join(' | '), 'info');
+      var last = data.verify[data.verify.length - 1];
+      addLog('세 번째 자료 중복: ' + (last.total !== last.unique ? 'OK (차이 있음)' : 'FAIL (차이 없음)'),
+        last.total !== last.unique ? 'ok' : 'err');
+    } else {
+      setDot('dot-api', false);
+      addLog('미션 생성 실패: ' + (data.error || res.status), 'err');
+    }
+  } catch(e) {
+    setDot('dot-api', false);
+    addLog('미션 생성 에러: ' + e.message, 'err');
+  }
+}
+
+// fold 검증
+async function checkFold() {
+  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
+  addLog('fold 검증...', 'info');
+  var rows = await CC.sb.getClassroomEvents(classroomId);
+  if (!rows.length) { addLog('이벤트 없음 — fold 불가', 'warn'); return; }
+
+  var evs = rows.map(function(r) {
+    var ev = r.event || {};
+    ev.sid = r.student_id;
+    ev.t = ev.t || new Date(r.created_at).getTime();
+    return ev;
+  });
+
+  var names = {};
+  rows.forEach(function(r) { if (r.profiles && r.profiles.name) names[r.student_id] = r.profiles.name; });
+
+  var students = CC.fold.foldMany(evs, { names: names, now: Date.now() });
+  addLog('fold 결과: 학생 ' + students.length + '명', 'ok');
+
+  var html = '<table class="debug-table"><tr><th>이름</th><th>성공조건</th><th>방법</th><th>실행</th><th>판정</th><th>마무리</th></tr>';
+  students.forEach(function(s) {
+    html += '<tr>' +
+      '<td><b>' + (s.name || s.id) + '</b></td>' +
+      '<td>' + (s.sDefine ? badge(true, s.sDefine.choice) : badge(false, '없음')) + '</td>' +
+      '<td>' + (s.sMethod ? badge(true, s.sMethod.slots.sep + '/' + s.sMethod.slots.dedup) : badge(false, '없음')) + '</td>' +
+      '<td>' + badge(s.sRuns.length > 0, s.sRuns.length + '건') + '</td>' +
+      '<td>' + badge(s.sJudges.length > 0, s.sJudges.length + '건') + '</td>' +
+      '<td>' + (s.sWrap ? badge(true, '있음') : badge(false, '없음')) + '</td>' +
+      '</tr>';
+
+    addLog('  ' + (s.name || s.id) + ': define=' + (s.sDefine ? 'O' : 'X') +
+      ' method=' + (s.sMethod ? 'O' : 'X') +
+      ' runs=' + s.sRuns.length + ' judges=' + s.sJudges.length +
+      ' wrap=' + (s.sWrap ? 'O' : 'X'), 'info');
+  });
+  html += '</table>';
+  document.getElementById('fold-result').innerHTML = html;
+}
+
+// 학생 목록
+async function checkStudents() {
+  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
+  addLog('학생 목록 조회...', 'info');
+  var students = await CC.sb.getClassroomStudents(classroomId);
+  addLog('등록 학생: ' + students.length + '명', students.length ? 'ok' : 'warn');
+
+  var html = '<table class="debug-table"><tr><th>이름</th><th>ID</th></tr>';
+  students.forEach(function(s) {
+    html += '<tr><td>' + s.name + '</td><td style="font-size:11px">' + s.id + '</td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('students-result').innerHTML = html;
+}
+
+// 전체 실행
+async function runAll() {
+  document.getElementById('log').innerHTML = '';
+  addLog('=== 전체 검증 시작 ===', 'info');
+  await checkConnection();
+  if (classroomId) {
+    await checkStudents();
+    await checkMissions();
+    await checkEvents();
+    await checkFold();
+  }
+  await testGenerate();
+  addLog('=== 전체 검증 완료 ===', 'ok');
+}
+
+// 페이지 로드 시 연결 확인
+checkConnection();
+</script>
+</body>
+</html>
