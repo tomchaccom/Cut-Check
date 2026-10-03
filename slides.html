@@ -8,191 +8,158 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F7F3ED;--surface:#FFF;--ink:#2C2520;--ink2:#6B5F54;--ink3:#A09688;--line:#E5DFD7;--green:#2E8B57;--gs:#E8F5EE;--coral:#C0392B;--blue:#3A7BD5;--bs:#E8F0FC;--amber:#C87F0A;--as:#FFF3DC;--sans:"IBM Plex Sans KR",system-ui,sans-serif;--disp:"Gothic A1",system-ui,sans-serif;--mono:"IBM Plex Mono",monospace}
-*{box-sizing:border-box;margin:0}
-body{background:#000;font-family:var(--sans);color:var(--ink);overflow:hidden}
-
-/* 슬라이드 컨테이너 */
+:root{--bg:#F7F3ED;--surface:#FFF;--ink:#2C2520;--ink2:#6B5F54;--ink3:#A09688;--line:#E5DFD7;--green:#2E8B57;--gs:#E8F5EE;--coral:#C0392B;--bs:#E8F0FC;--blue:#3A7BD5;--amber:#C87F0A;--as:#FFF3DC;--sans:"IBM Plex Sans KR",system-ui,sans-serif;--disp:"Gothic A1",system-ui,sans-serif;--mono:"IBM Plex Mono",monospace}
+*{box-sizing:border-box;margin:0}body{background:#000;font-family:var(--sans);color:var(--ink);overflow:hidden}
 .deck{position:relative;width:100vw;height:100vh}
-.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:60px 80px;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .3s}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:50px 70px;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .3s;overflow-y:auto}
 .slide.active{opacity:1;pointer-events:auto}
-@media(max-width:800px){.slide{padding:30px 24px}}
-
-/* 공통 */
-h1{font-family:var(--disp);font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1.3}
-h2{font-family:var(--disp);font-size:28px;font-weight:800;margin-bottom:16px}
-h3{font-size:20px;font-weight:700;margin-bottom:8px}
-p{font-size:17px;line-height:1.7;color:var(--ink2)}
-.tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:10px}
-.tag-g{background:var(--gs);color:var(--green)}
-.tag-b{background:var(--bs);color:var(--blue)}
-.tag-a{background:var(--as);color:var(--amber)}
-
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}
-@media(max-width:800px){.grid2{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
-.card h3{margin-bottom:6px}
-
-/* 타임라인 */
-.timeline{margin-top:16px;display:flex;flex-direction:column;gap:0}
-.tl-item{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
-.tl-item:last-child{border-bottom:none}
-.tl-date{font-family:var(--mono);font-size:13px;color:var(--ink3);min-width:60px;flex:none;padding-top:2px}
-.tl-dot{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none}
-.dot-feat{background:var(--green)}.dot-fix{background:var(--amber)}.dot-doc{background:var(--blue)}.dot-infra{background:var(--ink3)}
-.tl-text{font-size:14px;line-height:1.5}
-.tl-text b{color:var(--ink)}
-
-/* 숫자 카드 */
-.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
-@media(max-width:800px){.nums{grid-template-columns:repeat(2,1fr)}}
-.num-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
-.num-card .n{font-family:var(--disp);font-size:36px;font-weight:800}
-.num-card .l{font-size:13px;color:var(--ink3);margin-top:4px}
-.num-card.g .n{color:var(--green)}
-
-/* 간트 차트 */
-.gantt{margin-top:16px;display:flex;flex-direction:column;gap:6px}
-.gantt-row{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;font-size:14px}
-.gantt-label{font-weight:600;color:var(--ink2)}
-.gantt-bar-wrap{height:24px;background:var(--line);border-radius:6px;position:relative;overflow:hidden}
-.gantt-bar{height:100%;border-radius:6px;position:absolute;top:0}
-.gb-done{background:var(--green)}
-.gb-plan{background:var(--blue);opacity:.6}
-.gantt-weeks{display:grid;grid-template-columns:120px repeat(8,1fr);font-size:11px;color:var(--ink3);margin-bottom:4px}
-
-/* 네비 */
+@media(max-width:800px){.slide{padding:24px 20px}}
+h1{font-family:var(--disp);font-size:38px;font-weight:800;letter-spacing:-.02em;line-height:1.25}
+h2{font-family:var(--disp);font-size:26px;font-weight:800;margin-bottom:12px}
+h3{font-size:18px;font-weight:700;margin-bottom:6px}
+p,.desc{font-size:16px;line-height:1.7;color:var(--ink2)}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:8px}
+.tg{background:var(--gs);color:var(--green)}.tb{background:var(--bs);color:var(--blue)}.ta{background:var(--as);color:var(--amber)}.tr{background:#FDEDEB;color:var(--coral)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card p{font-size:14px}
+.big-quote{font-family:var(--disp);font-size:28px;font-weight:800;color:var(--green);text-align:center;margin:20px 0;line-height:1.4}
+@media(max-width:800px){.big-quote{font-size:20px}}
+.img-row{display:flex;gap:12px;margin-top:14px;align-items:flex-start}
+.img-row img{flex:1;min-width:0;border-radius:10px;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.img-cap{font-size:12px;color:var(--ink3);text-align:center;margin-top:6px}
+.sprint{border-left:4px solid var(--green);padding:14px 18px;background:var(--surface);border-radius:0 12px 12px 0;margin-bottom:12px}
+.sprint.s2{border-color:var(--blue)}.sprint.s3{border-color:var(--amber)}.sprint.s4{border-color:var(--coral)}
+.sprint h3{margin-bottom:4px}.sprint p{font-size:14px}
+.sprint .period{font-size:12px;font-weight:700;color:var(--ink3)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+th{text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);font-size:11px;color:var(--ink3)}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}@media(max-width:800px){.nums{grid-template-columns:repeat(2,1fr)}}
+.num-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.num-card .n{font-family:var(--disp);font-size:32px;font-weight:800;color:var(--green)}
+.num-card .l{font-size:12px;color:var(--ink3);margin-top:2px}
 .nav{position:fixed;bottom:20px;right:24px;display:flex;gap:8px;z-index:10}
 .nav button{width:44px;height:44px;border-radius:50%;border:none;background:rgba(46,139,87,.9);color:#fff;font-size:18px;cursor:pointer}
-.nav button:disabled{opacity:.3;cursor:default}
-.page-num{position:fixed;bottom:28px;left:24px;font-size:13px;color:var(--ink3);z-index:10;font-family:var(--mono)}
-
-/* 표 */
-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
-th{text-align:left;padding:8px;border-bottom:2px solid var(--line);font-weight:700;color:var(--ink3);font-size:12px}
-td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
-td:first-child{font-weight:600}
+.nav button:disabled{opacity:.3}
+.pn{position:fixed;bottom:28px;left:24px;font-size:13px;color:var(--ink3);z-index:10;font-family:var(--mono)}
 </style>
 </head>
 <body>
-
 <div class="deck" id="deck">
 
-<!-- 슬라이드 1: 표지 -->
-<div class="slide active">
-  <div style="text-align:center">
-    <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:20px;background:var(--green);color:#fff;font-family:var(--disp);font-weight:800;font-size:28px;margin-bottom:20px">C&C</div>
-    <h1>Cut & Check</h1>
-    <p style="font-size:20px;margin-top:10px">9월 진행 상황 · 10월 계획</p>
-    <p style="font-size:15px;margin-top:24px;color:var(--ink3)">산학협력실무 · 2026.10.03</p>
-  </div>
+<!-- 1: 표지 -->
+<div class="slide active" style="text-align:center">
+  <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:20px;background:var(--green);color:#fff;font-family:var(--disp);font-weight:800;font-size:28px;margin-bottom:16px">C&C</div>
+  <h1>Cut & Check</h1>
+  <p style="font-size:20px;margin-top:8px">9월 진행 · 10월 계획</p>
+  <p style="font-size:14px;margin-top:20px;color:var(--ink3)">산학협력실무 · 2026.10.03</p>
 </div>
 
-<!-- 슬라이드 2: 프로젝트 개요 -->
+<!-- 2: 설계 철학 한 줄 + 비교 -->
 <div class="slide">
-  <span class="tag tag-g">프로젝트 개요</span>
-  <h2>Cut & Check가 뭔가요?</h2>
-  <p style="max-width:600px;margin-bottom:20px">중학생이 <b>문제를 정의하고, 방법을 정하고, 실행하고, 스스로 판정하는</b> 수업 도구입니다.<br>파이썬 문법이 아니라, 문법이 바뀌어도 남는 사고 방식을 가르칩니다.</p>
-  <div style="background:var(--gs);border:1px solid var(--green);border-radius:14px;padding:20px;max-width:500px">
-    <b style="color:var(--green);font-size:18px">핵심 원칙</b>
-    <p style="margin-top:6px">시작은 대신해주고, 판단은 하나도 대신하지 않는다.</p>
-  </div>
-</div>
-
-<!-- 슬라이드 3: 9월 숫자 요약 -->
-<div class="slide">
-  <span class="tag tag-g">9월 성과</span>
-  <h2>9월에 무엇을 했나</h2>
-  <div class="nums">
-    <div class="num-card g"><div class="n">71</div><div class="l">총 커밋</div></div>
-    <div class="num-card g"><div class="n">15</div><div class="l">신규 파일</div></div>
-    <div class="num-card g"><div class="n">5</div><div class="l">주요 기능</div></div>
-    <div class="num-card g"><div class="n">1</div><div class="l">배포 (Vercel)</div></div>
-  </div>
-  <p style="margin-top:20px">9/22~10/3 (12일) 집중 개발. 블록 기반 프로토타입을 문장 입력형 서비스로 전환하고, 인증·교실·AI 미션 생성까지 연결.</p>
-</div>
-
-<!-- 슬라이드 4: 9월 주차별 타임라인 -->
-<div class="slide">
-  <span class="tag tag-g">9월 타임라인</span>
-  <h2>주차별 진행</h2>
-  <div class="timeline">
-    <div class="tl-item"><span class="tl-date">9/22</span><span class="tl-dot dot-feat"></span><div class="tl-text"><b>문장 입력형 전환</b><br>블록 팔레트 → 선택형 빈칸 3문장. 실행 엔진(runSentence), 미션 3개, 이벤트 9종</div></div>
-    <div class="tl-item"><span class="tl-date">9/23</span><span class="tl-dot dot-doc"></span><div class="tl-text"><b>문서 정비</b><br>테크스펙, 유저 플로우, README 스크린샷, 강사 대시보드 디자인 재구성</div></div>
-    <div class="tl-item"><span class="tl-date">9/24</span><span class="tl-dot dot-infra"></span><div class="tl-text"><b>Vercel 배포 + GitHub 자동 배포</b><br>cut-check-lilac.vercel.app, push 시 자동 빌드</div></div>
-    <div class="tl-item"><span class="tl-date">9/25</span><span class="tl-dot dot-feat"></span><div class="tl-text"><b>인증 + 교실 시스템</b><br>Supabase Auth, 회원가입, 강사 교실 생성, 학생 참여 코드 입장, RLS 보안</div></div>
-    <div class="tl-item"><span class="tl-date">9/26</span><span class="tl-dot dot-feat"></span><div class="tl-text"><b>AI 미션 생성</b><br>수업 내용 + 핵심 입력 → LLM(Pickle) → 맞춤 미션 자동 생성, few-shot 프롬프트</div></div>
-    <div class="tl-item"><span class="tl-date">9/27</span><span class="tl-dot dot-feat"></span><div class="tl-text"><b>강사·학생 화면 재구성</b><br>강사: 교실 선택 → 3탭 대시보드. 학생: 내 미션 → 풀기 → 내 기록 3탭</div></div>
-    <div class="tl-item"><span class="tl-date">9/28~</span><span class="tl-dot dot-fix"></span><div class="tl-text"><b>UX 정비 + 버그 수정</b><br>역할 분리, 접근성 14건, RLS 수정, 마무리 화면 개선, 내 기록 형식 A</div></div>
-  </div>
-</div>
-
-<!-- 슬라이드 5: 핵심 기능 — 학생 -->
-<div class="slide">
-  <span class="tag tag-g">핵심 기능</span>
-  <h2>학생 화면</h2>
+  <span class="tag tg">설계 철학</span>
+  <div class="big-quote">"중학생이 '안 되는데요' 대신<br>'여기서 깨졌다'고 말할 수 있게 만든다."</div>
+  <p style="text-align:center;margin-bottom:20px">시작 비용은 0으로, 판단은 하나도 대신하지 않는 방식으로.</p>
   <div class="grid2">
-    <div class="card">
-      <h3>문장 입력형 미션</h3>
-      <p>코드 대신 빈칸 선택. 성공 조건 → 방법 3문장 → 자료별 실행·판정 → 마무리</p>
+    <div class="card" style="border-color:var(--coral)">
+      <h3 style="color:var(--coral)">기존 코딩 교육</h3>
+      <p>빈 편집기 → 문법 오류로 막힘<br>가이드 코드 → 베껴 쓰기<br>정답 채점 → 답 추측<br>AI "잘했어요!" → 인정이 싸구려</p>
     </div>
-    <div class="card">
-      <h3>학생이 직접 판정</h3>
-      <p>시스템이 채점하지 않음. "내 성공 조건을 지켰나요?" 학생이 지켰다/못했다/어렵다 선택</p>
-    </div>
-    <div class="card">
-      <h3>마무리 돌아보기</h3>
-      <p>자료별 판정 카드를 다시 보면서, 가장 기억에 남는 걸 자기 언어로 정리</p>
-    </div>
-    <div class="card">
-      <h3>내 기록</h3>
-      <p>문제 원문 + 내가 한 판단 + 원본 데이터 + 판정·근거. 이벤트 로그 아닌 사람 언어</p>
+    <div class="card" style="border-color:var(--green)">
+      <h3 style="color:var(--green)">Cut & Check</h3>
+      <p>선택형 빈칸 → 시작 비용 0<br>방법은 안 적힘 → 직접 정함<br>시스템이 채점 안 함 → 학생이 판정<br>칭찬은 타이밍만 → 말은 선생님이</p>
     </div>
   </div>
 </div>
 
-<!-- 슬라이드 6: 핵심 기능 — 강사 -->
+<!-- 3: 철학이 화면에 어떻게 드러나는가 — 학생 -->
 <div class="slide">
-  <span class="tag tag-b">핵심 기능</span>
-  <h2>강사 화면</h2>
-  <div class="grid2">
+  <span class="tag tg">철학 → 화면</span>
+  <h2>빈 화면 대신, 문장의 빈칸을 고른다</h2>
+  <p>코드를 치지 않습니다. 세 문장의 빈칸을 선택해서 방법을 만듭니다.</p>
+  <div class="img-row">
+    <div><img src="docs/images/step3-method.png" alt="방법 쓰기"><p class="img-cap">방법을 문장으로 정한다</p></div>
+    <div><img src="docs/images/step4-run.png" alt="실행·판정"><p class="img-cap">결과를 보고 학생이 직접 판정한다</p></div>
+  </div>
+</div>
+
+<!-- 4: 철학이 화면에 어떻게 드러나는가 — 강사 -->
+<div class="slide">
+  <span class="tag tb">철학 → 화면</span>
+  <h2>정답률 대신, 지금 누구부터 가야 하는가</h2>
+  <p>점수·순위·소요 시간은 보여주지 않습니다. 저장조차 하지 않습니다.</p>
+  <div class="img-row">
+    <div><img src="docs/images/landing-teacher.png" alt="강사 대시보드"><p class="img-cap">조용히 막힌 학생, 칭찬 타이밍, 위험군</p></div>
+  </div>
+</div>
+
+<!-- 5: 9월 — 어떤 고민을 했는가 -->
+<div class="slide" style="justify-content:flex-start;padding-top:40px">
+  <span class="tag ta">9월 고민</span>
+  <h2>블록에서 문장으로 — 왜 바꿨는가</h2>
+  <div class="grid2" style="margin-top:12px">
     <div class="card">
-      <h3>교실 관리</h3>
-      <p>교실 생성 → 참여 코드 → 학생 목록. 한 강사가 여러 교실 운영</p>
+      <h3>고민 1: 블록 조립이 목표인가?</h3>
+      <p>기존 프로토타입은 블록을 드래그해서 순서를 만드는 구조였다. 그런데 "순서 맞추기"가 수업 목표가 아니었다. 목표는 <b>"무엇을 성공으로 정의하고, 왜 이 방법인지 설명하는 것"</b>이었다. 블록 조립은 이걸 가리고 있었다.</p>
     </div>
     <div class="card">
-      <h3>AI 미션 생성</h3>
-      <p>수업 내용 + 핵심 입력 → LLM이 맞춤 미션 생성. 수정/삭제 가능</p>
+      <h3>고민 2: 학생이 판단하고 있는가?</h3>
+      <p>블록을 올바른 순서로 놓으면 "통과"되는 구조에서, 학생은 결국 <b>정답 순서를 추측</b>하고 있었다. 판단이 아니라 맞추기였다. 문장 빈칸으로 바꾸면 "순서"가 사라지고 "선택의 이유"만 남는다.</p>
     </div>
     <div class="card">
-      <h3>개입 순서 대시보드</h3>
-      <p>정답률 대신: 조용히 막힌 학생, 도움 요청, 칭찬 타이밍, 위험군</p>
+      <h3>고민 3: 강사가 뭘 봐야 하는가?</h3>
+      <p>블록 순서는 강사에게도 의미가 없었다. 강사가 봐야 하는 건 <b>"이 학생이 성공을 어떻게 정의했고, 깨졌을 때 뭐라고 판정했는가"</b>였다. 대시보드를 정답률이 아니라 판단 기록 중심으로 재설계했다.</p>
     </div>
     <div class="card">
-      <h3>학생 활동 실시간</h3>
-      <p>Supabase를 통해 학생 이벤트 수집 → fold → 대시보드 반영</p>
+      <h3>고민 4: 서버 없이도 수업이 되는가?</h3>
+      <p>학교 와이파이는 끊긴다. 서버가 필수면 끊긴 순간 수업이 끝난다. 그래서 <b>서버는 기록의 조건이 아니라 사본</b>으로 설계했다. localStorage 우선, Supabase는 있으면 쓰고 없으면 로컬로.</p>
     </div>
   </div>
 </div>
 
-<!-- 슬라이드 7: 기술 스택 -->
+<!-- 6: 9월 — 결정과 결과 -->
 <div class="slide">
-  <span class="tag tag-b">기술</span>
-  <h2>기술 스택</h2>
+  <span class="tag tg">9월 결정</span>
+  <h2>고민에서 나온 결정</h2>
   <table>
-    <tr><th>영역</th><th>기술</th><th>선택 이유</th></tr>
-    <tr><td>프론트엔드</td><td>Vanilla JS + 정적 HTML/CSS</td><td>번들러 없음 — 교사가 파일을 열어서 고칠 수 있어야</td></tr>
-    <tr><td>인증 + DB</td><td>Supabase (Auth + PostgreSQL + RLS)</td><td>CDN으로 로드, 오프라인 우선 폴백</td></tr>
-    <tr><td>AI 미션 생성</td><td>Pickle API (OpenAI 호환)</td><td>Vercel serverless function에서 호출</td></tr>
-    <tr><td>배포</td><td>Vercel (GitHub 자동 배포)</td><td>push만 하면 배포, 서버리스 API 포함</td></tr>
-    <tr><td>아키텍처</td><td>3계층 (core / data / ui)</td><td>core에서 localStorage 쓰면 테스트가 깨짐</td></tr>
+    <tr><th>고민</th><th>결정</th><th>결과</th></tr>
+    <tr><td>블록이 목표를 가린다</td><td>블록 → 문장 빈칸 전환</td><td>sentence.html + runSentence 엔진</td></tr>
+    <tr><td>학생이 추측하고 있다</td><td>채점 제거, 학생 판정 도입</td><td>지켰다/못했다/어렵다 3선택 + 근거</td></tr>
+    <tr><td>강사가 순서를 본다</td><td>정답률 대신 개입 순서</td><td>교실 → 3탭 대시보드</td></tr>
+    <tr><td>서버 없으면 끝난다</td><td>오프라인 우선 + Supabase 사본</td><td>localStorage 우선, RLS 보안</td></tr>
+    <tr><td>매번 같은 문제</td><td>AI 미션 생성</td><td>수업 내용 입력 → LLM 맞춤 미션</td></tr>
+  </table>
+  <div class="nums" style="margin-top:20px">
+    <div class="num-card"><div class="n">71</div><div class="l">총 커밋</div></div>
+    <div class="num-card"><div class="n">15+</div><div class="l">신규 파일</div></div>
+    <div class="num-card"><div class="n">9</div><div class="l">검증 후 수정</div></div>
+    <div class="num-card"><div class="n">1</div><div class="l">Vercel 배포</div></div>
+  </div>
+</div>
+
+<!-- 7: 9월 타임라인 -->
+<div class="slide" style="justify-content:flex-start;padding-top:40px">
+  <span class="tag tg">9월 타임라인</span>
+  <h2>12일간 집중 개발 (9/22~10/3)</h2>
+  <table>
+    <tr><th>날짜</th><th>작업</th><th>산출물</th></tr>
+    <tr><td style="white-space:nowrap">9/22</td><td>블록 → 문장 입력형 전환</td><td>sentence.html, runSentence, 미션 3개, 이벤트 9종</td></tr>
+    <tr><td>9/23</td><td>문서 정비 + 디자인 통일</td><td>테크스펙, 유저 플로우, README, 강사 디자인</td></tr>
+    <tr><td>9/24</td><td>배포 인프라</td><td>Vercel + GitHub 자동 배포</td></tr>
+    <tr><td>9/25</td><td>인증 + 교실 시스템</td><td>Supabase Auth, 회원가입, 교실 생성/참여, RLS</td></tr>
+    <tr><td>9/26</td><td>AI 미션 생성</td><td>LLM API 연동, few-shot 프롬프트</td></tr>
+    <tr><td>9/27</td><td>강사·학생 화면 재구성</td><td>강사 3탭, 학생 3탭 (내 미션/풀기/기록)</td></tr>
+    <tr><td>9/28~</td><td>UX 정비 + 접근성 14건</td><td>역할 분리, 마무리 판정 리뷰, 내 기록 형식 A</td></tr>
+    <tr><td>10/1~3</td><td>3개 에이전트 병렬 검증</td><td>데이터 흐름 6건 + AI 품질 + 대시보드 갭 수정</td></tr>
   </table>
 </div>
 
-<!-- 슬라이드 8: 의도적으로 안 만든 것 -->
+<!-- 8: 의도적으로 안 만든 것 -->
 <div class="slide">
-  <span class="tag tag-a">설계 철학</span>
+  <span class="tag tr">설계 철학</span>
   <h2>의도적으로 만들지 않은 것</h2>
+  <p style="margin-bottom:12px">이 목록이 만든 것보다 중요합니다. 전부 한 번씩 "좋은 아이디어"로 제안됐다가 거절된 것들입니다.</p>
   <table>
     <tr><th>안 만든 것</th><th>이유</th></tr>
     <tr><td>점수 · 레벨</td><td>칭찬을 기계에 넘기면 사람의 격려가 싸구려가 된다</td></tr>
@@ -200,168 +167,95 @@ td:first-child{font-weight:600}
     <tr><td>AI 칭찬 문구</td><td>타이밍만 알려주고 말은 선생님이 한다</td></tr>
     <tr><td>정답률 · 순위</td><td>숫자를 띄우면 교사가 줄을 세운다</td></tr>
     <tr><td>다음 행동 추천</td><td>판단 대행의 가장 흔한 형태</td></tr>
+    <tr><td>반 전체 현황</td><td>옆자리 진도가 보이면 속도 경쟁이 된다</td></tr>
   </table>
-  <p style="margin-top:16px;font-size:14px">코드가 거절합니다 — <code>score</code>, <code>rank</code> 필드를 저장하면 예외, 화면에 금지 단어가 뜨면 테스트 실패.</p>
+  <p style="font-size:13px;margin-top:12px;color:var(--ink3)"><code>score</code>, <code>rank</code> 필드를 저장하면 코드가 예외를 던집니다. 화면에 금지 단어가 뜨면 테스트가 깨집니다.</p>
 </div>
 
-<!-- 슬라이드 9: 10월 계획 -->
+<!-- 9: 10월 — 스프린트 1 -->
 <div class="slide">
-  <span class="tag tag-b">10월 계획</span>
-  <h2>10월에 할 것</h2>
-  <div class="gantt-weeks"><span></span><span>1주</span><span>2주</span><span>3주</span><span>4주</span><span>5주</span><span>6주</span><span>7주</span><span>8주</span></div>
-  <div class="gantt">
-    <div class="gantt-row"><span class="gantt-label">미션 형식 확장</span><div class="gantt-bar-wrap"><div class="gantt-bar gb-plan" style="left:0;width:25%"></div></div></div>
-    <div class="gantt-row"><span class="gantt-label">실제 수업 파일럿</span><div class="gantt-bar-wrap"><div class="gantt-bar gb-plan" style="left:12.5%;width:25%"></div></div></div>
-    <div class="gantt-row"><span class="gantt-label">강사 대시보드 고도화</span><div class="gantt-bar-wrap"><div class="gantt-bar gb-plan" style="left:25%;width:25%"></div></div></div>
-    <div class="gantt-row"><span class="gantt-label">학생 기록 내보내기</span><div class="gantt-bar-wrap"><div class="gantt-bar gb-plan" style="left:37.5%;width:25%"></div></div></div>
-    <div class="gantt-row"><span class="gantt-label">실시간 동기화</span><div class="gantt-bar-wrap"><div class="gantt-bar gb-plan" style="left:50%;width:25%"></div></div></div>
-    <div class="gantt-row"><span class="gantt-label">관찰·설문 수집</span><div class="gantt-bar-wrap"><div class="gantt-bar gb-plan" style="left:25%;width:50%"></div></div></div>
+  <span class="tag tb">10월 계획</span>
+  <h2>4개 스프린트</h2>
+  <div class="sprint">
+    <span class="period">스프린트 1 · 10/6 ~ 10/12</span>
+    <h3>AI 미션 품질 + 미션 형식 확장</h3>
+    <p>현재 "나누고 → 중복 처리 → 세기" 한 유형뿐. 필터링(조건에 맞는 것만 골라내기), 정렬(순서 바꾸기) 유형을 추가한다. LLM 프롬프트를 주제 다양성·한국어 조사·자료 이름 품질 기준으로 개선한다. 강사가 생성 결과를 직접 편집(자료 수정·삭제)할 수 있게 한다.</p>
+  </div>
+  <div class="sprint s2">
+    <span class="period">스프린트 2 · 10/13 ~ 10/19</span>
+    <h3>5명 소규모 파일럿 준비 + 실행</h3>
+    <p>한결·태인·세은·준혁·연서 5명으로 실제 수업 1회 진행. 관찰 항목: 문장 빈칸을 설명 없이 이해하는가? 성공 조건과 방법을 구분하는가? 세 번째 자료의 차이를 자기 선택과 연결하는가? 마무리에서 형식적 문장이 아닌 자기 언어가 나오는가?</p>
   </div>
 </div>
 
-<!-- 슬라이드 10: 10월 초 진행 (10/1~10/3) -->
+<!-- 10: 10월 — 스프린트 3, 4 -->
 <div class="slide">
-  <span class="tag tag-g">10월 진행</span>
-  <h2>10/1~10/3 검증 + 수정</h2>
-  <p style="margin-bottom:16px">3개 검증 에이전트를 병렬 실행해 데이터 흐름·AI 품질·대시보드를 검증하고, 발견된 문제 9건을 수정.</p>
+  <span class="tag tb">10월 계획</span>
+  <div class="sprint s3">
+    <span class="period">스프린트 3 · 10/20 ~ 10/26</span>
+    <h3>강사 실시간 대시보드 + 기록 내보내기</h3>
+    <p>파일럿 관찰 결과 반영. 강사 대시보드에 실시간 자동 새로고침(30초 주기) 추가. 학생 상세에서 문장형 활동(성공 조건·방법·판정·마무리)을 한눈에 보는 뷰. 학생별 기록을 인쇄용 PDF + JSON으로 내보내기. 강사가 수업 중 가장 먼저 봐야 하는 정보 3가지를 파일럿 관찰에서 결정.</p>
+  </div>
+  <div class="sprint s4">
+    <span class="period">스프린트 4 · 10/27 ~ 10/31</span>
+    <h3>20명 수업 + 관찰·설문</h3>
+    <p>소규모 파일럿 결과를 반영해 20명 정규 수업 진행. 사전·사후 설문, 관찰 기록 수집. 강사 인터뷰: 대시보드가 실제로 개입 순서를 결정하는 데 도움이 됐는가? 학생 인터뷰: "내가 정한 성공"이라는 말이 의미가 있었는가? 결과를 11월 보고서에 반영.</p>
+  </div>
+  <div style="margin-top:16px;padding:14px;background:var(--gs);border:1px solid var(--green);border-radius:12px;font-size:14px">
+    <b style="color:var(--green)">스프린트마다 묻는 질문:</b> 이 기능은 시작 비용을 줄이는 건가, 판단을 대신하는 건가?
+  </div>
+</div>
+
+<!-- 11: 검증 질문 -->
+<div class="slide">
+  <span class="tag ta">검증</span>
+  <h2>파일럿에서 확인할 것</h2>
   <div class="grid2">
     <div class="card">
-      <h3>데이터 흐름 검증</h3>
-      <p>학생 이벤트 → Supabase → fold → 강사 대시보드 전체 경로 추적.<br>
-      <b>발견:</b> RLS 정책 2건(enrollments/profiles), currentMissionDbId undefined, quiet() 오탐.<br>
-      <b>수정:</b> RLS 정책 추가, null 명시, 문장형 활동 체크.</p>
+      <h3>학생 관찰</h3>
+      <p>1. 문장 빈칸의 의미를 강사 설명 없이 이해하는가?<br>
+      2. "성공 조건"과 "방법"을 구분해서 설명할 수 있는가?<br>
+      3. 세 번째 자료의 차이를 자신의 선택과 연결하는가?<br>
+      4. "지키지 못했다" 판정 후 방법을 수정하는가?<br>
+      5. 마무리에서 형식적 문장이 아닌 자기 언어가 나오는가?</p>
     </div>
     <div class="card">
-      <h3>AI 미션 품질 검증</h3>
-      <p>5회 호출 테스트. 중복 검증 5/5 통과.<br>
-      <b>발견:</b> 주제 4/5가 "도서관", 조사 오류 "같은 도서은".<br>
-      <b>수정:</b> 프롬프트 다양성 강제, hasJongseong() 받침 판별.</p>
-    </div>
-    <div class="card">
-      <h3>강사 대시보드 검증</h3>
-      <p>문장형 학생이 대시보드 5개 패널에 안 보이는 구조적 갭 발견.<br>
-      <b>발견:</b> tiles/risk/funnel 중복, praise() 필터 누락, quiet() 오탐.<br>
-      <b>수정:</b> innerHTML 초기화, praise에 문장형 조건 추가.</p>
-    </div>
-    <div class="card">
-      <h3>데이터 검증 대시보드</h3>
-      <p>debug.html 신규 — 연결 상태 5개, 학생 활동 테이블, 미션 테이블, AI 테스트를 한 페이지에서 확인.</p>
+      <h3>강사 관찰</h3>
+      <p>1. 대시보드를 보고 개입 순서를 실제로 결정하는가?<br>
+      2. "조용히 막힌 학생"을 대시보드에서 먼저 발견하는가?<br>
+      3. AI 생성 미션의 품질이 수업에 충분한가?<br>
+      4. 학생 기록을 보고 피드백을 줄 수 있는가?<br>
+      5. 45분 안에 미션 생성 → 풀기 → 마무리가 가능한가?</p>
     </div>
   </div>
 </div>
 
-<!-- 슬라이드 11: 10월 상세 -->
-<div class="slide">
-  <span class="tag tag-b">10월 계획</span>
-  <h2>주차별 상세</h2>
-  <div class="grid2">
-    <div class="card">
-      <h3>1~2주 (10/6~10/17)</h3>
-      <p>미션 형식 확장 — 필터링·정렬 유형 추가. 첫 파일럿 수업 준비 (5명 소규모). LLM 프롬프트 품질 개선.</p>
-    </div>
-    <div class="card">
-      <h3>3~4주 (10/20~10/31)</h3>
-      <p>실제 수업 진행 + 관찰. 강사 대시보드 고도화 (실시간 학생 활동). 학생 기록 인쇄/JSON 내보내기.</p>
-    </div>
-    <div class="card">
-      <h3>지속</h3>
-      <p>파일럿 관찰 기록 수집. 빈칸 문구·자료 조정. 학생 인터뷰.</p>
-    </div>
-    <div class="card">
-      <h3>검증 질문</h3>
-      <p>문장 빈칸의 의미를 설명 없이 이해하는가? 성공 조건과 방법을 구분하는가? 이유 입력이 형식적이 되지 않는가?</p>
-    </div>
-  </div>
-</div>
-
-<!-- 슬라이드 11: 커밋 로그 (전체) -->
-<div class="slide" style="overflow-y:auto;justify-content:flex-start;padding-top:40px">
-  <span class="tag tag-g">커밋 로그</span>
-  <h2>9월 전체 커밋 (67건)</h2>
-  <div style="font-size:12px;font-family:var(--mono);line-height:1.8;max-height:calc(100vh - 140px);overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px">
-    <div style="color:var(--green);font-weight:700;margin-bottom:8px">feat (기능 추가)</div>
-    04320eb 블록→문장 입력형 전환<br>
-    e26dd08 회원가입·인증 + 미션 생성 API<br>
-    d368989 Supabase 프로젝트 연결<br>
-    d24e6bc 수업 내용 기반 미션 생성 (LLM)<br>
-    a7cd103 강사 교실 만들기 / 학생 참여<br>
-    7e91c62 강사·학생 화면 전면 재구성<br>
-    92b9da9 미션 수정/삭제 + 마무리 판정 리뷰<br>
-    a5f9bc4 랜딩 페이지<br>
-    30104d2 수업 준비물 인쇄 페이지<br>
-    3aaf49e 학생 미션이 선생님 화면에 표시<br>
-    33f3237 미션 06 세어보기<br>
-    2206b17 졸업 시험 · 미션 만들기<br>
-    <br>
-    <div style="color:var(--amber);font-weight:700;margin-bottom:8px">fix (버그 수정 · UX 개선)</div>
-    eede11b 역할 분리 + 교실 표시 + UX 14건<br>
-    2151348 한자·일본어 필터링<br>
-    7a21d69 실제 학생 활동 표시 + 동적 문장<br>
-    a7b9e97 목업 제거 + 성공 조건 동적 변경<br>
-    b58ec7e 학생 미션 조회 RLS 수정<br>
-    010dfe2 학생 교실 조회 RLS<br>
-    bfee589 프로필 트리거 보강<br>
-    5d83383 회원가입 RLS 수정<br>
-    0d94898 내 기록 원문·데이터 추가<br>
-    e0f1083 null 참조 에러 수정<br>
-    <br>
-    <div style="color:var(--green);font-weight:700;margin-bottom:8px;margin-top:12px">10월 (검증 + 수정)</div>
-    6b4a6b3 9월 진행·10월 계획 슬라이드<br>
-    bdfc168 데이터 검증 대시보드<br>
-    16949b9 검증 에이전트 문제 일괄 수정 (대시보드 중복, AI 조사, 주제 다양성)<br>
-    17e2cfa 데이터 흐름 6건 수정 (RLS, quiet 오탐, missionId)<br>
-    <br>
-    <div style="color:var(--blue);font-weight:700;margin-bottom:8px">docs · infra</div>
-    0374e7b 테크스펙·유저 플로우·스크린샷<br>
-    0dc7b17 강사 디자인 재구성 + README<br>
-    5bfbf3a Vercel 배포<br>
-    ed96de8 GitHub 자동 배포 연동<br>
-    b91af1c core/data/ui 3계층 분리<br>
-  </div>
-</div>
-
-<!-- 슬라이드 12: 링크 -->
-<div class="slide">
-  <div style="text-align:center">
-    <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:var(--green);color:#fff;font-family:var(--disp);font-weight:800;font-size:22px;margin-bottom:16px">C&C</div>
-    <h2>감사합니다</h2>
-    <p style="margin-top:20px;font-size:15px">
-      서비스: <a href="https://cut-check-lilac.vercel.app" style="color:var(--green)">cut-check-lilac.vercel.app</a><br>
-      GitHub: <a href="https://github.com/tomchaccom/Cut-Check" style="color:var(--green)">tomchaccom/Cut-Check</a><br>
-      테크스펙: <a href="docs/tech-spec.md" style="color:var(--green)">docs/tech-spec.md</a><br>
-      유저 플로우: <a href="docs/user-flow.md" style="color:var(--green)">docs/user-flow.md</a>
-    </p>
-  </div>
+<!-- 12: 링크 -->
+<div class="slide" style="text-align:center">
+  <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:var(--green);color:#fff;font-family:var(--disp);font-weight:800;font-size:22px;margin-bottom:16px">C&C</div>
+  <h2>감사합니다</h2>
+  <p style="margin-top:20px;font-size:15px">
+    서비스: <a href="https://cut-check-lilac.vercel.app" style="color:var(--green)">cut-check-lilac.vercel.app</a><br>
+    검증 대시보드: <a href="https://cut-check-lilac.vercel.app/debug" style="color:var(--green)">cut-check-lilac.vercel.app/debug</a><br>
+    GitHub: <a href="https://github.com/tomchaccom/Cut-Check" style="color:var(--green)">tomchaccom/Cut-Check</a><br>
+    테크스펙: <a href="docs/tech-spec.md" style="color:var(--green)">docs/tech-spec.md</a>
+  </p>
 </div>
 
 </div>
 
-<!-- 네비게이션 -->
-<div class="page-num" id="pn">1 / 13</div>
+<div class="pn" id="pn">1 / 12</div>
 <div class="nav">
-  <button id="prev" disabled>←</button>
-  <button id="next">→</button>
+  <button id="prev" disabled>&larr;</button>
+  <button id="next">&rarr;</button>
 </div>
-
 <script>
 (function(){
-  var slides = document.querySelectorAll('.slide');
-  var cur = 0;
-  function go(n){
-    if(n<0||n>=slides.length)return;
-    slides[cur].classList.remove('active');
-    cur=n;
-    slides[cur].classList.add('active');
-    document.getElementById('prev').disabled=cur===0;
-    document.getElementById('next').disabled=cur===slides.length-1;
-    document.getElementById('pn').textContent=(cur+1)+' / '+slides.length;
-  }
+  var slides=document.querySelectorAll('.slide'),cur=0;
+  function go(n){if(n<0||n>=slides.length)return;slides[cur].classList.remove('active');cur=n;slides[cur].classList.add('active');document.getElementById('prev').disabled=cur===0;document.getElementById('next').disabled=cur===slides.length-1;document.getElementById('pn').textContent=(cur+1)+' / '+slides.length}
   document.getElementById('prev').addEventListener('click',function(){go(cur-1)});
   document.getElementById('next').addEventListener('click',function(){go(cur+1)});
-  document.addEventListener('keydown',function(e){
-    if(e.key==='ArrowRight'||e.key===' ')go(cur+1);
-    if(e.key==='ArrowLeft')go(cur-1);
-  });
+  document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key===' ')go(cur+1);if(e.key==='ArrowLeft')go(cur-1)});
 })();
 </script>
 </body>
