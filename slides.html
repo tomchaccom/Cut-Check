@@ -104,7 +104,7 @@ td:first-child{font-weight:600}
   <span class="tag tag-g">9월 성과</span>
   <h2>9월에 무엇을 했나</h2>
   <div class="nums">
-    <div class="num-card g"><div class="n">67</div><div class="l">총 커밋</div></div>
+    <div class="num-card g"><div class="n">71</div><div class="l">총 커밋</div></div>
     <div class="num-card g"><div class="n">15</div><div class="l">신규 파일</div></div>
     <div class="num-card g"><div class="n">5</div><div class="l">주요 기능</div></div>
     <div class="num-card g"><div class="n">1</div><div class="l">배포 (Vercel)</div></div>
@@ -219,7 +219,38 @@ td:first-child{font-weight:600}
   </div>
 </div>
 
-<!-- 슬라이드 10: 10월 상세 -->
+<!-- 슬라이드 10: 10월 초 진행 (10/1~10/3) -->
+<div class="slide">
+  <span class="tag tag-g">10월 진행</span>
+  <h2>10/1~10/3 검증 + 수정</h2>
+  <p style="margin-bottom:16px">3개 검증 에이전트를 병렬 실행해 데이터 흐름·AI 품질·대시보드를 검증하고, 발견된 문제 9건을 수정.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>데이터 흐름 검증</h3>
+      <p>학생 이벤트 → Supabase → fold → 강사 대시보드 전체 경로 추적.<br>
+      <b>발견:</b> RLS 정책 2건(enrollments/profiles), currentMissionDbId undefined, quiet() 오탐.<br>
+      <b>수정:</b> RLS 정책 추가, null 명시, 문장형 활동 체크.</p>
+    </div>
+    <div class="card">
+      <h3>AI 미션 품질 검증</h3>
+      <p>5회 호출 테스트. 중복 검증 5/5 통과.<br>
+      <b>발견:</b> 주제 4/5가 "도서관", 조사 오류 "같은 도서은".<br>
+      <b>수정:</b> 프롬프트 다양성 강제, hasJongseong() 받침 판별.</p>
+    </div>
+    <div class="card">
+      <h3>강사 대시보드 검증</h3>
+      <p>문장형 학생이 대시보드 5개 패널에 안 보이는 구조적 갭 발견.<br>
+      <b>발견:</b> tiles/risk/funnel 중복, praise() 필터 누락, quiet() 오탐.<br>
+      <b>수정:</b> innerHTML 초기화, praise에 문장형 조건 추가.</p>
+    </div>
+    <div class="card">
+      <h3>데이터 검증 대시보드</h3>
+      <p>debug.html 신규 — 연결 상태 5개, 학생 활동 테이블, 미션 테이블, AI 테스트를 한 페이지에서 확인.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 11: 10월 상세 -->
 <div class="slide">
   <span class="tag tag-b">10월 계획</span>
   <h2>주차별 상세</h2>
@@ -274,6 +305,12 @@ td:first-child{font-weight:600}
     0d94898 내 기록 원문·데이터 추가<br>
     e0f1083 null 참조 에러 수정<br>
     <br>
+    <div style="color:var(--green);font-weight:700;margin-bottom:8px;margin-top:12px">10월 (검증 + 수정)</div>
+    6b4a6b3 9월 진행·10월 계획 슬라이드<br>
+    bdfc168 데이터 검증 대시보드<br>
+    16949b9 검증 에이전트 문제 일괄 수정 (대시보드 중복, AI 조사, 주제 다양성)<br>
+    17e2cfa 데이터 흐름 6건 수정 (RLS, quiet 오탐, missionId)<br>
+    <br>
     <div style="color:var(--blue);font-weight:700;margin-bottom:8px">docs · infra</div>
     0374e7b 테크스펙·유저 플로우·스크린샷<br>
     0dc7b17 강사 디자인 재구성 + README<br>
@@ -300,7 +337,7 @@ td:first-child{font-weight:600}
 </div>
 
 <!-- 네비게이션 -->
-<div class="page-num" id="pn">1 / 12</div>
+<div class="page-num" id="pn">1 / 13</div>
 <div class="nav">
   <button id="prev" disabled>←</button>
   <button id="next">→</button>
