@@ -48,7 +48,17 @@ h1{font-size:22px;font-weight:800;margin-bottom:4px}
 </style>
 </head>
 <body>
-<div class="d-page">
+
+<!-- 비밀번호 게이트 -->
+<div id="auth-gate" style="max-width:360px;margin:120px auto;padding:0 20px;text-align:center">
+  <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:14px;background:var(--green);color:#fff;font-family:var(--disp);font-weight:800;font-size:18px;margin-bottom:12px">C&C</div>
+  <h2 style="font-size:18px;font-weight:800;margin-bottom:12px">관리자 접근</h2>
+  <input type="password" id="gate-pw" placeholder="비밀번호" style="width:100%;padding:12px 16px;border:1px solid var(--line-strong);border-radius:10px;font-size:16px;text-align:center;min-height:48px;background:var(--surface);color:var(--ink)">
+  <button id="gate-btn" style="width:100%;margin-top:10px;padding:12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:15px;cursor:pointer;min-height:48px">확인</button>
+  <p id="gate-msg" style="margin-top:10px;font-size:13px;color:var(--coral);min-height:20px"></p>
+</div>
+
+<div class="d-page" id="debug-content" hidden>
 
 <h1>시스템 상태</h1>
 <p class="d-sub">서비스가 제대로 동작하는지 한눈에 확인합니다. 로그인 후 사용하세요.</p>
@@ -234,7 +244,18 @@ window.CC_SUPABASE = {
   });
 
   window.runAll=function(){log.innerHTML='';checkAll()};
-  checkAll();
+
+  /* 비밀번호 확인 후 실행 */
+  var PASS='cutcheck2026';
+  var gate=document.getElementById('auth-gate');
+  var content=document.getElementById('debug-content');
+  if(sessionStorage.getItem('debug-auth')==='ok'){gate.hidden=true;content.hidden=false;checkAll()}
+  document.getElementById('gate-btn').addEventListener('click',function(){
+    if(document.getElementById('gate-pw').value===PASS){
+      sessionStorage.setItem('debug-auth','ok');gate.hidden=true;content.hidden=false;checkAll();
+    } else {document.getElementById('gate-msg').textContent='비밀번호가 맞지 않습니다.';}
+  });
+  document.getElementById('gate-pw').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('gate-btn').click()});
 })();
 </script>
 </body>
