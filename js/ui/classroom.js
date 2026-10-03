@@ -118,7 +118,9 @@
     /* 조용히 막힌 학생 — 손을 안 드는 쪽이 더 위험하다 */
     quiet: function () {
       return this.students.filter(function (s) {
-        return !s.asked && s.stage < 4 && s.idleSec > 240;
+        /* 문장형 활동이 있으면 막혀있지 않은 것 */
+        var sentenceActive = s.sDefine || (s.sRuns && s.sRuns.length > 0);
+        return !s.asked && s.stage < 4 && !sentenceActive && s.idleSec > 240;
       }).sort(function (a, b) { return b.idleSec - a.idleSec; });
     },
     /* 칭찬 타이밍 — 스스로 깨진 곳을 찾아냈거나, 보고 나서 기준을 고친 순간.

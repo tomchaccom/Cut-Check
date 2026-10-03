@@ -590,7 +590,7 @@
         if (!CC.SENTENCE_MISSIONS.some(function (x) { return x.id === mData.id; })) {
           CC.SENTENCE_MISSIONS.push(mData);
         }
-        currentMissionDbId = m.id;
+        currentMissionDbId = m.id || null;  /* DB id. 기본 미션은 id 없음 */
         loadMission(mData.id);
         switchTab('panel-play');
       });
