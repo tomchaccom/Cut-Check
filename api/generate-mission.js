@@ -44,6 +44,14 @@ var EXAMPLES = [
   }
 ];
 
+/* 한글 마지막 글자에 받침(종성)이 있는지 */
+function hasJongseong(str) {
+  if (!str) return false;
+  var last = str.charCodeAt(str.length - 1);
+  if (last < 0xAC00 || last > 0xD7A3) return false;
+  return (last - 0xAC00) % 28 !== 0;
+}
+
 async function generateWithLLM(lesson, keyPoint, difficulty) {
   var apiKey = (process.env.PICKLE_API_KEY || '').replace(/[\s\u2028\u2029\u200B-\u200F\uFEFF]/g, '');
   if (!apiKey) throw new Error('PICKLE_API_KEY가 설정되지 않았습니다.');
@@ -66,7 +74,9 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
     '- 세 번째 자료에 반드시 ' + dupHint + '의 중복 포함\n' +
     '- methodContext: "~를" 또는 "~을" 로 끝남 (예: "주문서를", "명단을")\n' +
     '- 수업 내용과 연결되는 실생활 맥락\n' +
-    '- 한자, 일본어, 영어를 쓰지 않는다. 순한국어만 사용';
+    '- 한자, 일본어, 영어를 쓰지 않는다. 순한국어만 사용\n' +
+    '- 예시와 다른 주제를 사용한다. 도서관/출석부 말고 수업 내용에 맞는 새로운 상황을 만든다\n' +
+    '- 주제 예시: 운동회 종목, 급식 메뉴, 동아리 신청, 시험 과목, 음악 플레이리스트, 여행 준비물 등';
 
   var res = await fetch('https://llm.pcl.kr/v1/chat/completions', {
     method: 'POST',
@@ -140,6 +150,11 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
     p.inputs[p.inputs.length - 1].v += ',' + last[0];
   }
 
+  /* 조사 교정 — "같은 도서은" → "같은 도서는" */
+  if (p.itemName) {
+    p.itemName = p.itemName.replace(/은$/, '').replace(/는$/, '');
+  }
+
   /* 기본값 */
   if (!p.methodContext) p.methodContext = '목록을';
   if (!p.itemName) p.itemName = '항목';
@@ -168,7 +183,7 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
     method: {
       sentences: [
         { template: p.methodContext + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
-        { template: '같은 ' + p.itemName + '은 {dedup}.', slot: 'dedup', options: ['각각 남긴다', '하나만 남긴다'] },
+        { template: '같은 ' + p.itemName + (hasJongseong(p.itemName) ? '은' : '는') + ' {dedup}.', slot: 'dedup', options: ['각각 남긴다', '하나만 남긴다'] },
         { template: '{output}을 출력한다.', slot: 'output', options: ['남은 항목의 개수', '항상 숫자 3'] }
       ]
     },

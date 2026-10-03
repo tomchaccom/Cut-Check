@@ -40,8 +40,12 @@
   /* ── 요약 타일 ───────────────────────────────────── */
   function tiles() {
     var t = $('#tiles');
+    t.innerHTML = '';  /* 중복 렌더 방지 */
     var quiet = C.quiet(), ready = C.ready(), risky = C.risky();
-    var done = C.students.filter(function (s) { return s.stage >= 3; }).length;
+    /* 문장형 학생: 실행+판정한 학생도 "도달"로 카운트 */
+    var done = C.students.filter(function (s) {
+      return s.stage >= 3 || (s.sRuns && s.sRuns.length > 0);
+    }).length;
 
     [
       { k: '지금 답해줄 수 있음', v: ready.length, u: '명', m: '증상 진술이 완성된 호출', cls: '' },
@@ -93,6 +97,7 @@
   /* ── 위험군 ──────────────────────────────────────── */
   function risk() {
     var box = $('#risk');
+    box.innerHTML = '';  /* 중복 렌더 방지 */
     var groups = [
       { key: 'hardcode', lab: '이번 결과를 성공으로 정의함', tip: '입력이 바뀌면 무너집니다' },
       { key: 'luck', lab: '오류만 없으면 성공으로 정의함', tip: '무엇이 나와야 하는지 정하지 않았습니다' },
@@ -116,6 +121,7 @@
   /* ── 흐름 ────────────────────────────────────────── */
   function funnel() {
     var box = $('#funnel');
+    box.innerHTML = '';  /* 중복 렌더 방지 */
     var f = C.funnel();
     var total = C.students.length;
     var worstDrop = 0, worstAt = 1;

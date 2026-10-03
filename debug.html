@@ -3,94 +3,98 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cut & Check — 데이터 검증 대시보드</title>
+<title>Cut & Check — 시스템 상태</title>
 <link rel="stylesheet" href="sentence.css">
 <style>
-.debug-page{max-width:1000px;margin:0 auto;padding:20px}
-.debug-section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
-.debug-section h3{font-size:16px;font-weight:800;margin-bottom:10px}
-.debug-table{width:100%;border-collapse:collapse;font-size:13px;font-family:var(--mono)}
-.debug-table th{text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);font-size:11px;color:var(--ink-3)}
-.debug-table td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;max-width:300px;overflow:hidden;text-overflow:ellipsis}
+.d-page{max-width:900px;margin:0 auto;padding:24px 20px 60px}
+h1{font-size:22px;font-weight:800;margin-bottom:4px}
+.d-sub{font-size:14px;color:var(--ink-2);margin-bottom:20px}
+
+/* 상태 카드 */
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:24px}
+.status-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.status-card .icon{font-size:28px;margin-bottom:6px}
+.status-card .label{font-size:13px;color:var(--ink-3);font-weight:600}
+.status-card .value{font-size:18px;font-weight:800;margin-top:2px}
+.status-card.ok{border-color:var(--green)}.status-card.ok .value{color:var(--green)}
+.status-card.err{border-color:var(--coral)}.status-card.err .value{color:var(--coral)}
+.status-card.wait{border-color:var(--line)}.status-card.wait .value{color:var(--ink-3)}
+
+/* 섹션 */
+.d-section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+.d-section h2{font-size:16px;font-weight:800;margin-bottom:4px}
+.d-section .desc{font-size:13px;color:var(--ink-3);margin-bottom:14px}
+
+/* 버튼 */
+.d-btn{padding:10px 20px;border-radius:10px;border:none;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
+.d-btn.primary{background:var(--green);color:#fff}
+.d-btn.secondary{background:var(--surface-2);border:1px solid var(--line-strong);color:var(--ink)}
+.d-btn:disabled{opacity:.4;cursor:not-allowed}
+.d-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+
+/* 테이블 */
+.d-table{width:100%;border-collapse:collapse;font-size:13px}
+.d-table th{text-align:left;padding:8px;border-bottom:2px solid var(--line);font-size:11px;color:var(--ink-3);font-weight:700}
+.d-table td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
 .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
 .badge-ok{background:var(--green-soft);color:var(--green)}
 .badge-err{background:var(--coral-soft);color:var(--coral)}
 .badge-warn{background:var(--amber-soft);color:var(--amber)}
-.debug-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;margin-right:6px}
-.debug-btn:hover{background:var(--surface-2)}
-.debug-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
-.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.dot-ok{background:var(--green)}.dot-err{background:var(--coral)}.dot-warn{background:var(--amber)}.dot-off{background:var(--ink-3)}
-pre{background:var(--surface-2);border-radius:8px;padding:12px;font-size:12px;overflow-x:auto;max-height:300px;overflow-y:auto}
-#log{font-family:var(--mono);font-size:12px;line-height:1.6;max-height:400px;overflow-y:auto;background:var(--surface-2);border-radius:8px;padding:12px}
+.badge-none{background:var(--surface-3);color:var(--ink-3)}
+
+/* 로그 */
+.d-log{font-family:var(--mono);font-size:12px;line-height:1.7;max-height:300px;overflow-y:auto;background:var(--surface-2);border-radius:10px;padding:14px;margin-top:10px}
 .log-ok{color:var(--green)}.log-err{color:var(--coral)}.log-warn{color:var(--amber)}.log-info{color:var(--ink-2)}
 </style>
 </head>
 <body>
-<div class="debug-page">
+<div class="d-page">
 
-<header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-  <div>
-    <h1 style="font-size:22px;font-weight:800">데이터 검증 대시보드</h1>
-    <p style="font-size:13px;color:var(--ink-3)">학생 이벤트 → Supabase → 강사 화면 흐름 검증</p>
+<h1>시스템 상태</h1>
+<p class="d-sub">서비스가 제대로 동작하는지 한눈에 확인합니다. 로그인 후 사용하세요.</p>
+
+<!-- 상태 요약 -->
+<div class="status-grid">
+  <div class="status-card wait" id="sc-conn"><div class="icon">🔌</div><div class="label">서버 연결</div><div class="value" id="sv-conn">확인 중</div></div>
+  <div class="status-card wait" id="sc-auth"><div class="icon">👤</div><div class="label">로그인</div><div class="value" id="sv-auth">확인 중</div></div>
+  <div class="status-card wait" id="sc-room"><div class="icon">🏫</div><div class="label">교실</div><div class="value" id="sv-room">확인 중</div></div>
+  <div class="status-card wait" id="sc-mission"><div class="icon">📝</div><div class="label">미션</div><div class="value" id="sv-mission">확인 중</div></div>
+  <div class="status-card wait" id="sc-event"><div class="icon">📊</div><div class="label">학생 활동</div><div class="value" id="sv-event">확인 중</div></div>
+</div>
+
+<!-- 학생 활동 -->
+<div class="d-section">
+  <h2>학생 활동 현황</h2>
+  <p class="desc">교실에 등록된 학생과 미션 풀이 현황입니다.</p>
+  <div id="students-area"></div>
+</div>
+
+<!-- 미션 목록 -->
+<div class="d-section">
+  <h2>등록된 미션</h2>
+  <p class="desc">강사가 생성한 미션과 자료 구성입니다.</p>
+  <div id="missions-area"></div>
+</div>
+
+<!-- AI 미션 테스트 -->
+<div class="d-section">
+  <h2>AI 미션 생성 테스트</h2>
+  <p class="desc">"미션 생성" 버튼을 누르면 테스트 미션을 만들어봅니다. 실제로 저장되지 않습니다.</p>
+  <div class="d-actions">
+    <button class="d-btn primary" id="test-gen">미션 생성 테스트</button>
   </div>
-  <div>
-    <button class="debug-btn primary" onclick="runAll()">전체 검증 실행</button>
-    <button class="debug-btn" onclick="document.getElementById('log').innerHTML=''">로그 지우기</button>
+  <div id="gen-area"></div>
+</div>
+
+<!-- 상세 로그 -->
+<div class="d-section">
+  <h2>상세 로그</h2>
+  <p class="desc">각 검증 단계의 세부 결과입니다.</p>
+  <div class="d-actions">
+    <button class="d-btn secondary" onclick="runAll()">전체 다시 검증</button>
+    <button class="d-btn secondary" onclick="document.getElementById('log').innerHTML=''">로그 지우기</button>
   </div>
-</header>
-
-<!-- 연결 상태 -->
-<div class="debug-section">
-  <h3>연결 상태</h3>
-  <div id="conn-status" style="display:flex;gap:20px;flex-wrap:wrap">
-    <span><span class="status-dot dot-off" id="dot-sb"></span>Supabase</span>
-    <span><span class="status-dot dot-off" id="dot-auth"></span>인증</span>
-    <span><span class="status-dot dot-off" id="dot-db"></span>DB 접근</span>
-    <span><span class="status-dot dot-off" id="dot-api"></span>미션 생성 API</span>
-  </div>
-</div>
-
-<!-- 사용자 -->
-<div class="debug-section">
-  <h3>사용자 / 교실</h3>
-  <div id="user-info" style="font-size:14px">검증 실행 전</div>
-</div>
-
-<!-- 이벤트 저장 검증 -->
-<div class="debug-section">
-  <h3>student_events 테이블</h3>
-  <button class="debug-btn" onclick="checkEvents()">이벤트 조회</button>
-  <button class="debug-btn" onclick="testPushEvent()">테스트 이벤트 전송</button>
-  <div id="events-result" style="margin-top:10px"></div>
-</div>
-
-<!-- 미션 검증 -->
-<div class="debug-section">
-  <h3>missions 테이블</h3>
-  <button class="debug-btn" onclick="checkMissions()">미션 조회</button>
-  <button class="debug-btn" onclick="testGenerate()">미션 생성 테스트</button>
-  <div id="missions-result" style="margin-top:10px"></div>
-</div>
-
-<!-- fold 검증 -->
-<div class="debug-section">
-  <h3>fold 검증 (이벤트 → 학생 객체)</h3>
-  <button class="debug-btn" onclick="checkFold()">fold 실행</button>
-  <div id="fold-result" style="margin-top:10px"></div>
-</div>
-
-<!-- 교실 학생 -->
-<div class="debug-section">
-  <h3>교실 학생 목록</h3>
-  <button class="debug-btn" onclick="checkStudents()">학생 조회</button>
-  <div id="students-result" style="margin-top:10px"></div>
-</div>
-
-<!-- 로그 -->
-<div class="debug-section">
-  <h3>실행 로그</h3>
-  <div id="log"></div>
+  <div class="d-log" id="log"></div>
 </div>
 
 </div>
@@ -108,205 +112,130 @@ window.CC_SUPABASE = {
 <script src="js/core/fold.js"></script>
 <script src="js/core/hangul.js"></script>
 <script>
-var log = document.getElementById('log');
-function addLog(msg, cls) {
-  var d = document.createElement('div');
-  d.className = 'log-' + (cls || 'info');
-  d.textContent = new Date().toLocaleTimeString() + ' ' + msg;
-  log.appendChild(d);
-  log.scrollTop = log.scrollHeight;
-}
+(function(){
+  var log=document.getElementById('log');
+  var classroomId=null;
+  function addLog(m,c){var d=document.createElement('div');d.className='log-'+(c||'info');d.textContent=new Date().toLocaleTimeString()+' '+m;log.appendChild(d);log.scrollTop=log.scrollHeight}
+  function setCard(id,ok,val){var c=document.getElementById('sc-'+id);c.className='status-card '+(ok===true?'ok':ok===false?'err':'wait');document.getElementById('sv-'+id).textContent=val}
+  function badge(ok,t){return '<span class="badge badge-'+(ok?'ok':ok===false?'err':'none')+'">'+t+'</span>'}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 
-function setDot(id, ok) {
-  var d = document.getElementById(id);
-  d.className = 'status-dot ' + (ok === true ? 'dot-ok' : ok === false ? 'dot-err' : 'dot-warn');
-}
+  async function checkAll(){
+    addLog('검증 시작','info');
 
-function badge(ok, text) {
-  return '<span class="badge badge-' + (ok ? 'ok' : 'err') + '">' + text + '</span>';
-}
+    // 1. 연결
+    setCard('conn',CC.sb.active(),CC.sb.active()?'연결됨':'미연결');
+    addLog('서버: '+(CC.sb.active()?'OK':'FAIL'),CC.sb.active()?'ok':'err');
 
-var classroomId = null;
+    // 2. 인증
+    var profile=await CC.sb.getProfile();
+    setCard('auth',!!profile,profile?profile.name+' ('+profile.role+')':'로그인 필요');
+    if(!profile){addLog('로그인 안 됨 — auth.html에서 로그인 후 새로고침','warn');return}
+    addLog('사용자: '+profile.name+' ('+profile.role+')','ok');
 
-// 연결 확인
-async function checkConnection() {
-  addLog('Supabase 연결 확인...', 'info');
-  setDot('dot-sb', CC.sb.active());
-  addLog('Supabase: ' + (CC.sb.active() ? 'OK' : 'FAIL'), CC.sb.active() ? 'ok' : 'err');
+    // 3. 교실
+    var rooms=await CC.sb.myClassrooms();
+    setCard('room',rooms.length>0,rooms.length?rooms[0].name+' ('+rooms[0].code+')':'없음');
+    if(!rooms.length){addLog('교실 없음','warn');return}
+    classroomId=rooms[0].id;
+    addLog('교실: '+rooms[0].name,'ok');
 
-  var profile = await CC.sb.getProfile();
-  setDot('dot-auth', !!profile);
-  if (profile) {
-    addLog('인증: ' + profile.name + ' (' + profile.role + ')', 'ok');
-    document.getElementById('user-info').innerHTML =
-      '<b>' + profile.name + '</b> · ' + profile.role + ' · ' + profile.id;
-  } else {
-    addLog('인증: 로그인 안 됨', 'warn');
-    document.getElementById('user-info').textContent = '로그인 안 됨 — auth.html에서 로그인 후 다시 확인';
-  }
+    // 4. 미션
+    var missions=await CC.sb.getMissions(classroomId);
+    setCard('mission',missions.length>0,missions.length+'개');
+    addLog('미션: '+missions.length+'개','ok');
+    renderMissions(missions);
 
-  var rooms = await CC.sb.myClassrooms();
-  setDot('dot-db', rooms.length > 0);
-  if (rooms.length) {
-    classroomId = rooms[0].id;
-    addLog('교실: ' + rooms[0].name + ' (코드: ' + rooms[0].code + ', id: ' + rooms[0].id + ')', 'ok');
-    document.getElementById('user-info').innerHTML += '<br>교실: <b>' + rooms[0].name + '</b> · ' + rooms[0].code;
-  } else {
-    addLog('교실: 없음', 'warn');
-  }
-}
+    // 5. 학생+이벤트
+    var students=await CC.sb.getClassroomStudents(classroomId);
+    var events=await CC.sb.getClassroomEvents(classroomId);
+    setCard('event',events.length>0,students.length+'명 / 활동 '+events.length+'건');
+    addLog('학생: '+students.length+'명, 이벤트: '+events.length+'건','ok');
 
-// 이벤트 조회
-async function checkEvents() {
-  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
-  addLog('student_events 조회...', 'info');
-  var events = await CC.sb.getClassroomEvents(classroomId);
-  addLog('이벤트 수: ' + events.length, events.length ? 'ok' : 'warn');
-
-  var html = '<table class="debug-table"><tr><th>시각</th><th>학생</th><th>타입</th><th>내용</th></tr>';
-  events.slice(-20).forEach(function(e) {
-    var ev = e.event || {};
-    var name = (e.profiles && e.profiles.name) || e.student_id.substring(0,8);
-    var content = JSON.stringify(ev).substring(0, 80);
-    html += '<tr><td>' + new Date(e.created_at).toLocaleString('ko') + '</td>' +
-      '<td>' + name + '</td><td>' + (ev.type || '-') + '</td><td>' + content + '</td></tr>';
-  });
-  html += '</table>';
-  if (!events.length) html = '<p style="color:var(--ink-3)">이벤트 없음. 학생이 미션을 풀면 여기 표시됩니다.</p>';
-  document.getElementById('events-result').innerHTML = html;
-}
-
-// 테스트 이벤트 전송
-async function testPushEvent() {
-  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
-  addLog('테스트 이벤트 전송...', 'info');
-  var ev = CC.events.make('s-define', { choice: '[테스트] 검증용', reason: '데이터 흐름 테스트' });
-  try {
-    await CC.sb.pushEvent(classroomId, null, ev);
-    addLog('이벤트 전송 성공', 'ok');
-    checkEvents();
-  } catch(e) {
-    addLog('이벤트 전송 실패: ' + e.message, 'err');
-  }
-}
-
-// 미션 조회
-async function checkMissions() {
-  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
-  addLog('missions 조회...', 'info');
-  var missions = await CC.sb.getMissions(classroomId);
-  addLog('미션 수: ' + missions.length, missions.length ? 'ok' : 'warn');
-
-  var html = '<table class="debug-table"><tr><th>ID</th><th>제목</th><th>자료수</th><th>생성일</th></tr>';
-  missions.forEach(function(m) {
-    var d = m.data || {};
-    html += '<tr><td>' + m.id.substring(0,8) + '</td><td>' + (d.title || '-') + '</td>' +
-      '<td>' + ((d.inputs || []).length) + '</td><td>' + new Date(m.created_at).toLocaleString('ko') + '</td></tr>';
-  });
-  html += '</table>';
-  document.getElementById('missions-result').innerHTML = html;
-}
-
-// 미션 생성 테스트
-async function testGenerate() {
-  addLog('미션 생성 API 호출...', 'info');
-  try {
-    var res = await fetch('/api/generate-mission', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lesson: '검증 테스트', keyPoint: '데이터 흐름 확인' })
-    });
-    var data = await res.json();
-    if (res.ok) {
-      setDot('dot-api', true);
-      addLog('미션 생성 성공: ' + data.title, 'ok');
-      addLog('자료: ' + data.inputs.map(function(i){return i.name}).join(', '), 'info');
-      addLog('검증: ' + data.verify.map(function(v){return '전체='+v.total+'/서로다른='+v.unique}).join(' | '), 'info');
-      var last = data.verify[data.verify.length - 1];
-      addLog('세 번째 자료 중복: ' + (last.total !== last.unique ? 'OK (차이 있음)' : 'FAIL (차이 없음)'),
-        last.total !== last.unique ? 'ok' : 'err');
+    // fold
+    if(events.length){
+      var evs=events.map(function(r){var ev=r.event||{};ev.sid=r.student_id;ev.t=ev.t||new Date(r.created_at).getTime();return ev});
+      var names={};events.forEach(function(r){if(r.profiles&&r.profiles.name)names[r.student_id]=r.profiles.name});
+      var folded=CC.fold.foldMany(evs,{names:names,now:Date.now()});
+      renderStudents(students,folded);
     } else {
-      setDot('dot-api', false);
-      addLog('미션 생성 실패: ' + (data.error || res.status), 'err');
+      renderStudents(students,[]);
     }
-  } catch(e) {
-    setDot('dot-api', false);
-    addLog('미션 생성 에러: ' + e.message, 'err');
+
+    addLog('검증 완료','ok');
   }
-}
 
-// fold 검증
-async function checkFold() {
-  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
-  addLog('fold 검증...', 'info');
-  var rows = await CC.sb.getClassroomEvents(classroomId);
-  if (!rows.length) { addLog('이벤트 없음 — fold 불가', 'warn'); return; }
+  function renderStudents(enrolled,folded){
+    var area=document.getElementById('students-area');
+    if(!enrolled.length){area.innerHTML='<p style="color:var(--ink-3)">등록된 학생이 없습니다.</p>';return}
 
-  var evs = rows.map(function(r) {
-    var ev = r.event || {};
-    ev.sid = r.student_id;
-    ev.t = ev.t || new Date(r.created_at).getTime();
-    return ev;
-  });
+    var foldMap={};folded.forEach(function(s){foldMap[s.id]=s});
 
-  var names = {};
-  rows.forEach(function(r) { if (r.profiles && r.profiles.name) names[r.student_id] = r.profiles.name; });
-
-  var students = CC.fold.foldMany(evs, { names: names, now: Date.now() });
-  addLog('fold 결과: 학생 ' + students.length + '명', 'ok');
-
-  var html = '<table class="debug-table"><tr><th>이름</th><th>성공조건</th><th>방법</th><th>실행</th><th>판정</th><th>마무리</th></tr>';
-  students.forEach(function(s) {
-    html += '<tr>' +
-      '<td><b>' + (s.name || s.id) + '</b></td>' +
-      '<td>' + (s.sDefine ? badge(true, s.sDefine.choice) : badge(false, '없음')) + '</td>' +
-      '<td>' + (s.sMethod ? badge(true, s.sMethod.slots.sep + '/' + s.sMethod.slots.dedup) : badge(false, '없음')) + '</td>' +
-      '<td>' + badge(s.sRuns.length > 0, s.sRuns.length + '건') + '</td>' +
-      '<td>' + badge(s.sJudges.length > 0, s.sJudges.length + '건') + '</td>' +
-      '<td>' + (s.sWrap ? badge(true, '있음') : badge(false, '없음')) + '</td>' +
-      '</tr>';
-
-    addLog('  ' + (s.name || s.id) + ': define=' + (s.sDefine ? 'O' : 'X') +
-      ' method=' + (s.sMethod ? 'O' : 'X') +
-      ' runs=' + s.sRuns.length + ' judges=' + s.sJudges.length +
-      ' wrap=' + (s.sWrap ? 'O' : 'X'), 'info');
-  });
-  html += '</table>';
-  document.getElementById('fold-result').innerHTML = html;
-}
-
-// 학생 목록
-async function checkStudents() {
-  if (!classroomId) { addLog('교실 ID 없음', 'err'); return; }
-  addLog('학생 목록 조회...', 'info');
-  var students = await CC.sb.getClassroomStudents(classroomId);
-  addLog('등록 학생: ' + students.length + '명', students.length ? 'ok' : 'warn');
-
-  var html = '<table class="debug-table"><tr><th>이름</th><th>ID</th></tr>';
-  students.forEach(function(s) {
-    html += '<tr><td>' + s.name + '</td><td style="font-size:11px">' + s.id + '</td></tr>';
-  });
-  html += '</table>';
-  document.getElementById('students-result').innerHTML = html;
-}
-
-// 전체 실행
-async function runAll() {
-  document.getElementById('log').innerHTML = '';
-  addLog('=== 전체 검증 시작 ===', 'info');
-  await checkConnection();
-  if (classroomId) {
-    await checkStudents();
-    await checkMissions();
-    await checkEvents();
-    await checkFold();
+    var html='<table class="d-table"><tr><th>이름</th><th>성공 조건</th><th>방법</th><th>실행</th><th>판정</th><th>마무리</th></tr>';
+    enrolled.forEach(function(st){
+      var s=foldMap[st.id];
+      if(s){
+        html+='<tr><td><b>'+esc(st.name)+'</b></td>'+
+          '<td>'+(s.sDefine?badge(true,esc(s.sDefine.choice)):badge(null,'미정'))+'</td>'+
+          '<td>'+(s.sMethod?badge(true,s.sMethod.slots.sep+'/'+s.sMethod.slots.dedup):badge(null,'미정'))+'</td>'+
+          '<td>'+badge(s.sRuns.length>0,s.sRuns.length+'건')+'</td>'+
+          '<td>'+badge(s.sJudges.length>0,s.sJudges.length+'건')+'</td>'+
+          '<td>'+(s.sWrap?badge(true,'완료'):badge(null,'미작성'))+'</td></tr>';
+      } else {
+        html+='<tr><td><b>'+esc(st.name)+'</b></td><td colspan="5">'+badge(null,'활동 없음')+'</td></tr>';
+      }
+    });
+    html+='</table>';
+    area.innerHTML=html;
   }
-  await testGenerate();
-  addLog('=== 전체 검증 완료 ===', 'ok');
-}
 
-// 페이지 로드 시 연결 확인
-checkConnection();
+  function renderMissions(missions){
+    var area=document.getElementById('missions-area');
+    if(!missions.length){area.innerHTML='<p style="color:var(--ink-3)">생성된 미션이 없습니다.</p>';return}
+    var html='<table class="d-table"><tr><th>제목</th><th>요청</th><th>자료</th><th>중복 검증</th></tr>';
+    missions.forEach(function(m){
+      var d=m.data||{};
+      var v=d.verify||[];
+      var last=v[v.length-1]||{};
+      var dupOk=last.total!==last.unique;
+      html+='<tr><td><b>'+esc(d.title||'-')+'</b></td>'+
+        '<td style="font-size:12px;color:var(--ink-2)">'+esc(d.brief||'-')+'</td>'+
+        '<td>'+((d.inputs||[]).length)+'개</td>'+
+        '<td>'+(v.length?badge(dupOk,dupOk?'전체='+last.total+'/다른='+last.unique:'중복 없음'):badge(null,'검증표 없음'))+'</td></tr>';
+    });
+    html+='</table>';
+    area.innerHTML=html;
+  }
+
+  // AI 테스트
+  document.getElementById('test-gen').addEventListener('click',async function(){
+    var btn=this;btn.disabled=true;btn.textContent='생성 중...';
+    var area=document.getElementById('gen-area');
+    area.innerHTML='<p style="color:var(--ink-3)">미션을 만들고 있어요...</p>';
+    try{
+      var res=await fetch('/api/generate-mission',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson:'테스트 수업',keyPoint:'데이터 흐름 확인'})});
+      var data=await res.json();
+      if(!res.ok)throw new Error(data.error);
+      var v=data.verify||[];var last=v[v.length-1]||{};
+      area.innerHTML='<table class="d-table">'+
+        '<tr><td><b>제목</b></td><td>'+esc(data.title)+'</td></tr>'+
+        '<tr><td><b>요청</b></td><td>'+esc(data.brief)+'</td></tr>'+
+        '<tr><td><b>문장 1</b></td><td>'+esc(data.method.sentences[0].template)+'</td></tr>'+
+        '<tr><td><b>문장 2</b></td><td>'+esc(data.method.sentences[1].template)+'</td></tr>'+
+        '<tr><td><b>자료</b></td><td>'+data.inputs.map(function(i){return esc(i.name)+': '+esc(i.v)}).join('<br>')+'</td></tr>'+
+        '<tr><td><b>중복 검증</b></td><td>'+badge(last.total!==last.unique,(last.total!==last.unique?'OK':'FAIL')+' (전체='+last.total+'/다른='+last.unique+')')+'</td></tr>'+
+        '</table>';
+      addLog('미션 생성 성공: '+data.title,'ok');
+    }catch(e){
+      area.innerHTML='<p style="color:var(--coral)">'+esc(e.message)+'</p>';
+      addLog('미션 생성 실패: '+e.message,'err');
+    }
+    btn.disabled=false;btn.textContent='미션 생성 테스트';
+  });
+
+  window.runAll=function(){log.innerHTML='';checkAll()};
+  checkAll();
+})();
 </script>
 </body>
 </html>
