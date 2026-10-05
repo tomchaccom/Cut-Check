@@ -277,7 +277,19 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
   p.brief = (p.brief || '')
     .replace(/서로\s*다른/g, '')
     .replace(/전체\s*/g, '')
+    .replace(/중복/g, '')
+    .replace(/인원\s*수/g, '몇 명인지')
+    .replace(/몇\s*명/g, '몇 개')   /* "몇 명"도 답 암시 — "몇 개"가 더 모호 */
     .replace(/\s{2,}/g, ' ').trim();
+
+  /* brief 끝이 자연스러운지 */
+  if (!/[요다세]\.?$/.test(p.brief)) p.brief += '.';
+
+  /* 자료 항목 최소 개수 검증 */
+  p.inputs.forEach(function (inp, i) {
+    var items = inp.v.split(',').filter(Boolean);
+    if (items.length < 3) throw new Error('자료 ' + (i+1) + '의 항목이 3개 미만');
+  });
 
   /* 조사 교정 */
   if (p.itemName) p.itemName = p.itemName.replace(/[은는]$/, '');
