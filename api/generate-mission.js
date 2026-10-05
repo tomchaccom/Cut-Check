@@ -285,10 +285,22 @@ async function generateWithLLM(lesson, keyPoint, difficulty) {
   /* brief 끝이 자연스러운지 */
   if (!/[요다세]\.?$/.test(p.brief)) p.brief += '.';
 
-  /* 자료 항목 최소 개수 검증 */
-  p.inputs.forEach(function (inp, i) {
+  /* 자료 항목 최소 3개 보장 — 부족하면 다른 자료에서 빌려옴 */
+  var allItems = [];
+  p.inputs.forEach(function (inp) {
+    inp.v.split(',').filter(Boolean).forEach(function (x) {
+      if (allItems.indexOf(x) === -1) allItems.push(x);
+    });
+  });
+  p.inputs.forEach(function (inp) {
     var items = inp.v.split(',').filter(Boolean);
-    if (items.length < 3) throw new Error('자료 ' + (i+1) + '의 항목이 3개 미만');
+    while (items.length < 3 && allItems.length > 0) {
+      var pick = allItems[Math.floor(Math.random() * allItems.length)];
+      if (items.indexOf(pick) === -1) items.push(pick);
+      else allItems = allItems.filter(function (x) { return x !== pick; });
+      if (allItems.length === 0) break;
+    }
+    inp.v = items.join(',');
   });
 
   /* 조사 교정 */
