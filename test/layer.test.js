@@ -98,7 +98,7 @@ t('문장형 재정의 후 버전 증가', sf2.sDefineVer === 2 && sf2.sDefine.c
 
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'llmguard.js', 'asks.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'llmguard.js', 'asks.js', 'pipeline.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');

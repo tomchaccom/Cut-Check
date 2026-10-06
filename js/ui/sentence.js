@@ -44,11 +44,13 @@
     M = CC.sentenceMission(id);
     if (!M) return;
 
-    /* 상태 초기화 */
+    /* 상태 초기화 — 슬롯을 미션의 sentences에서 동적으로 구성 */
+    var initSlots = {};
+    M.method.sentences.forEach(function (s) { initSlots[s.slot] = ''; });
     state = {
       defineChoice: '',
       defineReason: '',
-      slots: { sep: '', dedup: '', output: '' },
+      slots: initSlots,
       methodReason: '',
       methodVer: 0,
       defineVer: 0,
@@ -155,13 +157,19 @@
   }
 
   function summarizeMethod() {
-    var s = state.slots;
-    if (!s.sep || !s.dedup || !s.output) return '';
-    return s.sep + '로 나누고, 같은 이름은 ' + s.dedup + ', ' + s.output + '을 출력한다.';
+    if (!M || !M.method) return '';
+    var parts = [];
+    M.method.sentences.forEach(function (s) {
+      var val = state.slots[s.slot];
+      if (!val) return;
+      parts.push(s.template.replace('{' + s.slot + '}', val));
+    });
+    return parts.length ? parts.join(' ') : '';
   }
 
   function checkMethodComplete() {
-    return state.slots.sep && state.slots.dedup && state.slots.output;
+    if (!M || !M.method) return false;
+    return M.method.sentences.every(function (s) { return !!state.slots[s.slot]; });
   }
 
   function allDataJudged() {
@@ -220,9 +228,13 @@
 
   /* ── 화면 3 ────────────────────────────────────── */
   function onSlotChange() {
-    state.slots.sep = $('#slot-sep').value;
-    state.slots.dedup = $('#slot-dedup').value;
-    state.slots.output = $('#slot-output').value;
+    /* 미션의 sentences에서 슬롯을 동적으로 읽는다 */
+    if (M && M.method) {
+      M.method.sentences.forEach(function (s) {
+        var sel = document.getElementById('slot-' + s.slot);
+        if (sel) state.slots[s.slot] = sel.value;
+      });
+    }
     $('#go-run').disabled = !checkMethodComplete();
     var summary = summarizeMethod();
     if (summary) {
@@ -232,10 +244,7 @@
       $('#method-summary').hidden = true;
     }
   }
-
-  $('#slot-sep').addEventListener('change', onSlotChange);
-  $('#slot-dedup').addEventListener('change', onSlotChange);
-  $('#slot-output').addEventListener('change', onSlotChange);
+  /* 슬롯 이벤트는 loadMission에서 동적 생성 시 등록됨 (line 114) */
 
   $('#reason-method').addEventListener('input', function () {
     state.methodReason = this.value.trim();
@@ -243,17 +252,17 @@
 
   $('#go-run').addEventListener('click', function () {
     if (!checkMethodComplete()) return;
+    var slotsSnapshot = JSON.parse(JSON.stringify(state.slots));
     if (state.methodVer > 0) {
       rec('s-remethod', {
         fromSlots: null,
-        toSlots: { sep: state.slots.sep, dedup: state.slots.dedup, output: state.slots.output },
+        toSlots: slotsSnapshot,
         reason: state.methodReason
       });
     } else {
-      rec('s-method', {
-        slots: { sep: state.slots.sep, dedup: state.slots.dedup, output: state.slots.output },
-        reason: state.methodReason
-      });
+      var methodPayload = { slots: slotsSnapshot, reason: state.methodReason };
+      if (M.pipelineId) methodPayload.pipelineId = M.pipelineId;
+      rec('s-method', methodPayload);
     }
     state.methodVer++;
     renderRunStep();
@@ -318,12 +327,17 @@
           var predicted = pInput.value.trim() || '아직 모르겠어요';
           rec('s-predict', { dataId: dataInp.id, predicted: predicted });
 
-          var result = CC.engine.runSentence(state.slots, dataInp.v);
+          var result;
+          if (M.pipelineId && CC.pipeline) {
+            result = CC.pipeline.run(M.pipelineId, state.slots, M.pipelineParams || {}, dataInp.v);
+          } else {
+            result = CC.engine.runSentence(state.slots, dataInp.v);
+          }
           var runRecord = {
             dataId: dataInp.id,
             predicted: predicted,
             result: { err: result.err, type: result.type, value: result.value, steps: result.steps, msg: result.msg },
-            slots: { sep: state.slots.sep, dedup: state.slots.dedup, output: state.slots.output },
+            slots: JSON.parse(JSON.stringify(state.slots)),
             defineChoice: state.defineChoice,
             methodVer: state.methodVer,
             defineVer: state.defineVer,
@@ -355,13 +369,35 @@
       container.appendChild(errDiv);
     } else {
       var okDiv = el('div', 'run-result ok');
-      okDiv.appendChild(el('div', 'result-value', String(r.value)));
+
+      /* 결과 값 표시 — 타입별 분기 */
+      if (r.type === 'pairs' && r.value && typeof r.value === 'object' && !Array.isArray(r.value)) {
+        var pairsDiv = el('div', 'result-pairs');
+        Object.keys(r.value).forEach(function (k) {
+          var row = el('div', 'pair-row');
+          row.appendChild(el('span', 'pair-key', k));
+          row.appendChild(el('span', 'pair-sep', ' — '));
+          row.appendChild(el('span', 'pair-val', String(r.value[k])));
+          pairsDiv.appendChild(row);
+        });
+        okDiv.appendChild(pairsDiv);
+      } else if (Array.isArray(r.value)) {
+        okDiv.appendChild(el('div', 'result-value', r.value.join(', ')));
+      } else {
+        okDiv.appendChild(el('div', 'result-value', String(r.value)));
+      }
 
       if (r.steps && r.steps.length) {
         var stepsDiv = el('div', 'result-steps');
         r.steps.forEach(function (s) {
           var line = el('span');
-          if (s.step === '나누기') {
+          if (s.label || s.op) {
+            /* 파이프라인 형식 */
+            var sv = Array.isArray(s.value) ? s.value.join(', ')
+              : (s.value && typeof s.value === 'object') ? JSON.stringify(s.value)
+              : String(s.value);
+            line.textContent = (s.label || s.op) + ' → ' + sv;
+          } else if (s.step === '나누기') {
             line.textContent = s.sep + '로 나눔 → ' + (Array.isArray(s.result) ? s.result.join(', ') : s.result);
           } else if (s.step === '중복 처리') {
             line.textContent = s.dedup + ' → ' + (Array.isArray(s.result) ? s.result.join(', ') : s.result);
@@ -385,8 +421,12 @@
 
     /* 판정 */
     var judgeRow = el('div', 'judge-row');
+    var displayValue = r.err ? '실행 중단'
+      : (r.type === 'pairs' && typeof r.value === 'object') ? '(묶음 결과)'
+      : Array.isArray(r.value) ? r.value.join(', ')
+      : r.value;
     judgeRow.appendChild(el('div', 'judge-q',
-      '출력은 ' + (r.err ? '실행 중단' : r.value) + '입니다. 내가 정한 성공 조건을 지켰나요?'));
+      '출력은 ' + displayValue + '입니다. 내가 정한 성공 조건을 지켰나요?'));
 
     var btns = el('div', 'judge-btns');
     var verdicts = ['지켰다', '지키지 못했다', '아직 판단하기 어렵다'];

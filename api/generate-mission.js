@@ -1,182 +1,117 @@
-/* Cut & Check — 미션 자동 생성 API (Phase 1: 프롬프트 구조 개선)
+/* Cut & Check — Agent 기반 미션 생성 API
  *
  * POST /api/generate-mission
  * Body: { lesson, keyPoint, difficulty? }
  *
- * 핵심 변경:
- *   - system/user 메시지 분리
- *   - 수업 개념이 미션 맥락에 직접 연결되도록 강제
- *   - few-shot 예시를 수업 주제와 겹치지 않게 동적 선택
- *   - 자료 1,2는 중복 없이, 자료 3만 중복
+ * Agent 패턴:
+ *   1. 코드가 수업 키워드 → 파이프라인을 결정한다
+ *   2. LLM은 도메인(상황, 항목 이름, 자료 2개)만 생성한다
+ *   3. 코드가 반례(자료 3), 성공 조건(함정 포함), 방법 문장을 조립한다
+ *
+ * LLM이 구조를 모르므로 구조가 틀릴 수 없다.
+ * 후처리 10단계 → 3단계로 줄었다.
  */
 
-/* 한글 받침 판별 */
 function hasJongseong(str) {
   if (!str) return false;
   var last = str.charCodeAt(str.length - 1);
   if (last < 0xAC00 || last > 0xD7A3) return false;
   return (last - 0xAC00) % 28 !== 0;
 }
-
-/* ── few-shot 예시 풀 (4개 — 수업 주제와 겹치지 않는 2개를 선택) ── */
-var EXAMPLES = [
-  {
-    context: '급식',
-    json: {
-      title: '이번 주 급식 정리',
-      brief: '급식 메뉴가 왔어요. 메뉴가 몇 가지인지 알려주세요.',
-      stage: '급식',
-      defineQ: '나는 메뉴판에서 무엇이 나오면 성공이라고 생각하나요?',
-      defineOptions: [
-        { v: '적힌 메뉴의 전체 개수', key: 'total' },
-        { v: '서로 다른 메뉴의 가짓수', key: 'unique' }
-      ],
-      methodContext: '메뉴판을',
-      itemName: '메뉴',
-      inputs: [
-        { name: '월요일 급식', v: '밥,국,김치' },
-        { name: '화요일 급식', v: '비빔밥,미역국,깍두기,요구르트' },
-        { name: '일주일 합산', v: '밥,국,김치,비빔밥,국,밥,깍두기' }
-      ]
-    }
-  },
-  {
-    context: '운동회',
-    json: {
-      title: '운동회 종목 신청',
-      brief: '종목 신청서가 왔어요. 몇 종목인지 정리해주세요.',
-      stage: '운동회',
-      defineQ: '나는 신청서에서 무엇이 나오면 성공이라고 생각하나요?',
-      defineOptions: [
-        { v: '신청된 종목의 전체 횟수', key: 'total' },
-        { v: '서로 다른 종목의 수', key: 'unique' }
-      ],
-      methodContext: '신청서를',
-      itemName: '종목',
-      inputs: [
-        { name: '1반 신청', v: '달리기,줄넘기,축구' },
-        { name: '2반 신청', v: '농구,피구,줄다리기,달리기' },
-        { name: '전교 합산', v: '달리기,축구,농구,달리기,피구,축구' }
-      ]
-    }
-  },
-  {
-    context: '여행',
-    json: {
-      title: '수학여행 준비물',
-      brief: '준비물 목록이 왔어요. 몇 가지인지 알려주세요.',
-      stage: '여행',
-      defineQ: '나는 준비물 목록에서 무엇이 나오면 성공이라고 생각하나요?',
-      defineOptions: [
-        { v: '적힌 준비물의 전체 개수', key: 'total' },
-        { v: '서로 다른 준비물의 가짓수', key: 'unique' }
-      ],
-      methodContext: '준비물 목록을',
-      itemName: '준비물',
-      inputs: [
-        { name: '1조 준비물', v: '우산,간식,물통' },
-        { name: '2조 준비물', v: '썬크림,모자,카메라,간식' },
-        { name: '전체 합산', v: '우산,간식,물통,썬크림,간식,우산,모자' }
-      ]
-    }
-  },
-  {
-    context: '음악',
-    json: {
-      title: '합창대회 곡 정리',
-      brief: '곡 목록이 왔어요. 몇 곡인지 정리해주세요.',
-      stage: '음악',
-      defineQ: '나는 곡 목록에서 무엇이 나오면 성공이라고 생각하나요?',
-      defineOptions: [
-        { v: '적힌 곡의 전체 개수', key: 'total' },
-        { v: '서로 다른 곡의 수', key: 'unique' }
-      ],
-      methodContext: '곡 목록을',
-      itemName: '곡',
-      inputs: [
-        { name: '1반 선곡', v: '봄날,좋은날,소우주' },
-        { name: '2반 선곡', v: '밤편지,봄날,에너지,좋은날' },
-        { name: '전체 합산', v: '봄날,좋은날,소우주,밤편지,봄날,좋은날' }
-      ]
-    }
-  }
-];
-
-/* 수업 주제와 겹치지 않는 예시 2개 선택 */
-function pickExamples(lesson) {
-  var lower = (lesson || '').toLowerCase();
-  var filtered = EXAMPLES.filter(function (ex) {
-    return lower.indexOf(ex.context) === -1;
-  });
-  if (filtered.length < 2) filtered = EXAMPLES;
-  /* 랜덤 2개 */
-  var shuffled = filtered.sort(function () { return Math.random() - 0.5; });
-  return shuffled.slice(0, 2);
+function josa(word, pair) {
+  var j = hasJongseong(word);
+  if (pair === '은는') return j ? '은' : '는';
+  if (pair === '을를') return j ? '을' : '를';
+  if (pair === '이가') return j ? '이' : '가';
+  if (pair === '의') return '의';
+  return '';
 }
 
-/* ── 프롬프트 생성 ──────────────────────────────── */
-function buildMessages(lesson, keyPoint, difficulty) {
-  var diff = difficulty || 'medium';
-  var dupCount = diff === 'easy' ? '1~2개' : diff === 'hard' ? '3~4개' : '2~3개';
-  var examples = pickExamples(lesson);
+/* ══════════════════════════════════════════════════
+ * 1. 수업 키워드 → 파이프라인 매핑
+ * ══════════════════════════════════════════════════ */
+
+var KEYWORD_RULES = [
+  { keywords: ['딕셔너리', 'dict', '사전', '분류', '빈도'], pipeline: 'split-group' },
+  { keywords: ['정렬', 'sort', 'sorted', '순서', '나열'], pipeline: 'split-sort-join' },
+  { keywords: ['조건', 'if', '필터', '걸러', '선별', '골라'], pipeline: 'split-filter-count' },
+  { keywords: ['숫자', 'int', 'sum', '합계', '형변환', '계산', '연산', '더하'], pipeline: 'split-num-sum' },
+  { keywords: ['집합', 'set', '중복 제거'], pipeline: 'split-unique-count' },
+  { keywords: ['리스트', 'list', 'split', '문자열', '반복', 'for', '나누'], pipeline: 'split-unique-count' }
+];
+
+function selectPipeline(lesson, keyPoint) {
+  var text = ((lesson || '') + ' ' + (keyPoint || '')).toLowerCase();
+  for (var i = 0; i < KEYWORD_RULES.length; i++) {
+    var rule = KEYWORD_RULES[i];
+    for (var k = 0; k < rule.keywords.length; k++) {
+      if (text.indexOf(rule.keywords[k]) !== -1) return rule.pipeline;
+    }
+  }
+  return 'split-unique-count';
+}
+
+/* ══════════════════════════════════════════════════
+ * 2. 파이프라인별 LLM 프롬프트 (도메인만 요청)
+ * ══════════════════════════════════════════════════ */
+
+var PIPELINE_PROMPTS = {
+  'split-unique-count': {
+    desc: '"목록에서 항목 세기" 상황',
+    extra: '',
+    example: '{ "title": "동아리 신청 정리", "brief": "신청서가 왔어요. 몇 명인지 알려주세요.", "domain": "동아리", "itemName": "학생", "methodContext": "신청서를", "data": [{ "name": "월요일 신청", "items": ["민수","지우","현우"] }, { "name": "화요일 신청", "items": ["서연","도윤","하은","민준"] }] }'
+  },
+  'split-filter-count': {
+    desc: '"목록에서 조건에 맞는 것만 골라내기" 상황',
+    extra: '"filterTarget": 걸러낼 대상 목록(2~3개). data의 items에 filterTarget 항목이 최소 1개 포함되어야 합니다.\n"filterDesc": 걸러낼 조건 설명 (예: "알레르기 목록", "연체 도서 목록")',
+    example: '{ "title": "알레르기 재료 검수", "brief": "재료 목록이 왔어요. 주의할 게 몇 개인지 알려주세요.", "domain": "급식", "itemName": "재료", "methodContext": "재료 목록을", "filterDesc": "알레르기 목록", "filterTarget": ["우유","달걀","땅콩"], "data": [{ "name": "월요일 재료", "items": ["밥","우유","김치","떡"] }, { "name": "화요일 재료", "items": ["빵","달걀","과자","국","우유"] }] }'
+  },
+  'split-sort-join': {
+    desc: '"목록을 정렬하기" 상황',
+    extra: '',
+    example: '{ "title": "대기 명단 정리", "brief": "이름이 뒤섞여 있어요. 정리해주세요.", "domain": "접수", "itemName": "이름", "methodContext": "명단을", "data": [{ "name": "오전 접수", "items": ["지우","민수","하은"] }, { "name": "오후 접수", "items": ["서연","도윤","현우","가은"] }] }'
+  },
+  'split-num-sum': {
+    desc: '"숫자 목록에서 합계 구하기" 상황',
+    extra: '중요: data의 items는 반드시 정수(숫자)여야 합니다.',
+    example: '{ "title": "용돈 기입장 계산", "brief": "이번 주 지출이 얼마인지 알려주세요.", "domain": "용돈", "itemName": "금액", "methodContext": "지출 목록을", "data": [{ "name": "월요일 지출", "items": [1000,2000,500] }, { "name": "화요일 지출", "items": [3000,1500,800,200] }] }'
+  },
+  'split-group': {
+    desc: '"목록에서 같은 것끼리 묶어 세기" 상황',
+    extra: '중요: data의 items에 같은 항목이 2번 이상 등장해야 의미가 있습니다.',
+    example: '{ "title": "혈액형 조사 정리", "brief": "혈액형 조사 결과가 왔어요. 정리해주세요.", "domain": "건강", "itemName": "혈액형", "methodContext": "조사 결과를", "data": [{ "name": "1반 조사", "items": ["A","B","O","A","AB"] }, { "name": "2반 조사", "items": ["O","A","B","O","A","B"] }] }'
+  }
+};
+
+function buildPrompt(pipelineId, lesson, keyPoint) {
+  var spec = PIPELINE_PROMPTS[pipelineId] || PIPELINE_PROMPTS['split-unique-count'];
 
   var system = [
-    '당신은 중학교 컴퓨팅 사고력 수업 문제를 설계하는 전문가입니다.',
+    '당신은 중학교 수업 문제의 상황(도메인)을 만드는 전문가입니다.',
+    '문제의 구조(성공 조건, 방법 문장, 실행 로직)는 코드가 만듭니다.',
+    '당신은 상황만 만듭니다.',
     '',
-    '## 당신의 역할',
-    '강사가 오늘 수업에서 가르친 파이썬 개념을 알려줍니다.',
-    '당신은 그 개념을 학생이 직접 체험할 수 있는 "데이터를 나누고 세는" 실생활 문제를 만듭니다.',
+    '규칙:',
+    '1. 자료 항목은 실제 한국어 단어. "항목A", "노래1" 금지.',
+    '2. 자료 이름은 구체적. "자료 1", "데이터 1" 금지.',
+    '3. brief는 모호하게. 답을 암시하지 않음. "서로 다른", "전체", "합계" 등 금지.',
+    '4. title 15자 이내, brief 30자 이내.',
+    '5. 한국어만. 한자·일본어·영어 금지.',
+    '6. data는 정확히 2개. 각각 항목 3~5개.',
+    '7. methodContext는 "~를" 또는 "~을"로 끝남.',
     '',
-    '## 핵심 규칙',
-    '1. 문제의 상황(제목, 요청, 자료)은 반드시 수업에서 배운 개념과 연결되어야 합니다.',
-    '   - "리스트와 반복문" → 여러 항목이 담긴 목록을 다루는 상황',
-    '   - "조건문 if-else" → 조건에 따라 걸러내는 상황',
-    '   - "딕셔너리" → 이름표(키)가 붙은 데이터를 다루는 상황',
-    '   - "함수" → 같은 작업을 여러 번 반복하는 상황',
-    '   수업 개념이 문제 상황에 자연스럽게 녹아들어야 합니다.',
-    '',
-    '2. brief(업무 요청)는 모호하게 씁니다.',
-    '   - "몇 개인지 알려주세요" (O) — 전체인지 서로 다른인지 안 밝힘',
-    '   - "서로 다른 메뉴가 몇 개인지" (X) — 답을 알려줌',
-    '',
-    '3. 자료 3개의 구조:',
-    '   - 자료 1: 항목 3~4개, 중복 없음',
-    '   - 자료 2: 항목 4~5개, 중복 없음',
-    '   - 자료 3: 항목 5~7개, 반드시 ' + dupCount + '의 중복 포함',
-    '   자료 1과 2에는 절대 중복이 없어야 합니다.',
-    '',
-    '4. 자료의 항목은 실제 한국어 단어를 사용합니다.',
-    '   - "사과,바나나,우유" (O)',
-    '   - "항목A,항목B,항목C" (X)',
-    '   - "노래1,노래2" (X)',
-    '',
-    '5. 자료의 이름은 구체적이어야 합니다.',
-    '   - "월요일 급식", "1반 신청" (O)',
-    '   - "자료 1", "데이터 1" (X)',
-    '',
-    '6. 한국어만 사용합니다. 한자, 일본어, 영어를 쓰지 않습니다.',
-    '',
-    '## 응답 형식',
-    'JSON만 응답하세요. 설명, 마크다운, 주석을 넣지 마세요.'
+    'JSON만 응답하세요.'
   ].join('\n');
 
   var user = [
-    '오늘 수업 내용: ' + lesson,
-    '핵심 포인트: ' + keyPoint,
+    '오늘 수업: ' + lesson,
+    '핵심: ' + keyPoint,
     '',
-    '위 수업 내용과 연결되는 실생활 문제를 하나 만들어주세요.',
+    '이 수업과 연결되는 ' + spec.desc + '을 만들어주세요.',
+    spec.extra ? '\n' + spec.extra : '',
     '',
-    '참고 예시 (이 예시와 다른 주제로 만드세요):',
-    '',
-    '예시 1:',
-    JSON.stringify(examples[0].json, null, 2),
-    '',
-    '예시 2:',
-    JSON.stringify(examples[1].json, null, 2),
-    '',
-    '위 형식과 동일한 JSON을 만들어주세요.',
-    'title은 15자 이내, brief는 30자 이내.',
-    'methodContext는 "~를" 또는 "~을"로 끝나야 합니다.'
+    '예시 (이 예시와 다른 주제로):',
+    spec.example
   ].join('\n');
 
   return [
@@ -185,164 +120,259 @@ function buildMessages(lesson, keyPoint, difficulty) {
   ];
 }
 
-/* ── LLM 호출 ──────────────────────────────────── */
-async function generateWithLLM(lesson, keyPoint, difficulty) {
+/* ══════════════════════════════════════════════════
+ * 3. 반례 생성 (코드가 보장)
+ * ══════════════════════════════════════════════════ */
+
+function buildCounterexample(pipelineId, data, params) {
+  var items1 = data[0].items;
+  var items2 = data[1].items;
+
+  switch (pipelineId) {
+    case 'split-unique-count':
+      /* 중복 추가 → total ≠ unique */
+      return items1.concat([items1[0], items2[0]]);
+
+    case 'split-filter-count':
+      /* filterTarget에 없는 항목만 → 결과 0 */
+      var ft = params.filterTarget || [];
+      var all = items1.concat(items2);
+      var safe = all.filter(function (x) { return ft.indexOf(x) === -1; });
+      if (safe.length < 3) safe = safe.concat(['사과', '바나나', '포도']);
+      return safe.slice(0, 4);
+
+    case 'split-sort-join':
+      /* 이미 정렬된 순서 → 정렬 전후 동일 */
+      return items1.slice().sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+
+    case 'split-num-sum':
+      /* 항목 추가 → 합계 달라짐 */
+      return items1.concat([items2[0]]);
+
+    case 'split-group':
+      /* 전부 고유 → 빈도 전부 1 */
+      var uniq = [];
+      items1.concat(items2).forEach(function (x) { if (uniq.indexOf(x) === -1) uniq.push(x); });
+      return uniq.slice(0, 4);
+
+    default:
+      return items1.concat([items1[0]]);
+  }
+}
+
+/* ══════════════════════════════════════════════════
+ * 4. 미션 조립 (코드가 구조를 보장)
+ * ══════════════════════════════════════════════════ */
+
+function assembleMission(pipelineId, d, lesson, keyPoint) {
+  var id = 'ai-' + Date.now().toString(36);
+  var ctx = d.methodContext || '목록을';
+  var item = d.itemName || '항목';
+  var je = josa(item, '은는');
+
+  /* 자료 3개 조립 */
+  var counter = buildCounterexample(pipelineId, d.data, { filterTarget: d.filterTarget });
+  var inputs = [
+    { id: 'd01', name: d.data[0].name, v: d.data[0].items.join(',') },
+    { id: 'd02', name: d.data[1].name, v: d.data[1].items.join(',') },
+    { id: 'd03', name: d.counterName || (d.domain + ' 합산'), v: counter.join(',') }
+  ];
+
+  /* 결과 계산 (자료 1 기준 — hardcode 함정용) */
+  var d1items = d.data[0].items;
+  var d1result;
+  if (pipelineId === 'split-num-sum') {
+    d1result = d1items.reduce(function (a, b) { return a + Number(b); }, 0);
+  } else if (pipelineId === 'split-filter-count') {
+    var ft = d.filterTarget || [];
+    d1result = d1items.filter(function (x) { return ft.indexOf(x) !== -1; }).length;
+  } else if (pipelineId === 'split-sort-join') {
+    d1result = d1items.slice().sort(function (a, b) { return a.localeCompare(b, 'ko'); }).join(',');
+  } else if (pipelineId === 'split-group') {
+    var g = {}; d1items.forEach(function (x) { g[x] = (g[x] || 0) + 1; });
+    d1result = Object.keys(g).map(function (k) { return k + ':' + g[k]; }).join(', ');
+  } else {
+    var u = []; d1items.forEach(function (x) { if (u.indexOf(x) === -1) u.push(x); });
+    d1result = u.length;
+  }
+
+  /* ── define (성공 조건 + 함정) ── */
+  var define;
+  switch (pipelineId) {
+    case 'split-unique-count':
+      define = {
+        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 ' + item + ' 목록이 와도 전체 개수를 셀 수 있으면 성공이다', key: 'total', trap: null },
+          { v: '같은 ' + item + je + ' 빼고 서로 다른 수를 셀 수 있으면 성공이다', key: 'unique', trap: null },
+          { v: '오류 없이 끝까지 실행되면 성공이다', trap: 'luck' }
+        ]
+      };
+      break;
+    case 'split-filter-count':
+      define = {
+        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 목록이 와도 조건에 맞는 ' + item + josa(item, '의') + ' 개수를 셀 수 있으면 성공이다', key: 'filtered_count', trap: null },
+          { v: '오류 없이 끝까지 실행되면 성공이다', trap: 'luck' }
+        ]
+      };
+      break;
+    case 'split-sort-join':
+      define = {
+        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 ' + String(d1result).substring(0, 15) + '라고 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 목록이 와도 순서대로 나열된 결과가 나오면 성공이다', key: 'sorted', trap: null },
+          { v: '뭐라도 한 줄 나오면 성공이다', trap: 'luck' }
+        ]
+      };
+      break;
+    case 'split-num-sum':
+      define = {
+        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 숫자 목록이 와도 전부 더한 합계가 나오면 성공이다', key: 'sum', trap: null },
+          { v: '숫자가 나오면 성공이다', trap: 'luck' }
+        ]
+      };
+      break;
+    case 'split-group':
+      define = {
+        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 ' + String(d1result).substring(0, 20) + '이 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 목록이 와도 같은 것끼리 묶인 개수가 나오면 성공이다', key: 'group', trap: null },
+          { v: '뭐라도 나오면 성공이다', trap: 'luck' }
+        ]
+      };
+      break;
+  }
+
+  /* ── method (방법 문장) ── */
+  var sentences;
+  switch (pipelineId) {
+    case 'split-unique-count':
+      sentences = [
+        { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
+        { template: '같은 ' + item + je + ' {dedup}.', slot: 'dedup', options: ['각각 남긴다', '하나만 남긴다'] },
+        { template: '{output}을 출력한다.', slot: 'output', options: ['남은 항목의 개수', '항상 숫자 3'] }
+      ];
+      break;
+    case 'split-filter-count':
+      sentences = [
+        { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
+        { template: (d.filterDesc || '조건') + '에 {cond} 것만 남긴다.', slot: 'cond', options: ['있는', '없는'] }
+      ];
+      break;
+    case 'split-sort-join':
+      sentences = [
+        { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
+        { template: '{dir} 정렬한다.', slot: 'dir', options: ['가나다순으로', '거꾸로'] },
+        { template: '{joinSep}로 다시 합친다.', slot: 'joinSep', options: ['쉼표', '공백'] }
+      ];
+      break;
+    case 'split-num-sum':
+      sentences = [
+        { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] }
+      ];
+      break;
+    case 'split-group':
+      sentences = [
+        { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] }
+      ];
+      break;
+  }
+
+  var mission = {
+    id: id, no: 'AI', type: 'sentence',
+    pipelineId: pipelineId,
+    stage: d.domain || '수업',
+    title: d.title, brief: d.brief,
+    lesson: lesson, keyPoint: keyPoint,
+    define: define,
+    method: { sentences: sentences },
+    inputs: inputs
+  };
+
+  if (pipelineId === 'split-filter-count' && d.filterTarget) {
+    mission.pipelineParams = { filterTarget: d.filterTarget };
+  }
+
+  return mission;
+}
+
+/* ══════════════════════════════════════════════════
+ * 5. LLM 호출 + 후처리 (3단계로 축소)
+ * ══════════════════════════════════════════════════ */
+
+function strip(s) {
+  return String(s)
+    .replace(/[\u4E00-\u9FFF\u3400-\u4DBF\u3040-\u30FF\uFF00-\uFFEF]/g, '')
+    .replace(/\s{2,}/g, ' ').trim();
+}
+
+async function generate(lesson, keyPoint) {
   var apiKey = (process.env.PICKLE_API_KEY || '').replace(/[\s\u2028\u2029\u200B-\u200F\uFEFF]/g, '');
   if (!apiKey) throw new Error('PICKLE_API_KEY가 설정되지 않았습니다.');
 
-  var messages = buildMessages(lesson, keyPoint, difficulty);
+  var pipelineId = selectPipeline(lesson, keyPoint);
+  var messages = buildPrompt(pipelineId, lesson, keyPoint);
 
   var res = await fetch('https://llm.pcl.kr/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + apiKey
-    },
-    body: JSON.stringify({
-      model: 'pickle-general',
-      max_tokens: 1024,
-      messages: messages
-    })
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+    body: JSON.stringify({ model: 'pickle-general', max_tokens: 512, messages: messages })
   });
+  if (!res.ok) throw new Error('LLM API 오류: ' + res.status);
 
-  if (!res.ok) {
-    var errBody = await res.text();
-    throw new Error('LLM API 오류: ' + res.status + ' ' + errBody);
-  }
-
-  var data = await res.json();
-  var text = data.choices[0].message.content;
-  text = text.replace(/[\u2028\u2029\u0000-\u001F]/g, ' ');
-
-  var match = text.match(/\{[\s\S]*\}/);
+  var raw = (await res.json()).choices[0].message.content;
+  raw = raw.replace(/[\u2028\u2029\u0000-\u001F]/g, ' ');
+  var match = raw.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('JSON 파싱 실패');
-  var p = JSON.parse(match[0]);
+  var d = JSON.parse(match[0]);
 
-  /* ── Phase 2: 후처리 검증 ────────────────────── */
-  if (!p.inputs || p.inputs.length < 3) throw new Error('자료가 3개 미만');
+  /* ── 후처리 1: 텍스트 정리 ── */
+  d.title = strip(d.title || '').substring(0, 20);
+  d.brief = strip(d.brief || '').substring(0, 50);
+  d.itemName = strip(d.itemName || '항목').replace(/[은는]$/, '');
+  d.methodContext = strip(d.methodContext || '목록을');
+  if (!/[을를]$/.test(d.methodContext)) d.methodContext += '를';
+  if (d.filterDesc) d.filterDesc = strip(d.filterDesc);
+  d.domain = strip(d.domain || d.title || '수업');
+  if (d.brief && !/[요다세]\.?$/.test(d.brief)) d.brief += '.';
+  d.brief = (d.brief || '').replace(/서로\s*다른|전체\s*|합계/g, '').replace(/\s{2,}/g, ' ').trim();
 
-  /* CJK 문자 제거 */
-  function strip(s) {
-    return String(s)
-      .replace(/[\u4E00-\u9FFF\u3400-\u4DBF\u3040-\u30FF\uFF00-\uFFEF]/g, '')
-      .replace(/\s{2,}/g, ' ').trim();
-  }
-  p.title = strip(p.title || '');
-  p.brief = strip(p.brief || '');
-  if (p.defineQ) p.defineQ = strip(p.defineQ);
-  if (p.methodContext) p.methodContext = strip(p.methodContext);
-  if (p.itemName) p.itemName = strip(p.itemName);
-  if (p.defineOptions) p.defineOptions.forEach(function (o) { o.v = strip(o.v); });
-  p.inputs.forEach(function (inp) { inp.name = strip(inp.name); inp.v = strip(inp.v); });
-
-  /* 자료 이름 플레이스홀더 교정 */
-  var stage = p.stage || '수업';
-  p.inputs.forEach(function (inp, i) {
-    if (!inp.name || /자료\s*\d|데이터\s*\d/i.test(inp.name)) {
-      inp.name = stage + ' 자료 ' + (i + 1);
-    }
+  /* ── 후처리 2: 자료 검증 ── */
+  if (!d.data || d.data.length < 2) throw new Error('자료 2개 미만');
+  d.data.forEach(function (dat, i) {
+    if (!dat.items || dat.items.length < 3) throw new Error('자료 ' + (i + 1) + ' 항목 3개 미만');
+    if (!dat.name || /자료\s*\d|데이터\s*\d/.test(dat.name)) dat.name = d.domain + ' ' + (i + 1);
+    /* 문자열 항목 정리 */
+    dat.items = dat.items.map(function (x) { return String(x).trim(); }).filter(Boolean);
   });
 
-  /* 길이 제한 */
-  if (p.title && p.title.length > 20) p.title = p.title.substring(0, 20);
-  if (p.brief && p.brief.length > 50) p.brief = p.brief.substring(0, 50);
+  /* 플레이스홀더 감지 */
+  var allItems = d.data[0].items.concat(d.data[1].items);
+  if (allItems.some(function (x) { return /^[A-Za-z]\d*$|^항목\d|^노래\d/.test(x); }))
+    throw new Error('플레이스홀더 감지');
 
-  /* 쉼표 외 구분자 통일 */
-  p.inputs.forEach(function (inp) {
-    inp.v = inp.v.replace(/[、\s\/|·→]+/g, ',').replace(/,+/g, ',').replace(/^,|,$/g, '');
-  });
-
-  /* "항목A" 패턴 감지 → 거부 */
-  var hasPlaceholder = p.inputs.some(function (inp) {
-    return /[A-Za-z]\d*,/.test(inp.v) || /항목\d|노래\d|곡\d|이름\d/.test(inp.v);
-  });
-  if (hasPlaceholder) throw new Error('자료에 플레이스홀더가 포함됨 — 재시도 필요');
-
-  /* 자료 1, 2에서 중복 제거 */
-  for (var di = 0; di < Math.min(2, p.inputs.length); di++) {
-    var items = p.inputs[di].v.split(',');
-    var seen = [];
-    items.forEach(function (x) { if (seen.indexOf(x) === -1) seen.push(x); });
-    p.inputs[di].v = seen.join(',');
+  /* ── 후처리 3: filter 일관성 ── */
+  if (d.filterTarget && d.filterTarget.length) {
+    var found = d.filterTarget.filter(function (t) { return allItems.indexOf(t) !== -1; });
+    if (found.length === 0) throw new Error('filterTarget이 자료에 없음');
   }
 
-  /* 자료 3에 중복 없으면 강제 추가 */
-  var last = p.inputs[p.inputs.length - 1].v.split(',');
-  var uniq = []; last.forEach(function (x) { if (uniq.indexOf(x) === -1) uniq.push(x); });
-  if (last.length === uniq.length) {
-    p.inputs[p.inputs.length - 1].v += ',' + last[0];
-  }
-
-  /* brief에서 답 암시 제거 */
-  p.brief = (p.brief || '')
-    .replace(/서로\s*다른/g, '')
-    .replace(/전체\s*/g, '')
-    .replace(/중복/g, '')
-    .replace(/인원\s*수/g, '몇 명인지')
-    .replace(/몇\s*명/g, '몇 개')   /* "몇 명"도 답 암시 — "몇 개"가 더 모호 */
-    .replace(/\s{2,}/g, ' ').trim();
-
-  /* brief 끝이 자연스러운지 */
-  if (!/[요다세]\.?$/.test(p.brief)) p.brief += '.';
-
-  /* 자료 항목 최소 3개 보장 — 부족하면 다른 자료에서 빌려옴 */
-  var allItems = [];
-  p.inputs.forEach(function (inp) {
-    inp.v.split(',').filter(Boolean).forEach(function (x) {
-      if (allItems.indexOf(x) === -1) allItems.push(x);
-    });
-  });
-  p.inputs.forEach(function (inp) {
-    var items = inp.v.split(',').filter(Boolean);
-    while (items.length < 3 && allItems.length > 0) {
-      var pick = allItems[Math.floor(Math.random() * allItems.length)];
-      if (items.indexOf(pick) === -1) items.push(pick);
-      else allItems = allItems.filter(function (x) { return x !== pick; });
-      if (allItems.length === 0) break;
-    }
-    inp.v = items.join(',');
-  });
-
-  /* 조사 교정 */
-  if (p.itemName) p.itemName = p.itemName.replace(/[은는]$/, '');
-
-  /* 기본값 */
-  if (!p.methodContext) p.methodContext = '목록을';
-  if (!p.itemName) p.itemName = '항목';
-  if (!p.defineOptions || p.defineOptions.length < 2) {
-    p.defineOptions = [
-      { v: '적힌 항목의 전체 개수', key: 'total' },
-      { v: '서로 다른 항목의 개수', key: 'unique' }
-    ];
-  }
-
-  /* ── 표준 형식 변환 ────────────────────────── */
-  var id = 'ai-' + Date.now().toString(36);
-  var inputs = p.inputs.map(function (inp, i) {
-    return { id: 'd' + String(i + 1).padStart(2, '0'), name: inp.name, v: inp.v };
-  });
-  var verify = inputs.map(function (inp) {
-    var items = inp.v.split(',');
-    var u = []; items.forEach(function (x) { if (u.indexOf(x) === -1) u.push(x); });
-    return { input: inp.v, total: items.length, unique: u.length };
-  });
-
-  return {
-    id: id, no: 'AI', type: 'sentence', stage: stage,
-    title: p.title, brief: p.brief, lesson: lesson, keyPoint: keyPoint,
-    define: { q: p.defineQ || '무엇이 나오면 성공이라고 생각하나요?', options: p.defineOptions },
-    method: {
-      sentences: [
-        { template: p.methodContext + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
-        { template: '같은 ' + p.itemName + (hasJongseong(p.itemName) ? '은' : '는') + ' {dedup}.', slot: 'dedup', options: ['각각 남긴다', '하나만 남긴다'] },
-        { template: '{output}을 출력한다.', slot: 'output', options: ['남은 항목의 개수', '항상 숫자 3'] }
-      ]
-    },
-    inputs: inputs, verify: verify
-  };
+  return assembleMission(pipelineId, d, lesson, keyPoint);
 }
 
-/* ── Vercel Handler ────────────────────────────── */
+/* ══════════════════════════════════════════════════
+ * Vercel Handler
+ * ══════════════════════════════════════════════════ */
+
 module.exports = async function (req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -357,14 +387,12 @@ module.exports = async function (req, res) {
   if (!body.lesson) return res.status(400).json({ error: '수업 내용을 입력해주세요.' });
   if (!body.keyPoint) return res.status(400).json({ error: '핵심 포인트를 입력해주세요.' });
 
-  /* 최대 2회 시도 */
   for (var attempt = 0; attempt < 2; attempt++) {
     try {
-      var mission = await generateWithLLM(body.lesson, body.keyPoint, body.difficulty);
+      var mission = await generate(body.lesson, body.keyPoint);
       return res.status(200).json(mission);
     } catch (err) {
-      if (attempt === 0 && err.message.indexOf('플레이스홀더') !== -1) continue;
-      if (attempt === 0 && err.message.indexOf('JSON') !== -1) continue;
+      if (attempt === 0 && /플레이스홀더|JSON|자료|filterTarget/.test(err.message)) continue;
       return res.status(500).json({ error: err.message });
     }
   }
