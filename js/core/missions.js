@@ -426,6 +426,46 @@
         { input: '비빔밥,미역국,깍두기,요구르트',          total: 4, unique: 4 },
         { input: '밥,국,김치,비빔밥,국,밥,깍두기',         total: 7, unique: 5 }
       ]
+    },
+
+    /* ── sm-filter-1: 알레르기 검수 (파이프라인: split-filter-count) ── */
+    {
+      id: 'sm-filter-1',
+      no: '04',
+      type: 'sentence',
+      pipelineId: 'split-filter-count',
+      pipelineParams: { filterTarget: ['우유', '달걀', '땅콩'] },
+      stage: '걸러내기',
+      title: '급식에서 주의 재료를 찾아주세요',
+      brief: '영양사 선생님이 급식 재료 목록을 보내셨어요. 주의해야 할 재료가 몇 개 들어 있는지 알려주세요.',
+
+      define: {
+        q: '나는 재료 목록에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 1이라고 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 재료 목록이 와도 주의 재료의 개수를 셀 수 있으면 성공이다', key: 'filtered_count', trap: null },
+          { v: '오류 없이 끝까지 실행되면 성공이다', trap: 'luck' }
+        ]
+      },
+
+      method: {
+        sentences: [
+          { template: '재료 목록을 {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
+          { template: '주의 재료 목록에 {cond} 것만 남긴다.', slot: 'cond', options: ['있는', '없는'] }
+        ]
+      },
+
+      inputs: [
+        { id: 'd01', name: '월요일 재료', v: '밥,우유,김치,떡' },
+        { id: 'd02', name: '화요일 재료', v: '빵,달걀,과자,국,우유' },
+        { id: 'd03', name: '수요일 재료', v: '사과,바나나,물,감자' }
+      ],
+
+      verify: [
+        { input: '밥,우유,김치,떡', filtered_count: 1 },
+        { input: '빵,달걀,과자,국,우유', filtered_count: 2 },
+        { input: '사과,바나나,물,감자', filtered_count: 0 }
+      ]
     }
   ];
 
