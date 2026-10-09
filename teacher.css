@@ -181,6 +181,21 @@ body.notes .note { display: flex; gap: 6px; }
 }
 .saybox .k { font-size: 11.5px; font-weight: 700; color: var(--green); display: block; margin-bottom: 5px; }
 
+/* ── 칭찬 타이밍 타임라인 ────────────────────────── */
+.praise-timeline { grid-column: 1 / -1; }
+.tl-list { display: flex; flex-direction: column; gap: 0; margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--line); }
+.tl-row { display: flex; align-items: baseline; gap: 8px; padding: 6px 0 6px 12px; position: relative; font-size: 13.5px; line-height: 1.5; }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; position: absolute; left: -13px; top: 11px; }
+.tl-row.kept .tl-dot { background: var(--green); }
+.tl-row.miss .tl-dot { background: var(--coral); }
+.tl-row.unsure .tl-dot { background: var(--amber); }
+.tl-row.redefine .tl-dot, .tl-row.remethod .tl-dot { background: var(--blue); }
+.tl-row.praise .tl-dot { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+.tl-time { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; flex: none; min-width: 44px; }
+.tl-label { color: var(--ink-2); }
+.tl-row.praise .tl-label { color: var(--green); font-weight: 700; }
+.tl-row.miss .tl-label { color: var(--coral); }
+
 /* ── 실시간 연결 안내 ────────────────────────────── */
 .livebar {
   border-radius: 12px;
