@@ -631,6 +631,7 @@
           CC.SENTENCE_MISSIONS.push(mData);
         }
         currentMissionDbId = m.id || null;  /* DB id. 기본 미션은 id 없음 */
+        if ($('#play-empty')) $('#play-empty').hidden = true;
         loadMission(mData.id);
         switchTab('panel-play');
       });
@@ -643,6 +644,8 @@
   function renderHistory() {
     var list = $('#history-list');
     list.innerHTML = '';
+    /* 미션이 로드되지 않은 상태(DB에 미션 없음)면 빈 상태 표시 */
+    if (!M) { $('#history-empty').hidden = false; return; }
     var events = CC.store ? CC.store.all() : [];
     if (!events.length) { $('#history-empty').hidden = false; return; }
     $('#history-empty').hidden = true;
@@ -840,8 +843,15 @@
   }
 
   /* ── 초기화 ────────────────────────────────────── */
-  loadGeneratedMissions();
-  loadMission(CC.SENTENCE_MISSIONS[0].id);
+  if (!CC.sb || !CC.sb.active()) {
+    /* 로컬 모드에서만 코드 내장 미션을 바로 로드 */
+    loadGeneratedMissions();
+    loadMission(CC.SENTENCE_MISSIONS[0].id);
+  } else {
+    /* Supabase 모드: 미션 선택 전이므로 빈 상태 표시 */
+    if ($('#play-empty')) $('#play-empty').hidden = false;
+    document.querySelectorAll('.step').forEach(function (s) { s.classList.remove('active'); });
+  }
   initAuth();
 
 })(window.CC = window.CC || {});
