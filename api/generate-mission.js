@@ -349,10 +349,21 @@ async function generate(lesson, keyPoint) {
   /* ── 후처리 2: 자료 검증 ── */
   if (!d.data || d.data.length < 2) throw new Error('자료 2개 미만');
   d.data.forEach(function (dat, i) {
-    if (!dat.items || dat.items.length < 3) throw new Error('자료 ' + (i + 1) + ' 항목 3개 미만');
+    if (!dat.items) dat.items = [];
     if (!dat.name || /자료\s*\d|데이터\s*\d/.test(dat.name)) dat.name = d.domain + ' ' + (i + 1);
-    /* 문자열 항목 정리 */
     dat.items = dat.items.map(function (x) { return String(x).trim(); }).filter(Boolean);
+    /* 항목 3개 미만이면 다른 자료에서 빌려서 보충 */
+    if (dat.items.length < 3) {
+      var pool = [];
+      d.data.forEach(function (other) {
+        if (other === dat) return;
+        (other.items || []).forEach(function (x) { if (pool.indexOf(x) === -1) pool.push(x); });
+      });
+      while (dat.items.length < 3 && pool.length) {
+        var pick = pool.shift();
+        if (dat.items.indexOf(pick) === -1) dat.items.push(pick);
+      }
+    }
   });
 
   /* 플레이스홀더 감지 */
