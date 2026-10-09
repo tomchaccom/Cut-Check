@@ -382,9 +382,10 @@ window.CC_SUPABASE = {
         m.inputs.map(function (inp) {
           return '<div style="background:var(--surface);border-radius:8px;padding:6px 12px;margin-top:6px;font-family:var(--mono);font-size:13px"><b>' + esc(inp.name) + ':</b> ' + esc(inp.v) + '</div>';
         }).join('') +
-        '<table style="font-size:12px;width:100%;margin-top:8px;border-collapse:collapse"><tr style="color:var(--ink-3)"><th style="text-align:left;padding:3px 8px">자료</th><th>전체</th><th>서로 다른</th></tr>' +
+        (m.pipelineId ? '<div style="margin-top:8px;font-size:12px;color:var(--ink-3)">파이프라인: ' + esc(m.pipelineId) + '</div>' : '') +
+        (m.verify ? '<table style="font-size:12px;width:100%;margin-top:8px;border-collapse:collapse"><tr style="color:var(--ink-3)"><th style="text-align:left;padding:3px 8px">자료</th><th>전체</th><th>서로 다른</th></tr>' +
         m.verify.map(function (v, i) { return '<tr><td style="padding:3px 8px">' + esc(m.inputs[i].name) + '</td><td style="text-align:center;font-weight:700">' + v.total + '</td><td style="text-align:center;font-weight:700">' + v.unique + '</td></tr>'; }).join('') +
-        '</table></div>';
+        '</table>' : '') + '</div>';
 
       btn.disabled = false; btn.textContent = '미션 생성';
     })
