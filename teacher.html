@@ -304,14 +304,91 @@ window.CC_SUPABASE = {
       missions.forEach(function (m) {
         var d = m.data || {};
         var card = el('div', 'mission-card');
-        card.style.cursor = 'default';
-        card.appendChild(el('div', 'mc-stage', (d.no || '') + ' · ' + (d.stage || '')));
+        card.style.cssText = 'cursor:default;padding:16px';
+
+        /* 헤더: 번호 + 도메인 + 파이프라인 뱃지 */
+        var header = el('div');
+        header.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+        header.appendChild(el('div', 'mc-stage', (d.no || 'AI') + ' · ' + (d.stage || '')));
+        if (d.pipelineId) {
+          var PIPE_LABEL = {
+            'split-unique-count': '나누고 세기', 'split-count': '세기',
+            'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
+            'split-sort-join': '정렬', 'split-num-sum': '숫자 합계',
+            'split-num-max': '최대값', 'split-num-min': '최소값', 'split-group': '묶어서 세기'
+          };
+          var badge = el('span', null, PIPE_LABEL[d.pipelineId] || d.pipelineId);
+          badge.style.cssText = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)';
+          header.appendChild(badge);
+        }
+        card.appendChild(header);
         card.appendChild(el('div', 'mc-title', d.title || ''));
         card.appendChild(el('div', 'mc-brief', d.brief || ''));
-        card.appendChild(el('div', 'mc-brief', '자료 ' + ((d.inputs || []).length) + '개'));
+
+        /* 수업 연결 정보 */
+        if (d.lesson || d.keyPoint) {
+          var lessonInfo = el('div');
+          lessonInfo.style.cssText = 'margin-top:8px;padding:8px 10px;background:var(--surface-2);border-radius:8px;font-size:12.5px;line-height:1.6';
+          lessonInfo.innerHTML = (d.lesson ? '<b>수업:</b> ' + esc(d.lesson) : '') +
+            (d.keyPoint ? '<br><b>핵심:</b> ' + esc(d.keyPoint) : '');
+          card.appendChild(lessonInfo);
+        }
+
+        /* 방법 문장 미리보기 */
+        if (d.method && d.method.sentences) {
+          var methDiv = el('div');
+          methDiv.style.cssText = 'margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.6';
+          methDiv.innerHTML = '<b>방법 문장:</b> ' + d.method.sentences.map(function (s) {
+            return esc(s.template.replace('{' + s.slot + '}', '<u>' + s.options.join('/') + '</u>'));
+          }).join(' ');
+          card.appendChild(methDiv);
+        }
+
+        /* 성공 조건 보기 */
+        if (d.define && d.define.options) {
+          var defDiv = el('div');
+          defDiv.style.cssText = 'margin-top:6px;font-size:12.5px;line-height:1.6';
+          var opts = d.define.options.map(function (o) {
+            var tag = o.trap === 'hardcode' ? ' <span style="color:var(--coral);font-weight:700">[하드코딩]</span>'
+              : o.trap === 'luck' ? ' <span style="color:var(--amber);font-weight:700">[요행]</span>' : '';
+            return esc(o.v) + tag;
+          });
+          defDiv.innerHTML = '<b>성공 조건:</b><br>' + opts.map(function (o) { return '&nbsp;&nbsp;· ' + o; }).join('<br>');
+          card.appendChild(defDiv);
+        }
+
+        /* 자료 미리보기 */
+        if (d.inputs && d.inputs.length) {
+          var dataDiv = el('div');
+          dataDiv.style.cssText = 'margin-top:6px;font-size:12px;color:var(--ink-3);line-height:1.6';
+          dataDiv.innerHTML = '<b>자료 ' + d.inputs.length + '개:</b> ' +
+            d.inputs.map(function (inp) { return esc(inp.name); }).join(', ');
+          card.appendChild(dataDiv);
+        }
 
         var actions = el('div');
-        actions.style.cssText = 'display:flex;gap:6px;margin-top:8px';
+        actions.style.cssText = 'display:flex;gap:6px;margin-top:10px';
+
+        /* 상세 토글 */
+        var detailBtn = el('button', 'btn o', '자료 보기');
+        detailBtn.style.cssText = 'font-size:12px;padding:4px 10px';
+        var detailOpen = false;
+        var detailDiv = el('div');
+        detailDiv.hidden = true;
+        detailBtn.addEventListener('click', function () {
+          detailOpen = !detailOpen;
+          detailDiv.hidden = !detailOpen;
+          detailBtn.textContent = detailOpen ? '접기' : '자료 보기';
+          if (detailOpen && !detailDiv.innerHTML) {
+            detailDiv.style.cssText = 'margin-top:8px';
+            (d.inputs || []).forEach(function (inp) {
+              var row = el('div');
+              row.style.cssText = 'background:var(--surface);border-radius:8px;padding:6px 12px;margin-top:4px;font-family:var(--mono);font-size:13px';
+              row.innerHTML = '<b>' + esc(inp.name) + ':</b> ' + esc(inp.v);
+              detailDiv.appendChild(row);
+            });
+          }
+        });
 
         var editBtn = el('button', 'btn o', '수정');
         editBtn.style.cssText = 'font-size:12px;padding:4px 10px';
@@ -321,7 +398,6 @@ window.CC_SUPABASE = {
           editingMissionId = m.id;
           $('#gen-btn').textContent = '미션 수정';
           $('#gen-result').innerHTML = '<span style="color:var(--ink-3)">기존 미션을 수정합니다. 내용을 고치고 버튼을 누르세요.</span>';
-          /* 미션 관리 탭으로 전환 */
           document.querySelector('.main-tab[data-dtab="dtab-missions"]').click();
           $('#gen-lesson').focus();
         });
@@ -333,9 +409,11 @@ window.CC_SUPABASE = {
           CC.sb.deleteMission(m.id).then(loadMissions).catch(function (e) { alert('삭제 실패: ' + e.message); });
         });
 
+        actions.appendChild(detailBtn);
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         card.appendChild(actions);
+        card.appendChild(detailDiv);
         list.appendChild(card);
       });
     });
