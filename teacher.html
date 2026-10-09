@@ -440,32 +440,85 @@ window.CC_SUPABASE = {
     .then(function (r) {
       if (!r.ok) throw new Error(r.data.error || '생성 실패');
       var m = r.data;
-
-      /* Supabase에 저장 (수정 모드면 교체) */
-      if (editingMissionId && selectedRoom) {
-        CC.sb.updateMission(editingMissionId, m).then(loadMissions);
-      } else if (selectedRoom) {
-        CC.sb.saveMission(selectedRoom.id, m).then(loadMissions);
-      }
-      editingMissionId = null;
-      btn.textContent = '미션 생성';
-      /* localStorage에도 저장 */
-      var saved = []; try { saved = JSON.parse(localStorage.getItem('cutcheck.generated') || '[]'); } catch (e) {}
-      saved.push(m); localStorage.setItem('cutcheck.generated', JSON.stringify(saved));
-
-      result.innerHTML =
-        '<div style="background:var(--green-soft);border:1px solid var(--green);border-radius:12px;padding:16px;margin-top:8px">' +
-        '<div style="font-weight:800;font-size:17px">' + esc(m.title) + '</div>' +
-        '<div style="color:var(--ink-2);font-size:14px;margin-top:4px">' + esc(m.brief) + '</div>' +
-        m.inputs.map(function (inp) {
-          return '<div style="background:var(--surface);border-radius:8px;padding:6px 12px;margin-top:6px;font-family:var(--mono);font-size:13px"><b>' + esc(inp.name) + ':</b> ' + esc(inp.v) + '</div>';
-        }).join('') +
-        (m.pipelineId ? '<div style="margin-top:8px;font-size:12px;color:var(--ink-3)">파이프라인: ' + esc(m.pipelineId) + '</div>' : '') +
-        (m.verify ? '<table style="font-size:12px;width:100%;margin-top:8px;border-collapse:collapse"><tr style="color:var(--ink-3)"><th style="text-align:left;padding:3px 8px">자료</th><th>전체</th><th>서로 다른</th></tr>' +
-        m.verify.map(function (v, i) { return '<tr><td style="padding:3px 8px">' + esc(m.inputs[i].name) + '</td><td style="text-align:center;font-weight:700">' + v.total + '</td><td style="text-align:center;font-weight:700">' + v.unique + '</td></tr>'; }).join('') +
-        '</table>' : '') + '</div>';
-
       btn.disabled = false; btn.textContent = '미션 생성';
+
+      /* ── 초안 미리보기 (확정 전) ── */
+      var PIPE_LABEL = {
+        'split-unique-count': '나누고 세기', 'split-count': '세기',
+        'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
+        'split-sort-join': '정렬', 'split-num-sum': '숫자 합계',
+        'split-num-max': '최대값', 'split-num-min': '최소값', 'split-group': '묶어서 세기'
+      };
+
+      var preview = '<div style="background:var(--surface-2);border:2px solid var(--amber);border-radius:12px;padding:16px;margin-top:8px">';
+      preview += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      preview += '<span style="font-size:12px;font-weight:700;color:var(--amber)">초안 미리보기</span>';
+      if (m.pipelineId) preview += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">' + esc(PIPE_LABEL[m.pipelineId] || m.pipelineId) + '</span>';
+      preview += '</div>';
+      preview += '<div style="font-weight:800;font-size:17px;margin-top:8px">' + esc(m.title) + '</div>';
+      preview += '<div style="color:var(--ink-2);font-size:14px;margin-top:4px">' + esc(m.brief) + '</div>';
+
+      if (m.lesson) preview += '<div style="margin-top:8px;font-size:12.5px"><b>수업:</b> ' + esc(m.lesson) + (m.keyPoint ? ' · <b>핵심:</b> ' + esc(m.keyPoint) : '') + '</div>';
+
+      /* 방법 문장 */
+      if (m.method && m.method.sentences) {
+        preview += '<div style="margin-top:8px;font-size:12.5px;color:var(--ink-2)"><b>방법 문장:</b><br>';
+        m.method.sentences.forEach(function (s, i) {
+          preview += '&nbsp;&nbsp;' + (i + 1) + '. ' + esc(s.template.replace('{' + s.slot + '}', '[' + s.options.join('/') + ']')) + '<br>';
+        });
+        preview += '</div>';
+      }
+
+      /* 성공 조건 */
+      if (m.define && m.define.options) {
+        preview += '<div style="margin-top:8px;font-size:12.5px"><b>성공 조건 보기:</b><br>';
+        m.define.options.forEach(function (o) {
+          var tag = o.trap === 'hardcode' ? ' <span style="color:var(--coral);font-weight:700">[하드코딩 함정]</span>'
+            : o.trap === 'luck' ? ' <span style="color:var(--amber);font-weight:700">[요행 함정]</span>'
+            : ' <span style="color:var(--green);font-weight:700">[진짜]</span>';
+          preview += '&nbsp;&nbsp;· ' + esc(o.v) + tag + '<br>';
+        });
+        preview += '</div>';
+      }
+
+      /* 자료 */
+      (m.inputs || []).forEach(function (inp) {
+        preview += '<div style="background:var(--surface);border-radius:8px;padding:6px 12px;margin-top:6px;font-family:var(--mono);font-size:13px"><b>' + esc(inp.name) + ':</b> ' + esc(inp.v) + '</div>';
+      });
+
+      /* 확정 / 다시 생성 버튼 */
+      preview += '<div style="display:flex;gap:8px;margin-top:14px">';
+      preview += '<button class="btn primary" id="confirm-mission">이대로 확정</button>';
+      preview += '<button class="btn o" id="retry-mission">다시 생성</button>';
+      preview += '<button class="btn o" id="discard-mission" style="color:var(--coral);border-color:var(--coral)">취소</button>';
+      preview += '</div></div>';
+
+      result.innerHTML = preview;
+
+      /* 확정 */
+      $('#confirm-mission').addEventListener('click', function () {
+        if (editingMissionId && selectedRoom) {
+          CC.sb.updateMission(editingMissionId, m).then(loadMissions);
+        } else if (selectedRoom) {
+          CC.sb.saveMission(selectedRoom.id, m).then(loadMissions);
+        }
+        editingMissionId = null;
+        var saved = []; try { saved = JSON.parse(localStorage.getItem('cutcheck.generated') || '[]'); } catch (e) {}
+        saved.push(m); localStorage.setItem('cutcheck.generated', JSON.stringify(saved));
+        result.innerHTML = '<div style="color:var(--green);font-weight:700;margin-top:8px">미션이 등록되었어요.</div>';
+      });
+
+      /* 다시 생성 */
+      $('#retry-mission').addEventListener('click', function () {
+        result.innerHTML = '';
+        btn.click();
+      });
+
+      /* 취소 */
+      $('#discard-mission').addEventListener('click', function () {
+        editingMissionId = null;
+        result.innerHTML = '<span style="color:var(--ink-3)">취소되었어요.</span>';
+      });
     })
     .catch(function (err) {
       result.innerHTML = '<span style="color:var(--coral)">' + esc(err.message) + '</span>';
