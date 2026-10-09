@@ -442,61 +442,80 @@ window.CC_SUPABASE = {
       var m = r.data;
       btn.disabled = false; btn.textContent = '미션 생성';
 
-      /* ── 초안 미리보기 (확정 전) ── */
+      /* ── 초안 편집 폼 ── */
       var PIPE_LABEL = {
         'split-unique-count': '나누고 세기', 'split-count': '세기',
         'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
         'split-sort-join': '정렬', 'split-num-sum': '숫자 합계',
         'split-num-max': '최대값', 'split-num-min': '최소값', 'split-group': '묶어서 세기'
       };
+      var pipeLabel = m.pipelineId ? (PIPE_LABEL[m.pipelineId] || m.pipelineId) : '';
+      var inputStyle = 'width:100%;padding:8px 12px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit';
 
-      var preview = '<div style="background:var(--surface-2);border:2px solid var(--amber);border-radius:12px;padding:16px;margin-top:8px">';
-      preview += '<div style="display:flex;justify-content:space-between;align-items:center">';
-      preview += '<span style="font-size:12px;font-weight:700;color:var(--amber)">초안 미리보기</span>';
-      if (m.pipelineId) preview += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">' + esc(PIPE_LABEL[m.pipelineId] || m.pipelineId) + '</span>';
-      preview += '</div>';
-      preview += '<div style="font-weight:800;font-size:17px;margin-top:8px">' + esc(m.title) + '</div>';
-      preview += '<div style="color:var(--ink-2);font-size:14px;margin-top:4px">' + esc(m.brief) + '</div>';
+      var draft = '<div style="background:var(--surface-2);border:2px solid var(--amber);border-radius:12px;padding:16px;margin-top:8px">';
+      draft += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+      draft += '<span style="font-size:13px;font-weight:700;color:var(--amber)">초안 — 수정 후 확정하세요</span>';
+      if (pipeLabel) draft += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">' + esc(pipeLabel) + '</span>';
+      draft += '</div>';
 
-      if (m.lesson) preview += '<div style="margin-top:8px;font-size:12.5px"><b>수업:</b> ' + esc(m.lesson) + (m.keyPoint ? ' · <b>핵심:</b> ' + esc(m.keyPoint) : '') + '</div>';
+      /* 편집 가능 필드 */
+      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 이름</label>';
+      draft += '<input id="draft-title" style="' + inputStyle + ';margin-bottom:8px" value="' + esc(m.title) + '">';
 
-      /* 방법 문장 */
-      if (m.method && m.method.sentences) {
-        preview += '<div style="margin-top:8px;font-size:12.5px;color:var(--ink-2)"><b>방법 문장:</b><br>';
-        m.method.sentences.forEach(function (s, i) {
-          preview += '&nbsp;&nbsp;' + (i + 1) + '. ' + esc(s.template.replace('{' + s.slot + '}', '[' + s.options.join('/') + ']')) + '<br>';
-        });
-        preview += '</div>';
-      }
+      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 내용 (업무 요청)</label>';
+      draft += '<input id="draft-brief" style="' + inputStyle + ';margin-bottom:8px" value="' + esc(m.brief) + '">';
 
-      /* 성공 조건 */
+      /* 핵심 개념 (읽기용) */
+      draft += '<div style="padding:8px 10px;background:var(--green-soft);border:1px solid var(--green);border-radius:8px;margin-bottom:10px;font-size:12.5px;line-height:1.6">';
+      draft += '<b style="color:var(--green)">적용된 핵심 개념</b><br>';
+      draft += '<b>수업:</b> ' + esc(m.lesson || '') + '<br>';
+      draft += '<b>핵심:</b> ' + esc(m.keyPoint || '') + '<br>';
+      draft += '<b>유형:</b> ' + esc(pipeLabel) + ' — 학생이 ' + (m.method && m.method.sentences ? m.method.sentences.length : 0) + '개 빈칸을 선택';
+      draft += '</div>';
+
+      /* 성공 조건 보기 (읽기용) */
       if (m.define && m.define.options) {
-        preview += '<div style="margin-top:8px;font-size:12.5px"><b>성공 조건 보기:</b><br>';
+        draft += '<div style="font-size:12.5px;margin-bottom:8px"><b>성공 조건 보기:</b><br>';
         m.define.options.forEach(function (o) {
           var tag = o.trap === 'hardcode' ? ' <span style="color:var(--coral);font-weight:700">[하드코딩 함정]</span>'
             : o.trap === 'luck' ? ' <span style="color:var(--amber);font-weight:700">[요행 함정]</span>'
             : ' <span style="color:var(--green);font-weight:700">[진짜]</span>';
-          preview += '&nbsp;&nbsp;· ' + esc(o.v) + tag + '<br>';
+          draft += '&nbsp;&nbsp;· ' + esc(o.v) + tag + '<br>';
         });
-        preview += '</div>';
+        draft += '</div>';
       }
 
-      /* 자료 */
-      (m.inputs || []).forEach(function (inp) {
-        preview += '<div style="background:var(--surface);border-radius:8px;padding:6px 12px;margin-top:6px;font-family:var(--mono);font-size:13px"><b>' + esc(inp.name) + ':</b> ' + esc(inp.v) + '</div>';
+      /* 자료 편집 */
+      draft += '<div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px">자료 (쉼표로 구분)</div>';
+      (m.inputs || []).forEach(function (inp, i) {
+        draft += '<div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">';
+        draft += '<input class="draft-data-name" data-idx="' + i + '" style="' + inputStyle + ';flex:0 0 120px" value="' + esc(inp.name) + '">';
+        draft += '<input class="draft-data-val" data-idx="' + i + '" style="' + inputStyle + ';flex:1;font-family:var(--mono)" value="' + esc(inp.v) + '">';
+        draft += '</div>';
       });
 
-      /* 확정 / 다시 생성 버튼 */
-      preview += '<div style="display:flex;gap:8px;margin-top:14px">';
-      preview += '<button class="btn primary" id="confirm-mission">이대로 확정</button>';
-      preview += '<button class="btn o" id="retry-mission">다시 생성</button>';
-      preview += '<button class="btn o" id="discard-mission" style="color:var(--coral);border-color:var(--coral)">취소</button>';
-      preview += '</div></div>';
+      /* 버튼 */
+      draft += '<div style="display:flex;gap:8px;margin-top:14px">';
+      draft += '<button class="btn primary" id="confirm-mission">확정</button>';
+      draft += '<button class="btn o" id="retry-mission">다시 생성</button>';
+      draft += '<button class="btn o" id="discard-mission" style="color:var(--coral);border-color:var(--coral)">취소</button>';
+      draft += '</div></div>';
 
-      result.innerHTML = preview;
+      result.innerHTML = draft;
 
-      /* 확정 */
+      /* 확정 — 편집된 값을 반영 */
       $('#confirm-mission').addEventListener('click', function () {
+        m.title = ($('#draft-title').value || '').trim() || m.title;
+        m.brief = ($('#draft-brief').value || '').trim() || m.brief;
+        document.querySelectorAll('.draft-data-name').forEach(function (el) {
+          var idx = parseInt(el.dataset.idx);
+          if (m.inputs[idx]) m.inputs[idx].name = el.value.trim() || m.inputs[idx].name;
+        });
+        document.querySelectorAll('.draft-data-val').forEach(function (el) {
+          var idx = parseInt(el.dataset.idx);
+          if (m.inputs[idx]) m.inputs[idx].v = el.value.trim() || m.inputs[idx].v;
+        });
+
         if (editingMissionId && selectedRoom) {
           CC.sb.updateMission(editingMissionId, m).then(loadMissions);
         } else if (selectedRoom) {
