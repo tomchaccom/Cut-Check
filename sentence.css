@@ -539,8 +539,8 @@ button { cursor: pointer; }
 /* 실행 결과 */
 .run-result {
   margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 10px;
+  padding: 16px 18px;
+  border-radius: 12px;
   font-size: 15px;
 }
 .run-result.ok {
@@ -555,48 +555,67 @@ button { cursor: pointer; }
 
 .result-value {
   font-family: var(--mono);
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--green);
 }
+
+/* pairs 결과 (묶어서 세기) */
+.result-pairs { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+.pair-row { display: flex; align-items: baseline; gap: 8px; font-size: 15px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.pair-row:last-child { border-bottom: none; }
+.pair-key { font-weight: 700; min-width: 60px; }
+.pair-sep { color: var(--ink-3); font-size: 13px; }
+.pair-val { font-family: var(--mono); font-weight: 800; color: var(--green); }
+
 .result-steps {
   font-size: 13px;
   color: var(--ink-3);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 8px 12px;
 }
 .result-steps span {
   display: block;
-  margin-bottom: 2px;
+  padding: 3px 0;
+  border-bottom: 1px dashed var(--line);
 }
+.result-steps span:last-child { border-bottom: none; }
 
 /* 판정 */
 .judge-row {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
 }
 .judge-row .judge-q {
   font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 10px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.5;
 }
 .judge-btns {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .judge-btn {
-  padding: 8px 16px;
+  padding: 10px 18px;
   border: 2px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface);
   color: var(--ink);
   font-size: 14px;
-  font-weight: 600;
-  min-height: 44px;
+  font-weight: 700;
+  min-height: 48px;
   cursor: pointer;
-  transition: border-color .12s, background .12s;
+  transition: border-color .12s, background .12s, transform .1s;
 }
+.judge-btn:active { transform: scale(.97); }
 .judge-btn[aria-pressed="true"] {
   border-color: var(--green);
   background: var(--green-soft);

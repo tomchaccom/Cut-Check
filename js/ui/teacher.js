@@ -253,36 +253,59 @@
     }
     if (s.sMethod) {
       var bs2 = el('div', 'dbox');
-      bs2.appendChild(el('span', 'k', '문장형 · 현재 방법'));
+      bs2.appendChild(el('span', 'k', '현재 방법'));
       var sl = s.sMethod.slots;
-      bs2.appendChild(el('div', 'v',
-        (sl.sep || '-') + '로 나누고, ' + (sl.dedup || '-') + ', ' + (sl.output || '-') +
+      /* 슬롯을 동적으로 읽어서 표시 — 파이프라인이 달라져도 코드가 안 바뀐다 */
+      var slotParts = Object.keys(sl).map(function (k) { return sl[k]; }).filter(Boolean);
+      bs2.appendChild(el('div', 'v', slotParts.join(' → ') +
         (s.sMethodVer > 1 ? ' (수정 ' + (s.sMethodVer - 1) + '회)' : '')));
       g.appendChild(bs2);
     }
-    if (s.sRuns.length) {
-      var bs3 = el('div', 'dbox');
-      bs3.appendChild(el('span', 'k', '문장형 · 실행 기록'));
-      bs3.appendChild(el('div', 'v', '실행 ' + s.sRuns.length + '회'));
-      g.appendChild(bs3);
+
+    /* ── 칭찬 타이밍 기록 (타임라인) ── */
+    var moments = [];
+    if (s.sDefineVer > 1) moments.push({ cls: 'redefine', label: '성공 조건을 다시 정함 (' + (s.sDefineVer - 1) + '회)' });
+    if (s.sMethodVer > 1) moments.push({ cls: 'remethod', label: '방법을 수정함 (' + (s.sMethodVer - 1) + '회)' });
+    s.sJudges.forEach(function (j, ji) {
+      var timeStr = j.t ? new Date(j.t).toLocaleTimeString('ko', { hour: '2-digit', minute: '2-digit' }) : '';
+      if (j.verdict === '지키지 못했다') {
+        moments.push({ cls: 'miss', label: '"지키지 못했다"로 판정' + (j.basis ? ' — ' + j.basis : ''), time: timeStr });
+      } else if (j.verdict === '지켰다') {
+        moments.push({ cls: 'kept', label: '"지켰다"로 판정' + (j.basis ? ' — ' + j.basis : ''), time: timeStr });
+      } else {
+        moments.push({ cls: 'unsure', label: '"판단하기 어렵다"' + (j.basis ? ' — ' + j.basis : ''), time: timeStr });
+      }
+    });
+    if (s.selfFound) moments.push({ cls: 'praise', label: '깨진 곳을 스스로 찾아냄' });
+    if (s.redefined) moments.push({ cls: 'praise', label: '결과를 보고 성공 조건 자체를 다시 정함' });
+    if (s.revised) moments.push({ cls: 'praise', label: '결과를 보고 기준을 스스로 고침' });
+
+    if (moments.length) {
+      var tl = el('div', 'dbox praise-timeline');
+      tl.appendChild(el('span', 'k', '활동 타임라인'));
+      var tlList = el('div', 'tl-list');
+      moments.forEach(function (m) {
+        var row = el('div', 'tl-row ' + m.cls);
+        var dot = el('span', 'tl-dot');
+        row.appendChild(dot);
+        if (m.time) row.appendChild(el('span', 'tl-time', m.time));
+        row.appendChild(el('span', 'tl-label', m.label));
+        tlList.appendChild(row);
+      });
+      tl.appendChild(tlList);
+      g.appendChild(tl);
     }
-    if (s.sJudges.length) {
-      var bs4 = el('div', 'dbox');
-      bs4.appendChild(el('span', 'k', '문장형 · 최근 판정'));
-      var lastJ = s.sJudges[s.sJudges.length - 1];
-      bs4.appendChild(el('div', 'v', lastJ.verdict + (lastJ.basis ? ' — ' + lastJ.basis : '')));
-      g.appendChild(bs4);
-    }
+
     if (s.sHelps) {
       var bs5 = el('div', 'dbox flag');
-      bs5.appendChild(el('span', 'k', '문장형 · 도움 요청'));
+      bs5.appendChild(el('span', 'k', '도움 요청'));
       bs5.appendChild(el('div', 'v', s.sHelps + '회'));
       g.appendChild(bs5);
     }
     if (s.sWrap) {
       var bs6 = el('div', 'dbox');
-      bs6.appendChild(el('span', 'k', '문장형 · 마무리'));
-      bs6.appendChild(el('div', 'v', s.sWrap));
+      bs6.appendChild(el('span', 'k', '마무리'));
+      bs6.appendChild(el('div', 'v', '"' + s.sWrap + '"'));
       g.appendChild(bs6);
     }
 
