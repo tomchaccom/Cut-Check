@@ -810,14 +810,8 @@
 
         CC.sb.getMissions(currentClassroomId).then(function (missions) {
           console.log('[CC] getMissions:', missions.length, '개');
-          if (missions.length) {
-            renderMissionGrid(missions);
-            switchTab('panel-missions');
-          } else {
-            /* 미션 없으면 기본 미션으로 */
-            renderMissionGrid(CC.SENTENCE_MISSIONS.map(function (m) { return { data: m }; }));
-            switchTab('panel-missions');
-          }
+          renderMissionGrid(missions);
+          switchTab('panel-missions');
         });
       });
     });
