@@ -306,64 +306,29 @@ window.CC_SUPABASE = {
         var card = el('div', 'mission-card');
         card.style.cssText = 'cursor:default;padding:16px';
 
-        /* 헤더: 번호 + 도메인 + 파이프라인 뱃지 */
+        /* 헤더: 제목 + 유형 뱃지 — 간결하게 */
+        var PIPE_LABEL = {
+          'split-unique-count': '세기', 'split-count': '세기',
+          'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
+          'split-sort-join': '정렬', 'split-num-sum': '합계',
+          'split-num-max': '최대값', 'split-num-min': '최소값',
+          'split-group': '묶어서 세기', 'split-transform-join': '정리하기',
+          'split-filter-num-sum': '걸러서 합계'
+        };
         var header = el('div');
-        header.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap';
-        header.appendChild(el('div', 'mc-stage', (d.no || 'AI') + ' · ' + (d.stage || '')));
+        header.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
+        header.appendChild(el('div', 'mc-title', d.title || ''));
         if (d.pipelineId) {
-          var PIPE_LABEL = {
-            'split-unique-count': '나누고 세기', 'split-count': '세기',
-            'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
-            'split-sort-join': '정렬', 'split-num-sum': '숫자 합계',
-            'split-num-max': '최대값', 'split-num-min': '최소값', 'split-group': '묶어서 세기'
-          };
-          var badge = el('span', null, PIPE_LABEL[d.pipelineId] || d.pipelineId);
-          badge.style.cssText = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)';
+          var badge = el('span', null, PIPE_LABEL[d.pipelineId] || '');
+          badge.style.cssText = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5);white-space:nowrap';
           header.appendChild(badge);
         }
         card.appendChild(header);
-        card.appendChild(el('div', 'mc-title', d.title || ''));
         card.appendChild(el('div', 'mc-brief', d.brief || ''));
-
-        /* 수업 연결 정보 */
-        if (d.lesson || d.keyPoint) {
-          var lessonInfo = el('div');
-          lessonInfo.style.cssText = 'margin-top:8px;padding:8px 10px;background:var(--surface-2);border-radius:8px;font-size:12.5px;line-height:1.6';
-          lessonInfo.innerHTML = (d.lesson ? '<b>수업:</b> ' + esc(d.lesson) : '') +
-            (d.keyPoint ? '<br><b>핵심:</b> ' + esc(d.keyPoint) : '');
-          card.appendChild(lessonInfo);
-        }
-
-        /* 방법 문장 미리보기 */
-        if (d.method && d.method.sentences) {
-          var methDiv = el('div');
-          methDiv.style.cssText = 'margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.6';
-          methDiv.innerHTML = '<b>방법 문장:</b> ' + d.method.sentences.map(function (s) {
-            return esc(s.template.replace('{' + s.slot + '}', '<u>' + s.options.join('/') + '</u>'));
-          }).join(' ');
-          card.appendChild(methDiv);
-        }
-
-        /* 성공 조건 보기 */
-        if (d.define && d.define.options) {
-          var defDiv = el('div');
-          defDiv.style.cssText = 'margin-top:6px;font-size:12.5px;line-height:1.6';
-          var opts = d.define.options.map(function (o) {
-            var tag = o.trap === 'hardcode' ? ' <span style="color:var(--coral);font-weight:700">[하드코딩]</span>'
-              : o.trap === 'luck' ? ' <span style="color:var(--amber);font-weight:700">[요행]</span>' : '';
-            return esc(o.v) + tag;
-          });
-          defDiv.innerHTML = '<b>성공 조건:</b><br>' + opts.map(function (o) { return '&nbsp;&nbsp;· ' + o; }).join('<br>');
-          card.appendChild(defDiv);
-        }
-
-        /* 자료 미리보기 */
-        if (d.inputs && d.inputs.length) {
-          var dataDiv = el('div');
-          dataDiv.style.cssText = 'margin-top:6px;font-size:12px;color:var(--ink-3);line-height:1.6';
-          dataDiv.innerHTML = '<b>자료 ' + d.inputs.length + '개:</b> ' +
-            d.inputs.map(function (inp) { return esc(inp.name); }).join(', ');
-          card.appendChild(dataDiv);
+        if (d.lesson) {
+          var tag = el('div'); tag.style.cssText = 'margin-top:4px;font-size:12px;color:var(--ink-3)';
+          tag.textContent = d.lesson + (d.keyPoint ? ' · ' + d.keyPoint : '');
+          card.appendChild(tag);
         }
 
         var actions = el('div');
