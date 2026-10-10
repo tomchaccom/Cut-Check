@@ -69,25 +69,31 @@
     $('#sample-label').textContent = M.inputs[0].name;
     if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';
 
-    /* 화면 2: 성공 조건 — 미션의 질문을 문장 틀에 반영 */
-    if ($('#define-prefix') && M.define.q) {
-      /* defineQ에서 "나는 ~에서 무엇이 나오면" 패턴 추출 */
-      var dq = M.define.q;
-      var qMatch = dq.match(/^(.*에서)\s/);
-      if (qMatch) {
-        $('#define-prefix').textContent = '나는 ' + qMatch[1];
-      } else {
-        $('#define-prefix').textContent = '나는 이 목록에서';
-      }
-    }
-
-    /* 성공 조건 select 재구성 */
+    /* 화면 2: 성공 조건 — 카드형 버튼으로 표시 */
+    var defineCards = $('#define-cards');
     var defineSelect = $('#slot-define');
+    if (defineCards) {
+      defineCards.innerHTML = '';
+      M.define.options.forEach(function (o) {
+        var card = el('button', 'define-card');
+        card.type = 'button';
+        card.textContent = o.v;
+        card.dataset.value = o.v;
+        card.addEventListener('click', function () {
+          defineCards.querySelectorAll('.define-card').forEach(function (c) { c.classList.remove('selected'); });
+          card.classList.add('selected');
+          state.defineChoice = o.v;
+          defineSelect.value = o.v;
+          $('#go-method').disabled = false;
+        });
+        defineCards.appendChild(card);
+      });
+    }
+    /* select도 동기화 (이벤트 기록용) */
     defineSelect.innerHTML = '<option value="">선택하기</option>';
     M.define.options.forEach(function (o) {
       var opt = document.createElement('option');
-      opt.value = o.v;
-      opt.textContent = o.v;
+      opt.value = o.v; opt.textContent = o.v;
       defineSelect.appendChild(opt);
     });
     defineSelect.value = '';

@@ -111,15 +111,14 @@ function buildPrompt(pipelineId, lesson, keyPoint) {
     '규칙:',
     '1. 자료 항목은 실제 한국어 단어. "항목A", "노래1" 금지.',
     '2. 자료 이름은 구체적. "자료 1", "데이터 1" 금지.',
-    '3. title은 중학생이 바로 알아듣는 구체적 상황. 15자 이내.',
-    '   - "급식에서 알레르기 재료 찾기" (O)',
-    '   - "우편물 분류" (X) — 추상적',
-    '4. brief는 2~3문장으로 구체적 상황을 설명하되 방법은 알려주지 않음. 80자 이내.',
-    '   누가 부탁했는지, 왜 필요한지, 뭘 해야 하는지를 포함.',
-    '   - "영양사 선생님이 이번 주 급식 재료 목록을 보내셨어요. 알레르기가 있는 학생이 있어서, 주의해야 할 재료가 몇 개 들어 있는지 확인해달래요." (O)',
-    '   - "재료 목록을 정리해주세요." (X) — 너무 짧고 뭘 해야 하는지 모름',
-    '5. situation은 학생이 왜 이 일을 하는지 배경을 1~2문장으로. 50자 이내.',
-    '   - "우리 반이 급식 당번이에요. 알레르기 재료를 미리 체크해야 해요." (O)',
+    '3. title은 중학생이 바로 알아듣는 구체적 상황. 12자 이내.',
+    '   - "급식 알레르기 찾기" (O) — 짧고 명확',
+    '   - "데이터 분류 처리" (X) — 컴퓨터 용어',
+    '4. brief는 1문장, 행동 지시형, 40자 이내. 반말(해봐/세어봐/찾아봐) 사용.',
+    '   - "급식 재료에서 알레르기 재료가 몇 개인지 세어봐." (O)',
+    '   - "영양사 선생님이 이번 주 급식 재료 목록을 보내셨어요." (X) — 길고 설명적',
+    '5. situation은 왜 이걸 하는지 1문장. 30자 이내. 반말.',
+    '   - "급식 당번이라 알레르기 재료를 미리 체크해야 해." (O)',
     '6. 한국어만. 한자·일본어·영어 금지.',
     '7. data는 정확히 2개. 각각 항목 3~5개.',
     '8. methodContext는 "~를" 또는 "~을"로 끝남.',
@@ -235,80 +234,54 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
     d1result = u.length;
   }
 
-  /* ── define (성공 조건 + 함정) ── */
+  /* ── define (성공 조건 + 함정) — 짧고 직관적으로 ── */
+  var dq = '언제 성공이야?';
+  var hc = d1result;
   var define;
   switch (pipelineId) {
     case 'split-unique-count':
-      define = {
-        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
-        options: [
-          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
-          { v: '어떤 ' + item + ' 목록이 와도 전체 개수를 셀 수 있으면 성공이다', key: 'total', trap: null },
-          { v: '같은 ' + item + je + ' 빼고 서로 다른 수를 셀 수 있으면 성공이다', key: 'unique', trap: null },
-          { v: '오류 없이 끝까지 실행되면 성공이다', trap: 'luck' }
-        ]
-      };
-      break;
+      define = { q: dq, options: [
+        { v: '' + hc + josa(String(hc), '이가') + ' 나오면 성공', trap: 'hardcode' },
+        { v: '전체 ' + item + ' 개수가 나오면 성공', key: 'total', trap: null },
+        { v: '겹치는 건 빼고 센 수가 나오면 성공', key: 'unique', trap: null },
+        { v: '에러 안 나면 성공', trap: 'luck' }
+      ] }; break;
     case 'split-filter-count':
-      define = {
-        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
-        options: [
-          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
-          { v: '어떤 목록이 와도 조건에 맞는 ' + item + josa(item, '의') + ' 개수를 셀 수 있으면 성공이다', key: 'filtered_count', trap: null },
-          { v: '오류 없이 끝까지 실행되면 성공이다', trap: 'luck' }
-        ]
-      };
-      break;
+      define = { q: dq, options: [
+        { v: '' + hc + josa(String(hc), '이가') + ' 나오면 성공', trap: 'hardcode' },
+        { v: '조건에 맞는 ' + item + ' 개수가 나오면 성공', key: 'filtered_count', trap: null },
+        { v: '에러 안 나면 성공', trap: 'luck' }
+      ] }; break;
     case 'split-sort-join':
-      define = {
-        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
-        options: [
-          { v: '화면에 ' + String(d1result).substring(0, 15) + '라고 뜨면 성공이다', trap: 'hardcode' },
-          { v: '어떤 목록이 와도 순서대로 나열된 결과가 나오면 성공이다', key: 'sorted', trap: null },
-          { v: '뭐라도 한 줄 나오면 성공이다', trap: 'luck' }
-        ]
-      };
-      break;
+      define = { q: dq, options: [
+        { v: '' + String(hc).substring(0, 12) + '가 나오면 성공', trap: 'hardcode' },
+        { v: '순서대로 정렬되면 성공', key: 'sorted', trap: null },
+        { v: '뭐라도 나오면 성공', trap: 'luck' }
+      ] }; break;
     case 'split-num-sum':
-      define = {
-        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
-        options: [
-          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
-          { v: '어떤 숫자 목록이 와도 전부 더한 합계가 나오면 성공이다', key: 'sum', trap: null },
-          { v: '숫자가 나오면 성공이다', trap: 'luck' }
-        ]
-      };
-      break;
+      define = { q: dq, options: [
+        { v: '' + hc + josa(String(hc), '이가') + ' 나오면 성공', trap: 'hardcode' },
+        { v: '전부 더한 합계가 나오면 성공', key: 'sum', trap: null },
+        { v: '숫자가 나오면 성공', trap: 'luck' }
+      ] }; break;
     case 'split-group':
-      define = {
-        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
-        options: [
-          { v: '화면에 ' + String(d1result).substring(0, 20) + '이 뜨면 성공이다', trap: 'hardcode' },
-          { v: '어떤 목록이 와도 같은 것끼리 묶인 개수가 나오면 성공이다', key: 'group', trap: null },
-          { v: '뭐라도 나오면 성공이다', trap: 'luck' }
-        ]
-      };
-      break;
+      define = { q: dq, options: [
+        { v: '' + String(hc).substring(0, 15) + '이 나오면 성공', trap: 'hardcode' },
+        { v: '같은 것끼리 묶인 개수가 나오면 성공', key: 'group', trap: null },
+        { v: '뭐라도 나오면 성공', trap: 'luck' }
+      ] }; break;
     case 'split-transform-join':
-      define = {
-        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
-        options: [
-          { v: '화면에 ' + String(d1result).substring(0, 15) + '라고 뜨면 성공이다', trap: 'hardcode' },
-          { v: '어떤 목록이 와도 각 항목이 깔끔하게 정리된 결과가 나오면 성공이다', key: 'transformed', trap: null },
-          { v: '뭐라도 한 줄 나오면 성공이다', trap: 'luck' }
-        ]
-      };
-      break;
+      define = { q: dq, options: [
+        { v: '' + String(hc).substring(0, 12) + '가 나오면 성공', trap: 'hardcode' },
+        { v: '각 항목이 깔끔하게 정리되면 성공', key: 'transformed', trap: null },
+        { v: '뭐라도 나오면 성공', trap: 'luck' }
+      ] }; break;
     case 'split-filter-num-sum':
-      define = {
-        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
-        options: [
-          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
-          { v: '어떤 목록이 와도 숫자만 골라서 더한 합계가 나오면 성공이다', key: 'filtered_sum', trap: null },
-          { v: '숫자가 나오면 성공이다', trap: 'luck' }
-        ]
-      };
-      break;
+      define = { q: dq, options: [
+        { v: '' + hc + josa(String(hc), '이가') + ' 나오면 성공', trap: 'hardcode' },
+        { v: '숫자만 골라서 더한 합계가 나오면 성공', key: 'filtered_sum', trap: null },
+        { v: '숫자가 나오면 성공', trap: 'luck' }
+      ] }; break;
   }
 
   /* ── method (방법 문장) ── */
@@ -410,7 +383,7 @@ async function generate(lesson, keyPoint) {
 
   /* ── 후처리 1: 텍스트 정리 ── */
   d.title = strip(d.title || '').substring(0, 20);
-  d.brief = strip(d.brief || '').substring(0, 100);
+  d.brief = strip(d.brief || '').substring(0, 50);
   d.situation = strip(d.situation || '');
   d.itemName = strip(d.itemName || '항목').replace(/[은는]$/, '');
   d.methodContext = strip(d.methodContext || '목록을');

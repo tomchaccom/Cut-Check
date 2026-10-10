@@ -536,6 +536,29 @@ button { cursor: pointer; }
   cursor: not-allowed;
 }
 
+/* 성공 조건 카드 */
+.define-cards { display: flex; flex-direction: column; gap: 8px; }
+.define-card {
+  text-align: left;
+  padding: 14px 16px;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .12s, background .12s, transform .1s;
+  min-height: 48px;
+}
+.define-card:active { transform: scale(.98); }
+.define-card.selected {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--green);
+}
+.define-card.selected::before { content: "\2713  "; }
+
 /* 실행 결과 */
 .run-result {
   margin-top: 14px;
