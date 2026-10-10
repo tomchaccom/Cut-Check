@@ -36,7 +36,8 @@
     { id: 'split-num-sum',                ops: ['split','toNumber','sum'] },
     { id: 'split-num-max',                ops: ['split','toNumber','max'] },
     { id: 'split-num-min',                ops: ['split','toNumber','min'] },
-    { id: 'split-group',                  ops: ['split','groupCount'] }
+    { id: 'split-group',                  ops: ['split','groupCount'] },
+    { id: 'split-filter-num-sum',          ops: ['split','filter','toNumber','sum'] }
   ];
 
   var SEP_MAP = { '쉼표': ',', '공백': /\s+/, '줄바꿈': '\n' };
