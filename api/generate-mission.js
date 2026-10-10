@@ -64,8 +64,8 @@ var PIPELINE_PROMPTS = {
   },
   'split-filter-count': {
     desc: '"목록에서 조건에 맞는 것만 골라내기" 상황',
-    extra: '"filterTarget": 걸러낼 대상 목록(2~3개). data의 items에 filterTarget 항목이 최소 1개 포함되어야 합니다.\n"filterDesc": 걸러낼 조건 설명 (예: "알레르기 목록", "연체 도서 목록")',
-    example: '{ "title": "알레르기 재료 검수", "brief": "재료 목록이 왔어요. 주의할 게 몇 개인지 알려주세요.", "domain": "급식", "itemName": "재료", "methodContext": "재료 목록을", "filterDesc": "알레르기 목록", "filterTarget": ["우유","달걀","땅콩"], "data": [{ "name": "월요일 재료", "items": ["밥","우유","김치","떡"] }, { "name": "화요일 재료", "items": ["빵","달걀","과자","국","우유"] }] }'
+    extra: '"filterTarget": 걸러낼 대상 목록(2~3개). data의 items에 filterTarget 항목이 최소 1개 포함되어야 합니다.\n"filterDesc": 걸러낼 대상의 이름 (명사형, 2~4글자. 예: "알레르기 목록", "위험 재료", "연체 도서"). 반드시 포함하세요.',
+    example: '{ "title": "급식에서 알레르기 재료 찾기", "brief": "급식 재료가 왔어요. 주의할 게 몇 개인지 알려주세요.", "domain": "급식", "itemName": "재료", "methodContext": "재료 목록을", "filterDesc": "알레르기 목록", "filterTarget": ["우유","달걀","땅콩"], "data": [{ "name": "월요일 재료", "items": ["밥","우유","김치","떡"] }, { "name": "화요일 재료", "items": ["빵","달걀","과자","국","우유"] }] }'
   },
   'split-sort-join': {
     desc: '"목록을 정렬하기" 상황',
@@ -96,7 +96,10 @@ function buildPrompt(pipelineId, lesson, keyPoint) {
     '1. 자료 항목은 실제 한국어 단어. "항목A", "노래1" 금지.',
     '2. 자료 이름은 구체적. "자료 1", "데이터 1" 금지.',
     '3. brief는 모호하게. 답을 암시하지 않음. "서로 다른", "전체", "합계" 등 금지.',
-    '4. title 15자 이내, brief 30자 이내.',
+    '4. title은 중학생이 바로 알아듣는 구체적 상황. 15자 이내.',
+    '   - "급식에서 알레르기 재료 찾기" (O) — 무슨 일인지 바로 앎',
+    '   - "우편물 분류" (X) — 추상적, 중학생이 안 해본 일',
+    '   - "데이터 처리" (X) — 컴퓨터 용어',
     '5. 한국어만. 한자·일본어·영어 금지.',
     '6. data는 정확히 2개. 각각 항목 3~5개.',
     '7. methodContext는 "~를" 또는 "~을"로 끝남.',
@@ -343,6 +346,10 @@ async function generate(lesson, keyPoint) {
   d.methodContext = strip(d.methodContext || '목록을');
   if (!/[을를]$/.test(d.methodContext)) d.methodContext += '를';
   if (d.filterDesc) d.filterDesc = strip(d.filterDesc);
+  /* filterDesc 없으면 filterTarget에서 자동 생성 */
+  if (!d.filterDesc && d.filterTarget && d.filterTarget.length) {
+    d.filterDesc = d.filterTarget.slice(0, 2).join('·') + ' 목록';
+  }
   d.domain = strip(d.domain || d.title || '수업');
   if (d.brief && !/[요다세]\.?$/.test(d.brief)) d.brief += '.';
   d.brief = (d.brief || '').replace(/서로\s*다른|전체\s*|합계/g, '').replace(/\s{2,}/g, ' ').trim();

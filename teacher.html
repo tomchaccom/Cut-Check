@@ -396,8 +396,8 @@ window.CC_SUPABASE = {
           $('#gen-lesson').value = d.lesson || '';
           $('#gen-key').value = d.keyPoint || '';
           editingMissionId = m.id;
-          $('#gen-btn').textContent = '미션 수정';
-          $('#gen-result').innerHTML = '<span style="color:var(--ink-3)">기존 미션을 수정합니다. 내용을 고치고 버튼을 누르세요.</span>';
+          $('#gen-btn').textContent = '초안 다시 생성';
+          $('#gen-result').innerHTML = '<span style="color:var(--ink-3)">수업 내용과 핵심을 수정한 뒤 "초안 다시 생성"을 누르세요.</span>';
           document.querySelector('.main-tab[data-dtab="dtab-missions"]').click();
           $('#gen-lesson').focus();
         });
