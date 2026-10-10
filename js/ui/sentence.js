@@ -275,13 +275,177 @@
       rec('s-method', methodPayload);
     }
     state.methodVer++;
-    renderRunStep();
+
+    /* 설계 제출 이벤트 */
+    rec('s-design', { define: state.defineChoice, slots: slotsSnapshot, pipelineId: M.pipelineId || '' });
+
+    renderCodeStep();
     showStep(4);
   });
 
   $('#back-define').addEventListener('click', function () { showStep(2); });
 
-  /* ── 화면 4 ────────────────────────────────────── */
+  /* ── 화면 4: 코드 작성 ────────────────────────── */
+
+  /* Pyodide 로딩 */
+  var pyodideReady = false;
+  var pyodideObj = null;
+  if (typeof loadPyodide === 'function') {
+    loadPyodide().then(function (py) {
+      pyodideObj = py;
+      pyodideReady = true;
+      if ($('#pyodide-status')) $('#pyodide-status').textContent = 'Python 준비 완료';
+      if ($('#run-code')) $('#run-code').disabled = false;
+    }).catch(function () {
+      if ($('#pyodide-status')) $('#pyodide-status').textContent = 'Python 로드 실패';
+    });
+  }
+
+  function renderCodeStep() {
+    /* 설계도 표시 */
+    if ($('#design-define')) $('#design-define').textContent = '성공: ' + state.defineChoice;
+    if ($('#design-steps')) {
+      var steps = [];
+      if (M && M.method) {
+        M.method.sentences.forEach(function (s, i) {
+          var val = state.slots[s.slot] || '';
+          if (val) steps.push((i + 1) + '. ' + s.template.replace('{' + s.slot + '}', val));
+        });
+      }
+      $('#design-steps').innerHTML = steps.map(function (s) { return '<div>' + esc(s) + '</div>'; }).join('');
+    }
+
+    /* 자료 드롭다운 */
+    var dataSel = $('#code-data-select');
+    if (dataSel && M) {
+      dataSel.innerHTML = '';
+      M.inputs.forEach(function (inp) {
+        var o = document.createElement('option');
+        o.value = inp.v; o.textContent = inp.name;
+        dataSel.appendChild(o);
+      });
+      if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + M.inputs[0].v + '"';
+      dataSel.addEventListener('change', function () {
+        if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + this.value + '"';
+      });
+    }
+
+    /* 코드 에디터 초기값 */
+    var editor = $('#code-editor');
+    if (editor && !editor.value) {
+      editor.value = 'data = "' + (M ? M.inputs[0].v : '') + '"\n\n# 설계도를 보고 코드를 작성해봐\n\n';
+    }
+
+    /* Tab 키로 들여쓰기 */
+    if (editor) {
+      editor.addEventListener('keydown', function (e) {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          var start = this.selectionStart, end = this.selectionEnd;
+          this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+          this.selectionStart = this.selectionEnd = start + 4;
+        }
+      });
+    }
+
+    /* 실행 버튼 */
+    if ($('#run-code')) $('#run-code').disabled = !pyodideReady;
+
+    /* 판정/마무리 숨기기 */
+    if ($('#code-output')) $('#code-output').hidden = true;
+    if ($('#code-judge')) $('#code-judge').hidden = true;
+    if ($('#go-wrap')) $('#go-wrap').style.display = 'none';
+  }
+
+  /* 자료 변경 시 data 변수 업데이트 */
+  if ($('#code-data-select')) {
+    $('#code-data-select').addEventListener('change', function () {
+      var editor = $('#code-editor');
+      if (editor) {
+        editor.value = editor.value.replace(/^data = ".*"/m, 'data = "' + this.value + '"');
+      }
+    });
+  }
+
+  /* 실행 버튼 */
+  if ($('#run-code')) {
+    $('#run-code').addEventListener('click', function () {
+      if (!pyodideReady || !pyodideObj) return;
+      var code = $('#code-editor').value;
+      var dataVal = $('#code-data-select') ? $('#code-data-select').value : '';
+
+      /* data 변수를 코드 앞에 주입 */
+      var fullCode = 'data = "' + dataVal.replace(/"/g, '\\"') + '"\n' + code.replace(/^data = ".*"\n?/m, '');
+
+      /* stdout 캡처 */
+      pyodideObj.runPython('import io, sys; sys.stdout = io.StringIO()');
+      var output = '', error = '';
+      try {
+        pyodideObj.runPython(fullCode);
+        output = pyodideObj.runPython('sys.stdout.getvalue()');
+      } catch (e) {
+        error = String(e.message || e).split('\n').slice(-2).join('\n');
+      }
+
+      /* 결과 표시 */
+      var resultEl = $('#code-result');
+      var outputBox = $('#code-output');
+      if (resultEl && outputBox) {
+        outputBox.hidden = false;
+        if (error) {
+          resultEl.textContent = error;
+          resultEl.style.color = 'var(--coral)';
+        } else {
+          resultEl.textContent = output || '(출력 없음 — print()를 사용해봐)';
+          resultEl.style.color = 'var(--ink)';
+        }
+      }
+
+      /* 이벤트 기록 */
+      rec('s-code', { code: code, dataId: dataVal, output: output, error: error });
+
+      /* 판정 표시 */
+      if (!error) {
+        var judgeDiv = $('#code-judge');
+        if (judgeDiv) {
+          judgeDiv.hidden = false;
+          if ($('#code-judge-q')) {
+            $('#code-judge-q').textContent = '결과는 ' + (output.trim() || '(없음)') + '이야. 네가 정한 성공 조건을 지켰어?';
+          }
+          /* 판정 버튼 */
+          var btnsDiv = $('#code-judge-btns');
+          if (btnsDiv && !btnsDiv.children.length) {
+            var selectedVerdict = '';
+            ['지켰다', '지키지 못했다', '아직 모르겠다'].forEach(function (v) {
+              var b = el('button', 'judge-btn', v);
+              b.type = 'button';
+              b.setAttribute('aria-pressed', 'false');
+              b.addEventListener('click', function () {
+                btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+                b.setAttribute('aria-pressed', 'true');
+                selectedVerdict = v;
+                if ($('#code-judge-save')) $('#code-judge-save').disabled = false;
+              });
+              btnsDiv.appendChild(b);
+            });
+            $('#code-judge-save').addEventListener('click', function () {
+              rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
+              this.disabled = true; this.textContent = '저장됨';
+              btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
+              if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
+            });
+          }
+        }
+      }
+    });
+  }
+
+  /* 마무리 버튼 */
+  if ($('#go-wrap')) {
+    $('#go-wrap').addEventListener('click', function () { renderWrapStep(); showStep(5); });
+  }
+
+  /* ── 기존 화면 4 (하위 호환) ─────────────────── */
   function renderRunStep() {
     $('#cfg-define').textContent = state.defineChoice;
     $('#cfg-method').textContent = summarizeMethod();
@@ -506,15 +670,14 @@
   $('#back-define2').addEventListener('click', function () { showStep(2); });
 
   /* 도움 요청 */
-  $('#help-btn').addEventListener('click', function () { $('#help-dialog').showModal(); });
+  if ($('#help-btn')) $('#help-btn').addEventListener('click', function () { if ($('#help-dialog')) $('#help-dialog').showModal(); });
   $('#help-send').addEventListener('click', function () {
     rec('s-help', { expected: $('#help-expected').value.trim() || '아직 모르겠어요', stuck: $('#help-stuck').value });
     $('#help-expected').value = '';
     $('#help-stuck').value = '';
   });
 
-  /* 마무리로 */
-  $('#go-wrap').addEventListener('click', function () { renderWrapStep(); showStep(5); });
+  /* 마무리로 — 이벤트는 renderCodeStep에서 등록됨 */
 
   /* ── 화면 5: 판정 돌아보기 + 자유 정리 ──────────── */
   function renderWrapStep() {
