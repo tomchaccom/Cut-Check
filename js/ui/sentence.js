@@ -137,10 +137,10 @@
     $('#go-run').disabled = true;
 
     /* 화면 4·5 초기화 */
-    $('#data-runner').innerHTML = '';
-    $('#past-runs-list').innerHTML = '';
-    $('#past-runs').hidden = true;
-    $('#go-wrap').disabled = true;
+    if ($('#data-runner')) $('#data-runner').innerHTML = '';
+    if ($('#past-runs-list')) $('#past-runs-list').innerHTML = '';
+    if ($('#past-runs')) $('#past-runs').hidden = true;
+    if ($('#go-wrap')) $('#go-wrap').disabled = true;
     if ($('#wrap-review')) $('#wrap-review').innerHTML = '';
     if ($('#wrap-text')) $('#wrap-text').value = '';
     $('#finish').disabled = true;
