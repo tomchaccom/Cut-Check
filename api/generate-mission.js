@@ -89,9 +89,9 @@ var PIPELINE_PROMPTS = {
     example: '{ "title": "혈액형 조사 정리", "brief": "혈액형 조사 결과가 왔어요. 정리해주세요.", "domain": "건강", "itemName": "혈액형", "methodContext": "조사 결과를", "data": [{ "name": "1반 조사", "items": ["A","B","O","A","AB"] }, { "name": "2반 조사", "items": ["O","A","B","O","A","B"] }] }'
   },
   'split-transform-join': {
-    desc: '"목록의 각 항목을 변환하기" 상황',
-    extra: '중요: data의 items 중 일부에 앞뒤 공백이 있어야 합니다 (예: " 사과 "). 공백 제거 변환이 의미 있으려면 공백이 있어야 합니다.',
-    example: '{ "title": "출석부 이름 깔끔하게 정리", "brief": "담임 선생님이 출석부를 주셨는데, 이름 앞뒤에 공백이 들어가 있어서 컴퓨터가 같은 이름을 다른 이름으로 인식해요. 깔끔하게 정리해달래요.", "situation": "출석부를 엑셀에 옮겨야 하는데 공백 때문에 오류가 나요.", "domain": "학급", "itemName": "이름", "methodContext": "출석부를", "data": [{ "name": "1교시 출석", "items": [" 민수","지우 "," 현우 "] }, { "name": "2교시 출석", "items": ["서연 "," 도윤","하은"," 가은"] }] }'
+    desc: '"목록의 각 항목을 정리하기" 상황',
+    extra: '중요: data의 items 중 일부에 반드시 앞뒤 공백을 넣으세요 (예: " 사과", "바나나 "). 공백이 없으면 정리할 게 없어서 문제가 의미 없어집니다.\n중학생이 실제로 해본 일이어야 합니다: 출석부, 동아리 명단, 급식 신청, 체육대회 접수 등.',
+    example: '{ "title": "급식 신청 이름 정리", "brief": "급식 신청서에 이름이 지저분하게 적혀 있어. 깔끔하게 정리해봐.", "situation": "급식 당번이라 신청서를 정리해야 해.", "domain": "급식", "itemName": "이름", "methodContext": "신청서를", "data": [{ "name": "1반 신청", "items": [" 민수","지우 "," 현우"] }, { "name": "2반 신청", "items": ["서연 "," 도윤","하은 "," 가은"] }] }'
   },
   'split-filter-num-sum': {
     desc: '"숫자와 글자가 섞인 목록에서 숫자만 골라 합계 구하기" 상황',
@@ -207,7 +207,7 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
   var inputs = [
     { id: 'd01', name: d.data[0].name, v: d.data[0].items.join(',') },
     { id: 'd02', name: d.data[1].name, v: d.data[1].items.join(',') },
-    { id: 'd03', name: d.counterName || (d.domain + ' 합산'), v: counter.join(',') }
+    { id: 'd03', name: d.counterName || ('다른 ' + (d.domain || '자료')), v: counter.join(',') }
   ];
 
   /* 결과 계산 (자료 1 기준 — hardcode 함정용) */
@@ -320,8 +320,8 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
     case 'split-transform-join':
       sentences = [
         { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
-        { template: '각 ' + item + josa(item, '을를') + ' {op}.', slot: 'op', options: ['앞뒤 공백을 없앤다', '첫 글자만 남긴다'] },
-        { template: '{joinSep}로 다시 합친다.', slot: 'joinSep', options: ['쉼표', '공백'] }
+        { template: '각 ' + item + josa(item, '의') + ' {op}', slot: 'op', options: ['앞뒤 공백을 없앤다', '첫 글자만 남긴다'] },
+        { template: '결과를 {joinSep}로 합친다.', slot: 'joinSep', options: ['쉼표', '공백'] }
       ];
       break;
     case 'split-filter-num-sum':
@@ -394,8 +394,8 @@ async function generate(lesson, keyPoint) {
     d.filterDesc = d.filterTarget.slice(0, 2).join('·') + ' 목록';
   }
   d.domain = strip(d.domain || d.title || '수업');
-  if (d.brief && !/[요다세]\.?$/.test(d.brief)) d.brief += '.';
-  d.brief = (d.brief || '').replace(/서로\s*다른|전체\s*|합계/g, '').replace(/\s{2,}/g, ' ').trim();
+  d.brief = (d.brief || '').replace(/서로\s*다른|전체\s*|합계/g, '').replace(/\.{2,}/g, '.').replace(/\s{2,}/g, ' ').trim();
+  if (d.brief && !/[.?!봐해야]$/.test(d.brief)) d.brief += '.';
 
   /* ── 후처리 2: 자료 검증 ── */
   if (!d.data || d.data.length < 2) throw new Error('자료 2개 미만');
