@@ -34,10 +34,11 @@ function josa(word, pair) {
 var KEYWORD_RULES = [
   { keywords: ['딕셔너리', 'dict', '사전', '분류', '빈도'], pipeline: 'split-group' },
   { keywords: ['정렬', 'sort', 'sorted', '순서', '나열'], pipeline: 'split-sort-join' },
+  { keywords: ['반복', 'for', 'while', 'loop', '하나씩'], pipeline: 'split-filter-count' },
   { keywords: ['조건', 'if', '필터', '걸러', '선별', '골라'], pipeline: 'split-filter-count' },
-  { keywords: ['숫자', 'int', 'sum', '합계', '형변환', '계산', '연산', '더하'], pipeline: 'split-num-sum' },
+  { keywords: ['숫자', 'int', 'sum', '합계', '형변환', '계산', '연산', '더하', 'range'], pipeline: 'split-num-sum' },
   { keywords: ['집합', 'set', '중복 제거'], pipeline: 'split-unique-count' },
-  { keywords: ['리스트', 'list', 'split', '문자열', '반복', 'for', '나누'], pipeline: 'split-unique-count' }
+  { keywords: ['리스트', 'list', 'split', '문자열', '나누'], pipeline: 'split-unique-count' }
 ];
 
 function selectPipeline(lesson, keyPoint) {
