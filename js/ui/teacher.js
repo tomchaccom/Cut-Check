@@ -296,6 +296,25 @@
       g.appendChild(tl);
     }
 
+    /* 코드 실행 기록 */
+    if (s.sCodes && s.sCodes.length) {
+      var bsCode = el('div', 'dbox');
+      bsCode.appendChild(el('span', 'k', '코드 실행'));
+      var lastCode = s.sCodes[s.sCodes.length - 1];
+      var codeInfo = '실행 ' + s.sCodes.length + '회';
+      if (lastCode.error) codeInfo += ' · 마지막: 에러';
+      else if (lastCode.output) codeInfo += ' · 마지막 결과: ' + lastCode.output.trim().substring(0, 30);
+      bsCode.appendChild(el('div', 'v', codeInfo));
+      g.appendChild(bsCode);
+    }
+    if (s.sCodeJudges && s.sCodeJudges.length) {
+      var bsCJ = el('div', 'dbox');
+      bsCJ.appendChild(el('span', 'k', '코드 판정'));
+      var lastCJ = s.sCodeJudges[s.sCodeJudges.length - 1];
+      bsCJ.appendChild(el('div', 'v', lastCJ.verdict + (lastCJ.basis ? ' — ' + lastCJ.basis : '')));
+      g.appendChild(bsCJ);
+    }
+
     if (s.sHelps) {
       var bs5 = el('div', 'dbox flag');
       bs5.appendChild(el('span', 'k', '도움 요청'));

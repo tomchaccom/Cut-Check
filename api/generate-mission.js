@@ -179,8 +179,10 @@ function buildCounterexample(pipelineId, data, params) {
       return uniq.slice(0, 4);
 
     case 'split-transform-join':
-      /* 공백 없는 항목 → trim 전후 동일 (identity 반례) */
-      return items1.map(function (x) { return x.trim(); });
+      /* 이미 깨끗한 항목 → trim 해도 변화 없음 (identity 반례) */
+      var clean = [];
+      items1.concat(items2).forEach(function (x) { var c = x.trim(); if (clean.indexOf(c) === -1) clean.push(c); });
+      return clean.slice(0, 4);
 
     case 'split-filter-num-sum':
       /* 숫자가 아닌 항목만 → 합계 0 */
@@ -320,7 +322,7 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
     case 'split-transform-join':
       sentences = [
         { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
-        { template: '각 ' + item + josa(item, '의') + ' {op}', slot: 'op', options: ['앞뒤 공백을 없앤다', '첫 글자만 남긴다'] },
+        { template: '각 ' + item + josa(item, '의') + ' {op}.', slot: 'op', options: ['앞뒤 공백을 없앤다', '첫 글자만 남긴다'] },
         { template: '결과를 {joinSep}로 합친다.', slot: 'joinSep', options: ['쉼표', '공백'] }
       ];
       break;
