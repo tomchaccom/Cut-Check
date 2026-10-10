@@ -666,15 +666,13 @@
   }
 
   /* 방법/성공 조건 수정 */
-  $('#back-method').addEventListener('click', function () { showStep(3); });
-  $('#back-define2').addEventListener('click', function () { showStep(2); });
+  if ($('#back-method')) $('#back-method').addEventListener('click', function () { showStep(3); });
+  if ($('#back-define2')) $('#back-define2').addEventListener('click', function () { showStep(2); });
 
   /* 도움 요청 */
   if ($('#help-btn')) $('#help-btn').addEventListener('click', function () { if ($('#help-dialog')) $('#help-dialog').showModal(); });
-  $('#help-send').addEventListener('click', function () {
-    rec('s-help', { expected: $('#help-expected').value.trim() || '아직 모르겠어요', stuck: $('#help-stuck').value });
-    $('#help-expected').value = '';
-    $('#help-stuck').value = '';
+  if ($('#help-send')) $('#help-send').addEventListener('click', function () {
+    rec('s-help', { expected: ($('#help-expected') || {}).value || '', stuck: ($('#help-stuck') || {}).value || '' });
   });
 
   /* 마무리로 — 이벤트는 renderCodeStep에서 등록됨 */
@@ -736,6 +734,7 @@
   });
 
   /* 지난 실행 보기 */
+  if (!$('#toggle-past')) { /* HTML에서 제거됨 — 스킵 */ } else
   $('#toggle-past').addEventListener('click', function () {
     var list = $('#past-runs-list');
     list.hidden = !list.hidden;
