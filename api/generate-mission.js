@@ -32,13 +32,19 @@ function josa(word, pair) {
  * ══════════════════════════════════════════════════ */
 
 var KEYWORD_RULES = [
+  /* 구체적 키워드가 먼저 매칭되도록 위에 배치 */
+  { keywords: ['예외', 'try', 'except', '에러', 'error'], pipeline: 'split-filter-num-sum' },
   { keywords: ['딕셔너리', 'dict', '사전', '분류', '빈도'], pipeline: 'split-group' },
   { keywords: ['정렬', 'sort', 'sorted', '순서', '나열'], pipeline: 'split-sort-join' },
+  { keywords: ['함수', 'def ', '변환'], pipeline: 'split-transform-join' },
+  { keywords: ['문자열 메서드', 'strip', 'replace', 'upper', 'lower'], pipeline: 'split-transform-join' },
+  { keywords: ['컴프리헨션', 'comprehension', '한 줄로'], pipeline: 'split-filter-count' },
   { keywords: ['반복', 'for', 'while', 'loop', '하나씩'], pipeline: 'split-filter-count' },
   { keywords: ['조건', 'if', '필터', '걸러', '선별', '골라'], pipeline: 'split-filter-count' },
-  { keywords: ['숫자', 'int', 'sum', '합계', '형변환', '계산', '연산', '더하', 'range'], pipeline: 'split-num-sum' },
   { keywords: ['집합', 'set', '중복 제거'], pipeline: 'split-unique-count' },
-  { keywords: ['리스트', 'list', 'split', '문자열', '나누'], pipeline: 'split-unique-count' }
+  { keywords: ['숫자', 'int', 'sum', '합계', '형변환', '계산', '더하', 'range'], pipeline: 'split-num-sum' },
+  { keywords: ['파일', 'file', '입출력', 'open', 'read'], pipeline: 'split-transform-join' },
+  { keywords: ['리스트', 'list', 'split', '문자열', '나누', '변수', '자료형'], pipeline: 'split-unique-count' }
 ];
 
 function selectPipeline(lesson, keyPoint) {
@@ -81,6 +87,16 @@ var PIPELINE_PROMPTS = {
     desc: '"목록에서 같은 것끼리 묶어 세기" 상황',
     extra: '중요: data의 items에 같은 항목이 2번 이상 등장해야 의미가 있습니다.',
     example: '{ "title": "혈액형 조사 정리", "brief": "혈액형 조사 결과가 왔어요. 정리해주세요.", "domain": "건강", "itemName": "혈액형", "methodContext": "조사 결과를", "data": [{ "name": "1반 조사", "items": ["A","B","O","A","AB"] }, { "name": "2반 조사", "items": ["O","A","B","O","A","B"] }] }'
+  },
+  'split-transform-join': {
+    desc: '"목록의 각 항목을 변환하기" 상황',
+    extra: '중요: data의 items 중 일부에 앞뒤 공백이 있어야 합니다 (예: " 사과 "). 공백 제거 변환이 의미 있으려면 공백이 있어야 합니다.',
+    example: '{ "title": "출석부 이름 정리하기", "brief": "출석부가 왔는데 이름이 지저분해요. 정리해주세요.", "domain": "학급", "itemName": "이름", "methodContext": "출석부를", "data": [{ "name": "1교시 출석", "items": [" 민수","지우 "," 현우 "] }, { "name": "2교시 출석", "items": ["서연 "," 도윤","하은"," 가은"] }] }'
+  },
+  'split-filter-num-sum': {
+    desc: '"숫자와 글자가 섞인 목록에서 숫자만 골라 합계 구하기" 상황',
+    extra: '"filterTarget": 숫자가 아닌 항목 목록(2~3개). data의 items에 숫자와 글자가 섞여 있어야 합니다.\n"filterDesc": 걸러낼 대상 설명 (예: "숫자가 아닌 항목", "잘못 입력된 값")',
+    example: '{ "title": "용돈 기입장에서 숫자만 합치기", "brief": "기입장에 글자가 섞여 있어요. 숫자만 골라서 합쳐주세요.", "domain": "용돈", "itemName": "항목", "methodContext": "기입장을", "filterDesc": "숫자가 아닌 항목", "filterTarget": ["메모","간식","교통"], "data": [{ "name": "월요일 기록", "items": ["1000","메모","2000","500"] }, { "name": "화요일 기록", "items": ["3000","간식","1500","교통","800"] }] }'
   }
 };
 
@@ -159,6 +175,15 @@ function buildCounterexample(pipelineId, data, params) {
       items1.concat(items2).forEach(function (x) { if (uniq.indexOf(x) === -1) uniq.push(x); });
       return uniq.slice(0, 4);
 
+    case 'split-transform-join':
+      /* 공백 없는 항목 → trim 전후 동일 (identity 반례) */
+      return items1.map(function (x) { return x.trim(); });
+
+    case 'split-filter-num-sum':
+      /* 숫자가 아닌 항목만 → 합계 0 */
+      var ftNS = params.filterTarget || [];
+      return ftNS.concat(ftNS[0] ? [ftNS[0]] : ['메모', '기타']);
+
     default:
       return items1.concat([items1[0]]);
   }
@@ -195,6 +220,12 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
   } else if (pipelineId === 'split-group') {
     var g = {}; d1items.forEach(function (x) { g[x] = (g[x] || 0) + 1; });
     d1result = Object.keys(g).map(function (k) { return k + ':' + g[k]; }).join(', ');
+  } else if (pipelineId === 'split-transform-join') {
+    d1result = d1items.map(function (x) { return x.trim(); }).join(',');
+  } else if (pipelineId === 'split-filter-num-sum') {
+    var ftNS = d.filterTarget || [];
+    var nums = d1items.filter(function (x) { return ftNS.indexOf(x) === -1; });
+    d1result = nums.reduce(function (a, b) { return a + Number(b); }, 0);
   } else {
     var u = []; d1items.forEach(function (x) { if (u.indexOf(x) === -1) u.push(x); });
     d1result = u.length;
@@ -254,6 +285,26 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
         ]
       };
       break;
+    case 'split-transform-join':
+      define = {
+        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 ' + String(d1result).substring(0, 15) + '라고 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 목록이 와도 각 항목이 깔끔하게 정리된 결과가 나오면 성공이다', key: 'transformed', trap: null },
+          { v: '뭐라도 한 줄 나오면 성공이다', trap: 'luck' }
+        ]
+      };
+      break;
+    case 'split-filter-num-sum':
+      define = {
+        q: '나는 ' + ctx.replace(/[을를]$/, '') + '에서 무엇이 나오면 성공이라고 생각하나요?',
+        options: [
+          { v: '화면에 ' + d1result + josa(String(d1result), '이가') + ' 뜨면 성공이다', trap: 'hardcode' },
+          { v: '어떤 목록이 와도 숫자만 골라서 더한 합계가 나오면 성공이다', key: 'filtered_sum', trap: null },
+          { v: '숫자가 나오면 성공이다', trap: 'luck' }
+        ]
+      };
+      break;
   }
 
   /* ── method (방법 문장) ── */
@@ -289,6 +340,19 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
         { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] }
       ];
       break;
+    case 'split-transform-join':
+      sentences = [
+        { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
+        { template: '각 ' + item + josa(item, '을를') + ' {op}.', slot: 'op', options: ['앞뒤 공백을 없앤다', '첫 글자만 남긴다'] },
+        { template: '{joinSep}로 다시 합친다.', slot: 'joinSep', options: ['쉼표', '공백'] }
+      ];
+      break;
+    case 'split-filter-num-sum':
+      sentences = [
+        { template: ctx + ' {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
+        { template: (d.filterDesc || '숫자가 아닌 항목') + '을 {cond}.', slot: 'cond', options: ['빼고 숫자만 남긴다', '그대로 둔다'] }
+      ];
+      break;
   }
 
   var mission = {
@@ -302,7 +366,7 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
     inputs: inputs
   };
 
-  if (pipelineId === 'split-filter-count' && d.filterTarget) {
+  if ((pipelineId === 'split-filter-count' || pipelineId === 'split-filter-num-sum') && d.filterTarget) {
     mission.pipelineParams = { filterTarget: d.filterTarget };
   }
 
