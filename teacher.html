@@ -458,39 +458,44 @@ window.CC_SUPABASE = {
       if (pipeLabel) draft += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">' + esc(pipeLabel) + '</span>';
       draft += '</div>';
 
-      /* 편집 가능 필드 */
+      /* 문제 이름 */
       draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 이름</label>';
-      draft += '<input id="draft-title" style="' + inputStyle + ';margin-bottom:8px" value="' + esc(m.title) + '">';
+      draft += '<input id="draft-title" style="' + inputStyle + ';margin-bottom:10px" value="' + esc(m.title) + '">';
 
-      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 내용 (업무 요청)</label>';
-      draft += '<input id="draft-brief" style="' + inputStyle + ';margin-bottom:8px" value="' + esc(m.brief) + '">';
+      /* 문제 내용 */
+      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 내용 (학생에게 보이는 업무 요청)</label>';
+      draft += '<input id="draft-brief" style="' + inputStyle + ';margin-bottom:10px" value="' + esc(m.brief) + '">';
 
-      /* 핵심 개념 (읽기용) */
-      draft += '<div style="padding:8px 10px;background:var(--green-soft);border:1px solid var(--green);border-radius:8px;margin-bottom:10px;font-size:12.5px;line-height:1.6">';
-      draft += '<b style="color:var(--green)">적용된 핵심 개념</b><br>';
-      draft += '<b>수업:</b> ' + esc(m.lesson || '') + '<br>';
-      draft += '<b>핵심:</b> ' + esc(m.keyPoint || '') + '<br>';
-      draft += '<b>유형:</b> ' + esc(pipeLabel) + ' — 학생이 ' + (m.method && m.method.sentences ? m.method.sentences.length : 0) + '개 빈칸을 선택';
-      draft += '</div>';
-
-      /* 성공 조건 보기 (읽기용) */
+      /* 성공 조건 — 문제 내용 바로 아래 */
       if (m.define && m.define.options) {
-        draft += '<div style="font-size:12.5px;margin-bottom:8px"><b>성공 조건 보기:</b><br>';
+        draft += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px">';
+        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">성공 조건 보기 (학생이 고르는 선택지)</div>';
         m.define.options.forEach(function (o) {
-          var tag = o.trap === 'hardcode' ? ' <span style="color:var(--coral);font-weight:700">[하드코딩 함정]</span>'
-            : o.trap === 'luck' ? ' <span style="color:var(--amber);font-weight:700">[요행 함정]</span>'
-            : ' <span style="color:var(--green);font-weight:700">[진짜]</span>';
-          draft += '&nbsp;&nbsp;· ' + esc(o.v) + tag + '<br>';
+          var bg, label;
+          if (o.trap === 'hardcode') { bg = 'var(--coral-soft)'; label = '<span style="color:var(--coral);font-size:11px;font-weight:700">하드코딩 함정</span>'; }
+          else if (o.trap === 'luck') { bg = 'var(--amber-soft,#FFF3DC)'; label = '<span style="color:var(--amber);font-size:11px;font-weight:700">요행 함정</span>'; }
+          else { bg = 'var(--green-soft)'; label = '<span style="color:var(--green);font-size:11px;font-weight:700">진짜 성공</span>'; }
+          draft += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;margin-bottom:3px;border-radius:6px;background:' + bg + ';font-size:13px">';
+          draft += '<span>' + esc(o.v) + '</span>' + label + '</div>';
         });
         draft += '</div>';
       }
 
+      /* 핵심 개념 */
+      draft += '<div style="padding:8px 10px;background:var(--green-soft);border:1px solid var(--green);border-radius:8px;margin-bottom:10px;font-size:12.5px;line-height:1.6">';
+      draft += '<b style="color:var(--green)">적용된 핵심 개념</b><br>';
+      draft += '<b>수업:</b> ' + esc(m.lesson || '') + ' · <b>핵심:</b> ' + esc(m.keyPoint || '') + '<br>';
+      draft += '<b>유형:</b> ' + esc(pipeLabel) + ' — 학생이 ' + (m.method && m.method.sentences ? m.method.sentences.length : 0) + '개 빈칸을 선택';
+      draft += '</div>';
+
       /* 자료 편집 */
       draft += '<div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px">자료 (쉼표로 구분)</div>';
       (m.inputs || []).forEach(function (inp, i) {
+        var isCounter = (i === (m.inputs || []).length - 1);
         draft += '<div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">';
         draft += '<input class="draft-data-name" data-idx="' + i + '" style="' + inputStyle + ';flex:0 0 120px" value="' + esc(inp.name) + '">';
         draft += '<input class="draft-data-val" data-idx="' + i + '" style="' + inputStyle + ';flex:1;font-family:var(--mono)" value="' + esc(inp.v) + '">';
+        if (isCounter) draft += '<span style="font-size:11px;color:var(--coral);white-space:nowrap;font-weight:600">반례</span>';
         draft += '</div>';
       });
 
