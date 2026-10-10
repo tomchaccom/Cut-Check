@@ -56,7 +56,9 @@
       defineVer: 0,
       runs: [],
       judges: [],
-      allDataDone: false
+      allDataDone: false,
+      codeText: '',
+      codeOutput: ''
     };
 
     /* 화면 1 */
@@ -315,18 +317,21 @@
       $('#design-steps').innerHTML = steps.map(function (s) { return '<div>' + esc(s) + '</div>'; }).join('');
     }
 
-    /* 자료 드롭다운 */
+    /* 자료 드롭다운 — clone으로 이전 리스너 제거 */
     var dataSel = $('#code-data-select');
     if (dataSel && M) {
-      dataSel.innerHTML = '';
+      var fresh = dataSel.cloneNode(false);
+      dataSel.parentNode.replaceChild(fresh, dataSel);
       M.inputs.forEach(function (inp) {
         var o = document.createElement('option');
         o.value = inp.v; o.textContent = inp.name;
-        dataSel.appendChild(o);
+        fresh.appendChild(o);
       });
       if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + M.inputs[0].v + '"';
-      dataSel.addEventListener('change', function () {
+      fresh.addEventListener('change', function () {
         if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + this.value + '"';
+        var editor = $('#code-editor');
+        if (editor) editor.value = editor.value.replace(/^data = ".*"/m, 'data = "' + this.value + '"');
       });
     }
 
@@ -357,15 +362,7 @@
     if ($('#go-wrap')) $('#go-wrap').style.display = 'none';
   }
 
-  /* 자료 변경 시 data 변수 업데이트 */
-  if ($('#code-data-select')) {
-    $('#code-data-select').addEventListener('change', function () {
-      var editor = $('#code-editor');
-      if (editor) {
-        editor.value = editor.value.replace(/^data = ".*"/m, 'data = "' + this.value + '"');
-      }
-    });
-  }
+  /* 자료 변경 시 data 변수 업데이트 — renderCodeStep 내부에서만 등록 */
 
   /* 실행 버튼 */
   if ($('#run-code')) {
@@ -445,12 +442,13 @@
     $('#go-wrap').addEventListener('click', function () { renderWrapStep(); showStep(5); });
   }
 
-  /* ── 기존 화면 4 (하위 호환) ─────────────────── */
+  /* ── 기존 화면 4 (하위 호환 — HTML에서 제거된 요소는 스킵) ── */
   function renderRunStep() {
-    $('#cfg-define').textContent = state.defineChoice;
-    $('#cfg-method').textContent = summarizeMethod();
+    if ($('#cfg-define')) $('#cfg-define').textContent = state.defineChoice;
+    if ($('#cfg-method')) $('#cfg-method').textContent = summarizeMethod();
 
     var runner = $('#data-runner');
+    if (!runner) return; /* 코드 작성 화면에서는 data-runner 없음 */
     runner.innerHTML = '';
 
     M.inputs.forEach(function (inp, idx) {

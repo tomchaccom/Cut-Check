@@ -59,13 +59,15 @@
       case 'filter': {
         var tgt = params.filterTarget;
         var cond = slots.cond;
+        /* 포함/있는/빼고 숫자만 남긴다 등 다양한 표현을 정규화 */
+        var keep = (cond === '있는' || cond === '포함' || (cond && cond.indexOf('남긴다') !== -1));
         var fn;
         if (Array.isArray(tgt)) {
-          fn = (cond === '있는' || cond === '포함')
+          fn = keep
             ? function (x) { return tgt.indexOf(x.trim()) !== -1; }
             : function (x) { return tgt.indexOf(x.trim()) === -1; };
         } else {
-          fn = (cond === '포함' || cond === '있는')
+          fn = keep
             ? function (x) { return x.indexOf(tgt) !== -1; }
             : function (x) { return x.indexOf(tgt) === -1; };
         }
@@ -85,11 +87,12 @@
       }
       case 'transform': {
         var arg = params.transformArg || '';
+        var op = slots.op || '';
         var tfn;
-        if (slots.op === '공백제거')       tfn = function (x) { return x.trim(); };
-        else if (slots.op === '앞에붙이기') tfn = function (x) { return arg + x.trim(); };
-        else if (slots.op === '뒤에붙이기') tfn = function (x) { return x.trim() + arg; };
-        else if (slots.op === '첫글자만')   tfn = function (x) { return x.trim().charAt(0); };
+        if (op === '공백제거' || op.indexOf('공백') !== -1)    tfn = function (x) { return x.trim(); };
+        else if (op === '앞에붙이기')                          tfn = function (x) { return arg + x.trim(); };
+        else if (op === '뒤에붙이기')                          tfn = function (x) { return x.trim() + arg; };
+        else if (op === '첫글자만' || op.indexOf('첫') !== -1) tfn = function (x) { return x.trim().charAt(0); };
         else tfn = function (x) { return x; };
         return { t: 'list', v: val.map(tfn) };
       }

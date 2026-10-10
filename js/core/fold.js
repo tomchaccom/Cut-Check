@@ -52,7 +52,12 @@
       sHelps: 0,
       sWrap: null,
       sMethodVer: 0,
-      sDefineVer: 0
+      sDefineVer: 0,
+
+      /* 코드 작성 */
+      sDesign: null,         /* { define, slots, pipelineId } */
+      sCodes: [],            /* [{ code, dataId, output, error, t }] */
+      sCodeJudges: []        /* [{ verdict, basis, t }] */
     };
   }
 
@@ -118,6 +123,12 @@
         s.sHelps++; break;
       case 's-wrap':
         s.sWrap = e.text; break;
+      case 's-design':
+        s.sDesign = { define: e.define, slots: e.slots, pipelineId: e.pipelineId }; break;
+      case 's-code':
+        s.sCodes.push({ code: e.code, dataId: e.dataId, output: e.output, error: e.error, t: e.t }); break;
+      case 's-code-judge':
+        s.sCodeJudges.push({ verdict: e.verdict, basis: e.basis, t: e.t }); break;
 
       default: /* 모르는 type 은 무시한다 — 구버전 화면이 새 서버를 만나도 안 죽는다 */ break;
     }

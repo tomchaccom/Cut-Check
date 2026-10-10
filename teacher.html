@@ -295,6 +295,14 @@ window.CC_SUPABASE = {
 
   /* 미션 목록 */
   var editingMissionId = null;
+  var PIPE_LABEL = {
+    'split-unique-count': '세기', 'split-count': '세기',
+    'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
+    'split-sort-join': '정렬', 'split-num-sum': '합계',
+    'split-num-max': '최대값', 'split-num-min': '최소값',
+    'split-group': '묶어서 세기', 'split-transform-join': '정리하기',
+    'split-filter-num-sum': '걸러서 합계'
+  };
 
   function loadMissions() {
     if (!selectedRoom) return;
@@ -306,15 +314,7 @@ window.CC_SUPABASE = {
         var card = el('div', 'mission-card');
         card.style.cssText = 'cursor:default;padding:16px';
 
-        /* 헤더: 제목 + 유형 뱃지 — 간결하게 */
-        var PIPE_LABEL = {
-          'split-unique-count': '세기', 'split-count': '세기',
-          'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
-          'split-sort-join': '정렬', 'split-num-sum': '합계',
-          'split-num-max': '최대값', 'split-num-min': '최소값',
-          'split-group': '묶어서 세기', 'split-transform-join': '정리하기',
-          'split-filter-num-sum': '걸러서 합계'
-        };
+        /* 헤더: 제목 + 유형 뱃지 */
         var header = el('div');
         header.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
         header.appendChild(el('div', 'mc-title', d.title || ''));
@@ -408,12 +408,7 @@ window.CC_SUPABASE = {
       btn.disabled = false; btn.textContent = '미션 초안 생성';
 
       /* ── 초안 편집 폼 ── */
-      var PIPE_LABEL = {
-        'split-unique-count': '나누고 세기', 'split-count': '세기',
-        'split-filter-count': '걸러내기', 'split-filter-join': '걸러서 합치기',
-        'split-sort-join': '정렬', 'split-num-sum': '숫자 합계',
-        'split-num-max': '최대값', 'split-num-min': '최소값', 'split-group': '묶어서 세기'
-      };
+      /* PIPE_LABEL은 미션 카드 렌더링(위)에서 이미 정의됨 — 재사용 */
       var pipeLabel = m.pipelineId ? (PIPE_LABEL[m.pipelineId] || m.pipelineId) : '';
       var inputStyle = 'width:100%;padding:8px 12px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit';
 
