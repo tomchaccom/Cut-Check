@@ -61,6 +61,10 @@
 
     /* 화면 1 */
     $('#brief').textContent = M.brief;
+    if ($('#situation')) {
+      if (M.situation) { $('#situation').textContent = M.situation; $('#situation').hidden = false; }
+      else { $('#situation').hidden = true; }
+    }
     $('#sample-data').textContent = M.inputs[0].v;
     $('#sample-label').textContent = M.inputs[0].name;
     if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';

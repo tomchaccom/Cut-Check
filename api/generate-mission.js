@@ -66,22 +66,22 @@ var PIPELINE_PROMPTS = {
   'split-unique-count': {
     desc: '"목록에서 항목 세기" 상황',
     extra: '',
-    example: '{ "title": "동아리 신청 정리", "brief": "신청서가 왔어요. 몇 명인지 알려주세요.", "domain": "동아리", "itemName": "학생", "methodContext": "신청서를", "data": [{ "name": "월요일 신청", "items": ["민수","지우","현우"] }, { "name": "화요일 신청", "items": ["서연","도윤","하은","민준"] }] }'
+    example: '{ "title": "동아리 신청 정리", "brief": "학생회에서 동아리 신청서를 모았어요. 같은 학생이 두 번 쓴 것도 있는데, 신청한 학생이 실제로 몇 명인지 알아봐야 해요.", "situation": "동아리 모집 기간이라 신청서가 쏟아지고 있어요.", "domain": "동아리", "itemName": "학생", "methodContext": "신청서를", "data": [{ "name": "월요일 신청", "items": ["민수","지우","현우"] }, { "name": "화요일 신청", "items": ["서연","도윤","하은","민준"] }] }'
   },
   'split-filter-count': {
     desc: '"목록에서 조건에 맞는 것만 골라내기" 상황',
     extra: '"filterTarget": 걸러낼 대상 목록(2~3개). data의 items에 filterTarget 항목이 최소 1개 포함되어야 합니다.\n"filterDesc": 걸러낼 대상의 이름 (명사형, 2~4글자. 예: "알레르기 목록", "위험 재료", "연체 도서"). 반드시 포함하세요.',
-    example: '{ "title": "급식에서 알레르기 재료 찾기", "brief": "급식 재료가 왔어요. 주의할 게 몇 개인지 알려주세요.", "domain": "급식", "itemName": "재료", "methodContext": "재료 목록을", "filterDesc": "알레르기 목록", "filterTarget": ["우유","달걀","땅콩"], "data": [{ "name": "월요일 재료", "items": ["밥","우유","김치","떡"] }, { "name": "화요일 재료", "items": ["빵","달걀","과자","국","우유"] }] }'
+    example: '{ "title": "급식에서 알레르기 재료 찾기", "brief": "영양사 선생님이 이번 주 급식 재료 목록을 보내셨어요. 알레르기가 있는 학생이 있어서, 주의해야 할 재료가 몇 개 들어 있는지 확인해달래요.", "situation": "우리 반이 급식 당번이에요. 알레르기 재료를 미리 체크해야 해요.", "domain": "급식", "itemName": "재료", "methodContext": "재료 목록을", "filterDesc": "알레르기 목록", "filterTarget": ["우유","달걀","땅콩"], "data": [{ "name": "월요일 재료", "items": ["밥","우유","김치","떡"] }, { "name": "화요일 재료", "items": ["빵","달걀","과자","국","우유"] }] }'
   },
   'split-sort-join': {
     desc: '"목록을 정렬하기" 상황',
     extra: '',
-    example: '{ "title": "대기 명단 정리", "brief": "이름이 뒤섞여 있어요. 정리해주세요.", "domain": "접수", "itemName": "이름", "methodContext": "명단을", "data": [{ "name": "오전 접수", "items": ["지우","민수","하은"] }, { "name": "오후 접수", "items": ["서연","도윤","현우","가은"] }] }'
+    example: '{ "title": "체육대회 대기 명단 정리", "brief": "체육대회 접수 명단이 왔는데 순서가 뒤섞여 있어요. 이름순으로 정리해서 안내판에 붙여야 해요.", "situation": "체육대회 접수를 받았는데 순서가 엉망이에요.", "domain": "체육대회", "itemName": "이름", "methodContext": "명단을", "data": [{ "name": "오전 접수", "items": ["지우","민수","하은"] }, { "name": "오후 접수", "items": ["서연","도윤","현우","가은"] }] }'
   },
   'split-num-sum': {
     desc: '"숫자 목록에서 합계 구하기" 상황',
     extra: '중요: data의 items는 반드시 정수(숫자)여야 합니다.',
-    example: '{ "title": "용돈 기입장 계산", "brief": "이번 주 지출이 얼마인지 알려주세요.", "domain": "용돈", "itemName": "금액", "methodContext": "지출 목록을", "data": [{ "name": "월요일 지출", "items": [1000,2000,500] }, { "name": "화요일 지출", "items": [3000,1500,800,200] }] }'
+    example: '{ "title": "이번 주 용돈 지출 계산", "brief": "엄마가 이번 주에 얼마 썼는지 알려달래요. 매일 쓴 금액이 적혀 있는데 합쳐서 알려줘야 해요.", "situation": "용돈을 받으면 매일 얼마 썼는지 기록하고 있어요.", "domain": "용돈", "itemName": "금액", "methodContext": "지출 목록을", "data": [{ "name": "월요일 지출", "items": [1000,2000,500] }, { "name": "화요일 지출", "items": [3000,1500,800,200] }] }'
   },
   'split-group': {
     desc: '"목록에서 같은 것끼리 묶어 세기" 상황',
@@ -91,12 +91,12 @@ var PIPELINE_PROMPTS = {
   'split-transform-join': {
     desc: '"목록의 각 항목을 변환하기" 상황',
     extra: '중요: data의 items 중 일부에 앞뒤 공백이 있어야 합니다 (예: " 사과 "). 공백 제거 변환이 의미 있으려면 공백이 있어야 합니다.',
-    example: '{ "title": "출석부 이름 정리하기", "brief": "출석부가 왔는데 이름이 지저분해요. 정리해주세요.", "domain": "학급", "itemName": "이름", "methodContext": "출석부를", "data": [{ "name": "1교시 출석", "items": [" 민수","지우 "," 현우 "] }, { "name": "2교시 출석", "items": ["서연 "," 도윤","하은"," 가은"] }] }'
+    example: '{ "title": "출석부 이름 깔끔하게 정리", "brief": "담임 선생님이 출석부를 주셨는데, 이름 앞뒤에 공백이 들어가 있어서 컴퓨터가 같은 이름을 다른 이름으로 인식해요. 깔끔하게 정리해달래요.", "situation": "출석부를 엑셀에 옮겨야 하는데 공백 때문에 오류가 나요.", "domain": "학급", "itemName": "이름", "methodContext": "출석부를", "data": [{ "name": "1교시 출석", "items": [" 민수","지우 "," 현우 "] }, { "name": "2교시 출석", "items": ["서연 "," 도윤","하은"," 가은"] }] }'
   },
   'split-filter-num-sum': {
     desc: '"숫자와 글자가 섞인 목록에서 숫자만 골라 합계 구하기" 상황',
     extra: '"filterTarget": 숫자가 아닌 항목 목록(2~3개). data의 items에 숫자와 글자가 섞여 있어야 합니다.\n"filterDesc": 걸러낼 대상 설명 (예: "숫자가 아닌 항목", "잘못 입력된 값")',
-    example: '{ "title": "용돈 기입장에서 숫자만 합치기", "brief": "기입장에 글자가 섞여 있어요. 숫자만 골라서 합쳐주세요.", "domain": "용돈", "itemName": "항목", "methodContext": "기입장을", "filterDesc": "숫자가 아닌 항목", "filterTarget": ["메모","간식","교통"], "data": [{ "name": "월요일 기록", "items": ["1000","메모","2000","500"] }, { "name": "화요일 기록", "items": ["3000","간식","1500","교통","800"] }] }'
+    example: '{ "title": "용돈 기입장에서 진짜 금액만 더하기", "brief": "용돈 기입장에 금액 사이에 메모가 섞여 있어요. 글자는 빼고 숫자만 골라서 이번 주에 얼마 썼는지 합쳐야 해요.", "situation": "기입장을 대충 쓰다 보니 숫자랑 글자가 섞여버렸어요.", "domain": "용돈", "itemName": "항목", "methodContext": "기입장을", "filterDesc": "숫자가 아닌 항목", "filterTarget": ["메모","간식","교통"], "data": [{ "name": "월요일 기록", "items": ["1000","메모","2000","500"] }, { "name": "화요일 기록", "items": ["3000","간식","1500","교통","800"] }] }'
   }
 };
 
@@ -111,14 +111,18 @@ function buildPrompt(pipelineId, lesson, keyPoint) {
     '규칙:',
     '1. 자료 항목은 실제 한국어 단어. "항목A", "노래1" 금지.',
     '2. 자료 이름은 구체적. "자료 1", "데이터 1" 금지.',
-    '3. brief는 모호하게. 답을 암시하지 않음. "서로 다른", "전체", "합계" 등 금지.',
-    '4. title은 중학생이 바로 알아듣는 구체적 상황. 15자 이내.',
-    '   - "급식에서 알레르기 재료 찾기" (O) — 무슨 일인지 바로 앎',
-    '   - "우편물 분류" (X) — 추상적, 중학생이 안 해본 일',
-    '   - "데이터 처리" (X) — 컴퓨터 용어',
-    '5. 한국어만. 한자·일본어·영어 금지.',
-    '6. data는 정확히 2개. 각각 항목 3~5개.',
-    '7. methodContext는 "~를" 또는 "~을"로 끝남.',
+    '3. title은 중학생이 바로 알아듣는 구체적 상황. 15자 이내.',
+    '   - "급식에서 알레르기 재료 찾기" (O)',
+    '   - "우편물 분류" (X) — 추상적',
+    '4. brief는 2~3문장으로 구체적 상황을 설명하되 방법은 알려주지 않음. 80자 이내.',
+    '   누가 부탁했는지, 왜 필요한지, 뭘 해야 하는지를 포함.',
+    '   - "영양사 선생님이 이번 주 급식 재료 목록을 보내셨어요. 알레르기가 있는 학생이 있어서, 주의해야 할 재료가 몇 개 들어 있는지 확인해달래요." (O)',
+    '   - "재료 목록을 정리해주세요." (X) — 너무 짧고 뭘 해야 하는지 모름',
+    '5. situation은 학생이 왜 이 일을 하는지 배경을 1~2문장으로. 50자 이내.',
+    '   - "우리 반이 급식 당번이에요. 알레르기 재료를 미리 체크해야 해요." (O)',
+    '6. 한국어만. 한자·일본어·영어 금지.',
+    '7. data는 정확히 2개. 각각 항목 3~5개.',
+    '8. methodContext는 "~를" 또는 "~을"로 끝남.',
     '',
     'JSON만 응답하세요.'
   ].join('\n');
@@ -360,6 +364,7 @@ function assembleMission(pipelineId, d, lesson, keyPoint) {
     pipelineId: pipelineId,
     stage: d.domain || '수업',
     title: d.title, brief: d.brief,
+    situation: d.situation || '',
     lesson: lesson, keyPoint: keyPoint,
     define: define,
     method: { sentences: sentences },
@@ -405,7 +410,8 @@ async function generate(lesson, keyPoint) {
 
   /* ── 후처리 1: 텍스트 정리 ── */
   d.title = strip(d.title || '').substring(0, 20);
-  d.brief = strip(d.brief || '').substring(0, 50);
+  d.brief = strip(d.brief || '').substring(0, 100);
+  d.situation = strip(d.situation || '');
   d.itemName = strip(d.itemName || '항목').replace(/[은는]$/, '');
   d.methodContext = strip(d.methodContext || '목록을');
   if (!/[을를]$/.test(d.methodContext)) d.methodContext += '를';
