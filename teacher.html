@@ -58,6 +58,11 @@
 
     <!-- [학생 현황] -->
     <div class="dtab active" id="dtab-students">
+      <section id="alerts" hidden>
+        <h3 class="alerts-title">최근 알림</h3>
+        <ol id="alert-list" class="alert-list"></ol>
+      </section>
+      <div id="toasts" class="toasts" aria-live="polite"></div>
       <div class="livebar" id="livebar"></div>
       <div class="tiles" id="tiles"></div>
       <div class="tcols">
@@ -135,6 +140,7 @@ window.CC_SUPABASE = {
 <script src="js/core/events.js"></script>
 <script src="js/core/fold.js"></script>
 <script src="js/core/hangul.js"></script>
+<script src="js/core/alerts.js"></script>
 <script src="js/data/api.js"></script>
 <script src="js/data/store.js"></script>
 <script src="js/core/blocks.js"></script>
@@ -236,6 +242,8 @@ window.CC_SUPABASE = {
     loadMissions();
     loadStudents();
     loadStudentEvents();
+    clearInterval(eventTimer);
+    eventTimer = setInterval(loadStudentEvents, 5000);
   }
 
   /* 학생 명단 로드 */
@@ -259,6 +267,7 @@ window.CC_SUPABASE = {
     });
   }
 
+  var eventTimer = null;
   /* 학생 이벤트 로드 → 대시보드에 반영 */
   function loadStudentEvents() {
     if (!selectedRoom || !CC.sb.active()) return;

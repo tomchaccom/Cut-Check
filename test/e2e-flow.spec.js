@@ -87,3 +87,16 @@ test('학생 해결 → 설계도 → 코드 → 완료 → 교사 화면', asyn
   await expect(t.locator('body')).toContainText('코드 실행');
   await expect(t.locator('body')).toContainText('처음 생각보다 나눌 게 많았다.');
 });
+
+test('학생이 설계도를 내면 교사 화면에 알림이 뜬다', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  const t = await context.newPage();
+  await t.goto(BASE + '/teacher.html');
+  await expect(t.locator('.toast')).toHaveCount(0);     // 처음 연 때는 조용하다
+  await studentToCode(page);
+  await expect(t.locator('.toast')).toContainText('설계도를 냈어요.', { timeout: 5000 });
+  await expect(t.locator('#alert-list li')).toHaveCount(1);
+  await t.reload();
+  await expect(t.locator('.toast')).toHaveCount(0);     // 새로고침해도 쏟아지지 않는다
+});

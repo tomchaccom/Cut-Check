@@ -17,11 +17,12 @@
   };
   /* Supabase 연결 시 실제 학생 데이터 사용. 미연결 시 목업 폴백. */
   var C = CC.classroom;
+  var me = null;
   if (CC.sb && CC.sb.active()) {
     /* 목업 학생 제거 — 실제 데이터만 사용 */
     C.students = [];
   } else {
-    var me = CC.store ? CC.store.fold('나') : null;
+    me = CC.store ? CC.store.fold('나') : null;
     if (me) C.students = [me].concat(C.students);
   }
   var J = function (w, pair) { return CC.particle(w, pair); };
@@ -411,6 +412,24 @@
     }
   }
 
+  /* ── 교사 알림 ─────────────────────────────────── */
+  var lastSnap = null;
+  function showAlert(a) {
+    var text = CC.alerts.say(a);
+    var host = $('#toasts');
+    if (host) {
+      var toast = el('div', 'toast', text);
+      host.appendChild(toast);
+      setTimeout(function () { toast.remove(); }, 5000);
+    }
+    var list = $('#alert-list');
+    if (list) {
+      list.insertBefore(el('li', null, text), list.firstChild);
+      while (list.children.length > 10) list.removeChild(list.lastChild);
+      $('#alerts').hidden = false;
+    }
+  }
+
   /* ── 대시보드 렌더 (외부에서 호출 가능) ──────────── */
   function renderDashboard() {
     tiles();
@@ -454,7 +473,20 @@
         banner.appendChild(el('span', 'txt', '실제 학생 ' + sActive.length + '명의 활동이 있어요.'));
       }
     }
+
+    var nowSnap = CC.alerts.snap(C.students);
+    CC.alerts.diff(lastSnap, nowSnap).forEach(showAlert);
+    lastSnap = nowSnap;
   }
+
+  /* 로컬 모드: 학생 탭이 기록하면 브라우저가 storage 이벤트를 준다. 폴링이 필요 없다. */
+  window.addEventListener('storage', function () {
+    if (CC.sb && CC.sb.active()) return;
+    var fresh = CC.store ? CC.store.fold('나') : null;
+    C.students = C.students.filter(function (s) { return s !== me && s.id !== (fresh && fresh.id); });
+    if (fresh) { me = fresh; C.students = [fresh].concat(C.students); }
+    renderDashboard();
+  });
 
   /* 외부에서 호출할 수 있게 노출 */
   CC._renderDashboard = renderDashboard;
