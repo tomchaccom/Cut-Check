@@ -251,4 +251,9 @@ URL 은 `/api/generate-mission` 을 유지해 `teacher.html`·`debug.html`·`tes
 - 완료: `api/_schema.py`, `api/_pipeline.py`, 테스트 2개 (2026-10-16)
 - 엔진 동등성 테스트가 기존 엔진 버그 2개를 드러냈고 함께 고쳤다
   ('빼고 숫자만 남긴다' 가 거꾸로 돌던 것, '각각 남긴다' 가 무시되던 것)
-- 남은 것: `api/generate-mission.py` 핸들러(LLM 호출·재요청·부분 폴백), 교사 화면 7절, 9절 확인 1~3
+- 완료: `api/_generate.py` + `api/generate-mission.py` 핸들러, 교사 화면 7절, `vercel.json` maxDuration 60초,
+  기존 `api/generate-mission.js` 삭제 (2026-10-16)
+- 정한 것: 재요청에서 고쳐 온 1차 사유는 `guard` 에 넣지 않고 서버 로그로만 남긴다.
+  교사 화면의 `guard.reasons` 는 "왜 기본 틀인지" 만 말한다
+- 남은 것: 9절 확인 1(structured output 지원)·2(하이픈 파일명 라우트) — 실제 키와 `vercel dev` 가 필요하다.
+  코드는 json_schema 가 400 으로 거절되면 json_object 로 내려가게 해 두었다

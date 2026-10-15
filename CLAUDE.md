@@ -163,9 +163,10 @@ node test/robust.js          # 학생 자유 입력이 선생님 화면까지 �
 # 미션 생성 서버(api/*.py) — venv 없이 uv 가 pydantic 을 준비한다
 uv run --with-requirements requirements.txt python test/test_missionguard.py     # 생성 미션 검사 + 우리 미션 문장
 uv run --with-requirements requirements.txt python test/test_pipeline_parity.py  # JS·Python 엔진이 같은 답을 내는지
+uv run --with-requirements requirements.txt python test/test_generate.py         # LLM 을 가짜로 끼워 재요청·칸별 폴백 흐름
 ```
 
-여덟 다 통과해야 커밋한다. `js/core/pipeline.js` 를 고치면 `api/_pipeline.py` 도 같이 고친다.
+아홉 다 통과해야 커밋한다. `js/core/pipeline.js` 를 고치면 `api/_pipeline.py` 도 같이 고친다.
 브라우저 경로가 다르면 `CC_CHROME=/path/to/chrome node test/smoke.js`.
 
 학생의 자유 입력(직접 쓴 성공 조건, 마무리 문장, 만든 미션)은 **반드시 교사 화면에
