@@ -100,6 +100,9 @@ SPEC = {pid: _spec(pid) for pid in WHITELIST}
 PRAISE = re.compile(r'(잘했|훌륭|대단|멋지|최고|완벽|참 잘)')
 CODE = re.compile(r'(```|split\s*\(|\bfor\b\s+\w+\s+in|\.strip\s*\(|append\s*\(|print\s*\()')
 FOREIGN = re.compile(r'[一-鿿㐀-䶿぀-ヿ]')
+# 중1이 읽는다. 개발 용어는 읽히지 않고, 지시문은 문제가 아니라 숙제처럼 읽힌다.
+JARGON = re.compile(r'로직|데이터|타당성|집계|카운터|알고리즘|프로세스')
+ORDER = re.compile(r'(명시|기술|서술|작성)하(세요|시오)')
 # 화면이 학생에게 말할 때는 존댓말. 반말은 asks.js 에만 허용된다.
 BANMAL = re.compile(r'(봐|해|야|지|어|니|자|래|줘|거든|잖아|냐)[.!?~]*$')
 YOU = re.compile(r'(^|\s)(너|네가|너의|너는|너도)(\s|$)')
@@ -115,6 +118,12 @@ def _text_problem(v):
         return '코드 조각 — 베껴 쓸 답을 준다'
     if FOREIGN.search(v):
         return '한자·일본어 — 한국어만 쓴다'
+    m = JARGON.search(v)
+    if m:
+        return f"개발 용어 '{m.group(0)}' — 중1이 읽는 문장이다"
+    m = ORDER.search(v)
+    if m:
+        return f"지시문 '{m.group(0)}' — 학생에게 일을 맡기는 요청문으로 쓴다"
 
 
 def _sentence_problem(v):
