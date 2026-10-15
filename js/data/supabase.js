@@ -182,7 +182,7 @@
       return sb.from('student_events').select('*, profiles(name)')
         .eq('classroom_id', classroomId)
         .order('created_at', { ascending: true })
-        .then(function (r) { return r.data || []; });
+        .then(function (r) { return r.error ? null : (r.data || []); }); /* 실패는 null — 빈 목록과 구분한다 */
     },
 
     getMyEvents: function (classroomId, missionId) {

@@ -32,7 +32,8 @@
   }
 
   function say(a) {
-    var who = a.name + CC.particle(a.name, '이/가');
+    /* 로컬 모드 학생 이름은 '나' — 나+가 는 '내가' */
+    var who = a.name === '나' ? '내가' : a.name + CC.particle(a.name, '이/가');
     return a.kind === 'design' ? who + ' 설계도를 냈어요.' : who + ' 코드 결과를 판정했어요.';
   }
 
