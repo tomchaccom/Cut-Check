@@ -45,7 +45,9 @@ function launchOpts() {
   await p.locator('#tutor-q').fill(EVIL);
   await p.locator('#tutor-send').click(); await p.waitForTimeout(300);
   await p.locator('#tutor-close').click();
-  await p.locator('#run-code').click(); await p.waitForTimeout(200);
+  await p.waitForFunction(() => document.querySelector('#pyodide-status').textContent === 'Python 준비 완료', null, { timeout: 60000 });
+  await p.locator('#run-code').click();
+  await p.locator('#code-output').waitFor({ state: 'visible', timeout: 10000 });
   await p.locator('.judge-btn').first().click();
   await p.locator('#code-basis').fill(EVIL);
   await p.locator('#code-judge-save').click();

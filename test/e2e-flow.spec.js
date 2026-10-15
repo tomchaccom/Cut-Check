@@ -135,3 +135,40 @@ test('튜터: 서버가 없으면 쓸 수 없다고만 말하고, 있으면 답�
   const evs = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.log.v1') || '[]'));
   expect(evs.filter(e => e.type === 's-tutor').length).toBe(2);
 });
+
+test('무한루프는 5초 뒤 멈추고 화면은 살아 있다', async ({ context, page }) => {
+  test.setTimeout(180000);
+  await local(context);
+  await seedMission(page);
+  await studentToCode(page);
+  await waitPython(page);
+  await page.locator('#code-editor').fill('data = "a"\nwhile True:\n    pass\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#run-code')).toBeDisabled();
+  await page.locator('#back-method').click();                          // 그동안에도 화면은 반응한다
+  await expect(page.locator('#step3')).toHaveClass(/active/);
+  await page.locator('#go-run').click();
+  await expect(page.locator('#code-result')).toHaveText('5초 안에 끝나지 않아서 멈췄어요.', { timeout: 10000 });
+  await expect(page.locator('#run-code')).toBeDisabled();              // 새 worker 준비 전
+  await waitPython(page);
+  await page.locator('#code-editor').fill('data = "a"\nprint(1)\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toHaveText('1', { timeout: 10000 });
+  const evs = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.log.v1') || '[]'));
+  expect(evs.some(e => e.type === 's-code' && e.error === '5초 안에 끝나지 않아서 멈췄어요.')).toBe(true);
+});
+
+test('input() 과 에러는 위치와 사실만', async ({ context, page }) => {
+  test.setTimeout(120000);
+  await local(context);
+  await seedMission(page);
+  await studentToCode(page);
+  await waitPython(page);
+  await page.locator('#code-editor').fill('data = "a"\nx = input()\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toContainText('input()을 쓸 수 없어요', { timeout: 10000 });
+  await waitPython(page);
+  await page.locator('#code-editor').fill('data = "a"\nparts = 1\nprint(pars)\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toHaveText(/^3번째 줄: NameError/, { timeout: 10000 });
+});
