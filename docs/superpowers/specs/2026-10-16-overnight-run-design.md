@@ -41,6 +41,8 @@
   리포트에 사유를 적고 다음 작업으로 넘어간다.
 - 로컬 브랜치에만 커밋한다. **push·PR 금지.**
 - 다른 세션이 쓰는 워크트리(`coho` 등)의 파일은 작업 0의 확인 절차 외에는 건드리지 않는다.
+- 문제가 생기면 `docs/트러블슈팅.md` 를 먼저 찾고, 없으면 해결한 뒤 확인된 해결법만 추가한다 (CLAUDE.md "문제가 생기면").
+  리포트의 "사람이 판단할 것"에 그날 추가된 항목을 적는다.
 
 ## 3. 작업 순서
 
@@ -62,7 +64,8 @@
 2. 끝났으면 coho 의 미커밋 변경(`api/_generate.py`, `api/_schema.py`, `api/_pipeline.py`,
    `teacher.html`, 테스트 2개, `test/eval_generate.py`, `docs/eval*.md`, `docs/eval*.json`)을
    테스트 통과 확인 후 커밋한다.
-3. 그 커밋에서 새 브랜치 `tomchaccom/overnight-2026-10-17` 를 만들고, 이 스펙 파일을 가져온다.
+3. 그 커밋에서 새 브랜치 `tomchaccom/overnight-2026-10-17` 를 만들고, 브랜치 `tomchaccom/밤새계획실행` 에서
+   이 스펙 파일, `docs/트러블슈팅.md`, `CLAUDE.md` 의 "문제가 생기면" 절을 가져온다 (`git cherry-pick`).
 4. 2.1 의 자동 압축을 설정한다.
 5. 전체 테스트를 돌려 기준선을 기록한다.
 
