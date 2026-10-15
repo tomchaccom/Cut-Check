@@ -414,6 +414,11 @@
 
   /* ── 교사 알림 ─────────────────────────────────── */
   var lastSnap = null;
+  /* Supabase 모드는 첫 기록을 받기 전까지 기준선을 만들지 않는다 (빈 목록이 기준선이 되면
+   * 이미 있던 제출이 전부 새 알림이 된다). 교실을 고를 때마다 다시 시작한다. */
+  var alertsLoaded = !(CC.sb && CC.sb.active());
+  CC._resetAlerts = function () { lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); };
+  CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || []); };
   function showAlert(a) {
     var text = CC.alerts.say(a);
     var host = $('#toasts');
@@ -474,6 +479,7 @@
       }
     }
 
+    if (!alertsLoaded) return;
     var nowSnap = CC.alerts.snap(C.students);
     CC.alerts.diff(lastSnap, nowSnap).forEach(showAlert);
     lastSnap = nowSnap;

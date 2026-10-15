@@ -241,6 +241,7 @@ window.CC_SUPABASE = {
     $('#dashboard').hidden = false;
     loadMissions();
     loadStudents();
+    if (CC._resetAlerts) CC._resetAlerts();
     loadStudentEvents();
     clearInterval(eventTimer);
     eventTimer = setInterval(loadStudentEvents, 5000);
@@ -272,7 +273,7 @@ window.CC_SUPABASE = {
   function loadStudentEvents() {
     if (!selectedRoom || !CC.sb.active()) return;
     CC.sb.getClassroomEvents(selectedRoom.id).then(function (rows) {
-      if (!rows || !rows.length) return;
+      if (!rows || !rows.length) { if (CC._alertsLoaded) CC._alertsLoaded(); return; }
 
       /* sid 별로 이벤트를 묶어서 fold */
       var evs = rows.map(function (r) {
@@ -292,6 +293,7 @@ window.CC_SUPABASE = {
 
       /* classroom 객체에 실제 학생 주입 */
       CC.classroom.students = students;
+      if (CC._alertsLoaded) CC._alertsLoaded(students);
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
       if (typeof CC._renderDashboard === 'function') CC._renderDashboard();
