@@ -338,7 +338,7 @@
     /* 코드 에디터 초기값 */
     var editor = $('#code-editor');
     if (editor && !editor.value) {
-      editor.value = 'data = "' + (M ? M.inputs[0].v : '') + '"\n\n# 설계도를 보고 코드를 작성해봐\n\n';
+      editor.value = 'data = "' + (M ? M.inputs[0].v : '') + '"\n\n# 설계도대로 코드를 써 보세요.\n\n';
     }
 
     /* Tab 키로 들여쓰기 */
@@ -393,7 +393,7 @@
           resultEl.textContent = error;
           resultEl.style.color = 'var(--coral)';
         } else {
-          resultEl.textContent = output || '(출력 없음 — print()를 사용해봐)';
+          resultEl.textContent = output || '출력된 것이 없어요.';
           resultEl.style.color = 'var(--ink)';
         }
       }
@@ -407,7 +407,7 @@
         if (judgeDiv) {
           judgeDiv.hidden = false;
           if ($('#code-judge-q')) {
-            $('#code-judge-q').textContent = '결과는 ' + (output.trim() || '(없음)') + '이야. 네가 정한 성공 조건을 지켰어?';
+            $('#code-judge-q').textContent = '내 성공 조건을 지켰나요?';
           }
           /* 판정 버튼 */
           var btnsDiv = $('#code-judge-btns');
@@ -471,7 +471,7 @@
 
       /* 예상 입력 */
       var predRow = el('div', 'predict-row');
-      var predLabel = el('label', null, '실행하기 전에 — 결과가 어떻게 나올 것 같나요?');
+      var predLabel = el('label', null, '결과가 어떻게 나올 것 같나요?');
       var predInput = el('input');
       predInput.type = 'text';
       predInput.placeholder = '예상한 결과 또는 "아직 모르겠어요"';
@@ -598,7 +598,7 @@
       : Array.isArray(r.value) ? r.value.join(', ')
       : r.value;
     judgeRow.appendChild(el('div', 'judge-q',
-      '출력은 ' + displayValue + '입니다. 내가 정한 성공 조건을 지켰나요?'));
+      '내 성공 조건을 지켰나요?'));
 
     var btns = el('div', 'judge-btns');
     var verdicts = ['지켰다', '지키지 못했다', '아직 판단하기 어렵다'];
