@@ -1,0 +1,1561 @@
+[
+ {
+  "no": 1,
+  "lesson": "파이썬 리스트와 반복문. for문으로 하나씩 꺼내서 처리하는 법",
+  "keyPoint": "같은 값이 여러 번 있을 때 전체와 서로 다른 개수가 다르다",
+  "expect": "split-unique-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a140793b1f",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-sort-join",
+   "stage": "리스트 데이터 비교 분석",
+   "title": "리스트 데이터 비교 분석",
+   "brief": "세 개의 숫자 리스트가 주어집니다. 각 리스트에서 가장 많이 나온 숫자를",
+   "situation": "",
+   "lesson": "파이썬 리스트와 반복문. for문으로 하나씩 꺼내서 처리하는 법",
+   "keyPoint": "같은 값이 여러 번 있을 때 전체와 서로 다른 개수가 다르다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "2가 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "순서대로 늘어서면 성공",
+      "trap": null,
+      "key": "sorted"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "{dir} 늘어놓는다.",
+      "slot": "dir",
+      "options": [
+       "가나다순으로",
+       "거꾸로"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "세트 1",
+     "v": "3 3 5 3 7,2 2 4 2 6,9 1 9 9 8"
+    },
+    {
+     "id": "d02",
+     "name": "세트 2",
+     "v": "4 4 2 2 2,5 5 1 5 5,3 3 3 7 3"
+    },
+    {
+     "id": "d03",
+     "name": "세트 3",
+     "v": "이 세트로도 같은 기준으로 판단할 수 있는지 확인해 보세요. 기준이 깨진",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "situation",
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "situation": [
+      "'찾아보고, 그 숫자가 리스트 전체에 몇 번 나타났는지': 반말 — 학생 화면은 존댓말로 쓴다"
+     ],
+     "sentences": [
+      "'반복문을 사용하여 각 숫자의 출현 빈도를 세어': 반말 — 학생 화면은 존댓말로 쓴다",
+      "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+      "'반복문을 사용하여 각 숫자의 출현 빈도를 세어' 의 빈칸이 {sep} 하나가 아님",
+      "'가장 빈도가 높은 숫자를 선택하는 기준을 세웠' 의 빈칸이 {sep} 하나가 아님",
+      "'이 기준이 항상 타당한지 마지막 데이터 세트로' 의 빈칸이 {sep} 하나가 아님"
+     ],
+     "options": [
+      "진짜 성공 조건이 없음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "situation",
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "situation": [
+     "'찾아보고, 그 숫자가 리스트 전체에 몇 번 나타났는지': 반말 — 학생 화면은 존댓말로 쓴다"
+    ],
+    "sentences": [
+     "'반복문을 사용하여 각 숫자의 출현 빈도를 세어': 반말 — 학생 화면은 존댓말로 쓴다",
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+     "'반복문을 사용하여 각 숫자의 출현 빈도를 세어' 의 빈칸이 {sep} 하나가 아님",
+     "'가장 빈도가 높은 숫자를 선택하는 기준을 세웠' 의 빈칸이 {sep} 하나가 아님",
+     "'이 기준이 항상 타당한지 마지막 데이터 세트로' 의 빈칸이 {sep} 하나가 아님"
+    ],
+    "options": [
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 18661,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 10152,
+    "status": "ok",
+    "chars": 1354
+   },
+   {
+    "mode": "json_schema",
+    "ms": 8484,
+    "status": "ok",
+    "chars": 1419
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"리스트 데이터 비교 분석\",\n    \"brief\": \"세 개의 숫자 리스트가 주어집니다. 각 리스트에서 가장 많이 나온 숫자를\"\n  ,\n    \"situation\": \"찾아보고, 그 숫자가 리스트 전체에 몇 번 나타났는지\"\n  ,\n    \"itemName\": \"데이터 세트\",\n    \"data\": [\n      {\n        \"name\": \"세트 1\",\n        \"items\": [\n          \t\"3, 3, 5, 3, 7\",\n\t\t\"2, 2, 4, 2, 6\",\n\t\t\"9, 1, 9, 9, 8\"\n\t]\n      },\n      {\n        \"name\": \"세트 2\",\n        \"items\": [\n\t\t\"4, 4, 2, 2, 2\",\n\t\t\"5, 5, 1, 5, 5\",\n\t\t\"3, 3, 3, 7, 3\"\n\t]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"세트 3\",\n      \"text\": \"이 세트로도 같은 기준으로 판단할 수 있는지 확인해 보세요. 기준이 깨진\"\n    ,\n      \"axis\": \"count\"\n    }\n  ,\n    \"options\": [\n      {\n        \"v\": \"A\",\n        \"trap\": \"luck\",\n        \"key\": \"counter_example_count\"\n      }\n    ,\n      {\n        \"v\": \"B\",\n        \"trap\": \"hardcode\",\n        \"key\": \"counter_example_count\"\n      }\n    ,\n      {\n        \"v\": \"C\",\n        \"trap\": \"hardcode\",\n        \"key\": \"counter_example_count\"\n      }\n    ,\n      {\n        \"v\": \"D\",\n        \"trap\": \"hardcode\",\n        \"key\": \"counter_example_count\"\n      }\n    ]\n  ,\n    \"pipelineId\": \"split-sort-join\"\n  ,\n    \"sentences\": [\n      {\n\t\"template\": \"반복문을 사용하여 각 숫자의 출현 빈도를 세어\"\n      ,\n\t\"slot\": \"sep\"\n      }\n    ,\n      {\n\t\"template\": \"가장 빈도가 높은 숫자를 선택하는 기준을 세웠\"\n      ,\n\t\"slot\": \"sep\"\n      }\n    ,\n      {\n\t\"template\": \"이 기준이 항상 타당한지 마지막 데이터 세트로\"\n      ,\n\t\"slot\": \"sep\"\n      }\n    ]\n  }\n}",
+   "{\n  \"mission\": {\n    \"title\": \"리스트 데이터 비교 분석\",\n    \"brief\": \"세 개의 숫자 리스트가 주어집니다. 각 리스트에서 가장 많이 나온 숫자를\",\n    \"situation\": \"찾아보고, 그 숫자가 리스트 전체에 몇 번 나타났는지\",\n    \"itemName\": \"데이터 세트\",\n    \"data\": [\n      {\n        \"name\": \"세트 1\",\n        \"items\": [\n          \"3 3 5 3 7\",\n          \"2 2 4 2 6\",\n          \"9 1 9 9 8\"\n        ]\n      },\n      {\n        \"name\": \"세트 2\",\n        \"items\": [\n          \"4 4 2 2 2\",\n          \"5 5 1 5 5\",\n          \"3 3 3 7 3\"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"세트 3\",\n      \"text\": \"이 세트로도 같은 기준으로 판단할 수 있는지 확인해 보세요. 기준이 깨진\"\n    ,\n      \"axis\": \"count\"\n    }\n  ,\n    \"options\": [\n      {\n        \"v\": \"A\",\n        \"trap\": \"luck\",\n        \"key\": \"counter_example_count\"\n      }\n    ,\n      {\n        \"v\": \"B\",\n        \"trap\": \"hardcode\",\n        \"key\": \"counter_example_count\"\n      }\n    ,\n      {\n        \"v\": \"C\",\n        \"trap\": \"hardcode\",\n        \"key\": \"counter_example_count\"\n      }\n    ,\n      {\n        \"v\": \"D\",\n        \"trap\": \"hardcode\",\n        \"key\": \"counter_example_count\"\n      }\n    ]\n  ,\n    \"pipelineId\": \"split-sort-join\"\n  ,\n    \"sentences\": [\n      {\n        \"template\": \"반복문을 사용하여 각 숫자의 출현 빈도를 세어\"\n      ,\n        \"slot\": \"sep\"\n      }\n    ,\n      {\n        \"template\": \"가장 빈도가 높은 숫자를 선택하는 기준을 세웠\"\n      ,\n        \"slot\": \"sep\"\n      }\n    ,\n      {\n        \"template\": \"이 기준이 항상 타당한지 마지막 데이터 세트로\"\n      ,\n        \"slot\": \"sep\"\n      }\n    ]\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "data": [
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다"
+    ]
+   },
+   {
+    "situation": [
+     "'찾아보고, 그 숫자가 리스트 전체에 몇 번 나타났는지': 반말 — 학생 화면은 존댓말로 쓴다"
+    ],
+    "sentences": [
+     "'반복문을 사용하여 각 숫자의 출현 빈도를 세어': 반말 — 학생 화면은 존댓말로 쓴다",
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+     "'반복문을 사용하여 각 숫자의 출현 빈도를 세어' 의 빈칸이 {sep} 하나가 아님",
+     "'가장 빈도가 높은 숫자를 선택하는 기준을 세웠' 의 빈칸이 {sep} 하나가 아님",
+     "'이 기준이 항상 타당한지 마지막 데이터 세트로' 의 빈칸이 {sep} 하나가 아님"
+    ],
+    "options": [
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(2, 2, 4, 2, 6, 3, 3,)가 없음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 2,
+  "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
+  "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
+  "expect": "split-filter-count",
+  "ok": false,
+  "error": "TimeoutError: The read operation timed out",
+  "reasons": {},
+  "ms": 25059,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 25051,
+    "status": "TimeoutError"
+   }
+  ],
+  "raws": [],
+  "attempts": []
+ },
+ {
+  "no": 3,
+  "lesson": "딕셔너리. 키와 값 쌍으로 저장",
+  "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
+  "expect": "split-group",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a14079e2fe",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-unique-count",
+   "stage": "데이터 정리 기준 정하기",
+   "title": "데이터 정리 기준 정하기",
+   "brief": "아래 세 가지 데이터에 대해 공통된 규칙을 정해 보세요. 규칙이 모든 수",
+   "situation": "데이터를 정리하려고 합니다. 다음 세 가지 데이터를 정",
+   "lesson": "딕셔너리. 키와 값 쌍으로 저장",
+   "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "전체 조건 수가 나오면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "겹치는 건 한 번만 센 수가 나오면 성공",
+      "trap": null,
+      "key": "unique"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "같은 조건은 {dedup}.",
+      "slot": "dedup",
+      "options": [
+       "각각 남긴다",
+       "하나만 남긴다"
+      ]
+     },
+     {
+      "template": "{output}을 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "데이터 1",
+     "v": "이름 홍길동 나이 15,이름 홍길동 나이 15,이름 이순신 나이 45"
+    },
+    {
+     "id": "d02",
+     "name": "데이터 2",
+     "v": "과일 사과 가격 500,과일 사과 가격 500,과일 바나나 가격 300"
+    },
+    {
+     "id": "d03",
+     "name": "데이터 3",
+     "v": "이 데이터는 위에서 정한 조건에 맞지 않습니다. 같은 것을 묶는 기준을",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "options": [
+      "luck 함정이 없음",
+      "진짜 성공 조건이 없음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음"
+     ],
+     "sentences": [
+      "빈칸이 ['output', 'output', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+      "'데이터를 정리하겠습니다.' 의 빈칸이 {output} 하나가 아님",
+      "'세 가지 데이터는 다음과 같습니다.' 의 빈칸이 {output} 하나가 아님"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['output', 'output', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'데이터를 정리하겠습니다.' 의 빈칸이 {output} 하나가 아님",
+     "'세 가지 데이터는 다음과 같습니다.' 의 빈칸이 {output} 하나가 아님"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 17915,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 9770,
+    "status": "ok",
+    "chars": 1535
+   },
+   {
+    "mode": "json_schema",
+    "ms": 8132,
+    "status": "ok",
+    "chars": 1383
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"데이터 정리 기준 정하기\",\n    \"brief\": \"아래 세 가지 데이터에 대해 공통된 규칙을 정해 보세요. 규칙이 모든 수\"\n  ,\n    \"situation\": \"데이터를 정리하려고 합니다. 다음 세 가지 데이터를 정\"\n  ,\n    \"itemName\": \"조건\",\n    \"data\": [\n      {\n        \"name\": \"데이터 1\",\n        \"items\": [\n          \t\"이름: 홍길동, 나이: 15\",\n          \"이름: 홍길동, 나이: 15\",\n          \"이름: 이순신, 나이: 45\"\n        ]\n      },\n      {\n        \"name\": \"데이터 2\",\n        \"items\": [\n          \t\"과일: 사과, 가격: 500\",\n          \"과일: 사과, 가격: 500\",\n          \"과일: 바나나, 가격: 300\"\n        ]\n      }\n    ]\n  ,\n    \"counter\": {\n      \"name\": \"데이터 3\",\n      \"text\": \"이 데이터는 위에서 정한 조건에 맞지 않습니다. 같은 것을 묶는 기준을\"\n    ,\n      \"axis\": \"count\"\n    }\n  ,\n    \"options\": [\n      {\n        \"v\": \t\"문자 그대로 같음\"\n      ,\n        \"trap\": \"hardcode\",\n        \"key\": \t\"name\"\n      }\n    ,\n      {\n        \"v\": \t\"첫 글자만 같음\"\n      ,\n        \"trap\": \t\"hardcode\"\n      ,\n        \"key\": \t\"name\"\n      }\n    ,\n      {\n        \"v\": \t\"두 번째 값이 같음\"\n      ,\n        \"trap\": \t\"hardcode\"\n      ,\n        \"key\": \t\"name\"\n      }\n    ,\n      {\n        \"v\": \t\"두 번째 값이 같음\"\n      ,\n        \"trap\": \t\"hardcode\"\n      ,\n        \"key\": \t\"name\"\n      }\n    ]\n  ,\n    \"filterDesc\": \"조건에 맞는 데이터만 추출하세요.\"\n  ,\n    \"pipelineId\": \"split-unique-count\"\n  ,\n    \"sentences\": [\n      \t{\n        \"template\": \"데이터를 정리하겠습니다.\"\n      ,\n        \"slot\": \t\"output\"\n      }\n    ,\n      {\n        \"template\": \"세 가지 데이터는 다음과 같습니다.\"\n      ,\n        \"slot\": \"output\"\n      }\n    ,\n      {\n        \"template\": \"세 개의 데이터에서 {output}에 대해 {\"\n      ,\n        \"slot\": \t\"output\"\n      }\n    ]\n  }\n}",
+   "{\n  \"mission\": {\n    \"title\": \"데이터 정리 기준 정하기\",\n    \"brief\": \"아래 세 가지 데이터에 대해 공통된 규칙을 정해 보세요. 규칙이 모든 수\",\n    \"situation\": \"데이터를 정리하려고 합니다. 다음 세 가지 데이터를 정\",\n    \"itemName\": \"조건\",\n    \"data\": [\n      {\n        \"name\": \"데이터 1\",\n        \"items\": [\n          \"이름 홍길동 나이 15\",\n          \"이름 홍길동 나이 15\",\n          \"이름 이순신 나이 45\"\n        ]\n      },\n      {\n        \"name\": \"데이터 2\",\n        \"items\": [\n          \"과일 사과 가격 500\",\n          \"과일 사과 가격 500\",\n          \"과일 바나나 가격 300\"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"데이터 3\",\n      \"text\": \"이 데이터는 위에서 정한 조건에 맞지 않습니다. 같은 것을 묶는 기준을\",\n      \"axis\": \"count\"\n    }\n  ,\n    \"options\": [\n      {\n        \"v\": \"문자 그대로 같음\",\n        \"trap\": \"hardcode\",\n        \"key\": \"name\"\n      },\n      {\n        \"v\": \"첫 글자만 같음\",\n        \"trap\": \"hardcode\",\n        \"key\": \"name\"\n      },\n      {\n        \"v\": \"두 번째 값이 같음\",\n        \"trap\": \"hardcode\",\n        \"key\": \"name\"\n      },\n      {\n        \"v\": \"두 번째 값이 같음\",\n        \"trap\": \"hardcode\",\n        \"key\": \"name\"\n      }\n    ],\n    \"filterDesc\": \"조건에 맞는 데이터만 추출하세요.\",\n    \"pipelineId\": \"split-unique-count\",\n    \"sentences\": [\n      {\n        \"template\": \"데이터를 정리하겠습니다.\",\n        \"slot\": \"output\"\n      },\n      {\n        \"template\": \"세 가지 데이터는 다음과 같습니다.\",\n        \"slot\": \"output\"\n      },\n      {\n        \"template\": \"세 개의 데이터에서 {output}에 대해 {\",\n        \"slot\": \"output\"\n      }\n    ]\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "data": [
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다"
+    ]
+   },
+   {
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['output', 'output', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'데이터를 정리하겠습니다.' 의 빈칸이 {output} 하나가 아님",
+     "'세 가지 데이터는 다음과 같습니다.' 의 빈칸이 {output} 하나가 아님"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 4,
+  "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
+  "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
+  "expect": "split-transform-join",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1407a23c6",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-unique-count",
+   "stage": "데이터 처리 함수 만들기",
+   "title": "데이터 처리 함수 만들기",
+   "brief": "세 가지의 숫자 데이터를 처리하고, 가장 적합한 규칙을 찾아 함수로 구현",
+   "situation": "숫자를 읽고, 정해진 규칙에 따라 값을 계산한 뒤 {a",
+   "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
+   "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "전체 값 수가 나오면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "겹치는 건 한 번만 센 수가 나오면 성공",
+      "trap": null,
+      "key": "unique"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "같은 값은 {dedup}.",
+      "slot": "dedup",
+      "options": [
+       "각각 남긴다",
+       "하나만 남긴다"
+      ]
+     },
+     {
+      "template": "{output}을 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "자료 1",
+     "v": "3,7,5"
+    },
+    {
+     "id": "d02",
+     "name": "자료 2",
+     "v": "2,4,6"
+    },
+    {
+     "id": "d03",
+     "name": "다른 날 자료",
+     "v": "3,7,5,3,2",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "counter",
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "counter": [
+      "axis=invisible 인데 앞뒤 공백 항목이 없음"
+     ],
+     "options": [
+      "luck 함정이 없음",
+      "진짜 성공 조건이 없음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(3)가 없음"
+     ],
+     "sentences": [
+      "빈칸이 ['dedup', 'dedup', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+      "'규칙을 {a} 정해 보세요' 의 빈칸이 {dedup} 하나가 아님",
+      "'함수로 {a} 묶어 보세요' 의 빈칸이 {dedup} 하나가 아님",
+      "'{a} 결과를 확인해 보세요' 의 빈칸이 {output} 하나가 아님"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "counter",
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "counter": [
+     "axis=invisible 인데 앞뒤 공백 항목이 없음"
+    ],
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['dedup', 'dedup', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'규칙을 {a} 정해 보세요' 의 빈칸이 {dedup} 하나가 아님",
+     "'함수로 {a} 묶어 보세요' 의 빈칸이 {dedup} 하나가 아님",
+     "'{a} 결과를 확인해 보세요' 의 빈칸이 {output} 하나가 아님"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 16584,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 8487,
+    "status": "ok",
+    "chars": 1402
+   },
+   {
+    "mode": "json_schema",
+    "ms": 8081,
+    "status": "ok",
+    "chars": 1394
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"데이터 처리 함수 만들기\",\n    \"brief\": \"세 가지의 숫자 데이터를 처리하고, 가장 적합한 규칙을 찾아 함수로 구현\",\n    \"situation\": \"숫자를 읽고, 정해진 규칙에 따라 값을 계산한 뒤 그값\"\n  ,\n    \"itemName\": \"값\"\n  ,\n    \"data\": [\n      {\n        \"name\": \"자료 1\",\n        \"items\": [\n          \"3\"\n        ,\n          \"7\"\n        ,\n          \"5\"\n        ]\n      }\n      ,\n      {\n        \"name\": \"자료 2\",\n        \"items\": [\n          \"2\"\n        ,\n          \"4\"\n        ,\n          \"6\"\n        ]\n      }\n      ]\n    ,\n    \"counter\": {\n      \"name\": \"자료 3\",\n      \"text\": \"이 데이터를 처리하면 결과가 예상과 다릅니다\"\n    ,\n      \"axis\": \"invisible\"\n    }\n  ,\n    \"options\": [\n      {\n        \"v\":  \"value\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"function\"\n      }\n      ,\n      {\n        \"v\":  \"data\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"function\"\n      }\n    ,\n      {\n        \"v\":  \"rule\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"function\"\n      }\n    ,\n      {\n        \"v\":  \"print\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"function\"\n      }\n    ]\n  ,\n    \"pipelineId\": \"split-unique-count\"\n  ,\n    \"sentences\": [\n      {\n        \"template\": \"규칙을 정해 보세요\"\n      ,\n        \"slot\": \"sep\"\n      }\n      ,\n      {\n        \"template\": \"함수로 묶어 보세요\"\n      ,\n        \"slot\": \"sep\"\n      }\n      ,\n      {\n        \"template\": \"결과를 확인해 보세요\"\n      ,\n        \"slot\": \"sep\"\n      }\n    ]\n  }\n}",
+   "{\n  \"mission\": {\n    \"title\": \"데이터 처리 함수 만들기\",\n    \"brief\": \"세 가지의 숫자 데이터를 처리하고, 가장 적합한 규칙을 찾아 함수로 구현\",\n    \"situation\": \"숫자를 읽고, 정해진 규칙에 따라 값을 계산한 뒤 {a\",\n    \"itemName\": \"값\"\n  ,\n    \"data\": [\n      {\n        \"name\": \"자료 1\",\n        \"items\": [\n          \"3\"\n        ,\n          \"7\"\n        ,\n          \"5\"\n        ]\n      }\n      ,\n      {\n        \"name\": \"자료 2\",\n        \"items\": [\n          \"2\"\n        ,\n          \"4\"\n        ,\n          \"6\"\n        ]\n      }\n      ]\n    ,\n    \"counter\": {\n      \"name\": \"자료 3\",\n      \"text\": \"이 데이터를 처리하면 결과가 예상과 다릅니다\"\n    ,\n      \"axis\": \"invisible\"\n    }\n  ,\n    \"options\": [\n      {\n        \"v\":  \"값\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"value\"\n      }\n      ,\n      {\n        \"v\":  \"데이터\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"data\"\n      }\n    ,\n      {\n        \"v\":  \"규칙\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"rule\"\n      }\n    ,\n      {\n        \"v\":  \"출력\"\n      ,\n        \"trap\": \"hardcode\"\n      ,\n        \"key\": \"print\"\n      }\n    ]\n  ,\n    \"pipelineId\": \"split-unique-count\"\n  ,\n    \"sentences\": [\n      {\n        \"template\": \"규칙을 {a} 정해 보세요\"\n      ,\n        \"slot\": \"dedup\"\n      }\n      ,\n      {\n        \"template\": \"함수로 {a} 묶어 보세요\"\n      ,\n        \"slot\": \"dedup\"\n      }\n      ,\n      {\n        \"template\": \"{a} 결과를 확인해 보세요\"\n      ,\n        \"slot\": \"output\"\n      }\n    ]\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "counter": [
+     "axis=invisible 인데 앞뒤 공백 항목이 없음"
+    ],
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'규칙을 정해 보세요' 의 빈칸이 {sep} 하나가 아님",
+     "'함수로 묶어 보세요' 의 빈칸이 {sep} 하나가 아님",
+     "'결과를 확인해 보세요' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   },
+   {
+    "counter": [
+     "axis=invisible 인데 앞뒤 공백 항목이 없음"
+    ],
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(3)가 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['dedup', 'dedup', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'규칙을 {a} 정해 보세요' 의 빈칸이 {dedup} 하나가 아님",
+     "'함수로 {a} 묶어 보세요' 의 빈칸이 {dedup} 하나가 아님",
+     "'{a} 결과를 확인해 보세요' 의 빈칸이 {output} 하나가 아님"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 5,
+  "lesson": "문자열 다루기. split, strip, replace",
+  "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
+  "expect": "split-transform-join",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1407a5792",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-sort-join",
+   "stage": "학생 성적 정리",
+   "title": "학생 성적 정리",
+   "brief": "성적표 데이터를 정리합니다.",
+   "situation": "선생님이 학생들의 점수를 정리할 준비를 하고 있습니다.",
+   "lesson": "문자열 다루기. split, strip, replace",
+   "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "100이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "순서대로 늘어서면 성공",
+      "trap": null,
+      "key": "sorted"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "{dir} 늘어놓는다.",
+      "slot": "dir",
+      "options": [
+       "가나다순으로",
+       "거꾸로"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "파일 1",
+     "v": "100,95,80"
+    },
+    {
+     "id": "d02",
+     "name": "파일 2",
+     "v": " 90 , 85, 70 "
+    },
+    {
+     "id": "d03",
+     "name": "파일 3",
+     "v": " 100 90 80 ",
+     "counter": true,
+     "axis": "sep"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "options": [
+      "hardcode 함정이 없음",
+      "진짜 성공 조건이 없음"
+     ],
+     "sentences": [
+      "'파일 {i}의 데이터 {sep} 기준' 의 빈칸이 {sep} 하나가 아님"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "options": [
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "'파일 {i}의 데이터 {sep} 기준' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 13259,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 6747,
+    "status": "ok",
+    "chars": 1154
+   },
+   {
+    "mode": "json_schema",
+    "ms": 6500,
+    "status": "ok",
+    "chars": 1127
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"학생 성적 정리\",\n    \"brief\": \"성적표 데이터를 정리합니다.\",\n    \"situation\": \"선생님이 학생들의 점수를 정리할 준비를 하고 있습니다.\",\n    \"itemName\": \"점수 데이터\",\n    \"data\": [\n      {\n        \"name\": \"파일 1\",\n        \"items\": [\n          \"100\",\n          \"95\",\n          \"80\"\n        ]\n      },\n      {\n        \"name\": \"파일 2\",\n        \"items\": [\n          \" 90 \",\n          \" 85\",\n          \" 70 \"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"파일 3\",\n      \"text\": \" 100 90 80 \"\n    ,\n      \"axis\": \"sep\"\n    },\n    \"options\": [\n      {\n        \"v\": \"split(' ')를 사용하여 정리\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"strip()를 사용하여 정리\",\n        \"trap\": \"luck\"\n      }\n    ,\n      {\n        \"v\": \"split()를 사용하여 정리\",\n        \"trap\": \"luck\"\n      }\n    ,\n      {\n        \"v\": \"replace(' ', '')를 사용하여 정리\",\n        \"trap\": \"luck\"\n      }\n    ],\n    \"filterDesc\": \"\",\n    \"pipelineId\": \"split-sort-join\",\n    \"sentences\": [\n      {\n        \"template\": \"파일 {i}의 데이터에서\",\n        \"slot\": \"sep\"\n      },\n      {\n        \"template\": \"숫자만 남겼습니다.\",\n        \"slot\": \"sep\"\n      },\n      {\n        \"template\": \"정리된 결과\",\n        \"slot\": \"sep\"\n      }\n    ]\n  }\n}",
+   "{\n  \"mission\": {\n    \"title\": \"학생 성적 정리\",\n    \"brief\": \"성적표 데이터를 정리합니다.\",\n    \"situation\": \"선생님이 학생들의 점수를 정리할 준비를 하고 있습니다.\",\n    \"itemName\": \"점수 데이터\",\n    \"data\": [\n      {\n        \"name\": \"파일 1\",\n        \"items\": [\n          \"100\",\n          \"95\",\n          \"80\"\n        ]\n      },\n      {\n        \"name\": \"파일 2\",\n        \"items\": [\n          \" 90 \",\n          \" 85\",\n          \" 70 \"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"파일 3\",\n      \"text\": \" 100 90 80 \",\n      \"axis\": \"sep\"\n    },\n    \"options\": [\n      {\n        \"v\": \"공백을 기준으로 나누기\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"양쪽 공백 없애기\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"자동 공백 처리 나누기\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"모든 공백 지우기\",\n        \"trap\": \"luck\"\n      }\n    ],\n    \"filterDesc\": \"\",\n    \"pipelineId\": \"split-sort-join\",\n    \"sentences\": [\n      {\n        \"template\": \"파일 {i}의 데이터 {sep} 기준\",\n        \"slot\": \"sep\"\n      },\n      {\n        \"template\": \"결과 방향 {dir}\",\n        \"slot\": \"dir\"\n      },\n      {\n        \"template\": \"정리된 결과 {joinSep}\",\n        \"slot\": \"joinSep\"\n      }\n    ]\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "options": [
+     "'split(' ')를 사용하여 정리': 코드 조각 — 베껴 쓸 답을 준다",
+     "'strip()를 사용하여 정리': 덧붙임 '(' — 부연 설명 없이 한 번에 읽히게 쓴다",
+     "'split()를 사용하여 정리': 코드 조각 — 베껴 쓸 답을 준다",
+     "'replace(' ', '')를 사용하여 정리': 덧붙임 '(' — 부연 설명 없이 한 번에 읽히게 쓴다",
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+     "'파일 {i}의 데이터에서' 의 빈칸이 {sep} 하나가 아님",
+     "'숫자만 남겼습니다.' 의 빈칸이 {sep} 하나가 아님",
+     "'정리된 결과' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   },
+   {
+    "options": [
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "'파일 {i}의 데이터 {sep} 기준' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 6,
+  "lesson": "정렬. sorted와 sort의 차이",
+  "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
+  "expect": "split-sort-join",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1407a9c4e",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-sort-join",
+   "stage": "학생 신상 데이터 정리하기",
+   "title": "학생 신상 데이터 정리하기",
+   "brief": "데이터 세트를 기준으로 나열해보시오.",
+   "situation": "학교 행사에 참여할 학생의 신상 정보를 정리해야 합니다",
+   "lesson": "정렬. sorted와 sort의 차이",
+   "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "이름:가 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "순서대로 늘어서면 성공",
+      "trap": null,
+      "key": "sorted"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "{dir} 늘어놓는다.",
+      "slot": "dir",
+      "options": [
+       "가나다순으로",
+       "거꾸로"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "데이터 1",
+     "v": "이름: 홍길동 | 키: 160cm | 몸무게: 50kg,이름: 김철수 | 키: 155cm | 몸무게: 45kg,이름: 이영희 | 키: 165cm | 몸무게: 55kg"
+    },
+    {
+     "id": "d02",
+     "name": "데이터 2",
+     "v": "이름: 홍길동 | 키: 160cm | 몸무게: 50kg,이름: 김철수 | 키: 160cm | 몸무게: 60kg,이름: 이영희 | 키: 160cm | 몸무게: 40kg"
+    },
+    {
+     "id": "d03",
+     "name": "데이터 3",
+     "v": "위 기준만으로는 순서가 정해지지 않는 경우가 발생함",
+     "counter": true,
+     "axis": "sep"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "options": [
+      "hardcode 함정이 없음",
+      "진짜 성공 조건이 없음"
+     ],
+     "sentences": [
+      "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+      "'sort는 {name}를 기준으로 정렬합니다.' 의 빈칸이 {sep} 하나가 아님",
+      "'sorted는 {name}를 반환합니다.' 의 빈칸이 {sep} 하나가 아님",
+      "'sort는 {name}를 반환하지 않습니다.' 의 빈칸이 {sep} 하나가 아님"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "options": [
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+     "'sort는 {name}를 기준으로 정렬합니다.' 의 빈칸이 {sep} 하나가 아님",
+     "'sorted는 {name}를 반환합니다.' 의 빈칸이 {sep} 하나가 아님",
+     "'sort는 {name}를 반환하지 않습니다.' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 17596,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 8883,
+    "status": "ok",
+    "chars": 1261
+   },
+   {
+    "mode": "json_schema",
+    "ms": 8689,
+    "status": "ok",
+    "chars": 1282
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"학생 신상 데이터 정리하기\",\n    \"brief\": \"데이터 세트를 기준으로 나열해보시오.\",\n    \"situation\": \"학교 행사에 참여할 학생의 신상 정보를 정리해야 합니다\",\n    \"itemName\": \"정렬 기준\",\n    \"data\": [\n      {\n        \"name\": \"데이터 1\",\n        \"items\": [\n          \"이름: 홍길동, 키: 160cm,体重: 50kg\",\n          \"이름: 김철수, 키: 155cm,体重: 45kg\",\n          \"이름: 이영희, 키: 165cm,体重: 55kg\"\n        ]\n      },\n      {\n        \"name\": \"데이터 2\",\n        \"items\": [\n          \"이름: 홍길동, 키: 160cm,体重: 50kg\",\n          \"이름: 김철수, 키: 160cm,体重: 60kg\",\n          \"이름: 이영희, 키: 160cm,体重: 40kg\"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"데이터 3\",\n      \"text\": \"위 기준만으로는 순서가 정해지지 않는 경우가 발생함\",\n      \"axis\": \"sep\"\n    }\n  ,\n  \"options\": [\n    {\n      \"v\":   \",c\"\n    ,\n    \"trap\": \"luck\"\n    }\n  ,\n  {\n      \"v\": \"정답 1\",\n      \"trap\": \"luck\"\n    },\n    {\n      \"v\": \"정답 2\",\n      \"trap\": \"luck\"\n    },\n    {\n      \"v\": \"정답 3\",\n      \"trap\": \"luck\"\n    }\n  ]\n  ,\n  \"filterDesc\": \"sort를 사용할 수 있는 데이터 형태는?\",\n  \"pipelineId\": \"split-sort-join\",\n  \"sentences\": [\n    {\n      \"template\": \"sort는 {name}를 기준으로 정렬합니다.\",\n      \"slot\": \"sep\"\n    }\n  ,\n    {\n      \"template\": \"sorted는 {name}를 반환합니다.\",\n      \"slot\": \"sep\"\n    }\n  ,\n    {\n      \"template\": \"sort는 {name}를 반환하지 않습니다.\",\n      \"slot\": \"sep\"\n    }\n  ]\n}\n   }",
+   "{\n  \"mission\": {\n    \"title\": \"학생 신상 데이터 정리하기\",\n    \"brief\": \"데이터 세트를 기준으로 나열해보시오.\",\n    \"situation\": \"학교 행사에 참여할 학생의 신상 정보를 정리해야 합니다\",\n    \"itemName\": \"정렬 기준\",\n    \"data\": [\n      {\n        \"name\": \"데이터 1\",\n        \"items\": [\n          \"이름: 홍길동 | 키: 160cm | 몸무게: 50kg\",\n          \"이름: 김철수 | 키: 155cm | 몸무게: 45kg\",\n          \"이름: 이영희 | 키: 165cm | 몸무게: 55kg\"\n        ]\n      },\n      {\n        \"name\": \"데이터 2\",\n        \"items\": [\n          \"이름: 홍길동 | 키: 160cm | 몸무게: 50kg\",\n          \"이름: 김철수 | 키: 160cm | 몸무게: 60kg\",\n          \"이름: 이영희 | 키: 160cm | 몸무게: 40kg\"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"데이터 3\",\n      \"text\": \"위 기준만으로는 순서가 정해지지 않는 경우가 발생함\",\n      \"axis\": \"sep\"\n    }\n  ,\n  \"options\": [\n    {\n      \"v\": \",c\"\n    ,\n    \"trap\": \"luck\"\n    }\n  ,\n    {\n      \"v\": \"정답 1\",\n      \"trap\": \"luck\"\n    },\n    {\n      \"v\": \"정답 2\",\n      \"trap\": \"luck\"\n    },\n    {\n      \"v\": \"정답 3\",\n      \"trap\": \"luck\"\n    }\n  ]\n  ,\n  \"filterDesc\": \"sort를 사용할 수 있는 데이터 형태는?\",\n  \"pipelineId\": \"split-sort-join\",\n  \"sentences\": [\n    {\n      \"template\": \"sort는 {name}를 기준으로 정렬합니다.\",\n      \"slot\": \"sep\"\n    }\n  ,\n    {\n      \"template\": \"sorted는 {name}를 반환합니다.\",\n      \"slot\": \"sep\"\n    }\n  ,\n    {\n      \"template\": \"sort는 {name}를 반환하지 않습니다.\",\n      \"slot\": \"sep\"\n    }\n  ]\n}\n}"
+  ],
+  "attempts": [
+   {
+    "data": [
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다",
+     "Value error, 항목 안에 쉼표 — 자료는 쉼표로 이어 붙인다"
+    ]
+   },
+   {
+    "options": [
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+     "'sort는 {name}를 기준으로 정렬합니다.' 의 빈칸이 {sep} 하나가 아님",
+     "'sorted는 {name}를 반환합니다.' 의 빈칸이 {sep} 하나가 아님",
+     "'sort는 {name}를 반환하지 않습니다.' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 7,
+  "lesson": "숫자 형변환. int()로 문자열을 숫자로",
+  "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
+  "expect": "split-num-sum",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1407acf77",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-unique-count",
+   "stage": "문자열 숫자 합산 검증",
+   "title": "문자열 숫자 합산 검증",
+   "brief": "문자열로 입력된 숫자 두 개를 더한 결과가 맞는지 확인합니다.",
+   "situation": "데이터에 저장된 숫자 두 개를 더한 결과를 얻어야 한다",
+   "lesson": "숫자 형변환. int()로 문자열을 숫자로",
+   "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "전체 data 수가 나오면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "겹치는 건 한 번만 센 수가 나오면 성공",
+      "trap": null,
+      "key": "unique"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "같은 data는 {dedup}.",
+      "slot": "dedup",
+      "options": [
+       "각각 남긴다",
+       "하나만 남긴다"
+      ]
+     },
+     {
+      "template": "{output}을 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "sample_1",
+     "v": "10,20,30"
+    },
+    {
+     "id": "d02",
+     "name": "sample_2",
+     "v": "15,5,20"
+    },
+    {
+     "id": "d03",
+     "name": "다른 날 자료",
+     "v": "10,20,30,10,15",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "counter",
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "counter": [
+      "axis=empty 인데 결과가 비어 있지 않음",
+      "axis=empty 인데 결과가 비어 있지 않음"
+     ],
+     "options": [
+      "hardcode 함정이 없음",
+      "진짜 성공 조건이 없음"
+     ],
+     "sentences": [
+      "빈칸이 ['dedup', 'dedup', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+      "'데이터의 정확성을 검증합니다.' 의 빈칸이 {dedup} 하나가 아님",
+      "'문자열을 숫자로 변환하는 과정을 거칩니다.' 의 빈칸이 {dedup} 하나가 아님",
+      "'마지막 데이터에서 오류가 발생합니다.' 의 빈칸이 {output} 하나가 아님"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "counter",
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "counter": [
+     "axis=empty 인데 결과가 비어 있지 않음",
+     "axis=empty 인데 결과가 비어 있지 않음"
+    ],
+    "options": [
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['dedup', 'dedup', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'데이터의 정확성을 검증합니다.' 의 빈칸이 {dedup} 하나가 아님",
+     "'문자열을 숫자로 변환하는 과정을 거칩니다.' 의 빈칸이 {dedup} 하나가 아님",
+     "'마지막 데이터에서 오류가 발생합니다.' 의 빈칸이 {output} 하나가 아님"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 13096,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 6657,
+    "status": "ok",
+    "chars": 1132
+   },
+   {
+    "mode": "json_schema",
+    "ms": 6426,
+    "status": "ok",
+    "chars": 1136
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"숫자 더하기 검증\",\n    \"brief\": \"문자열로 저장된 숫자를 더하는 코드의 정확성을 확인합니다.\",\n    \"situation\": \"데이터에 저장된 숫자 두 개를 더한 결과를 얻어야 한다\",\n    \"itemName\": \"data\",\n    \"data\": [\n      {\n        \"name\": \"sample_1\",\n        \"items\": [\n          \"10\",\n          \"20\"\n        ,\n          \"30\"\n        ]\n      },\n      {\n        \"name\": \"sample_2\",\n        \"items\": [\n          \"15\",\n          \"5\",\n          \"20\"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"sample_3\",\n      \"text\": \"오류 발생\",\n      \"axis\": \"empty\"\n    },\n    \"options\": [\n      {\n        \"v\": \"input_data\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"output_data\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"check_result\",\n        \"trap\": \"luck\"\n      }\n    ]\n  ,\n    \"filterDesc\": \"input_data는 문자열만 포함해야 합니다.\",\n    \"pipelineId\": \"split-unique-count\",\n    \"sentences\": [\n      {\n        \"template\": \"데이터의 정확성을 검증합니다.\",\n        \"slot\": \"sep\"\n      }\n    ,\n      {\n        \"template\": \"문자열을 숫자로 변환하는 과정을 거칩니다.\",\n        \"slot\": \"sep\"\n      },\n      {\n        \"template\": \"마지막 데이터에서 오류가 발생합니다.\",\n        \"slot\": \"sep\"\n      }\n    ]\n  }\n}",
+   "{\n  \"mission\": {\n    \"title\": \"문자열 숫자 합산 검증\",\n    \"brief\": \"문자열로 입력된 숫자 두 개를 더한 결과가 맞는지 확인합니다.\",\n    \"situation\": \"데이터에 저장된 숫자 두 개를 더한 결과를 얻어야 한다\",\n    \"itemName\": \"data\",\n    \"data\": [\n      {\n        \"name\": \"sample_1\",\n        \"items\": [\n          \"10\",\n          \"20\"\n        ,\n          \"30\"\n        ]\n      },\n      {\n        \"name\": \"sample_2\",\n        \"items\": [\n          \"15\",\n          \"5\",\n          \"20\"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"sample_3\",\n      \"text\": \"오류 발생\",\n      \"axis\": \"empty\"\n    },\n    \"options\": [\n      {\n        \"v\": \"input_data\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"output_data\",\n        \"trap\": \"luck\"\n      },\n      {\n        \"v\": \"check_result\",\n        \"trap\": \"luck\"\n      }\n    ],\n    \"filterDesc\": \"input_data는 문자열만 포함해야 합니다.\",\n    \"pipelineId\": \"split-unique-count\",\n    \"sentences\": [\n      {\n        \"template\": \"데이터의 정확성을 검증합니다.\",\n        \"slot\": \"dedup\"\n      },\n      {\n        \"template\": \"문자열을 숫자로 변환하는 과정을 거칩니다.\",\n        \"slot\": \"dedup\"\n      },\n      {\n        \"template\": \"마지막 데이터에서 오류가 발생합니다.\",\n        \"slot\": \"output\"\n      }\n    ]\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "counter": [
+     "axis=empty 인데 결과가 비어 있지 않음",
+     "axis=empty 인데 결과가 비어 있지 않음"
+    ],
+    "options": [
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'데이터의 정확성을 검증합니다.' 의 빈칸이 {sep} 하나가 아님",
+     "'문자열을 숫자로 변환하는 과정을 거칩니다.' 의 빈칸이 {sep} 하나가 아님",
+     "'마지막 데이터에서 오류가 발생합니다.' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   },
+   {
+    "counter": [
+     "axis=empty 인데 결과가 비어 있지 않음",
+     "axis=empty 인데 결과가 비어 있지 않음"
+    ],
+    "options": [
+     "hardcode 함정이 없음",
+     "진짜 성공 조건이 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['dedup', 'dedup', 'output'] — 이 유형은 ['sep', 'dedup', 'output'] 를 한 번씩",
+     "'데이터의 정확성을 검증합니다.' 의 빈칸이 {dedup} 하나가 아님",
+     "'문자열을 숫자로 변환하는 과정을 거칩니다.' 의 빈칸이 {dedup} 하나가 아님",
+     "'마지막 데이터에서 오류가 발생합니다.' 의 빈칸이 {output} 하나가 아님"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 8,
+  "lesson": "예외 처리. try-except",
+  "keyPoint": "숫자가 아닌 값이 섞여 있으면 계산이 멈춘다",
+  "expect": "split-filter-num-sum",
+  "ok": false,
+  "error": "TimeoutError: The read operation timed out",
+  "reasons": {},
+  "ms": 25059,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 25051,
+    "status": "TimeoutError"
+   }
+  ],
+  "raws": [],
+  "attempts": []
+ },
+ {
+  "no": 9,
+  "lesson": "집합 set. 중복 없는 모음",
+  "keyPoint": "중복을 없애면 개수가 달라진다",
+  "expect": "split-unique-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1407b71f6",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-sort-join",
+   "stage": "중복 제거와 개수 세기",
+   "title": "중복 제거와 개수 세기",
+   "brief": "학생, 다음 자료 세 개를 순서대로 처리하여 각 집합의 고유한 원소의 개",
+   "situation": "수학 시간, 선생님이 중복이 포함된 숫자 목록을 주셨다",
+   "lesson": "집합 set. 중복 없는 모음",
+   "keyPoint": "중복을 없애면 개수가 달라진다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "1이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "순서대로 늘어서면 성공",
+      "trap": null,
+      "key": "sorted"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "{dir} 늘어놓는다.",
+      "slot": "dir",
+      "options": [
+       "가나다순으로",
+       "거꾸로"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "1번",
+     "v": "1,1,2,2,3"
+    },
+    {
+     "id": "d02",
+     "name": "2번",
+     "v": "4,5,4,6"
+    },
+    {
+     "id": "d03",
+     "name": "3번",
+     "v": "처리 결과가 앞의 두 자료와 일관되지 않아 오류가 발생했다",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "options": [
+      "luck 함정이 없음",
+      "진짜 성공 조건이 없음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음"
+     ],
+     "sentences": [
+      "'학생은 주어진 자료에서 중복을 제거한 후 원{' 의 빈칸이 {sep} 하나가 아님",
+      "'}수를 세어야 한다{' 의 빈칸이 {joinSep} 하나가 아님",
+      "'}반례 자료에서는 기존의 기준이 깨져야 한다{' 의 빈칸이 {dir} 하나가 아님"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음"
+    ],
+    "sentences": [
+     "'학생은 주어진 자료에서 중복을 제거한 후 원{' 의 빈칸이 {sep} 하나가 아님",
+     "'}수를 세어야 한다{' 의 빈칸이 {joinSep} 하나가 아님",
+     "'}반례 자료에서는 기존의 기준이 깨져야 한다{' 의 빈칸이 {dir} 하나가 아님"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 16540,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 9191,
+    "status": "ok",
+    "chars": 1309
+   },
+   {
+    "mode": "json_schema",
+    "ms": 7330,
+    "status": "ok",
+    "chars": 1189
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"중복 제거와 개수 세기\",\n    \"brief\": \"학생, 다음 자료 세 개를 순서대로 처리하여 각 집합의 고유한 원소의 개\"\n  ,\n    \"situation\": \"수학 시간, 선생님이 중복이 포함된 숫자 목록을 주셨다\"\n  ,\n    \"itemName\": \"데이터 번호\",\n    \"data\": [\n      {\n        \"name\":                    \"1번\",\n        \"items\": [\n           \t\"1\",\n          \t\"1\",\n         \t\"2\",\n         \t\"2\",\n         \t\"3\"\n        ]\n      },\n      {\n        \"name\":  \t\"2번\",\n        \"items\": [\n          \t\"4\",\n         \t\"5\",\n         \t\"4\",\n         \t\"6\"\n        ]\n      }\n    ]\n  ,\n    \"counter\": {\n      \"name\":  \"3번\",\n      \"text\":  \"처리 결과가 앞의 두 자료와 일관되지 않아 오류가 발생했다\"\n    ,\n      \"axis\": \"count\"\n    }\n  ,\n    \"options\": [\n      {\n        \"v\":   \t\"O\",\n        \"trap\": \"hardcode\",\n        \"key\":  \t\"0.3\"\n      }\n    ,\n      {\n        \"v\":  \t\"X\",\n        \"trap\": \"hardcode\",\n        \"key\": \t\"0.3\"\n      }\n    ,\n      {\n        \"v\": \t\"\",\n        \"trap\": \t\"hardcode\",\n        \"key\": \t\"0.3\"\n      }\n    ]\n  ,\n    \"pipelineId\":  \t\"split-sort-join\"\n  ,\n    \"sentences\": \t[\n      {\n        \"template\": \t\"학생은 주어진 자료에서 중복을 제거한 후 원\"\n      ,\n        \"slot\": \t\"joinSep\"\n      }\n    ,\n      {\n        \"template\": \t\"자료의 고유한 원소 개수를 정확히 세어야 한다\"\n      ,\n        \"slot\": \t\"joinSep\"\n      }\n    ,\n      {\n        \"template\": \t\"반례 자료에서는 기존의 기준이 깨져야 한다\"\n      ,\n        \"slot\": \t\"joinSep\"\n      }\n    ]\n  }\n}",
+   "{\n  \"mission\": {\n    \"title\": \"중복 제거와 개수 세기\",\n    \"brief\": \"학생, 다음 자료 세 개를 순서대로 처리하여 각 집합의 고유한 원소의 개\",\n    \"situation\": \"수학 시간, 선생님이 중복이 포함된 숫자 목록을 주셨다\",\n    \"itemName\": \"데이터 번호\",\n    \"data\": [\n      {\n        \"name\": \"1번\",\n        \"items\": [\n          \"1\",\n          \"1\",\n          \"2\",\n          \"2\",\n          \"3\"\n        ]\n      },\n      {\n        \"name\": \"2번\",\n        \"items\": [\n          \"4\",\n          \"5\",\n          \"4\",\n          \"6\"\n        ]\n      }\n    ],\n    \"counter\": {\n      \"name\": \"3번\",\n      \"text\": \"처리 결과가 앞의 두 자료와 일관되지 않아 오류가 발생했다\",\n      \"axis\": \"count\"\n    },\n    \"options\": [\n      {\n        \"v\": \"O\",\n        \"trap\": \"hardcode\",\n        \"key\": \"0.3\"\n      },\n      {\n        \"v\": \"X\",\n        \"trap\": \"hardcode\",\n        \"key\": \"0.3\"\n      },\n      {\n        \"v\": \"\",\n        \"trap\": \"hardcode\",\n        \"key\": \"0.3\"\n      }\n    ],\n    \"pipelineId\": \"split-sort-join\",\n    \"sentences\": [\n      {\n        \"template\": \"학생은 주어진 자료에서 중복을 제거한 후 원{\",\n        \"slot\": \"sep\"\n      }\n    ,\n      {\n        \"template\": \"}수를 세어야 한다{\",\n        \"slot\": \"joinSep\"\n      }\n    ,\n      {\n        \"template\": \"}반례 자료에서는 기존의 기준이 깨져야 한다{\",\n        \"slot\": \"dir\"\n      }\n    ]\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['joinSep', 'joinSep', 'joinSep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+     "'학생은 주어진 자료에서 중복을 제거한 후 원' 의 빈칸이 {joinSep} 하나가 아님",
+     "'자료의 고유한 원소 개수를 정확히 세어야 한다' 의 빈칸이 {joinSep} 하나가 아님",
+     "'반례 자료에서는 기존의 기준이 깨져야 한다' 의 빈칸이 {joinSep} 하나가 아님"
+    ]
+   },
+   {
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(1, 1, 2, 2, 3)가 없음"
+    ],
+    "sentences": [
+     "'학생은 주어진 자료에서 중복을 제거한 후 원{' 의 빈칸이 {sep} 하나가 아님",
+     "'}수를 세어야 한다{' 의 빈칸이 {joinSep} 하나가 아님",
+     "'}반례 자료에서는 기존의 기준이 깨져야 한다{' 의 빈칸이 {dir} 하나가 아님"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 10,
+  "lesson": "파일 입출력. open, read",
+  "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
+  "expect": "split-filter-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1407bd1a9",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-sort-join",
+   "stage": "파일에서 중요한 정보만 추출하라",
+   "title": "파일에서 중요한 정보만 추출하라",
+   "brief": "이 목록을 정리해 주세요.",
+   "situation": "학교 도서관에서 도서 목록 파일이 들어왔다. 이 파일들",
+   "lesson": "파일 입출력. open, read",
+   "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "9788901123456이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "순서대로 늘어서면 성공",
+      "trap": null,
+      "key": "sorted"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "{dir} 늘어놓는다.",
+      "slot": "dir",
+      "options": [
+       "가나다순으로",
+       "거꾸로"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "파일_정규.txt",
+     "v": "9788901123456 | 컴퓨터 과학 기초 | 2023-05-10 | 25000원 | 대출가능,9788901123457 | 영어 회화 완성 | 2022-11-01 | 30000원 | 재고없음,9788901123458 | 수학 문제집 | 2023-06-15 | 18000원 | 대출가능,9788901123459 | 과학 탐구 | 2021-09-20 | 22000원 | 대출가능"
+    },
+    {
+     "id": "d02",
+     "name": "파일_혼합.txt",
+     "v": "A101 | 국어 문법 | 2023-01-10 | 20000원 | 대출가능,B202 | 역사 읽기 | 2020-05-05 | 15000원 | 재고없음,C303 | 지리 탐험 | 2023-02-28 | 28000원 | 대출가능,D404 | 음악 이론 | 2023-03-15 | 19000원 | 예약중"
+    },
+    {
+     "id": "d03",
+     "name": "파일_오류_시나리오.txt",
+     "v": "파일 형식이 일정하지 않거나, 상태 정보가 중복되어 있다.",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "brief",
+     "options",
+     "sentences"
+    ],
+    "reasons": {
+     "brief": [
+      "'주어진 텍스트 파일들을 읽어서, 조건에 맞는 줄만 필터링하는 프로그램을拟': 한자·일본어 — 한국어만 쓴다"
+     ],
+     "options": [
+      "luck 함정이 없음",
+      "진짜 성공 조건이 없음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "함정 보기에 key 가 있음",
+      "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+      "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음"
+     ],
+     "sentences": [
+      "'주어진 데이터 파일 {fileName}에서 {' 의 빈칸이 {sep} 하나가 아님",
+      "'{field}가 {' 의 빈칸이 {dir} 하나가 아님",
+      "'{value}인 줄만 남긴다.' 의 빈칸이 {joinSep} 하나가 아님"
+     ]
+    },
+    "retried": true
+   }
+  },
+  "guard": {
+   "fallback": [
+    "brief",
+    "options",
+    "sentences"
+   ],
+   "reasons": {
+    "brief": [
+     "'주어진 텍스트 파일들을 읽어서, 조건에 맞는 줄만 필터링하는 프로그램을拟': 한자·일본어 — 한국어만 쓴다"
+    ],
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음"
+    ],
+    "sentences": [
+     "'주어진 데이터 파일 {fileName}에서 {' 의 빈칸이 {sep} 하나가 아님",
+     "'{field}가 {' 의 빈칸이 {dir} 하나가 아님",
+     "'{value}인 줄만 남긴다.' 의 빈칸이 {joinSep} 하나가 아님"
+    ]
+   },
+   "retried": true
+  },
+  "ms": 24498,
+  "http": [
+   {
+    "mode": "json_schema",
+    "ms": 12339,
+    "status": "ok",
+    "chars": 1628
+   },
+   {
+    "mode": "json_schema",
+    "ms": 12141,
+    "status": "ok",
+    "chars": 1632
+   }
+  ],
+  "raws": [
+   "{\n  \"mission\": {\n    \"title\": \"파일에서 중요한 정보만 추출하라\",\n    \"brief\": \"주어진 텍스트 파일들을 읽어서, 조건에 맞는 줄만 필터링하는 프로그램을擬\"\n  ,\n  \"situation\": \"학교 도서관에서 도서 목록 파일이 들어왔다. 이 파일들\"\n  ,\n  \"itemName\": \"도서목록파일\",\n  \"data\": [\n    {\n      \"name\": \"파일_정규.txt\",\n      \"items\": [\n        \"9788901123456 | 컴퓨터 과학 기초 | 2023-05-10 | 25000원 | 대출가능\",\n        \"9788901123457 | 영어 회화 완성 | 2022-11-01 | 30000원 | 재고없음\",\n        \"9788901123458 | 수학 문제집 | 2023-06-15 | 18000원 | 대출가능\",\n        \"9788901123459 | 과학 탐구 | 2021-09-20 | 22000원 | 대출가능\"\n      ]\n    }\n  ,\n    {\n      \"name\": \"파일_혼합.txt\",\n      \"items\": [\n        \"A101 | 국어 문법 | 2023-01-10 | 20000원 | 대출가능\",\n        \"B202 | 역사 읽기 | 2020-05-05 | 15000원 | 재고없음\",\n        \"C303 | 지리 탐험 | 2023-02-28 | 28000원 | 대출가능\",\n        \"D404 | 음악 이론 | 2023-03-15 | 19000원 | 예약중\"\n      ]\n    }\n  ]\n  ,\n  \"counter\": {\n    \"name\": \"파일_오류_시나리오.txt\",\n    \"text\": \"파일 형식이 일정하지 않거나, 상태 정보가 중복되어 있다.\"\n  ,\n    \"axis\": \"count\"\n  }\n,\n  \"options\": [\n    {\n      \"v\": \"success\",\n      \"trap\":  \"hardcode\",\n      \"key\": \"condition\"\n    }\n  ,\n    {\n      \"v\": \"failure\",\n      \"trap\":  \"hardcode\",\n      \"key\": \"filter\"\n    }\n  ,\n    {\n      \"v\": \"unverified\",\n      \"trap\":  \"hardcode\",\n      \"key\": \"format\"\n    }\n  ]\n,\n  \"filterDesc\": \"파일의 형식과 상태 정보를 분석하여, 조건에 맞는 줄만 선별하는 기준을 설정하라. 선택한 줄의 수와 내용이 맞으면 성공이다. 반례 파일을 통해 기준이 잘못되었음을 확인하라. 반례에서 실패하면 기준을 수정하라.\",\n  \"pipelineId\": \"split-sort-join\",\n  \"sentences\": [\n    {\n      \"template\": \"주어진 데이터 파일 {fileName}에서 {\",\n      \"slot\": \"sep\"\n    }\n  ,\n    {\n      \"template\": \"{field}가 {\",\n      \"slot\": \"sep\"\n    }\n  ,\n    {\n      \"template\": \"{value}인 줄만 남긴다.\",\n      \"slot\": \"sep\"\n    }\n  ]\n}\n  }",
+   "{\n  \"mission\": {\n    \"title\": \"파일에서 중요한 정보만 추출하라\",\n    \"brief\": \"주어진 텍스트 파일들을 읽어서, 조건에 맞는 줄만 필터링하는 프로그램을拟\"\n  ,\n  \"situation\": \"학교 도서관에서 도서 목록 파일이 들어왔다. 이 파일들\"\n  ,\n  \"itemName\": \"도서목록파일\",\n  \"data\": [\n    {\n      \"name\": \"파일_정규.txt\",\n      \"items\": [\n        \"9788901123456 | 컴퓨터 과학 기초 | 2023-05-10 | 25000원 | 대출가능\",\n        \"9788901123457 | 영어 회화 완성 | 2022-11-01 | 30000원 | 재고없음\",\n        \"9788901123458 | 수학 문제집 | 2023-06-15 | 18000원 | 대출가능\",\n        \"9788901123459 | 과학 탐구 | 2021-09-20 | 22000원 | 대출가능\"\n      ]\n    }\n  ,\n    {\n      \"name\": \"파일_혼합.txt\",\n      \"items\": [\n        \"A101 | 국어 문법 | 2023-01-10 | 20000원 | 대출가능\",\n        \"B202 | 역사 읽기 | 2020-05-05 | 15000원 | 재고없음\",\n        \"C303 | 지리 탐험 | 2023-02-28 | 28000원 | 대출가능\",\n        \"D404 | 음악 이론 | 2023-03-15 | 19000원 | 예약중\"\n      ]\n    }\n  ]\n  ,\n  \"counter\": {\n    \"name\": \"파일_오류_시나리오.txt\",\n    \"text\": \"파일 형식이 일정하지 않거나, 상태 정보가 중복되어 있다.\"\n  ,\n    \"axis\": \"count\"\n  }\n,\n  \"options\": [\n    {\n      \"v\": \"success\",\n      \"trap\":  \"hardcode\",\n      \"key\": \"condition\"\n    }\n  ,\n    {\n      \"v\": \"failure\",\n      \"trap\":  \"hardcode\",\n      \"key\": \"filter\"\n    }\n  ,\n    {\n      \"v\": \"unverified\",\n      \"trap\":  \"hardcode\",\n      \"key\": \"format\"\n    }\n  ]\n,\n  \"filterDesc\": \"파일의 형식과 상태 정보를 분석하여, 조건에 맞는 줄만 선별하는 기준을 설정하라. 선택한 줄의 수와 내용이 맞으면 성공이다. 반례 파일을 통해 기준이 잘못되었음을 확인하라. 반례에서 실패하면 기준을 수정하라.\",\n  \"pipelineId\": \"split-sort-join\",\n  \"sentences\": [\n    {\n      \"template\": \"주어진 데이터 파일 {fileName}에서 {\",\n      \"slot\": \"sep\"\n    }\n  ,\n    {\n      \"template\": \"{field}가 {\",\n      \"slot\": \"dir\"\n    }\n  ,\n    {\n      \"template\": \"{value}인 줄만 남긴다.\",\n      \"slot\": \"joinSep\"\n    }\n  ]\n}\n  }"
+  ],
+  "attempts": [
+   {
+    "brief": [
+     "'주어진 텍스트 파일들을 읽어서, 조건에 맞는 줄만 필터링하는 프로그램을擬': 한자·일본어 — 한국어만 쓴다"
+    ],
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음"
+    ],
+    "sentences": [
+     "빈칸이 ['sep', 'sep', 'sep'] — 이 유형은 ['sep', 'dir', 'joinSep'] 를 한 번씩",
+     "'주어진 데이터 파일 {fileName}에서 {' 의 빈칸이 {sep} 하나가 아님",
+     "'{field}가 {' 의 빈칸이 {sep} 하나가 아님",
+     "'{value}인 줄만 남긴다.' 의 빈칸이 {sep} 하나가 아님"
+    ]
+   },
+   {
+    "brief": [
+     "'주어진 텍스트 파일들을 읽어서, 조건에 맞는 줄만 필터링하는 프로그램을拟': 한자·일본어 — 한국어만 쓴다"
+    ],
+    "options": [
+     "luck 함정이 없음",
+     "진짜 성공 조건이 없음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "함정 보기에 key 가 있음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음",
+     "hardcode 함정에 첫 자료의 실제 결과(9788901123456, |, 컴퓨)가 없음"
+    ],
+    "sentences": [
+     "'주어진 데이터 파일 {fileName}에서 {' 의 빈칸이 {sep} 하나가 아님",
+     "'{field}가 {' 의 빈칸이 {dir} 하나가 아님",
+     "'{value}인 줄만 남긴다.' 의 빈칸이 {joinSep} 하나가 아님"
+    ]
+   }
+  ]
+ }
+]

@@ -7,7 +7,7 @@ js/core/pipeline.js 를 옮겨 심은 것이다. 생성된 미션의 반례가 �
 같은 입력을 JS·Python 양쪽에 넣어 결과가 다르면 깨진다.
 JS 를 고치면 여기도 고치고, 그 테스트를 돌린다.
 
-생성기가 쓰는 7개 파이프라인만 옮긴다 (max/min 은 생성기가 안 쓴다).
+JS 의 허용 조합 14개를 그대로 옮긴다.
 """
 import re
 
@@ -21,16 +21,25 @@ OPS = {
     'join': ('list', 'text'),
     'toNumber': ('list', 'numlist'),
     'sum': ('numlist', 'number'),
+    'max': ('numlist', 'number'),
+    'min': ('numlist', 'number'),
     'groupCount': ('list', 'pairs'),
 }
 
 WHITELIST = {
+    'split-count': ['split', 'count'],
     'split-unique-count': ['split', 'unique', 'count'],
     'split-filter-count': ['split', 'filter', 'count'],
+    'split-filter-join': ['split', 'filter', 'join'],
+    'split-filter-unique-count': ['split', 'filter', 'unique', 'count'],
     'split-sort-join': ['split', 'sort', 'join'],
-    'split-num-sum': ['split', 'toNumber', 'sum'],
-    'split-group': ['split', 'groupCount'],
+    'split-filter-sort-join': ['split', 'filter', 'sort', 'join'],
     'split-transform-join': ['split', 'transform', 'join'],
+    'split-transform-unique-count': ['split', 'transform', 'unique', 'count'],
+    'split-num-sum': ['split', 'toNumber', 'sum'],
+    'split-num-max': ['split', 'toNumber', 'max'],
+    'split-num-min': ['split', 'toNumber', 'min'],
+    'split-group': ['split', 'groupCount'],
     'split-filter-num-sum': ['split', 'filter', 'toNumber', 'sum'],
 }
 
@@ -112,6 +121,9 @@ def _exec(op, val, slots, params):
         return 'numlist', nums
     if op == 'sum':
         return 'number', sum(val)
+    if op in ('max', 'min'):
+        # 빈 목록이면 JS 는 ±Infinity 이고, JSON 으로 넘어오면 null 이다. 같게 맞춘다
+        return 'number', (max if op == 'max' else min)(val) if val else None
     if op == 'groupCount':
         g = {}
         for x in val:
