@@ -183,6 +183,11 @@ window.CC_SUPABASE = {
     $('#t-logout').addEventListener('click', function () {
       CC.sb.signOut().then(function () { window.location.href = 'auth.html'; });
     });
+  } else {
+    /* 로컬 모드 — 교실은 서버에만 있다. 서버가 없어도 이 브라우저의 기록으로
+     * 대시보드는 열려야 한다 (CLAUDE.md: 서버를 필수로 만들지 않는다). */
+    $('#classroom-selector').hidden = true;
+    $('#dashboard').hidden = false;
   }
 
   /* 교실 목록 로드 */
