@@ -49,7 +49,7 @@ def ask(question, mission, code, call_llm, timeout=20):
             return {'kind': kind, 'answer': REFUSE[kind], 'refused': True}
         reasons = problems(d.get('answer'), mission, code) if kind == 'syntax' else ['kind 가 없음']
         if not reasons:
-            return {'kind': 'syntax', 'answer': d['answer'].strip(), 'refused': False}
+            return {'kind': 'syntax', 'answer': str(d['answer']).strip(), 'refused': False}
         msgs = msgs + [{'role': 'assistant', 'content': str(raw)},
                        {'role': 'user', 'content': '아래 문제를 고쳐 다시 답한다: ' + ' / '.join(reasons)}]
     return {'kind': 'guarded', 'answer': REFUSE['guarded'], 'refused': True}

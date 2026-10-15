@@ -43,6 +43,12 @@ for name, ans in [
     ('너', '너 코드에서는 `split`을 쓰고 있어요.'),
     ('너무 김', '`split`은 문자열을 나눠요. ' + '가' * 200),
     ('한 줄이지만 학생 코드와 같은 줄', '이렇게 써요. `parts = data.split(",")`'),
+    ('한 줄 완성 프로그램', '`print(len(set(data.split(","))))` 처럼 쓰면 서로 다른 개수가 나와요.'),
+    ('공백 변형 1', '`parts=data.split(",")` 처럼 써요.'),
+    ('공백 변형 2', '`parts = data.split( "," )` 처럼 써요.'),
+    ('세미콜론', '`x = s.split(","); print(len(set(x)))` 처럼 써요.'),
+    ('학생 변수 이름', '`len(parts)` 는 목록의 길이예요.'),
+    ('print 안 호출', '`print(len(x))` 는 길이를 화면에 보여줘요.'),
     ('빈 답', ''),
 ]:
     r = problems(ans, M, CODE)
@@ -52,6 +58,7 @@ print('[통과]')
 for name, ans in [
     ('문법 설명 + 한 줄 예시', '`"a b c".split()` 처럼 쓰면 공백을 기준으로 나눈 목록이 나와요.'),
     ('에러 설명', 'IndentationError 는 들여쓰기가 맞지 않을 때 나오는 에러예요.'),
+    ('print 데모', '`print("안녕")` 처럼 쓰면 화면에 글자가 나와요.'),
     ('for 문', '`for x in 목록:` 다음 줄을 들여 쓰면 목록의 값을 하나씩 꺼내요.'),
 ]:
     r = problems(ans, M, CODE)
@@ -91,6 +98,35 @@ t('두 번 다 걸리면 고정 문장', len(llm.calls) == 2 and r['kind'] == 'g
 
 r = ask('split?', M, CODE, fake('이건 JSON 이 아님'))
 t('JSON 이 아니면 고정 문장', r['kind'] == 'guarded' and r['refused'], r)
+
+print('[HTTP]')
+import io  # noqa: E402
+from tutor import handler  # noqa: E402
+
+
+def post(raw, length=None):
+    h = handler.__new__(handler)
+    h.headers = {'Content-Length': str(len(raw)) if length is None else length}
+    h.rfile, h.wfile, out = io.BytesIO(raw), io.BytesIO(), []
+    h.send_response = lambda c: out.append(c)
+    h.send_header = lambda *a: None
+    h.end_headers = lambda: None
+    h.do_POST()
+    return out[0]
+
+
+for name, raw, ln in [
+    ('Content-Length 가 숫자가 아님', b'{}', 'abc'),
+    ('UTF-8 이 아님', b'\xff\xfe', None),
+    ('객체가 아닌 JSON', b'[]', None),
+    ('items 가 숫자', json.dumps({'question': 'q', 'mission': {'items': 5}}).encode(), None),
+]:
+    try:
+        c = post(raw, ln)
+    except Exception as e:
+        c = repr(e)
+    # items 가 숫자여도 400 이 아니라 질문 처리까지 간다(LLM 키 없음 → 502)
+    t('HTTP ' + name, c in (400, 502), c)
 
 print('\n전부 통과' if not fail else f'\n실패 {fail}건')
 sys.exit(1 if fail else 0)

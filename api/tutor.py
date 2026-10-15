@@ -31,14 +31,16 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             body = json.loads(self.rfile.read(int(self.headers.get('Content-Length') or 0)) or b'{}')
-        except json.JSONDecodeError:
+        except (ValueError, TypeError, UnicodeDecodeError):  # JSONDecodeError 는 ValueError
+            return self._send(400, {'error': '요청 형식이 잘못됐어요.'})
+        if not isinstance(body, dict):
             return self._send(400, {'error': '요청 형식이 잘못됐어요.'})
         q = str(body.get('question') or '').strip()[:QMAX]
         if not q:
             return self._send(400, {'error': '질문을 입력해 주세요.'})
         mission = body.get('mission') if isinstance(body.get('mission'), dict) else {}
         mission = {'title': str(mission.get('title') or ''), 'itemName': str(mission.get('itemName') or ''),
-                   'items': [str(x) for x in (mission.get('items') or [])][:50]}
+                   'items': [str(x) for x in (mission.get('items') if isinstance(mission.get('items'), list) else [])][:50]}
         code = str(body.get('code') or '')[:4000]
         try:
             r = ask(q, mission, code, pickle_llm)

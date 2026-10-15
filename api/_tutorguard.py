@@ -43,11 +43,25 @@ def problems(answer, mission, code=''):
         if len(w) >= 2 and w in a:
             out.append(f"미션 단어 '{w}' — 예시는 미션과 다른 자료로 든다")
             break
+    squashed = re.sub(r'\s+', '', a)
+    names = {'data'}
     for line in (code or '').splitlines():
         ln = line.strip()
-        if len(ln) >= 8 and not ln.startswith('#') and not ln.startswith('data =') and ln in a:
+        m = re.match(r'(\w+)\s*=', ln)
+        if m:
+            names.add(m.group(1))
+        sq = re.sub(r'\s+', '', ln)
+        if len(sq) >= 6 and not ln.startswith('#') and not sq.startswith('data=') and sq in squashed:
             out.append('학생 코드를 답에 옮김 — 고친 코드를 돌려주지 않는다')
             break
+    for s in segs:
+        body = s.strip('`')
+        if ';' in body:
+            out.append('코드 예시에 ; — 한 줄에 프로그램을 담는다')
+        if re.search(r'print\s*\(.*\w\s*\(', body):
+            out.append('print 안에 호출 — 결과까지 내는 완성 프로그램이다')
+        if any(re.search(r'(?<![\w.])' + re.escape(n) + r'(?!\w)', body) for n in names):
+            out.append('학생이 쓴 변수 이름 — 학생 코드를 옮기는 것과 같다')
     m = METHOD.search(a)
     if m:
         out.append(f"방법 판단 '{m.group(0)}' — 설계도는 학생이 이미 정했다")
