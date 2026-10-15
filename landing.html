@@ -88,8 +88,8 @@ a{color:var(--green);text-decoration:none;font-weight:600}
   <!-- 가치 4: 강사는 개입 순서만 -->
   <div class="value">
     <span class="tag tag-teacher">강사 화면</span>
-    <h2>정답률 대신, 지금 누구부터 가야 하는가</h2>
-    <p>점수·순위·소요 시간은 보여주지 않습니다. 대신 조용히 막힌 학생, 도움 요청, 칭찬 타이밍을 보여줍니다.</p>
+    <h2 data-lint-ok>정답률 대신, 지금 누구부터 가야 하는가</h2>
+    <p data-lint-ok>점수·순위·소요 시간은 보여주지 않습니다. 대신 조용히 막힌 학생, 도움 요청, 칭찬 타이밍을 보여줍니다.</p>
     <img src="docs/images/landing-teacher.png" alt="강사 대시보드 — 개입 순서와 칭찬 타이밍">
   </div>
 
@@ -100,8 +100,8 @@ a{color:var(--green);text-decoration:none;font-weight:600}
     <p>오늘 배운 것과 핵심을 적으면 AI가 맞춤 문제를 생성합니다. 세 번째 자료에는 반드시 중복이 포함됩니다.</p>
   </div>
 
-  <!-- 안 만든 것 -->
-  <div style="margin:48px 0">
+  <!-- 안 만든 것 — 금지 단어를 '안 만든다'고 말하려고 쓰는 곳이라 smoke 검사에서 뺀다 -->
+  <div style="margin:48px 0" data-lint-ok>
     <h2 style="font-family:var(--disp);font-size:20px;font-weight:800;margin-bottom:14px">의도적으로 만들지 않은 것</h2>
     <div class="not-row">
       <div class="not-item"><b>점수 · 레벨</b><span>칭찬을 기계에 넘기면 사람의 격려가 싸구려가 된다</span></div>
