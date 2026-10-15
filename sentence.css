@@ -795,3 +795,17 @@ dialog::backdrop {
   .main-tabs { font-size: 13px; }
   .mission-grid { grid-template-columns: 1fr; }
 }
+
+.tutor-open { position: fixed; right: 16px; bottom: 16px; z-index: 40; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,.12); cursor: pointer; }
+.tutor { width: min(420px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 32px)); padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); }
+.tutor::backdrop { background: rgba(0,0,0,.25); }
+.tutor-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.tutor-head h2 { font-size: 15px; margin: 0; }
+.tutor-head button { border: 0; background: none; font-size: 20px; color: var(--ink-2); cursor: pointer; }
+.tutor-note { margin: 0; padding: 8px 16px; font-size: 12px; color: var(--ink-3); }
+.tutor-log { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px; min-height: 120px; max-height: 320px; overflow-y: auto; }
+.tutor-msg { padding: 8px 12px; border-radius: 10px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.tutor-msg.me { align-self: flex-end; background: var(--green-soft); }
+.tutor-msg.ai { align-self: flex-start; background: var(--surface-2); }
+.tutor-form { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.tutor-form textarea { flex: 1; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 8px; font: inherit; font-size: 14px; background: var(--surface); color: var(--ink); resize: none; }

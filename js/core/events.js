@@ -61,7 +61,8 @@
     S_WRAP: 's-wrap',              /* 마무리 문장 { text } */
     S_DESIGN: 's-design',          /* 설계 제출 { define, slots, pipelineId } */
     S_CODE: 's-code',              /* 코드 실행 { code, dataId, output, error } */
-    S_CODE_JUDGE: 's-code-judge'   /* 코드 결과 판정 { verdict, basis } */
+    S_CODE_JUDGE: 's-code-judge',  /* 코드 결과 판정 { verdict, basis } */
+    S_TUTOR: 's-tutor'             /* 튜터 질문 { question, answer, kind, refused } */
   };
 
   /* 여기 없는 값은 저장하지 않기로 한 것이다.

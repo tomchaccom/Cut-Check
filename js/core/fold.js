@@ -58,7 +58,8 @@
       sDesignCount: 0,
       sDesign: null,         /* { define, slots, pipelineId } */
       sCodes: [],            /* [{ code, dataId, output, error, t }] */
-      sCodeJudges: []        /* [{ verdict, basis, t }] */
+      sCodeJudges: [],       /* [{ verdict, basis, t }] */
+      sTutor: []             /* [{ question, answer, kind, refused, t }] */
     };
   }
 
@@ -131,6 +132,8 @@
         s.sCodes.push({ code: e.code, dataId: e.dataId, output: e.output, error: e.error, t: e.t }); break;
       case 's-code-judge':
         s.sCodeJudges.push({ verdict: e.verdict, basis: e.basis, t: e.t }); break;
+      case 's-tutor':
+        s.sTutor.push({ question: e.question, answer: e.answer, kind: e.kind, refused: !!e.refused, t: e.t }); break;
 
       default: /* 모르는 type 은 무시한다 — 구버전 화면이 새 서버를 만나도 안 죽는다 */ break;
     }

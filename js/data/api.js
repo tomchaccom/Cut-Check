@@ -116,4 +116,16 @@
     _local: local,
     _http: http
   };
+
+  /* AI 튜터. 서버가 없거나 실패하면 reject — 화면은 "쓸 수 없어요"를 보여주고 수업은 계속된다. */
+  CC.tutorApi = function (body) {
+    return fetch('/api/tutor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) throw new Error('tutor ' + r.status);
+      return r.json();
+    });
+  };
 })(window.CC = window.CC || {});

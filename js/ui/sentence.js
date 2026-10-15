@@ -30,6 +30,18 @@
     return ev;
   };
 
+  if (CC.tutor) CC.tutor.init({
+    rec: rec,
+    context: function () {
+      var items = [];
+      (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
+      return {
+        mission: { title: M ? M.title : '', itemName: M ? (M.itemName || '') : '', items: items.map(function (x) { return x.trim(); }).filter(Boolean) },
+        code: ($('#code-editor') || {}).value || ''
+      };
+    }
+  });
+
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -154,6 +166,7 @@
 
   /* ── 화면 전환 ─────────────────────────────────── */
   function showStep(n) {
+    if (CC.tutor) CC.tutor.visible(n === 4);
     document.querySelectorAll('.step').forEach(function (s) { s.classList.remove('active'); });
     var target = $('#step' + n);
     if (target) {
