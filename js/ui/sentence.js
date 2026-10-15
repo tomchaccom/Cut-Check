@@ -439,9 +439,13 @@
       var dataVal = $('#code-data-select') ? $('#code-data-select').value : '';
 
       /* data 변수를 코드 앞에 주입 */
-      var fullCode = 'data = "' + dataVal.replace(/"/g, '\\"') + '"\n' + code.replace(/^data = ".*"\n?/m, '');
+      /* 학생의 data 줄은 같은 자리에서 바꿔 줄 번호를 지킨다. 없으면 앞에 한 줄을 붙이고 에러 줄 번호에서 1을 뺀다 */
+      var dataLine = 'data = "' + dataVal.replace(/"/g, '\\"') + '"';
+      var hasData = /^data = ".*"/m.test(code);
+      var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
 
       py.run(fullCode, function (output, error) {
+        if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
         /* 결과 표시 */
         var resultEl = $('#code-result');
         var outputBox = $('#code-output');

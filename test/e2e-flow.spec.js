@@ -53,9 +53,6 @@ test('교사 화면에서 초안을 만들 수 있다 (LLM 고정 응답)', asyn
   await page.goto(BASE + '/teacher.html');
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
   const gen = page.locator('#gen-btn');
-  if (!(await gen.isVisible())) {
-    test.fixme(true, '로컬 모드에서 교사 미션 생성 탭에 들어갈 수 없다 — 교실 선택이 Supabase 를 요구');
-  }
   await page.locator('#gen-lesson').fill('리스트와 반복문');
   await page.locator('#gen-key').fill('같은 값이 여러 번 나올 때');
   await gen.click();
@@ -171,4 +168,9 @@ test('input() 과 에러는 위치와 사실만', async ({ context, page }) => {
   await page.locator('#code-editor').fill('data = "a"\nparts = 1\nprint(pars)\n');
   await page.locator('#run-code').click();
   await expect(page.locator('#code-result')).toHaveText(/^3번째 줄: NameError/, { timeout: 10000 });
+  await waitPython(page);
+  /* data 줄이 없어도 에디터 기준 줄 번호가 나온다 */
+  await page.locator('#code-editor').fill('parts = 1\nprint(pars)\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toHaveText(/^2번째 줄: NameError/, { timeout: 10000 });
 });
