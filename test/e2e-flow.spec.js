@@ -28,13 +28,21 @@ async function seedMission(page) {
   await page.reload();
 }
 
+/* 카드 화면: 진짜 카드를 순서대로 놓고 세부를 고른다. 시험용 미션은 split-unique-count (sm1 복제) */
+async function pickCards(page) {
+  for (const label of ['나누기', '겹친 것은 하나만', '개수 세기']) {
+    await page.locator('.card-pick', { hasText: label }).click();
+  }
+  await page.locator('.design-item select').first().selectOption('쉼표');
+}
+
 async function studentToCode(page) {
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
   await page.locator('#reason-define').fill('모두 세야 하니까');
   await page.locator('#go-method').click();
-  for (const s of await page.locator('select.slot:visible').all()) await s.selectOption({ index: 1 });
+  await pickCards(page);
   await page.locator('#reason-method').fill('보이는 대로');
   await page.locator('#go-run').click();
   await expect(page.locator('#step4')).toHaveClass(/active/);
@@ -108,7 +116,7 @@ test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({
   await page.locator('.define-card').first().click();
   await page.locator('#go-method').click();
   await expect(page.locator('#tutor-open')).toBeHidden();
-  for (const s of await page.locator('select.slot:visible').all()) await s.selectOption({ index: 1 });
+  await pickCards(page);
   await page.locator('#go-run').click();
   await expect(page.locator('#tutor-open')).toBeVisible();
   await page.locator('#back-method').click();
@@ -173,4 +181,44 @@ test('input() 과 에러는 위치와 사실만', async ({ context, page }) => {
   await page.locator('#code-editor').fill('parts = 1\nprint(pars)\n');
   await page.locator('#run-code').click();
   await expect(page.locator('#code-result')).toHaveText(/^2번째 줄: NameError/, { timeout: 10000 });
+});
+
+test('설계 카드가 코드 뼈대가 되고, 쓴 코드는 설계를 고쳐도 남는다', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await expect(page.locator('#samples .sample-data')).toHaveCount(2);           // 첫 화면에 자료 2개
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  await expect(page.locator('.card-pick')).toHaveCount(4);                      // 진짜 3 + 헷갈리는 1
+  await pickCards(page);
+  await page.locator('.design-item').nth(2).locator('.card-up').click();        // 개수 세기를 위로
+  await expect(page.locator('.design-item').nth(1)).toContainText('개수 세기');
+  await page.locator('.design-item').nth(1).locator('.card-down').click();      // 되돌리기
+  await page.locator('#go-run').click();
+  const code = await page.locator('#code-editor').inputValue();
+  expect(code).toContain('# 1. 나누기 (기준: 쉼표)');
+  expect(code).toContain('# 3. 개수 세기');
+  expect(code).not.toMatch(/split|set\(|len\(/);                                // 함수 이름은 안 준다
+
+  await page.locator('#code-editor').fill('data = "a,b"\nprint(1)\n');
+  await page.locator('#back-method').click();
+  await page.locator('.design-item').nth(2).locator('.card-remove').click();
+  await page.locator('#go-run').click();
+  expect(await page.locator('#code-editor').inputValue()).toContain('print(1)'); // 덮어쓰지 않는다
+});
+
+test('다른 미션으로 바꾸면 앞 미션 코드가 남지 않는다', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await page.locator('#code-editor').fill('print("앞 미션")');
+  await page.locator('.m-btn[data-id="sm2"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  await pickCards(page);
+  await page.locator('#go-run').click();
+  expect(await page.locator('#code-editor').inputValue()).not.toContain('앞 미션');
 });

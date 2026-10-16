@@ -255,7 +255,7 @@
     if (s.sMethod) {
       var bs2 = el('div', 'dbox');
       bs2.appendChild(el('span', 'k', '현재 방법'));
-      var sl = s.sMethod.slots;
+      var sl = s.sMethod.slots || {};   /* 카드 기록에는 slots 가 없다 — 카드 표시는 Task 5 */
       /* 슬롯을 동적으로 읽어서 표시 — 파이프라인이 달라져도 코드가 안 바뀐다 */
       var slotParts = Object.keys(sl).map(function (k) { return sl[k]; }).filter(Boolean);
       bs2.appendChild(el('div', 'v', slotParts.join(' → ') +

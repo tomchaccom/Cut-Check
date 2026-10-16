@@ -46,7 +46,7 @@
 
       /* 문장형 미션 */
       sDefine: null,         /* { choice, reason } */
-      sMethod: null,         /* { slots, reason } */
+      sMethod: null,         /* { cards, reason } — 예전 기록은 slots */
       sRuns: [],             /* [{ dataId, result, t }] */
       sJudges: [],           /* [{ runId, verdict, basis, t }] */
       sHelps: 0,
@@ -56,7 +56,7 @@
 
       /* 코드 작성 */
       sDesignCount: 0,
-      sDesign: null,         /* { define, slots, pipelineId } */
+      sDesign: null,         /* { define, cards, pipelineId } — 예전 기록은 slots */
       sCodes: [],            /* [{ code, dataId, output, error, t }] */
       sCodeJudges: [],       /* [{ verdict, basis, t }] */
       sTutor: []             /* [{ question, answer, kind, refused, t }] */
@@ -112,10 +112,10 @@
         s.sDefine = { choice: e.to, reason: e.reason };
         s.sDefineVer++; break;
       case 's-method':
-        s.sMethod = { slots: e.slots, reason: e.reason };
+        s.sMethod = { slots: e.slots, cards: e.cards, reason: e.reason };
         s.sMethodVer++; break;
       case 's-remethod':
-        s.sMethod = { slots: e.toSlots, reason: e.reason };
+        s.sMethod = { slots: e.toSlots, cards: e.toCards, reason: e.reason };
         s.sMethodVer++; break;
       case 's-run':
         s.sRuns.push({ dataId: e.dataId, result: e.result, t: e.t }); break;
@@ -126,7 +126,7 @@
       case 's-wrap':
         s.sWrap = e.text; break;
       case 's-design':
-        s.sDesign = { define: e.define, slots: e.slots, pipelineId: e.pipelineId };
+        s.sDesign = { define: e.define, slots: e.slots, cards: e.cards, pipelineId: e.pipelineId };
         s.sDesignCount++; break;
       case 's-code':
         s.sCodes.push({ code: e.code, dataId: e.dataId, output: e.output, error: e.error, t: e.t }); break;

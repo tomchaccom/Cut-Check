@@ -144,7 +144,7 @@ ours = json.loads(subprocess.run(
 for m in ours:
     said = [('brief', m['brief'], _LIMIT['brief']), ('define.q', m['define']['q'], _LIMIT['brief'])]
     said += [('goals', o['v'], _LIMIT['goals']) for o in m['define']['options']]
-    said += [('sentences', s['template'], _LIMIT['sentences']) for s in m['method']['sentences']]
+    said += [('sentences', s['template'], _LIMIT['sentences']) for s in m.get('method', {}).get('sentences', [])]  # 문장형 기본 미션은 이제 카드 설계 — 빈칸 문장이 없다
     for field, text, limit in said:
         why = (f'{len(text)}자 > {limit}자' if len(text) > limit else None) or _text_problem(text) or \
             _sentence_problem(text) or _plain_problem(text) or (field == 'brief' and _brief_problem(text))
