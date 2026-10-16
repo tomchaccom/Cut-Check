@@ -277,3 +277,24 @@ test('내 기록에는 지금 미션 것만, 코드 실행 결과와 내 판단�
   await expect(rec).not.toContainText('앞 미션 정리');   // 다른 미션 기록이 섞이지 않는다
   await expect(rec).not.toContainText('세 개가 나와서');
 });
+
+test('자료 3개로 실행 — 같은 코드를 자료마다 돌려 결과를 나란히 보인다', async ({ page }) => {
+  test.setTimeout(120000);
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await waitPython(page);
+  // sm1 복제: 주문서 01·02 는 3개, 03(반례)은 사과가 겹쳐 서로 다른 건 4개
+  await page.locator('#code-editor').fill('data = "x"\nitems = data.split(",")\nprint(len(set(items)))\n');
+  await page.locator('#run-all').click();
+  const out = page.locator('#code-result');
+  await expect(out).toContainText('주문서 03  →  4', { timeout: 20000 });
+  await expect(out).toContainText('주문서 01  →  3');
+  await expect(out).toContainText('주문서 02  →  3');
+  await expect(page.locator('#code-judge')).toBeVisible();          // 판단은 학생이
+  await expect(page.locator('#code-judge')).not.toContainText('정답'); // 시스템은 맞다·틀리다를 말하지 않는다
+
+  await page.locator('#code-editor').fill('print(item)\n');            // 에러도 자료마다 위치와 사실만
+  await page.locator('#run-all').click();
+  await expect(out).toContainText('주문서 03  →  1번째 줄', { timeout: 20000 });
+});

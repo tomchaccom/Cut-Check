@@ -46,9 +46,8 @@ for name, ans in [
     ('한 줄 완성 프로그램', '`print(len(set(data.split(","))))` 처럼 쓰면 서로 다른 개수가 나와요.'),
     ('공백 변형 1', '`parts=data.split(",")` 처럼 써요.'),
     ('공백 변형 2', '`parts = data.split( "," )` 처럼 써요.'),
+    ('미션 자료 변수 data 로 예시', '`items = set(data.split(","))` 처럼 쓰면 돼요.'),
     ('세미콜론', '`x = s.split(","); print(len(set(x)))` 처럼 써요.'),
-    ('학생 변수 이름', '`len(parts)` 는 목록의 길이예요.'),
-    ('print 안 호출', '`print(len(x))` 는 길이를 화면에 보여줘요.'),
     ('빈 답', ''),
 ]:
     r = problems(ans, M, CODE)
@@ -61,6 +60,12 @@ for name, ans in [
     ('이름만 감싼 백틱은 예시가 아님', '`append()`는 목록 끝에 값을 붙여요. `for`문과 함께 써요. 예: `nums.append(7)`'),
     ('print 데모', '`print("안녕")` 처럼 쓰면 화면에 글자가 나와요.'),
     ('for 문', '`for x in 목록:` 다음 줄을 들여 쓰면 목록의 값을 하나씩 꺼내요.'),
+    # 사람 결정으로 풀었다 — 문법 설명이다
+    ('학생 변수 이름이 든 예시', '`len(parts)` 는 목록의 길이예요.'),
+    ('print 안 호출 한 겹', '`print(len(x))` 는 길이를 화면에 보여줘요.'),
+    ('값·문법 꼴은 예시 줄이 아니다', '`range(시작, 끝)`처럼 써요. `끝`은 빠져요. 예: `for i in range(1, 4):`'),
+    ('나눌 값과 기준 글자', '`a,b,c`를 `,`로 나누면 세 조각이 돼요.'),
+    ('set 이 하는 일', 'set 은 중복을 없애고 한 번씩만 남겨요. 예: `set(["a", "a"])`'),
 ]:
     r = problems(ans, M, CODE)
     t(name, not r, r)
