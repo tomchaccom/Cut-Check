@@ -165,5 +165,12 @@
     });
   }
 
-  CC.fold = { fold: fold, foldMany: foldMany, empty: empty, apply: apply };
+  /* 학생 한 명의 미션 하나 → 'none' | 'doing' | 'done'. 마무리(s-wrap)를 저장하면 푼 미션이다.
+   * 상태만 말한다 — 점수·정답 여부는 담지 않는다 (CLAUDE.md) */
+  function missionStatus(events) {
+    if (!events || !events.length) return 'none';
+    return events.some(function (e) { return e.type === 's-wrap'; }) ? 'done' : 'doing';
+  }
+
+  CC.fold = { fold: fold, foldMany: foldMany, empty: empty, apply: apply, missionStatus: missionStatus };
 })(window.CC = window.CC || {});

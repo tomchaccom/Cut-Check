@@ -90,6 +90,10 @@ t('문장형 접기 — 실행 기록', sf.sRuns.length === 1);
 t('문장형 접기 — 판정', sf.sJudges.length === 1 && sf.sJudges[0].verdict === '지켰다');
 t('문장형 접기 — 마무리', sf.sWrap === '처음에는 전체 개수라고 생각했다.');
 t('문장형 접기 — 버전', sf.sDefineVer === 1 && sf.sMethodVer === 1);
+/* 내 미션 목록의 상태 — 마무리를 저장하면 완료, 무엇이든 했으면 진행 중. 점수·순위는 없다 */
+t('미션 상태 — 미시작', CC.fold.missionStatus([]) === 'none');
+t('미션 상태 — 진행 중', CC.fold.missionStatus([{ type: 's-define' }, { type: 's-code' }]) === 'doing');
+t('미션 상태 — 완료', CC.fold.missionStatus([{ type: 's-define' }, { type: 's-wrap', text: '정리' }]) === 'done');
 
 /* 카드 설계 — 새 기록은 cards, 예전 기록(slots 만)도 그대로 접힌다 */
 const card = [{ op: 'split', label: '나누기', detail: '기준: 쉼표' }, { op: 'count', label: '개수 세기', detail: '' }];
