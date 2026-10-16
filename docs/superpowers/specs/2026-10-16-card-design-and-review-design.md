@@ -174,7 +174,7 @@ flowchart TD
 | `js/core/cards.js` (새) | 카드 카탈로그 · 헷갈리는 카드 표 · 코드 뼈대 문자열 만들기 (순수 함수) |
 | `sentence.html` · `js/ui/sentence.js` · `sentence.css` | ① 자료 2개, ③ 카드 화면, ④ 뼈대 넣기. 빈칸 문장 UI · `renderRunStep` 삭제 |
 | `js/core/missions.js` | 기본 미션 sm1·sm2·sm3 에 `pipelineId` (sm-filter-1 은 이미 있음) |
-| `js/core/events.js` · `fold.js` | `s-design` 에 `cards: [{op, detail}]` 추가 (`slots` 는 예전 기록용으로 유지, 스키마 버전 그대로) |
+| `js/core/events.js` · `fold.js` | `s-design` 에 `cards: [{op, label, detail}]` 추가 (label 을 같이 담아 교사 화면이 미션 없이도 읽는다) (`slots` 는 예전 기록용으로 유지, 스키마 버전 그대로) |
 | `js/ui/teacher.js` | 설계도를 카드로 표시, 초안에 "검수 필요" 배지 |
 | `api/_schema.py` · `api/_generate.py` | LLM 칸에서 성공 조건·방법 문장 제거, 요청 "구할 값" 규칙, 성공 조건은 코드로, 전체 시간 기준 |
 | `api/_review.py` (새) | LLM 검수 |
