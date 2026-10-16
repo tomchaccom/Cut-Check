@@ -71,7 +71,7 @@ test('교사 화면에서 초안을 만들 수 있다 (LLM 고정 응답)', asyn
   await expect(page.locator('#confirm-mission')).toBeVisible();
   await expect(page.locator('#gen-result')).toContainText('검수 필요');
   await expect(page.locator('#gen-result')).toContainText('셋째만 문구예요');
-  await expect(page.locator('#gen-result')).toContainText('헷갈리는 카드');
+  await expect(page.locator('#gen-result')).toContainText('없어도 되는 카드');
 });
 
 test('학생 해결 → 설계도 → 코드 → 완료 → 교사 화면', async ({ context, page }) => {
@@ -111,6 +111,21 @@ test('학생이 설계도를 내면 교사 화면에 알림이 뜬다', async ({
   await expect(t.locator('#alert-list li')).toHaveCount(1);
   await t.reload();
   await expect(t.locator('.toast')).toHaveCount(0);     // 새로고침해도 쏟아지지 않는다
+});
+
+test('강사 홈 — 학생은 가나다순 폴더, 말 걸 순간은 사실만', async ({ context, page }) => {
+  test.setTimeout(120000);
+  await local(context);
+  await seedMission(page);
+  const t = await context.newPage();
+  await t.goto(BASE + '/teacher.html');            // 먼저 열어 둔다 — 알림은 연 뒤에 생긴 제출만 뜬다
+  await studentToCode(page);                       // 설계도를 낸다
+  const names = await t.locator('.student-tile .name').allInnerTexts();
+  expect(names.length).toBeGreaterThan(0);
+  expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'ko')));   // 가나다순만
+  await expect(t.locator('#moments')).toContainText('설계도를 냈어요', { timeout: 5000 });
+  await expect(t.locator('#moments')).not.toContainText(/잘했|훌륭|칭찬/);
+  await expect(t.locator('details.more')).toBeAttached();                       // 분석 패널은 접혀서 남는다
 });
 
 test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({ context, page }) => {

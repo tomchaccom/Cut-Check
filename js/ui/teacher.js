@@ -26,6 +26,7 @@
     if (me) C.students = [me].concat(C.students);
   }
   var J = function (w, pair) { return CC.particle(w, pair); };
+  var fresh = {};   /* 화면을 연 뒤 새 순간이 생긴 학생 id — 폴더에 점. 서랍을 열면 지운다 */
 
   /* 미션 04 슬롯 id → 사람이 읽는 이름. 교사 화면에 내부 id 가 새어나가면 안 된다. */
   var SLOT_LABEL = {
@@ -148,8 +149,69 @@
       '개별 개입보다 전체에게 한 번 물어보는 게 빠른 구간입니다.';
   }
 
-  /* ── 학생 상세 ───────────────────────────────────── */
-  function openDetail(s) {
+  /* ── 학생 한 명 (서랍) ───────────────────────────────
+   * 이 학생이 한 것을 순서대로 줄로. 판정·점수는 없다. 노란 표시는 "말 걸기 좋은 순간"
+   * — 무엇을 말할지는 쓰지 않는다. 데이터는 fold 결과 그대로, 시각만 원래 기록에서 읽는다. */
+  var hm = function (t) {
+    return t ? new Date(t).toLocaleTimeString('ko', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+  };
+
+  /* 이 학생의 원래 기록 — 로컬은 이 브라우저, 서버 모드는 teacher.html 이 C.events 에 넣는다. 목업은 없다 */
+  function eventsOf(s) {
+    if (s === me) return CC.store ? CC.store.all() : [];
+    return (C.events || []).filter(function (e) { return e.sid === s.id; });
+  }
+  function lastT(evs, types) {
+    for (var i = evs.length - 1; i >= 0; i--) if (types.indexOf(evs[i].type) !== -1) return evs[i].t;
+    return null;
+  }
+  /* 미션 id → 미션. 내부 id 는 화면에 내지 않는다 */
+  function missionOf(mid) {
+    var all = (CC.SENTENCE_MISSIONS || []).concat(CC._roomMissions || []);
+    try { all = all.concat(JSON.parse(localStorage.getItem('cutcheck.generated') || '[]')); } catch (e) { /* 저장소가 막혀도 이름만 빠진다 */ }
+    return all.filter(function (m) { return m && m.id === mid; })[0] || null;
+  }
+  function mids(evs) {
+    var out = [];
+    evs.forEach(function (e) { if (e.mid && out.indexOf(e.mid) === -1) out.push(e.mid); });
+    return out;
+  }
+  function missionName(mid, i) {
+    var m = missionOf(mid);
+    return m && m.title ? m.title : '미션 ' + (i + 1);
+  }
+
+  /* 폴더 아래 한 줄 — 지금 미션 · 단계 */
+  function whereNow(s) {
+    var evs = eventsOf(s), ms = mids(evs);
+    var step = s.sWrap ? '정리까지 했어요'
+      : s.sCodes.length ? '코딩'
+      : (s.sDesignCount || s.sMethod) ? '설계'
+      : s.sDefine ? '성공 조건'
+      : C.STAGES[s.stage];
+    var last = ms.length ? missionName(ms[ms.length - 1], ms.length - 1)
+      : (s.mission && MISSION_NAME[s.mission]) || '';
+    return last ? last + ' · ' + step : step;
+  }
+
+  function row(dl, label, t, fill) {
+    var r = el('div', 'row');
+    r.appendChild(el('dt', null, label));
+    var dd = el('dd');
+    fill(dd);
+    r.appendChild(dd);
+    r.appendChild(el('span', 'tm', hm(t)));
+    dl.appendChild(r);
+  }
+  function mark(dd, txt) { dd.appendChild(el('span', 'mark', txt)); }
+  function was(dd, txt) { if (txt) dd.appendChild(el('span', 'was', txt)); }
+
+  function openDetail(s, mid) {
+    var all = eventsOf(s);
+    var ms = mids(all);
+    var evs = mid ? all.filter(function (e) { return e.mid === mid; }) : all;
+    var v = mid ? (CC.fold.fold(evs, { id: s.id, name: s.name }) || CC.fold.empty(s.id, s.name)) : s;
+
     var d = $('#detail');
     d.innerHTML = '';
     var close = el('button', 'close', '×');
@@ -158,196 +220,162 @@
     close.addEventListener('click', closeDetail);
     d.appendChild(close);
 
-    d.appendChild(el('h3', null, s.name));
+    d.appendChild(el('h3', 'big-title', s.name));
     d.appendChild(el('p', 'dsub', C.STAGES[s.stage] + ' 단계 · 마지막 조작 ' + mmss(s.idleSec)));
+    delete fresh[s.id];
 
-    var g = el('div', 'dgrid');
-
-    var b1 = el('div', 'dbox' + (s.define.trap ? ' flag' : ''));
-    b1.appendChild(el('span', 'k', '이 학생이 정한 성공'));
-    b1.appendChild(el('div', 'v', s.define.text));
-    g.appendChild(b1);
-
-    var b2 = el('div', 'dbox' + (s.why.weak ? ' flag' : ''));
-    b2.appendChild(el('span', 'k', '자를 기준을 고른 이유'));
-    b2.appendChild(el('div', 'v', s.why.text));
-    g.appendChild(b2);
-
-    var b3 = el('div', 'dbox');
-    b3.appendChild(el('span', 'k', '지금 만든 순서'));
-    if (s.blocks.length) {
-      var bl = el('div', 'dblocks');
-      s.blocks.forEach(function (id) { bl.appendChild(el('span', null, CC.block(id).label)); });
-      b3.appendChild(bl);
-    } else {
-      b3.appendChild(el('div', 'v', '아직 블록을 놓지 않았어요'));
-    }
-    g.appendChild(b3);
-
-    if (s.made) {
-      var b10 = el('div', 'dbox');
-      b10.appendChild(el('span', 'k', '이 학생이 만든 미션'));
-      b10.appendChild(el('div', 'v', '“' + s.made.brief + '”'));
-      b10.appendChild(el('div', 'v', '자료: ' + s.made.inputs.join(' / ') + ' · 함정 ' + s.made.traps + '개'));
-      g.appendChild(b10);
+    /* 미션 고르기 — 기록이 미션 하나뿐이면 고를 게 없다 */
+    if (ms.length > 1) {
+      var pills = el('div', 'mf-row');
+      pills.setAttribute('aria-label', '미션');
+      [null].concat(ms).forEach(function (id, i) {
+        var b = el('button', 'mf', id ? missionName(id, i - 1) : '모든 미션');
+        b.type = 'button';
+        b.setAttribute('aria-pressed', (id || null) === (mid || null) ? 'true' : 'false');
+        if (id) b.appendChild(el('span', 'st', CC.fold.missionStatus(all.filter(function (e) { return e.mid === id; })) === 'done' ? '완료' : '아직'));
+        b.addEventListener('click', function () { openDetail(s, id); });
+        pills.appendChild(b);
+      });
+      d.appendChild(pills);
     }
 
-    if (s.abstractOk !== null && s.abstractOk !== undefined) {
-      var b8 = el('div', 'dbox' + (s.abstractOk ? '' : ' flag'));
-      b8.appendChild(el('span', 'k', '미션 04 · 추상화'));
-      b8.appendChild(el('div', 'v', s.abstractOk
-        ? '함수 하나로 두 업무를 다 해냈어요'
-        : '값 하나를 안 빼서 두 번째 업무가 무너졌어요' +
-          (s.abstractPicked ? ' (밖으로 뺀 것: ' + s.abstractPicked.map(function (k) {
-            return SLOT_LABEL[k] || k;
-          }).join(', ') + ')' : '')));
-      g.appendChild(b8);
-    }
+    var cols = el('div', 'd-cols');
+    var main = el('section', 'd-main');
+    main.setAttribute('aria-label', '기록');
+    main.appendChild(el('h4', null, '이 학생이 한 것 — 순서대로'));
+    main.appendChild(el('p', 'lead', '노란 표시는 말 걸기 좋은 순간이에요.'));
+    var dl = el('dl', 'd-rows');
 
-    if (s.reviewComments) {
-      var b9 = el('div', 'dbox');
-      b9.appendChild(el('span', 'k', '미션 05 · 동료 검토'));
-      b9.appendChild(el('div', 'v', '질문형 코멘트 ' + s.reviewComments + '개를 보냈어요' +
-        (s.reviewGuess ? ' · 예측: ' + (s.reviewGuess.guess === 'hold' ? '버틸 것' : '깨질 것') : '')));
-      g.appendChild(b9);
+    /* 문장형 미션 */
+    if (v.sDefine) {
+      var defs = evs.filter(function (e) { return e.type === 's-define' || e.type === 's-redefine'; });
+      var first = defs.length ? (defs[0].choice || defs[0].to) : null;
+      row(dl, '성공 조건', lastT(evs, ['s-define', 's-redefine']), function (dd) {
+        dd.appendChild(document.createTextNode(v.sDefine.choice || ''));
+        if (v.sDefineVer > 1) {
+          mark(dd, '다시 정함');
+          was(dd, '고친 횟수 ' + (v.sDefineVer - 1) + '번' + (first && first !== v.sDefine.choice ? ' · 처음: “' + first + '”' : ''));
+        }
+        if (v.sDefine.reason) was(dd, '이유 “' + v.sDefine.reason + '”');
+      });
     }
-
-    if (s.wrap) {
-      var b7 = el('div', 'dbox');
-      b7.appendChild(el('span', 'k', '오늘 이 학생이 말할 문장'));
-      b7.appendChild(el('div', 'v', s.wrap));
-      g.appendChild(b7);
-    }
-
-    if (s.cause) {
-      var b6 = el('div', 'dbox');
-      b6.appendChild(el('span', 'k', '깨진 원인을 이렇게 봤어요'));
-      b6.appendChild(el('div', 'v', s.cause + (s.handle ? ' → ' + s.handle : '')));
-      g.appendChild(b6);
-    }
-
-    if (s.revised) {
-      var b5 = el('div', 'dbox');
-      b5.appendChild(el('span', 'k', '스스로 고친 횟수'));
-      b5.appendChild(el('div', 'v', s.revised + '번' +
-        (s.lastRevision ? ' · 마지막 ' + s.lastRevision.from + ' → ' + s.lastRevision.to : '')));
-      g.appendChild(b5);
-    }
-
-    if (s.symptom) {
-      var b4 = el('div', 'dbox');
-      b4.appendChild(el('span', 'k', '학생이 쓴 증상'));
-      b4.appendChild(el('div', 'v', s.symptom.act
-        ? '”' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았는데 ' +
-          CC.josa(s.symptom.act, '이/가') + ' 나왔어요”' +
-          (s.symptom.blk ? ' · 의심 블록 ' + s.symptom.blk : '')
-        : '”' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았어요” — 실제로 뭐가 나왔는지는 못 골랐습니다'));
-      g.appendChild(b4);
-    }
-
-    /* 문장형 미션 데이터 */
-    if (s.sDefine) {
-      var bs1 = el('div', 'dbox');
-      bs1.appendChild(el('span', 'k', '문장형 · 성공 조건'));
-      bs1.appendChild(el('div', 'v', s.sDefine.choice + (s.sDefineVer > 1 ? ' (수정 ' + (s.sDefineVer - 1) + '회)' : '')));
-      g.appendChild(bs1);
-    }
-    if (s.sMethod) {
-      var bs2 = el('div', 'dbox');
-      bs2.appendChild(el('span', 'k', '현재 방법'));
-      var sl = s.sMethod.slots || {};
-      var text = s.sMethod.cards
-        ? s.sMethod.cards.map(function (c) { return CC.cards.text(c); }).join(' → ')
+    if (v.sMethod) {
+      var sl = v.sMethod.slots || {};
+      var plan = v.sMethod.cards
+        ? v.sMethod.cards.map(function (c) { return CC.cards.text(c); }).join(' → ')
         : Object.keys(sl).map(function (k) { return sl[k]; }).filter(Boolean).join(' → ');  /* 예전 기록 */
-      bs2.appendChild(el('div', 'v', text + (s.sMethodVer > 1 ? ' (수정 ' + (s.sMethodVer - 1) + '회)' : '')));
-      g.appendChild(bs2);
-    }
-
-    /* ── 칭찬 타이밍 기록 (타임라인) ── */
-    var moments = [];
-    if (s.sDefineVer > 1) moments.push({ cls: 'redefine', label: '성공 조건을 다시 정함 (' + (s.sDefineVer - 1) + '회)' });
-    if (s.sMethodVer > 1) moments.push({ cls: 'remethod', label: '방법을 수정함 (' + (s.sMethodVer - 1) + '회)' });
-    s.sJudges.forEach(function (j, ji) {
-      var timeStr = j.t ? new Date(j.t).toLocaleTimeString('ko', { hour: '2-digit', minute: '2-digit' }) : '';
-      if (j.verdict === '지키지 못했다') {
-        moments.push({ cls: 'miss', label: '"지키지 못했다"로 판정' + (j.basis ? ' — ' + j.basis : ''), time: timeStr });
-      } else if (j.verdict === '지켰다') {
-        moments.push({ cls: 'kept', label: '"지켰다"로 판정' + (j.basis ? ' — ' + j.basis : ''), time: timeStr });
-      } else {
-        moments.push({ cls: 'unsure', label: '"판단하기 어렵다"' + (j.basis ? ' — ' + j.basis : ''), time: timeStr });
-      }
-    });
-    if (s.selfFound) moments.push({ cls: 'praise', label: '깨진 곳을 스스로 찾아냄' });
-    if (s.redefined) moments.push({ cls: 'praise', label: '결과를 보고 성공 조건 자체를 다시 정함' });
-    if (s.revised) moments.push({ cls: 'praise', label: '결과를 보고 기준을 스스로 고침' });
-
-    if (moments.length) {
-      var tl = el('div', 'dbox praise-timeline');
-      tl.appendChild(el('span', 'k', '활동 타임라인'));
-      var tlList = el('div', 'tl-list');
-      moments.forEach(function (m) {
-        var row = el('div', 'tl-row ' + m.cls);
-        var dot = el('span', 'tl-dot');
-        row.appendChild(dot);
-        if (m.time) row.appendChild(el('span', 'tl-time', m.time));
-        row.appendChild(el('span', 'tl-label', m.label));
-        tlList.appendChild(row);
+      row(dl, '설계도', lastT(evs, ['s-method', 's-remethod', 's-design']), function (dd) {
+        dd.appendChild(document.createTextNode(plan));
+        if (v.sMethodVer > 1) was(dd, '고친 횟수 ' + (v.sMethodVer - 1) + '번');
+        if (v.sMethod.reason) was(dd, '이유 “' + v.sMethod.reason + '”');
       });
-      tl.appendChild(tlList);
-      g.appendChild(tl);
     }
-
-    /* 코드 실행 기록 */
-    if (s.sCodes && s.sCodes.length) {
-      var bsCode = el('div', 'dbox');
-      bsCode.appendChild(el('span', 'k', '코드 실행'));
-      var lastCode = s.sCodes[s.sCodes.length - 1];
-      var codeInfo = '실행 ' + s.sCodes.length + '회';
-      if (lastCode.error) codeInfo += ' · 마지막: 에러';
-      else if (lastCode.output) codeInfo += ' · 마지막 결과: ' + lastCode.output.trim().substring(0, 30);
-      bsCode.appendChild(el('div', 'v', codeInfo));
-      g.appendChild(bsCode);
-    }
-    if (s.sCodeJudges && s.sCodeJudges.length) {
-      var bsCJ = el('div', 'dbox');
-      bsCJ.appendChild(el('span', 'k', '코드 판정'));
-      var lastCJ = s.sCodeJudges[s.sCodeJudges.length - 1];
-      bsCJ.appendChild(el('div', 'v', lastCJ.verdict + (lastCJ.basis ? ' — ' + lastCJ.basis : '')));
-      g.appendChild(bsCJ);
-    }
-
-    if (s.sHelps) {
-      var bs5 = el('div', 'dbox flag');
-      bs5.appendChild(el('span', 'k', '도움 요청'));
-      bs5.appendChild(el('div', 'v', s.sHelps + '회'));
-      g.appendChild(bs5);
-    }
-    if (s.sTutor && s.sTutor.length) {
-      var bt = el('div', 'dbox');
-      bt.appendChild(el('span', 'k', '튜터에게 물은 것 (' + s.sTutor.length + '회)'));
-      s.sTutor.forEach(function (x) {
-        bt.appendChild(el('div', 'v', 'Q. ' + x.question));
-        bt.appendChild(el('div', 'v', 'A. ' + x.answer));
+    if (v.sCodes.length) {
+      var lastCode = v.sCodes[v.sCodes.length - 1];
+      row(dl, '코드 실행', lastCode.t, function (dd) {
+        dd.appendChild(document.createTextNode('마지막으로 실행한 코드'));
+        dd.appendChild(el('div', 'code', lastCode.code || ''));
+        was(dd, '실행 ' + v.sCodes.length + '번');
       });
-      g.appendChild(bt);
+      /* 자료마다 마지막 결과 — dataId 에는 자료 값이 들어 있다 (sentence.js lastResults 와 같은 규칙) */
+      var byData = {}, order = [];
+      v.sCodes.forEach(function (c) {
+        if (!(c.dataId in byData)) order.push(c.dataId);
+        byData[c.dataId] = c.error || String(c.output || '').trim() || '출력 없음';
+      });
+      var m = missionOf(mid || (ms.length === 1 ? ms[0] : null));   /* 자료 값 → 자료 이름 */
+      row(dl, '자료별 결과', lastCode.t, function (dd) {
+        dd.className = 'mono';
+        order.forEach(function (val) {
+          var inp = m && (m.inputs || []).filter(function (x) { return x.v === val; })[0];
+          dd.appendChild(el('div', null, (inp ? inp.name : String(val == null ? '' : val).slice(0, 40)) + ' → ' + byData[val]));
+        });
+      });
     }
-    if (s.sWrap) {
-      var bs6 = el('div', 'dbox');
-      bs6.appendChild(el('span', 'k', '마무리'));
-      bs6.appendChild(el('div', 'v', '"' + s.sWrap + '"'));
-      g.appendChild(bs6);
+    var judges = v.sJudges.concat(v.sCodeJudges).sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+    if (judges.length) {
+      var seq = [];
+      judges.forEach(function (j) { if (seq[seq.length - 1] !== j.verdict) seq.push(j.verdict); });
+      var lastJ = judges[judges.length - 1];
+      row(dl, '스스로 판단', lastJ.t, function (dd) {
+        dd.appendChild(document.createTextNode(seq.join(' → ')));
+        /* "지키지 못했다" 였다가 바뀐 경우 — 자기 결과를 스스로 깨뜨린 순간 */
+        var miss = seq.indexOf('지키지 못했다');
+        if (miss !== -1 && miss < seq.length - 1) mark(dd, '스스로 깨뜨림');
+        if (lastJ.basis) was(dd, '“' + lastJ.basis + '”');
+      });
     }
+    if (v.sHelps) row(dl, '도움 요청', lastT(evs, ['s-help']), function (dd) { dd.textContent = v.sHelps + '번'; });
+    if (v.sWrap) row(dl, '정리', lastT(evs, ['s-wrap']), function (dd) { dd.textContent = '“' + v.sWrap + '”'; });
 
-    d.appendChild(g);
+    /* 블록 미션 (01·02·03·06) · 04 · 05 · 졸업 과제 — 예전 기록도 그대로 보인다 */
+    if (!mid) {
+      if (s.define.text !== '아직 안 정함') row(dl, '정한 성공', null, function (dd) {
+        dd.textContent = s.define.text;
+        if (s.redefined) mark(dd, '다시 정함');
+      });
+      if (s.why.text !== '아직 안 정함') row(dl, '자를 기준을 고른 이유', null, function (dd) { dd.textContent = s.why.text; });
+      if (s.blocks.length) row(dl, '지금 만든 순서', null, function (dd) {
+        dd.textContent = s.blocks.map(function (id) { return CC.block(id).label; }).join(' → ');
+      });
+      if (s.symptom) row(dl, '학생이 쓴 증상', null, function (dd) {
+        dd.textContent = s.symptom.act
+          ? '“' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았는데 ' + CC.josa(s.symptom.act, '이/가') + ' 나왔어요”' +
+            (s.symptom.blk ? ' · 의심 블록 ' + s.symptom.blk : '')
+          : '“' + CC.josa(s.symptom.exp, '이/가') + ' 나올 줄 알았어요” — 실제로 뭐가 나왔는지는 못 골랐어요';
+      });
+      if (s.selfFound) row(dl, '스스로 판단', null, function (dd) { dd.textContent = '깨진 곳을 찾아냈어요'; mark(dd, '스스로 깨뜨림'); });
+      if (s.revised) row(dl, '스스로 고친 기준', null, function (dd) {
+        dd.textContent = s.revised + '번' + (s.lastRevision ? ' · 마지막 ' + s.lastRevision.from + ' → ' + s.lastRevision.to : '');
+        mark(dd, '다시 정함');
+      });
+      if (s.cause) row(dl, '깨진 원인을 이렇게 봤어요', null, function (dd) { dd.textContent = s.cause + (s.handle ? ' → ' + s.handle : ''); });
+      if (s.abstractOk !== null && s.abstractOk !== undefined) row(dl, '미션 04 · 추상화', null, function (dd) {
+        dd.textContent = s.abstractOk
+          ? '함수 하나로 두 업무를 다 해냈어요'
+          : '값 하나를 안 빼서 두 번째 업무가 무너졌어요' +
+            (s.abstractPicked ? ' (밖으로 뺀 것: ' + s.abstractPicked.map(function (k) { return SLOT_LABEL[k] || k; }).join(', ') + ')' : '');
+      });
+      if (s.reviewComments) row(dl, '미션 05 · 동료 검토', null, function (dd) {
+        dd.textContent = '질문형 코멘트 ' + s.reviewComments + '개를 보냈어요' +
+          (s.reviewGuess ? ' · 예측: ' + (s.reviewGuess.guess === 'hold' ? '버틸 것' : '깨질 것') : '');
+      });
+      if (s.made) row(dl, '이 학생이 만든 미션', null, function (dd) {
+        dd.textContent = '“' + s.made.brief + '”';
+        was(dd, '자료: ' + s.made.inputs.join(' / ') + ' · 함정 ' + s.made.traps + '개');
+      });
+      if (s.wrap) row(dl, '오늘 이 학생이 말할 문장', null, function (dd) { dd.textContent = s.wrap; });
+    }
+    if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
+    main.appendChild(dl);
 
     /* 교사가 할 말을 대신 써주지 않는다. 물어볼 질문만 고른다. */
     var say = el('div', 'saybox');
     say.appendChild(el('span', 'k', '이 학생에게 먼저 물어볼 것'));
     say.appendChild(el('span', null, nextQuestion(s)));
-    d.appendChild(say);
+    main.appendChild(say);
+    cols.appendChild(main);
+
+    var side = el('section', 'd-side');
+    side.setAttribute('aria-label', '튜터 질문');
+    side.appendChild(el('h4', null, '튜터에게 물은 것' + (v.sTutor.length ? ' (' + v.sTutor.length + '번)' : '')));
+    side.appendChild(el('p', 'lead', '질문과 답을 그대로 보여 드려요.'));
+    var qs = el('div', 'd-qs');
+    v.sTutor.forEach(function (x) {
+      var q = el('div', 'q');
+      q.appendChild(el('div', null, 'Q. ' + x.question));
+      q.appendChild(el('div', 'a', 'A. ' + x.answer));
+      q.appendChild(el('span', 'was', hm(x.t) + (x.refused ? ' · 튜터가 답하지 않았어요' : '')));
+      qs.appendChild(q);
+    });
+    if (!v.sTutor.length) qs.appendChild(el('p', 'emptyrow', '아직 없어요.'));
+    side.appendChild(qs);
+    cols.appendChild(side);
+    d.appendChild(cols);
 
     $('#scrim').hidden = false;
     d.hidden = false;
+    renderFolders();
   }
 
   function nextQuestion(s) {
@@ -428,6 +456,7 @@
   var alertsLoaded = !(CC.sb && CC.sb.active());
   CC._resetAlerts = function () { lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); };
   CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || []); };
+  /* 말 걸 순간 — 시각 · 학생 이름 · 사실 문장. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다 */
   function showAlert(a) {
     var text = CC.alerts.say(a);
     var host = $('#toasts');
@@ -436,16 +465,54 @@
       host.appendChild(toast);
       setTimeout(function () { toast.remove(); }, 5000);
     }
+    fresh[a.id] = true;
     var list = $('#alert-list');
     if (list) {
-      list.insertBefore(el('li', null, text), list.firstChild);
+      var li = el('li', 'mo');
+      li.appendChild(el('span', 'tm', hm(Date.now())));
+      var body = el('span');
+      var who = el('button', 'who', a.name);
+      who.type = 'button';
+      who.addEventListener('click', function () {
+        var s = C.students.filter(function (x) { return x.id === a.id; })[0];
+        if (s) openDetail(s);
+      });
+      body.appendChild(who);
+      body.appendChild(el('span', 'sep', ' · '));
+      body.appendChild(document.createTextNode(text));
+      li.appendChild(body);
+      list.insertBefore(li, list.firstChild);
       while (list.children.length > 10) list.removeChild(list.lastChild);
-      $('#alerts').hidden = false;
+      $('#moments-empty').hidden = true;
     }
+  }
+
+  /* ── 학생 폴더 — 가나다순만. 진도·속도로 줄 세우지 않는다 (CLAUDE.md) ── */
+  function renderFolders() {
+    var box = $('#student-folders');
+    if (!box) return;
+    box.innerHTML = '';
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    C.students.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ko'); }).forEach(function (s) {
+      var t = el('button', 'tile student-tile');
+      t.type = 'button';
+      var lastAt = Date.now() - (s.idleSec || 0) * 1000;
+      var f = el('span', 'folder' + (lastAt < today.getTime() ? ' gray' : ''));
+      f.setAttribute('aria-hidden', 'true');
+      f.appendChild(el('span', 'tab'));
+      f.appendChild(el('span', 'body'));
+      if (fresh[s.id]) f.appendChild(el('span', 'dot'));
+      t.appendChild(f);
+      t.appendChild(el('span', 'name', s.name));
+      t.appendChild(el('span', 'meta', whereNow(s)));
+      t.addEventListener('click', function () { openDetail(s); });
+      box.appendChild(t);
+    });
   }
 
   /* ── 대시보드 렌더 (외부에서 호출 가능) ──────────── */
   function renderDashboard() {
+    renderFolders();
     tiles();
     rowList('#ready', '#p-ready', C.ready(), 'hot', function (s) {
       return s.symptom
@@ -492,6 +559,7 @@
     var nowSnap = CC.alerts.snap(C.students);
     CC.alerts.diff(lastSnap, nowSnap).forEach(showAlert);
     lastSnap = nowSnap;
+    renderFolders();
   }
 
   /* 로컬 모드: 학생 탭이 기록하면 브라우저가 storage 이벤트를 준다. 폴링이 필요 없다. */
