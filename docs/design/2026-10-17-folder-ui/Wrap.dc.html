@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>미션 정리</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#555555}
+.step{font-size:14px;padding:10px 0;color:#555555;text-decoration:none;border-bottom:2px solid transparent}
+.step.on{color:#111111;font-weight:600;border-bottom-color:#111111}
+.row{display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid #E3E3E3;font-size:15px;line-height:1.55}
+.row dt{color:#555555;font-size:13px;padding-top:2px}
+.row dd{margin:0}
+.was{display:block;margin-top:4px;font-size:13px;color:#555555}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;background:#FFF23D;font-size:13px;font-weight:600}
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans KR',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:900px;box-sizing:border-box;padding:32px clamp(16px,4vw,56px) 64px">
+<div style="max-width:1280px;margin:0 auto">
+<nav aria-label="위치" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;min-height:44px">
+<a href="Main.dc.html" style="text-decoration:none">내 교실</a><span aria-hidden="true" style="color:#888888">/</span><a href="Classroom.dc.html" style="text-decoration:none">1학년 3반</a><span aria-hidden="true" style="color:#888888">/</span><span>급식 재료 몇 가지?</span>
+</nav>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(44px,7vw,96px);line-height:1;letter-spacing:-0.04em">급식 재료 몇 가지?</h1>
+<nav aria-label="단계" style="display:flex;flex-wrap:wrap;gap:28px;border-bottom:1px solid #111111;margin-top:18px">
+<a class="step" href="#">01 문제</a><a class="step" href="Success.dc.html">02 성공</a><a class="step" href="Mission.dc.html">03 설계</a><a class="step" href="Code.dc.html">04 코딩</a><a class="step on" href="#" aria-current="step">05 정리</a>
+</nav>
+<div style="display:flex;flex-wrap:wrap;gap:56px;margin-top:32px">
+<section aria-label="내가 해 온 것" style="flex:999 1 560px;min-width:0">
+<h2 style="margin:0 0 6px;font-size:22px;font-weight:600">내가 해 온 것</h2>
+<p style="margin:0 0 8px;font-size:15px;color:#555555">고친 기록도 그대로 남아요.</p>
+<dl style="margin:0;border-top:1px solid #111111">
+<div class="row"><dt>내가 정한 성공</dt><dd>겹치는 재료는 한 번만 센 수가 나오면 성공<span class="was">처음엔 "월요일 재료의 답과 같은 3이 나오면 성공"이었다가 바꿨어요</span></dd></div>
+<div class="row"><dt>내 설계도</dt><dd>나누기 (쉼표) → 겹친 것은 하나만 → 개수 세기<span class="was">1번 고쳤어요 — "겹친 것은 하나만" 을 더했어요</span></dd></div>
+<div class="row"><dt>실행 결과</dt><dd style="font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.8">월요일 재료 → 3<br>화요일 재료 → 3<br>수요일 재료 → 5 <span class="tag" style="font-family:'IBM Plex Sans KR',sans-serif">새로 온 자료</span></dd></div>
+<div class="row"><dt>내 판단</dt><dd>지켰다<span class="was">"수요일엔 김이랑 계란이 새로 들어와서 5가 맞아요"</span></dd></div>
+</dl>
+</section>
+<section aria-label="한 줄 정리" style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:14px">
+<label style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:22px;font-weight:600">처음 생각과 달랐던 점이 있나요?</span>
+<span style="font-size:15px;color:#555555">한두 문장이면 충분해요. 선생님이 읽어요.</span>
+<textarea rows="5" placeholder="예: 겹치는 걸 빼야 한다는 걸 수요일 자료를 보고 알았다." style="font:inherit;font-size:16px;color:#111111;padding:14px;border:1px solid #111111;border-radius:14px;resize:vertical"></textarea>
+</label>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<a href="Classroom.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-size:16px;font-weight:600">저장하고 미션 닫기</a>
+<a href="Code.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border-radius:999px;border:1px solid #111111;text-decoration:none;font-size:16px">코드 다시 보기</a>
+</div>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

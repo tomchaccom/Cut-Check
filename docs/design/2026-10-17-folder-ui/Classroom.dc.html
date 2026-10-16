@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>1학년 3반 미션</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#555555}
+.file{position:relative;width:78%;aspect-ratio:.8/1;background:#FFFFFF;border:1px solid #E6E6E6;border-radius:10px;clip-path:polygon(0 0,74% 0,100% 20%,100% 100%,0 100%);box-shadow:0 8px 18px rgba(0,0,0,.05)}
+.file .fold{position:absolute;right:0;top:0;width:26%;height:20%;background:#EDEDED;border-bottom-left-radius:10px}
+.file .ext{position:absolute;left:0;right:0;bottom:12%;text-align:center;font-family:'Archivo',sans-serif;font-weight:500;font-size:22px;letter-spacing:.04em;color:#A8A8A8}
+.file.done{background:#111111;border-color:#111111}.file.done .fold{background:#3A3A3A}.file.done .ext{color:#FFF23D}
+.file.doing{border:2px solid #111111}
+.tile{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px;border-radius:14px;text-decoration:none;color:#111111}
+.tile:hover{background:#F6F6F6}
+.tile:focus-visible{outline:2px solid #111111;outline-offset:2px}
+.state{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;margin-top:-4px}
+.state.done{background:#111111;color:#FFFFFF}
+.state.doing{border:1px solid #111111;color:#111111}
+.state.none{color:#555555}
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans KR',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:900px;box-sizing:border-box;padding:32px clamp(16px,4vw,56px) 64px">
+<div style="max-width:1280px;margin:0 auto">
+<nav aria-label="위치" style="display:flex;gap:8px;align-items:center;font-size:15px;min-height:44px">
+<a href="Main.dc.html" style="text-decoration:none">내 교실</a><span aria-hidden="true" style="color:#888888">/</span><span>1학년 3반</span>
+</nav>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(56px,11vw,150px);line-height:.95;letter-spacing:-0.04em">1학년 3반</h1>
+<div style="height:1px;background:#111111;margin-top:18px"></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;padding-top:12px">
+<p style="margin:0;font-size:18px;line-height:1.5">선생님이 올린 미션 5개. 파일을 열면 이어서 할 수 있어요.</p>
+<p style="margin:0;font-size:14px;color:#555555;display:flex;gap:14px;align-items:center"><span class="state done">완료</span><span class="state doing">진행 중</span><span>표시 없음 = 아직 안 열었어요</span></p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:30px 22px;margin-top:40px">
+<sc-for list="{{files}}" as="f" hint-placeholder-count="5">
+<a class="tile" href="Mission.dc.html">
+<span class="file {{f.state}}" aria-hidden="true"><span class="fold"></span><span class="ext">{{f.ext}}</span></span>
+<span style="font-size:15px;font-weight:500;text-align:center;line-height:1.35">{{f.name}}</span>
+<span class="state {{f.state}}">{{f.label}}</span>
+</a>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+files: [
+{ name: '창고 주문서 세기', ext: 'TXT', state: 'done', label: '완료' },
+{ name: '오늘 출석 확인', ext: 'TXT', state: 'done', label: '완료' },
+{ name: '급식 재료 몇 가지?', ext: 'PY', state: 'doing', label: '진행 중' },
+{ name: '주의 재료 찾기', ext: 'TXT', state: 'none', label: '' },
+{ name: '간식비 모두 얼마?', ext: 'TXT', state: 'none', label: '' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

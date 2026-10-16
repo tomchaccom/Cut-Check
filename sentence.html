@@ -6,12 +6,12 @@
 <title>Cut &amp; Check · 문장형 미션</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="sentence.css">
 </head>
 <body>
 
-<div class="page">
+<div class="page wide">
   <!-- 상단 바 -->
   <header class="topbar">
     <div class="brand">
@@ -21,15 +21,7 @@
         <small id="save-status">저장됨</small>
       </div>
     </div>
-    <nav class="steps-nav" id="steps-nav">
-      <span data-step="1">문제</span>
-      <span data-step="2">성공</span>
-      <span data-step="3">설계</span>
-      <span data-step="4">코딩</span>
-      <span data-step="5">정리</span>
-    </nav>
     <div class="toptools">
-      <span class="tbtn" id="classroom-name" style="cursor:default;background:var(--green-soft);color:var(--green);border-color:var(--green)" hidden></span>
       <span class="tbtn" id="user-info" style="cursor:default" hidden></span>
       <button class="tbtn" id="logout-btn" aria-label="로그아웃">로그아웃</button>
     </div>
@@ -44,29 +36,50 @@
 
   <!-- [내 미션] 패널 -->
   <section class="tab-panel active" id="panel-missions">
-    <h2 class="step-title">내 미션</h2>
-    <div class="mission-grid" id="mission-grid"></div>
-    <div class="empty-msg" id="missions-empty" hidden>선생님이 미션을 만들면 여기에 보여요.</div>
+    <div id="rooms-view">
+      <h1 class="wordmark">CUT:CHECK</h1>
+      <div class="rule"></div>
+      <p class="home-lead">문제를 쪼개고, 직접 깨뜨려 보고, 지켰는지는 내가 판단해요.<br>교실 폴더를 열어 오늘의 미션을 골라 주세요.</p>
+      <h2 class="sub-label">내 교실</h2>
+      <div class="icon-grid" id="room-grid"></div>
+    </div>
+    <div id="room-view" hidden>
+      <nav class="crumb" aria-label="위치"><a href="#" id="crumb-home">내 교실</a><span class="sep" aria-hidden="true">/</span><span id="crumb-room"></span></nav>
+      <h1 class="big-title xl" id="room-title"></h1>
+      <div class="rule"></div>
+      <p class="home-lead" id="room-lead"></p>
+      <div class="icon-grid" id="mission-grid"></div>
+      <p id="missions-empty" hidden>아직 올라온 미션이 없어요.</p>
+    </div>
   </section>
 
   <!-- [미션 풀기] 패널 -->
   <section class="tab-panel" id="panel-play">
     <button class="btn text" id="back-to-missions" hidden style="margin-bottom:12px" aria-label="미션 목록으로 돌아가기">&larr; 미션 목록으로</button>
-    <nav class="mission-bar" id="mission-bar" hidden></nav>
+    <nav class="mission-bar icon-grid" id="mission-bar" hidden></nav>
     <div class="empty-msg" id="play-empty" hidden>내 미션 탭에서 미션을 골라 주세요.</div>
+    <header id="mission-head" hidden>
+    <nav class="crumb" aria-label="위치" id="play-crumb"><a href="#" id="crumb-play-home">내 교실</a><span class="sep" aria-hidden="true">/</span><span id="crumb-play-room"></span><span class="sep" aria-hidden="true">/</span><span id="crumb-play-mission"></span></nav>
+    <h1 class="big-title" id="mission-title"></h1>
+    <nav class="step-tabs" id="steps-nav" aria-label="단계">
+      <span data-step="1">01 문제</span>
+      <span data-step="2">02 성공</span>
+      <span data-step="3">03 설계</span>
+      <span data-step="4">04 코딩</span>
+      <span data-step="5">05 정리</span>
+    </nav>
+    </header>
 
   <main class="content">
 
     <!-- 화면 1: 뭘 해야 할까 -->
-    <section class="step active" id="step1" tabindex="-1">
+    <!-- 02·03 단계에서는 왼쪽 단으로 남는다 (showStep 의 data-side) -->
+    <section class="step active" id="step1" tabindex="-1" aria-label="받은 요청">
       <h2 class="step-title">뭘 해야 할까?</h2>
-      <div class="request-card">
-        <p class="req-text" id="brief" style="font-size:18px;font-weight:700;line-height:1.5"></p>
-        <p class="req-situation" id="situation" hidden style="font-size:13px;color:var(--ink-3);margin-top:8px"></p>
-      </div>
-      <div class="sample-box">
-        <div id="samples"></div>
-      </div>
+      <p class="req-text" id="brief"></p>
+      <p class="req-situation" id="situation" hidden></p>
+      <dl class="samples" id="samples"></dl>
+      <p class="side-define"><span>내가 정한 성공</span><br><span id="side-define"></span></p>
       <div class="step-action">
         <button class="btn primary" id="go-define">다음</button>
       </div>
@@ -74,10 +87,9 @@
 
     <!-- 화면 2: 언제 성공이야 -->
     <section class="step" id="step2" tabindex="-1">
-      <h2 class="step-title">언제 성공일까?</h2>
-      <!-- 무엇에 대한 성공인지 — 받은 요청을 다시 보여 준다 -->
+      <!-- 무엇에 대한 성공인지 — 받은 요청은 왼쪽에 있고, 여기는 작게 다시 -->
       <blockquote class="define-brief" id="define-brief"></blockquote>
-      <p class="define-q" id="define-q"></p>
+      <h2 class="define-q" id="define-q"></h2>
       <div class="define-cards" id="define-cards">
         <!-- JS에서 카드 생성 -->
       </div>
@@ -97,9 +109,12 @@
     <!-- 화면 3: 어떻게 할까 -->
     <section class="step" id="step3" tabindex="-1">
       <h2 class="step-title">어떻게 할까?</h2>
-      <p class="card-hint">필요한 카드를 골라 순서대로 놓아 보세요.</p>
+      <p class="card-hint">할 일을 눌러 담고, 위에서 아래로 순서를 맞춰 보세요.</p>
       <div class="card-pool" id="card-pool" aria-label="고를 수 있는 카드"></div>
-      <h3 class="design-title">내 설계도</h3>
+      <div class="design-head">
+        <h3 class="design-title">내 설계도</h3>
+        <button type="button" class="btn text" id="design-reset">처음부터</button>
+      </div>
       <ol class="design-list" id="design-list" aria-label="내 설계도"></ol>
       <label class="reason-label">이유
         <textarea class="reason" id="reason-method" placeholder="이 방법을 고른 이유를 적어보세요." rows="2"></textarea>
@@ -115,49 +130,54 @@
       <h2 class="step-title">코드로 만들기</h2>
 
       <!-- 설계도 요약 -->
-      <div class="design-summary" id="design-summary" style="background:var(--green-soft);border:1px solid var(--green);border-radius:12px;padding:14px 16px;margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">나의 설계도</div>
-        <div id="design-define" style="font-size:14px;margin-bottom:4px"></div>
-        <div id="design-steps" style="font-size:14px"></div>
+      <div class="design-summary plan-row" id="design-summary">
+        <span class="plan-label">나의 설계도</span>
+        <span id="design-define" class="plan-pill"></span>
+        <span id="design-steps" class="plan-steps"></span>
       </div>
 
       <!-- 자료 선택 -->
-      <div style="margin-bottom:12px">
-        <span style="font-size:13px;font-weight:600;color:var(--ink-2)">자료 선택</span>
-        <select id="code-data-select" style="margin-left:8px;padding:6px 10px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink)"></select>
+      <div class="data-row">
+        <label for="code-data-select" class="field-label">자료 선택</label>
+        <select id="code-data-select" class="data-select"></select>
       </div>
-      <div id="code-data-preview" style="background:var(--surface-2);border-radius:8px;padding:8px 12px;font-family:var(--mono);font-size:14px;margin-bottom:12px"></div>
+      <div id="code-data-preview" class="data-preview"></div>
 
       <!-- 코드 에디터 -->
-      <div style="position:relative">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:13px;font-weight:600;color:var(--ink-2)">파이썬 코드</span>
-          <span id="pyodide-status" style="font-size:11px;color:var(--ink-3)">Python 로딩 중...</span>
-        </div>
-        <textarea id="code-editor" rows="8" style="width:100%;padding:12px;border:1px solid var(--line-strong);border-radius:10px;font-family:var(--mono);font-size:14px;background:var(--surface);color:var(--ink);resize:vertical;tab-size:4;line-height:1.6" placeholder="# data 에 자료가 들어 있어요."></textarea>
+      <div class="editor-head">
+        <label for="code-editor" class="field-label">파이썬 코드</label>
+        <span id="pyodide-status" class="pyodide-status">Python 로딩 중...</span>
+      </div>
+      <textarea id="code-editor" class="code-editor" rows="8" placeholder="# data 에 자료가 들어 있어요."></textarea>
+
+      <div class="run-row">
+        <button class="pill primary" id="run-all" disabled>자료 3개로 실행</button>
+        <button class="pill" id="run-code" disabled>실행</button>
+        <button class="pill" id="back-method">설계 수정</button>
       </div>
 
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn primary" id="run-code" disabled>실행</button>
-        <button class="btn primary" id="run-all" disabled>자료 3개로 실행</button>
-        <button class="btn secondary" id="back-method">설계 수정</button>
+      <!-- 실행 결과: 자료 3개는 표, 한 자료·실행 중은 #code-result -->
+      <div class="tbl-wrap" id="code-table-wrap" hidden>
+        <table class="tbl" id="code-table">
+          <caption>실행 결과</caption>
+          <thead><tr><th scope="col">자료</th><th scope="col">내용</th><th scope="col" style="text-align:right">결과</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-
-      <!-- 실행 결과 -->
       <div id="code-output" hidden style="margin-top:12px">
-        <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:4px">실행 결과</div>
-        <pre id="code-result" style="background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:var(--mono);font-size:14px;white-space:pre-wrap;overflow-x:auto;max-height:200px"></pre>
+        <pre id="code-result" class="code-result"></pre>
       </div>
 
       <!-- 판정 -->
-      <div id="code-judge" hidden style="margin-top:16px">
+      <div id="code-judge" class="judge-box" hidden>
+        <div class="field-label">내가 정한 성공</div>
         <div class="judge-row" style="border:none;padding:0;margin:0">
           <div class="judge-q" id="code-judge-q"></div>
           <div class="judge-btns" id="code-judge-btns"></div>
           <label class="basis-label">왜 그렇게 생각했나요?
             <input type="text" class="basis-input" id="code-basis" placeholder="근거를 적어 주세요">
           </label>
-          <button class="btn secondary" id="code-judge-save" disabled style="margin-top:8px">판정 저장</button>
+          <button class="pill" id="code-judge-save" disabled style="margin-top:8px">판정 저장</button>
         </div>
       </div>
 
@@ -168,22 +188,25 @@
 
     <!-- 화면 5: 마무리 -->
     <section class="step" id="step5" tabindex="-1">
-      <h2 class="step-title">돌아보기</h2>
-
-      <!-- 판정 리뷰 -->
-      <div id="wrap-review"></div>
-
-      <!-- 한 줄 정리 -->
-      <div style="margin-top:24px">
-        <p class="review-guide">오늘 확인한 것 중에서 가장 기억에 남는 건 무엇인가요?</p>
-        <textarea id="wrap-text" class="reason" rows="3" placeholder="한 줄이면 충분해요."></textarea>
-      </div>
-
-      <div class="step-actions">
-        <button class="btn primary" id="finish" disabled>기록 저장</button>
-      </div>
-      <div id="wrap-done" hidden>
-        <p class="done-msg">기록이 저장되었어요.</p>
+      <div class="cols">
+        <section class="col-main" aria-label="내가 해 온 것">
+          <h2 class="step-title">내가 해 온 것</h2>
+          <p class="muted">고친 기록도 그대로 남아요.</p>
+          <dl class="wrap-rows" id="wrap-review"></dl>
+        </section>
+        <section class="col-side" aria-label="한 줄 정리">
+          <label class="wrap-ask">
+            <span class="wrap-q">처음 생각과 달랐던 점이 있나요?</span>
+            <span class="muted">한두 문장이면 충분해요. 선생님이 읽어요.</span>
+            <textarea id="wrap-text" class="reason" rows="5" placeholder="한 줄이면 충분해요."></textarea>
+          </label>
+          <div class="step-actions">
+            <button class="btn primary" id="finish" disabled>기록 저장</button>
+          </div>
+          <div id="wrap-done" hidden>
+            <p class="done-msg">기록이 저장되었어요.</p>
+          </div>
+        </section>
       </div>
     </section>
 

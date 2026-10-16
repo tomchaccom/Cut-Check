@@ -71,7 +71,7 @@ test('교사 화면에서 초안을 만들 수 있다 (LLM 고정 응답)', asyn
   await expect(page.locator('#confirm-mission')).toBeVisible();
   await expect(page.locator('#gen-result')).toContainText('검수 필요');
   await expect(page.locator('#gen-result')).toContainText('셋째만 문구예요');
-  await expect(page.locator('#gen-result')).toContainText('헷갈리는 카드');
+  await expect(page.locator('#gen-result')).toContainText('없어도 되는 카드');
 });
 
 test('학생 해결 → 설계도 → 코드 → 완료 → 교사 화면', async ({ context, page }) => {
@@ -111,6 +111,39 @@ test('학생이 설계도를 내면 교사 화면에 알림이 뜬다', async ({
   await expect(t.locator('#alert-list li')).toHaveCount(1);
   await t.reload();
   await expect(t.locator('.toast')).toHaveCount(0);     // 새로고침해도 쏟아지지 않는다
+});
+
+test('강사 홈 — 학생은 가나다순 폴더, 말 걸 순간은 사실만', async ({ context, page }) => {
+  test.setTimeout(120000);
+  await local(context);
+  await seedMission(page);
+  const t = await context.newPage();
+  await t.goto(BASE + '/teacher.html');            // 먼저 열어 둔다 — 알림은 연 뒤에 생긴 제출만 뜬다
+  await studentToCode(page);                       // 설계도를 낸다
+  const names = await t.locator('.student-tile .name').allInnerTexts();
+  expect(names.length).toBeGreaterThan(0);
+  expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'ko')));   // 가나다순만
+  await expect(t.locator('#moments')).toContainText('설계도를 냈어요', { timeout: 5000 });
+  await expect(t.locator('#moments')).not.toContainText(/잘했|훌륭|칭찬/);
+  await expect(t.locator('details.more')).toBeAttached();                       // 분석 패널은 접혀서 남는다
+});
+
+test('학생 서랍 — 스스로 판단은 판단마다 근거가 남는다', async ({ context, page }) => {
+  await local(context);
+  await page.goto(BASE + '/sentence.html');
+  await page.evaluate(() => {
+    const now = Date.now();
+    localStorage.setItem('cutcheck.log.v1', JSON.stringify([
+      { v: 1, type: 's-code-judge', verdict: '지키지 못했다', basis: '첫 근거 6이 나와서', t: now - 60000, mid: 'sm1' },
+      { v: 1, type: 's-code-judge', verdict: '지켰다', basis: '둘째 근거 겹친 걸 뺐다', t: now, mid: 'sm1' }
+    ]));
+  });
+  await page.goto(BASE + '/teacher.html');
+  await page.getByRole('button', { name: '내 기록 열기' }).click();
+  const d = page.locator('#detail');
+  await expect(d).toContainText('첫 근거 6이 나와서');
+  await expect(d).toContainText('둘째 근거 겹친 걸 뺐다');
+  await expect(d).toContainText('스스로 깨뜨림');
 });
 
 test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({ context, page }) => {
@@ -257,6 +290,8 @@ test('내 기록에는 지금 미션 것만, 코드 실행 결과와 내 판단�
   await page.locator('#code-basis').fill('세 개가 나와서');
   await page.locator('#code-judge-save').click();
   await page.locator('#go-wrap').click();
+  await expect(page.locator('#wrap-review')).toContainText('3');              // 정리 화면도 코드 실행 결과로
+  await expect(page.locator('#wrap-review')).toContainText('세 개가 나와서');
   await page.locator('#wrap-text').fill('앞 미션 정리');
   await page.locator('#finish').click();
 
@@ -287,16 +322,18 @@ test('자료 3개로 실행 — 같은 코드를 자료마다 돌려 결과를 �
   // sm1 복제: 주문서 01·02 는 3개, 03(반례)은 사과가 겹쳐 서로 다른 건 4개
   await page.locator('#code-editor').fill('data = "x"\nitems = data.split(",")\nprint(len(set(items)))\n');
   await page.locator('#run-all').click();
-  const out = page.locator('#code-result');
-  await expect(out).toContainText('주문서 03  →  4', { timeout: 20000 });
-  await expect(out).toContainText('주문서 01  →  3');
-  await expect(out).toContainText('주문서 02  →  3');
+  const rows = page.locator('#code-table tbody tr');
+  await expect(rows).toHaveCount(3, { timeout: 20000 });
+  await expect(rows.nth(2).locator('.out')).toHaveText('4');
+  await expect(rows.nth(0).locator('.out')).toHaveText('3');
+  await expect(rows.nth(1).locator('.out')).toHaveText('3');
+  await expect(rows.nth(2)).toContainText('새로 온 자료');
   await expect(page.locator('#code-judge')).toBeVisible();          // 판단은 학생이
   await expect(page.locator('#code-judge')).not.toContainText('정답'); // 시스템은 맞다·틀리다를 말하지 않는다
 
   await page.locator('#code-editor').fill('print(item)\n');            // 에러도 자료마다 위치와 사실만
   await page.locator('#run-all').click();
-  await expect(out).toContainText('주문서 03  →  1번째 줄', { timeout: 20000 });
+  await expect(rows.nth(2).locator('.out')).toContainText('1번째 줄', { timeout: 20000 });
 });
 
 test('성공 조건 화면은 받은 요청을 다시 보여 주고 묻는다', async ({ page }) => {
@@ -306,4 +343,106 @@ test('성공 조건 화면은 받은 요청을 다시 보여 주고 묻는다', 
   await page.locator('#go-define').click();
   await expect(page.locator('#define-brief')).toHaveText('주문서에 상품이 몇 개인지 알려 주세요.');
   await expect(page.locator('#define-q')).toContainText('하나를 골라 주세요.');
+});
+
+/* 가짜 Supabase — 로그인한 학생, 교실 둘. js/data/supabase.js 를 이 객체로 바꿔 끼운다 */
+const FAKE_SB = `(function(CC){var P=function(v){return Promise.resolve(v)};
+var base={no:'AI',type:'sentence',pipelineId:'split-count',stage:'세기',brief:'재료가 모두 몇 개인지 알려 주세요.',define:{q:'어떤 결과가 나오면 성공일까요?',options:[{v:'재료가 모두 몇 개인지 나오면 성공',key:'count'}]},inputs:[{id:'d01',name:'월',v:'a,b'},{id:'d02',name:'화',v:'c,d'},{id:'d03',name:'수',v:'e',counter:true}]};
+function m(id,t){var x=JSON.parse(JSON.stringify(base));x.id=id;x.title=t;return x}
+CC.sb={active:function(){return true},getProfile:function(){return P({role:'student',name:'태인'})},
+myClassrooms:function(){return P(window.__rooms||[{id:'r1',name:'1학년 3반'},{id:'r2',name:'방과후 코딩반'}])},
+getMissions:function(rid){return P(rid==='r1'?[{id:'db1',data:m('ai-a','푼 미션')},{id:'db2',data:m('ai-b','하던 미션')},{id:'db3',data:m('ai-c','안 한 미션')}]:[])},
+getMyEvents:function(){return P([{type:'s-define',_missionDbId:'db1'},{type:'s-wrap',text:'끝',_missionDbId:'db1'},{type:'s-define',_missionDbId:'db2'}])},
+pushEvent:function(rid,mid){(window.__pushed=window.__pushed||[]).push([rid,mid]);return P(null)},signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
+})(window.CC=window.CC||{});`;
+
+async function asStudent(page, rooms) {
+  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_SB }));
+  if (rooms) await page.addInitScript(r => { window.__rooms = r; }, rooms);
+  await page.goto(BASE + '/sentence.html');
+}
+
+test('학생 홈 — 교실은 폴더, 열면 미션 파일과 내 상태', async ({ page }) => {
+  await asStudent(page);
+  await expect(page.locator('.room-tile')).toHaveCount(2);
+  await expect(page.locator('.room-tile').first()).toContainText('1학년 3반');
+  await page.locator('.room-tile').first().click();
+  await expect(page.locator('#room-view .crumb')).toContainText('1학년 3반');
+  const files = page.locator('.mission-file');
+  await expect(files).toHaveCount(3);
+  await expect(files.nth(0)).toContainText('완료');
+  await expect(files.nth(1)).toContainText('진행 중');
+  await page.locator('#room-view .crumb a', { hasText: '내 교실' }).click();
+  await expect(page.locator('.room-tile')).toHaveCount(2);
+});
+
+test('다른 교실을 둘러보고 돌아와도 기록은 미션을 연 교실로 간다', async ({ page }) => {
+  await asStudent(page);
+  await page.locator('.room-tile').first().click();                 // r1
+  await page.locator('.mission-file').first().click();              // r1 의 db1
+  await page.locator('#crumb-play-home').click();                    // 미션 머리의 '내 교실'
+  await page.locator('.room-tile').nth(1).click();                  // r2 둘러보기
+  await expect(page.locator('#room-title')).toHaveText('방과후 코딩반');
+  await page.locator('.main-tab[data-panel="panel-play"]').click();
+  await expect(page.locator('#crumb-play-room')).toHaveText('1학년 3반');
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  const pushed = await page.evaluate(() => window.__pushed);
+  expect(pushed).toEqual([['r1', 'db1']]);
+});
+
+test('폰 폭 04 — 튜터 버튼이 결과 표를 덮지 않는다 (어느 스크롤 위치에서도)', async ({ page }) => {
+  await page.setViewportSize({ width: 420, height: 860 });
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await expect(page.locator('#tutor-open')).toBeVisible();
+  // 문서 좌표로 비교한다 — 떠 있는 버튼이면 스크롤에 따라 표 위로 올라오므로 이 비교가 깨진다
+  const [btnTop, stepBottom] = await page.evaluate(() => {
+    const y = window.scrollY;
+    return [document.querySelector('#tutor-open').getBoundingClientRect().top + y,
+      document.querySelector('#step4').getBoundingClientRect().bottom + y];
+  });
+  for (const yy of [0, 400, 100000]) {
+    await page.evaluate(v => window.scrollTo(0, v), yy);
+    const now = await page.evaluate(() => document.querySelector('#tutor-open').getBoundingClientRect().top + window.scrollY);
+    expect(Math.round(now)).toBe(Math.round(btnTop));
+  }
+  expect(btnTop).toBeGreaterThanOrEqual(stepBottom);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(420);
+});
+
+test('교실이 없는 학생 — 교실 코드로 들어가기만 보인다', async ({ page }) => {
+  const errs = []; page.on('pageerror', e => errs.push(e.message));
+  await asStudent(page, []);
+  await expect(page.locator('.room-join')).toBeVisible();
+  await expect(page.locator('.room-tile')).toHaveCount(0);
+  expect(errs).toEqual([]);
+});
+
+test('미션 머리 — 위치 표시, 큰 미션 이름, 단계 탭', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await expect(page.locator('#mission-title')).toHaveText('시험용 미션');
+  await expect(page.locator('#steps-nav .current')).toContainText('01');
+  await page.locator('#go-define').click();
+  await expect(page.locator('#steps-nav .current')).toContainText('02');
+});
+
+test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  await pickCards(page);
+  const rows = page.locator('.design-item');
+  const y = await Promise.all([0, 1, 2].map(i => rows.nth(i).boundingBox().then(b => b.y)));
+  expect(y[0] < y[1] && y[1] < y[2]).toBe(true);
+  const w = await rows.first().boundingBox();
+  expect(w.width).toBeLessThan(560);                 // 줄은 글자 폭만큼
 });

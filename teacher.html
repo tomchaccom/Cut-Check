@@ -6,7 +6,7 @@
 <title>Cut &amp; Check · 선생님 화면</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="sentence.css">
 <link rel="stylesheet" href="teacher.css">
 </head>
@@ -42,41 +42,58 @@
 
   <!-- 교실 대시보드 -->
   <div id="dashboard" hidden>
-    <div class="t-head">
-      <div>
-        <span class="eyebrow" id="class-label"></span>
-        <h1 id="dash-title">지금 누구부터 갈까</h1>
+    <div class="t-top">
+      <nav class="crumb" aria-label="위치"><span>내 교실</span><span class="sep" aria-hidden="true">/</span><span id="crumb-room">이 브라우저</span><span class="role-tag">강사</span></nav>
+      <div class="t-top-r">
+        <span class="room-code" id="room-code-wrap" hidden>교실 코드 <b id="room-code"></b></span>
+        <button type="button" class="pill primary" id="go-make">미션 만들기</button>
       </div>
     </div>
+    <h1 class="big-title xl" id="dash-title">이 브라우저</h1>
+    <p class="eyebrow" id="class-label"></p>
 
     <!-- 탭 -->
-    <nav class="main-tabs" style="margin-bottom:20px">
-      <button class="main-tab active" data-dtab="dtab-students">학생 현황</button>
-      <button class="main-tab" data-dtab="dtab-missions">미션 관리</button>
-      <button class="main-tab" data-dtab="dtab-invite">학생 추가</button>
+    <nav class="main-tabs step-tabs" aria-label="보기">
+      <button type="button" class="main-tab active" data-dtab="dtab-students">학생</button>
+      <button type="button" class="main-tab" data-dtab="dtab-missions">미션</button>
+      <button type="button" class="main-tab" data-dtab="dtab-invite">학생 추가</button>
     </nav>
 
-    <!-- [학생 현황] -->
+    <!-- [학생] -->
     <div class="dtab active" id="dtab-students">
-      <section id="alerts" hidden>
-        <h3 class="alerts-title">최근 알림</h3>
-        <ol id="alert-list" class="alert-list"></ol>
-      </section>
       <div id="toasts" class="toasts" aria-live="polite"></div>
       <div class="livebar" id="livebar"></div>
-      <div class="tiles" id="tiles"></div>
-      <div class="tcols">
-        <div>
-          <section class="panel"><div class="hd"><div><h2>지금 답해줄 수 있어요</h2><p class="lead">증상 진술이 완성된 호출.</p></div><span class="pill now" id="p-ready">0명</span></div><div class="rows" id="ready"></div></section>
-          <section class="panel"><div class="hd"><div><h2>말이 안 만들어졌어요</h2><p class="lead">기대만 골랐지만 실제 결과를 못 고른 학생.</p></div><span class="pill soon" id="p-half">0명</span></div><div class="rows" id="half"></div></section>
-          <section class="panel"><div class="hd"><div><h2>조용히 막혀 있어요</h2><p class="lead">4분 넘게 멈춰 있는 학생.</p></div><span class="pill calm" id="p-quiet">0명</span></div><div class="rows" id="quiet"></div></section>
-        </div>
-        <div>
-          <section class="panel"><div class="hd"><div><h2>지금 칭찬해주세요</h2><p class="lead">스스로 찾아냈거나 기준을 고친 순간.</p></div><span class="pill soon" id="p-praise">0명</span></div><div class="rows" id="praise"></div></section>
-          <section class="panel"><div class="hd"><div><h2>성공을 이렇게 정의했어요</h2><p class="lead">하드코딩의 출발점.</p></div></div><div class="riskgrid" id="risk"></div></section>
-          <section class="panel"><div class="hd"><div><h2>사고 단계별 흐름</h2></div></div><div class="funnel" id="funnel"></div><div class="dropnote" id="dropnote"></div></section>
-        </div>
+      <div class="t-cols">
+        <section aria-label="학생" class="t-main">
+          <div class="t-sec-hd">
+            <h2>학생 — 가나다순</h2>
+            <p class="legend"><span><i class="lg-dot"></i>새 순간이 있어요</span><span><i class="lg-gray"></i>오늘 아직 기록이 없어요</span></p>
+          </div>
+          <div class="icon-grid student-grid" id="student-folders"></div>
+        </section>
+        <section aria-label="말 걸 순간" class="t-side" id="moments">
+          <h2>말 걸 순간</h2>
+          <p class="lead" data-lint-ok>점수가 아니라 타이밍이에요. 격려의 말은 선생님이 해 주세요.</p>
+          <ol id="alert-list" class="alert-list"></ol>
+          <p class="emptyrow" id="moments-empty">화면을 연 뒤에 생긴 일이 여기에 쌓여요.</p>
+        </section>
       </div>
+      <details class="more">
+        <summary>더 보기 — 분석</summary>
+        <div class="tiles" id="tiles"></div>
+        <div class="tcols">
+          <div>
+            <section class="panel"><div class="hd"><div><h2>지금 답해줄 수 있어요</h2><p class="lead">증상 진술이 완성된 호출.</p></div><span class="pill now" id="p-ready">0명</span></div><div class="rows" id="ready"></div></section>
+            <section class="panel"><div class="hd"><div><h2>말이 안 만들어졌어요</h2><p class="lead">기대만 골랐지만 실제 결과를 못 고른 학생.</p></div><span class="pill soon" id="p-half">0명</span></div><div class="rows" id="half"></div></section>
+            <section class="panel"><div class="hd"><div><h2>조용히 막혀 있어요</h2><p class="lead">4분 넘게 멈춰 있는 학생.</p></div><span class="pill calm" id="p-quiet">0명</span></div><div class="rows" id="quiet"></div></section>
+          </div>
+          <div>
+            <section class="panel"><div class="hd"><div><h2>지금 칭찬해주세요</h2><p class="lead">스스로 찾아냈거나 기준을 고친 순간.</p></div><span class="pill soon" id="p-praise">0명</span></div><div class="rows" id="praise"></div></section>
+            <section class="panel"><div class="hd"><div><h2>성공을 이렇게 정의했어요</h2><p class="lead">하드코딩의 출발점.</p></div></div><div class="riskgrid" id="risk"></div></section>
+            <section class="panel"><div class="hd"><div><h2>사고 단계별 흐름</h2></div></div><div class="funnel" id="funnel"></div><div class="dropnote" id="dropnote"></div></section>
+          </div>
+        </div>
+      </details>
     </div>
 
     <!-- [미션 관리] -->
@@ -143,6 +160,7 @@ window.CC_SUPABASE = {
 <script src="js/core/alerts.js"></script>
 <script src="js/core/pipeline.js"></script>
 <script src="js/core/cards.js"></script>
+<script src="js/core/missions.js"></script>
 <script src="js/data/api.js"></script>
 <script src="js/data/store.js"></script>
 <script src="js/core/blocks.js"></script>
@@ -167,6 +185,11 @@ window.CC_SUPABASE = {
       var panel = $('#' + t.dataset.dtab);
       if (panel) panel.classList.add('active');
     });
+  });
+
+  /* 미션 만들기 — 지금처럼 미션 탭으로 */
+  $('#go-make').addEventListener('click', function () {
+    document.querySelector('.main-tab[data-dtab="dtab-missions"]').click();
   });
 
   /* dtab CSS */
@@ -237,7 +260,11 @@ window.CC_SUPABASE = {
   /* 교실 선택 */
   function selectRoom(room) {
     selectedRoom = room;
-    $('#class-label').textContent = room.name + ' · 코드 ' + room.code;
+    $('#class-label').textContent = '';
+    $('#crumb-room').textContent = room.name;
+    $('#dash-title').textContent = room.name;
+    $('#room-code').textContent = room.code;
+    $('#room-code-wrap').hidden = false;
     $('#invite-code').textContent = room.code;
     $('#dash-divider').hidden = false;
     $('#dashboard').hidden = false;
@@ -266,7 +293,7 @@ window.CC_SUPABASE = {
       });
       /* 교실 카드에 학생 수 반영 */
       var label = $('#class-label');
-      if (label) label.textContent = selectedRoom.name + ' · 코드 ' + selectedRoom.code + ' · 학생 ' + students.length + '명';
+      if (label) label.textContent = '학생 ' + students.length + '명';
     });
   }
 
@@ -296,6 +323,7 @@ window.CC_SUPABASE = {
 
       /* classroom 객체에 실제 학생 주입 */
       CC.classroom.students = students;
+      CC.classroom.events = evs;   /* 학생 서랍이 미션별로 다시 접고 시각을 읽는다 */
       if (CC._alertsLoaded) CC._alertsLoaded(students);
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
@@ -328,6 +356,7 @@ window.CC_SUPABASE = {
   function loadMissions() {
     if (!selectedRoom) return;
     CC.sb.getMissions(selectedRoom.id).then(function (missions) {
+      CC._roomMissions = missions.map(function (m) { return m.data || {}; });   /* 학생 서랍의 미션 이름 */
       var list = $('#mission-list');
       list.innerHTML = '';
       missions.forEach(function (m) {
@@ -435,85 +464,74 @@ window.CC_SUPABASE = {
       var guard = m.guard || { fallback: [], reasons: {} };
       var fb = function (field) {
         if (guard.fallback.indexOf(field) === -1) return '';
-        return ' <span title="' + esc((guard.reasons[field] || []).join('\n')) + '" style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--amber-soft,#FFF3DC);color:var(--amber)">기본 틀로 채워졌어요</span>';
+        return ' <span class="kind" title="' + esc((guard.reasons[field] || []).join('\n')) + '">기본 틀로 채워졌어요</span>';
       };
       /* 자료는 기본 틀이 없다. 코드가 관계만 고친 경우(단위 떼기 등)는 따로 알린다 */
       var repaired = (guard.repaired || []);
       var AXIS = { count: '개수 변화', sep: '구분자 변화', empty: '빈 결과', invisible: '보이지 않는 차이' };
-      var inputStyle = 'width:100%;padding:8px 12px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit';
 
-      var draft = '<div style="background:var(--surface-2);border:2px solid var(--amber);border-radius:12px;padding:16px;margin-top:8px">';
-      draft += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-      draft += '<span style="font-size:13px;font-weight:700;color:var(--amber)">초안 — 수정 후 확정하세요</span>';
-      if (pipeLabel) draft += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">' + esc(pipeLabel) + '</span>';
-      draft += '</div>';
+      /* NewMission.dc.html — 가는 선으로 나눈 칸들. 검수 필요만 노란 상자 */
+      var draft = '<div class="draft">';
+      draft += '<div class="draft-hd"><span>초안 — 수정 후 확정하세요</span>' + (pipeLabel ? '<span class="kind">' + esc(pipeLabel) + '</span>' : '') + '</div>';
       var rv = guard.review;
       if (rv && rv.status === 'teacher') {
-        draft += '<div role="status" style="background:var(--amber-soft,#FFF3DC);border:1px solid var(--amber);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px">' +
-          '<b style="color:var(--amber)">검수 필요</b> — 학생에게 내기 전에 확인해 주세요.<ul style="margin:4px 0 0 18px;padding:0">' +
-          (rv.reasons || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+        draft += '<div role="status" class="review-box"><b>검수 필요 — 학생에게 내기 전에 확인해 주세요</b>' +
+          (rv.reasons || []).map(function (x) { return '<span>· ' + esc(x) + '</span>'; }).join('') + '</div>';
       }
 
-      /* 문제 이름 */
-      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 이름' + fb('title') + '</label>';
-      draft += '<input id="draft-title" style="' + inputStyle + ';margin-bottom:10px" value="' + esc(m.title) + '">';
+      /* 문제 */
+      draft += '<div class="sec"><h3>문제</h3>';
+      draft += '<label class="lb">문제 이름' + fb('title') + '<input id="draft-title" class="in" value="' + esc(m.title) + '"></label>';
+      draft += '<label class="lb">학생에게 오는 요청' + fb('brief') + '<input id="draft-brief" class="in" value="' + esc(m.brief) + '"></label>';
+      draft += '</div>';
 
-      /* 문제 내용 */
-      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 내용 (학생에게 보이는 업무 요청)' + fb('brief') + '</label>';
-      draft += '<input id="draft-brief" style="' + inputStyle + ';margin-bottom:10px" value="' + esc(m.brief) + '">';
+      /* 자료 — 마지막 자료가 반례 */
+      draft += '<div class="sec"><h3>자료 <span class="h-sub">— 쉼표로 이어 써요. 마지막 자료가 반례예요</span>' +
+        (repaired.length ? ' <span class="kind" title="' + esc(repaired.join('\n')) + '">자동으로 손봤어요</span>' : '') + '</h3>';
+      (m.inputs || []).forEach(function (inp, i) {
+        var isCounter = (i === (m.inputs || []).length - 1);
+        draft += '<div class="drow' + (isCounter ? ' counter' : '') + '"><span class="dname">';
+        draft += '<input class="in draft-data-name" data-idx="' + i + '" aria-label="자료 ' + (i + 1) + ' 이름" value="' + esc(inp.name) + '">';
+        if (isCounter) draft += '<span class="h-sub">반례' + (AXIS[inp.axis] ? ' · ' + AXIS[inp.axis] : '') + '</span>' + fb('counter');
+        draft += '</span><input class="in mono draft-data-val" data-idx="' + i + '" aria-label="자료 ' + (i + 1) + ' 내용" value="' + esc(inp.v) + '"></div>';
+      });
+      draft += '</div>';
 
-      /* 성공 조건 — 문제 내용 바로 아래 */
+      /* 성공 조건 보기 — 무엇이 진짜인지는 교사에게만 */
       if (m.define && m.define.options) {
-        draft += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px">';
-        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">성공 조건 보기 (학생이 고르는 선택지)' + '</div>';
+        draft += '<div class="sec"><h3>성공 조건 보기 <span class="h-sub">— 학생에게는 무엇이 진짜인지 안 보여요</span></h3><div>';
         m.define.options.forEach(function (o) {
-          var bg, label;
-          if (o.trap === 'hardcode') { bg = 'var(--coral-soft)'; label = '<span style="color:var(--coral);font-size:11px;font-weight:700">하드코딩 함정</span>'; }
-          else if (o.trap === 'luck') { bg = 'var(--amber-soft,#FFF3DC)'; label = '<span style="color:var(--amber);font-size:11px;font-weight:700">요행 함정</span>'; }
-          else { bg = 'var(--green-soft)'; label = '<span style="color:var(--green);font-size:11px;font-weight:700">진짜 성공</span>'; }
-          draft += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;margin-bottom:3px;border-radius:6px;background:' + bg + ';font-size:13px">';
-          draft += '<span>' + esc(o.v) + '</span>' + label + '</div>';
+          var kind = o.trap === 'hardcode' ? '<span class="kind">함정 · 외우기</span>'
+            : o.trap === 'luck' ? '<span class="kind">함정 · 운</span>'
+            : '<span class="kind real">진짜</span>';
+          draft += '<div class="opt"><span>' + esc(o.v) + '</span>' + kind + '</div>';
         });
-        draft += '</div>';
+        draft += '</div></div>';
       }
 
-      /* 설계 카드 — 학생 화면과 같은 표(js/core/cards.js). 헷갈리는 카드는 교사에게만 표시 */
+      /* 설계 카드 — 학생 화면과 같은 표(js/core/cards.js). 없어도 되는 카드는 교사에게만 표시 */
       var cards = CC.cards.forMission(m);
       if (cards.length) {
-        draft += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px">';
-        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">설계 카드 (학생이 골라 순서를 정함)</div>';
+        draft += '<div class="sec"><h3>설계 카드 <span class="h-sub">— 순서는 학생이 정해요. 채점하지 않아요</span></h3><div class="chips">';
         cards.forEach(function (c) {
-          draft += '<div style="font-size:13px;padding:3px 0">' + esc(c.label) +
-            (c.detail ? ' <b style="color:var(--blue,#3A7BD5)">[' + esc(c.detail.name + ': ' + c.detail.options.join(' / ')) + ']</b>' : '') +
-            (c.decoy ? ' <span style="font-size:11px;color:var(--ink-3)">헷갈리는 카드</span>' : '') + '</div>';
+          draft += '<span class="chip' + (c.decoy ? ' extra' : '') + '">' + esc(c.label) +
+            (c.detail ? ' · ' + esc(c.detail.options.join(' / ')) : '') +
+            (c.decoy ? ' · 없어도 되는 카드' : '') + '</span>';
         });
-        draft += '</div>';
+        draft += '</div></div>';
       }
 
       /* 핵심 개념 */
-      draft += '<div style="padding:8px 10px;background:var(--green-soft);border:1px solid var(--green);border-radius:8px;margin-bottom:10px;font-size:12.5px;line-height:1.6">';
-      draft += '<b style="color:var(--green)">적용된 핵심 개념</b><br>';
-      draft += '<b>수업:</b> ' + esc(m.lesson || '') + ' · <b>핵심:</b> ' + esc(m.keyPoint || '') + '<br>';
-      draft += '<b>유형:</b> ' + esc(pipeLabel) + ' — 카드 ' + cards.filter(function (c) { return !c.decoy; }).length + '장으로 설계';
-      draft += '</div>';
-
-      /* 자료 편집 */
-      draft += '<div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px">자료 (쉼표로 구분)' +
-        (repaired.length ? ' <span title="' + esc(repaired.join('\n')) + '" style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">자동으로 손봤어요</span>' : '') + '</div>';
-      (m.inputs || []).forEach(function (inp, i) {
-        var isCounter = (i === (m.inputs || []).length - 1);
-        draft += '<div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">';
-        draft += '<input class="draft-data-name" data-idx="' + i + '" style="' + inputStyle + ';flex:0 0 120px" value="' + esc(inp.name) + '">';
-        draft += '<input class="draft-data-val" data-idx="' + i + '" style="' + inputStyle + ';flex:1;font-family:var(--mono)" value="' + esc(inp.v) + '">';
-        if (isCounter) draft += '<span style="font-size:11px;color:var(--coral);white-space:nowrap;font-weight:600">반례' + (AXIS[inp.axis] ? ' · ' + AXIS[inp.axis] : '') + fb('counter') + '</span>';
-        draft += '</div>';
-      });
+      draft += '<div class="sec"><h3>적용된 핵심 개념</h3><p class="lb">';
+      draft += '수업: ' + esc(m.lesson || '') + ' · 핵심: ' + esc(m.keyPoint || '') + '<br>';
+      draft += '유형: ' + esc(pipeLabel) + ' — 카드 ' + cards.filter(function (c) { return !c.decoy; }).length + '장으로 설계';
+      draft += '</p></div>';
 
       /* 버튼 */
-      draft += '<div style="display:flex;gap:8px;margin-top:14px">';
-      draft += '<button class="btn primary" id="confirm-mission">확정</button>';
-      draft += '<button class="btn o" id="retry-mission">다시 생성</button>';
-      draft += '<button class="btn o" id="discard-mission" style="color:var(--coral);border-color:var(--coral)">취소</button>';
+      draft += '<div class="draft-actions">';
+      draft += '<button type="button" class="pill primary" id="confirm-mission">확정</button>';
+      draft += '<button type="button" class="pill" id="retry-mission">다시 생성</button>';
+      draft += '<button type="button" class="pill quiet" id="discard-mission">취소</button>';
       draft += '</div></div>';
 
       result.innerHTML = draft;

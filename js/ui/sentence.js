@@ -69,11 +69,20 @@
       defineVer: 0,
       runs: [],
       judges: [],
+      codes: [],        /* 이번에 낸 s-code 기록 — 정리 화면의 결과 */
+      judge: null,      /* 마지막 s-code-judge */
+      firstDefine: '',
       allDataDone: false,
       codeText: '',
       skeleton: '',
       codeOutput: ''
     };
+
+    /* 미션 머리 — 위치 표시와 큰 이름 */
+    $('#mission-head').hidden = false;
+    $('#mission-title').textContent = M.title;
+    $('#crumb-play-mission').textContent = M.title;
+    $('#crumb-play-room').textContent = currentClassroomName || '내 미션';
 
     /* 화면 1 */
     $('#brief').textContent = M.brief;
@@ -84,8 +93,8 @@
     var samples = $('#samples');
     samples.innerHTML = '';
     M.inputs.slice(0, 2).forEach(function (inp) {   /* 반례는 코드 단계에서 — 처음엔 앞 두 자료만 */
-      samples.appendChild(el('span', 'sample-label', inp.name));
-      samples.appendChild(el('code', 'sample-data', inp.v));
+      samples.appendChild(el('dt', 'sample-label', inp.name));
+      samples.appendChild(el('dd', 'sample-data', inp.v));
     });
     if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';
 
@@ -151,7 +160,10 @@
       target.classList.add('active');
       try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
     }
-    document.querySelectorAll('.steps-nav span').forEach(function (s) {
+    /* 02·03 에서는 받은 요청(화면 1)을 왼쪽 단으로 남긴다 */
+    if (n === 2 || n === 3) $('#step1').dataset.side = n;
+    else $('#step1').removeAttribute('data-side');
+    document.querySelectorAll('#steps-nav span').forEach(function (s) {
       var sn = parseInt(s.dataset.step, 10);
       s.classList.remove('current', 'done');
       if (sn === n) s.classList.add('current');
@@ -224,23 +236,14 @@
     $('#go-run').disabled = !checkMethodComplete();
   }
 
-  function findLatestRun(dataId, methodVer) {
-    for (var i = state.runs.length - 1; i >= 0; i--) {
-      var r = state.runs[i];
-      if (r.dataId === dataId && r.methodVer === methodVer) {
-        r._idx = i;
-        return r;
-      }
-    }
-    return null;
+  /* 자료마다 마지막 실행 결과 — s-code 의 dataId 에는 자료 값이 들어 있다. 정리 화면과 내 기록이 같이 쓴다 */
+  function lastResults(codes) {
+    var last = {};
+    codes.forEach(function (c) { last[c.dataId] = c.error || String(c.output || '').trim() || '출력 없음'; });
+    return last;
   }
 
-  function findJudgeForRun(runIdx) {
-    for (var i = state.judges.length - 1; i >= 0; i--) {
-      if (state.judges[i].runIdx === runIdx) return state.judges[i];
-    }
-    return null;
-  }
+  $('#design-reset').addEventListener('click', function () { state.design = []; renderDesign(); });
 
   /* ── 화면 1 ────────────────────────────────────── */
   $('#go-define').addEventListener('click', function () { showStep(2); });
@@ -257,6 +260,8 @@
 
   $('#go-method').addEventListener('click', function () {
     if (!state.defineChoice) return;
+    if (!state.firstDefine) state.firstDefine = state.defineChoice;
+    $('#side-define').textContent = state.defineChoice;
     if (state.defineVer > 0) {
       rec('s-redefine', { from: state.defineChoice, to: state.defineChoice, reason: state.defineReason });
     } else {
@@ -368,7 +373,7 @@
     if ($('#design-define')) $('#design-define').textContent = '성공: ' + state.defineChoice;
     if ($('#design-steps')) {
       $('#design-steps').innerHTML = picked().map(function (c, i) {
-        return '<div>' + (i + 1) + '. ' + esc(CC.cards.text(c)) + '</div>';
+        return '<span class="plan-pill">' + (i + 1) + '. ' + esc(CC.cards.text(c)) + '</span>';
       }).join('');
     }
 
@@ -409,6 +414,7 @@
 
     /* 판정/마무리 숨기기 */
     if ($('#code-output')) $('#code-output').hidden = true;
+    if ($('#code-table-wrap')) $('#code-table-wrap').hidden = true;
     if ($('#code-judge')) $('#code-judge').hidden = true;
     if ($('#go-wrap')) $('#go-wrap').style.display = 'none';
   }
@@ -435,7 +441,7 @@
     var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
     py.run(fullCode, function (output, error) {
       if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
-      rec('s-code', { code: code, dataId: dataVal, output: output, error: error });
+      state.codes.push(rec('s-code', { code: code, dataId: dataVal, output: output, error: error }));
       cb(output, error);
     });
   }
@@ -443,6 +449,7 @@
   function showResult(text, isError) {
     var resultEl = $('#code-result'), outputBox = $('#code-output');
     if (!resultEl || !outputBox) return;
+    if ($('#code-table-wrap')) $('#code-table-wrap').hidden = true;
     outputBox.hidden = false;
     resultEl.textContent = text;
     resultEl.style.color = isError ? 'var(--coral)' : 'var(--ink)';
@@ -470,7 +477,7 @@
       btnsDiv.appendChild(b);
     });
     $('#code-judge-save').addEventListener('click', function () {
-      rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
+      state.judge = rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
       this.disabled = true; this.textContent = '저장됨';
       btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
       if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
@@ -493,18 +500,27 @@
   if ($('#run-all')) {
     $('#run-all').addEventListener('click', function () {
       if (!pyodideReady || !M) return;
-      var code = $('#code-editor').value, lines = [], anyOk = false, i = 0;
+      var code = $('#code-editor').value, rows = [], anyOk = false, i = 0;
       showResult('실행 중...', false);
       (function next() {
         if (i >= M.inputs.length) {
-          showResult(lines.join('\n'), false);
+          var tb = $('#code-table tbody');
+          tb.innerHTML = '';
+          rows.forEach(function (r) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + esc(r.name) + (r.counter ? '<span class="tag-new">새로 온 자료</span>' : '') + '</td>' +
+              '<td class="data">' + esc(r.v) + '</td><td class="out' + (r.err ? ' err' : '') + '">' + esc(r.text) + '</td>';
+            tb.appendChild(tr);
+          });
+          $('#code-table-wrap').hidden = false;
+          $('#code-output').hidden = true;
           if (anyOk) showJudge();
           return;
         }
         var inp = M.inputs[i++];
         runWith(code, inp.v, function (output, error) {
           if (!error) anyOk = true;
-          lines.push(inp.name + '  →  ' + (error || String(output || '').trim() || '출력된 것이 없어요.'));
+          rows.push({ name: inp.name, v: inp.v, counter: !!inp.counter, err: !!error, text: error || String(output || '').trim() || '출력된 것이 없어요.' });
           next();
         });
       })();
@@ -532,43 +548,30 @@
   function renderWrapStep() {
     var review = $('#wrap-review');
     review.innerHTML = '';
+    function row(label, value, was, mono) {
+      var r = el('div', 'row');
+      r.appendChild(el('dt', null, label));
+      var dd = el('dd', mono ? 'mono' : null);
+      if (typeof value === 'string') dd.textContent = value; else dd.appendChild(value);
+      if (was) dd.appendChild(el('span', 'was', was));
+      r.appendChild(dd);
+      review.appendChild(r);
+    }
 
-    /* 성공 조건 + 방법 요약 */
-    var summary = el('div', 'review-summary');
-    summary.innerHTML = '<b>성공 조건:</b> ' + esc(state.defineChoice) +
-      '<br><b>방법:</b> ' + esc(summarizeMethod());
-    review.appendChild(summary);
+    row('내가 정한 성공', state.defineChoice,
+      state.firstDefine && state.firstDefine !== state.defineChoice ? '처음 정한 것: "' + state.firstDefine + '"' : '');
+    row('내 설계도', summarizeMethod(), state.methodVer > 1 ? (state.methodVer - 1) + '번 고쳤어요' : '');
 
-    /* 자료별 판정 카드 */
+    var last = lastResults(state.codes), res = document.createDocumentFragment();
     M.inputs.forEach(function (inp) {
-      var latestRun = findLatestRun(inp.id, state.methodVer);
-      if (!latestRun) return;
-      var judge = findJudgeForRun(latestRun._idx);
-      if (!judge) return;
-
-      var vClass = judge.verdict === '지켰다' ? 'kept' : judge.verdict === '지키지 못했다' ? 'missed' : 'unsure';
-      var vBadge = judge.verdict === '지켰다' ? 'v-kept' : judge.verdict === '지키지 못했다' ? 'v-missed' : 'v-unsure';
-
-      var card = el('div', 'review-card ' + vClass);
-
-      var header = el('div', 'rc-header');
-      header.appendChild(el('span', 'rc-name', inp.name));
-      var badge = el('span', 'rc-verdict ' + vBadge, judge.verdict);
-      header.appendChild(badge);
-      card.appendChild(header);
-
-      var detail = el('div', 'rc-detail');
-      detail.textContent = inp.v + ' → ' + (latestRun.result.err ? '실행 중단' : latestRun.result.value);
-      card.appendChild(detail);
-
-      if (judge.basis) {
-        var basis = el('div', 'rc-basis');
-        basis.textContent = '"' + judge.basis + '"';
-        card.appendChild(basis);
-      }
-
-      review.appendChild(card);
+      if (!(inp.v in last)) return;
+      var line = el('div', null, inp.name + ' → ' + last[inp.v]);
+      if (inp.counter) line.appendChild(el('span', 'tag-new', '새로 온 자료'));
+      res.appendChild(line);
     });
+    if (res.childNodes.length) row('실행 결과', res, '', true);
+
+    if (state.judge) row('내 판단', state.judge.verdict, state.judge.basis ? '"' + state.judge.basis + '"' : '');
   }
 
   /* 자유 정리 입력 */
@@ -603,8 +606,11 @@
   });
 
   /* ── 탭 전환 ────────────────────────────────────── */
+  /* 기록이 가는 교실 = 미션 파일을 연 교실. 둘러보는 교실(viewedRoom)과 따로 둔다 —
+   * 다른 교실 폴더를 열어 보기만 해도 기록이 그 교실로 가면 안 된다 */
   var currentClassroomId = null;
   var currentMissionDbId = null;
+  var viewedRoom = null;  /* { id, name } — 지금 열어 본 교실 폴더 */
 
   function switchTab(panelId) {
     document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
@@ -640,15 +646,13 @@
 
     missions.forEach(function (m) {
       var mData = m.data || m;
-      var card = el('div', 'mission-card');
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.appendChild(el('div', 'mc-stage', (mData.no || '') + ' · ' + (mData.stage || '')));
-      card.appendChild(el('div', 'mc-title', mData.title || ''));
-      card.appendChild(el('div', 'mc-brief', mData.brief || ''));
+      var card = el('button', 'tile mission-file');
+      card.type = 'button';
+      card.innerHTML = '<span class="file" aria-hidden="true"><span class="fold"></span><span class="ext">TXT</span></span>';
+      card.appendChild(el('span', 'name', mData.title || ''));
 
-      /* 상태 — 아래에서 내 기록을 받아 채운다 */
-      var statusEl = el('span', 'mc-status st-none', '미시작');
+      /* 상태 — 아래에서 내 기록을 받아 채운다. 안 연 미션은 비워 둔다 */
+      var statusEl = el('span', 'mc-status state', '');
       statusEl.dataset.dbId = m.id || '';
       statusEl.dataset.mid = mData.id || '';
       card.appendChild(statusEl);
@@ -658,6 +662,7 @@
           CC.SENTENCE_MISSIONS.push(mData);
         }
         currentMissionDbId = m.id || null;  /* DB id. 기본 미션은 id 없음 */
+        if (viewedRoom) { currentClassroomId = viewedRoom.id; currentClassroomName = viewedRoom.name; }
         if ($('#play-empty')) $('#play-empty').hidden = true;
         loadMission(mData.id);
         switchTab('panel-play');
@@ -667,18 +672,20 @@
     });
   }
 
-  var STATUS = { none: ['st-none', '미시작'], doing: ['st-progress', '진행 중'], done: ['st-done', '완료'] };
+  var STATUS = { none: ['', ''], doing: ['doing', '진행 중'], done: ['done', '완료'] };
 
   /* 푼 미션 표시 — 이 학생의 기록만 본다. 반 전체 현황은 학생 화면에 띄우지 않는다 (CLAUDE.md) */
   function showMyStatus(grid) {
-    if (!CC.sb || !CC.sb.active() || !currentClassroomId) return;
-    CC.sb.getMyEvents(currentClassroomId).then(function (evs) {
+    if (!CC.sb || !CC.sb.active() || !viewedRoom) return;
+    CC.sb.getMyEvents(viewedRoom.id).then(function (evs) {
       grid.querySelectorAll('.mc-status').forEach(function (st) {
         var db = st.dataset.dbId, mid = st.dataset.mid;
         var mine = evs.filter(function (e) { return db ? e._missionDbId === db : e.mid === mid; });
         var s = STATUS[CC.fold.missionStatus(mine)];
-        st.className = 'mc-status ' + s[0];
+        st.className = 'mc-status state ' + s[0];
         st.textContent = s[1];
+        var f = st.parentNode.querySelector('.file');
+        if (f) f.className = 'file ' + s[0];
       });
     });
   }
@@ -758,16 +765,14 @@
     }
 
     /* 코드 실행 — 자료마다 마지막 실행 결과. s-code 의 dataId 에는 자료 값이 들어 있다 */
-    var lastByData = {};
-    codes.forEach(function (c) { lastByData[c.dataId] = c; });
+    var lastByData = lastResults(codes);
     var resultsSection = el('div', 'rc-results');
     (M.inputs || []).forEach(function (inp) {
-      var c = lastByData[inp.v];
-      if (!c) return;
+      if (!(inp.v in lastByData)) return;
       var row = el('div', 'rc-result-row');
       row.innerHTML = '<span class="rc-data-name">' + esc(inp.name) + '</span>' +
         '<div class="rc-data-input">' + esc(inp.v) + '</div>' +
-        '<div class="rc-row-result">결과: <b>' + esc(c.error || String(c.output || '').trim() || '출력 없음') + '</b></div>';
+        '<div class="rc-row-result">결과: <b>' + esc(lastByData[inp.v]) + '</b></div>';
       resultsSection.appendChild(row);
     });
     /* 내 판단 — 학생이 스스로 내린 것. 시스템 판정이 아니다 */
@@ -792,21 +797,64 @@
     list.appendChild(card);
   }
 
+  /* 내 교실 = 폴더. 교실을 열면 그 교실 미션이 파일로 나온다 */
+  var currentClassroomName = '';  /* 미션 화면 위치 표시용 */
+  function renderRooms(rooms) {
+    var grid = $('#room-grid');
+    grid.innerHTML = '';
+    rooms.forEach(function (r) {
+      var b = el('button', 'tile room-tile');
+      b.type = 'button';
+      b.innerHTML = '<span class="folder" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>';
+      b.appendChild(el('span', 'name', r.name));
+      b.addEventListener('click', function () { openRoom(r); });
+      grid.appendChild(b);
+    });
+    var join = el('a', 'tile room-join');
+    join.href = 'auth.html';
+    join.innerHTML = '<span class="folder new" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>';
+    join.appendChild(el('span', 'name', '교실 코드로 들어가기'));
+    join.appendChild(el('span', 'meta', '선생님께 받은 코드'));
+    grid.appendChild(join);
+    showRooms();
+  }
+
+  function showRooms() { $('#rooms-view').hidden = false; $('#room-view').hidden = true; }
+
+  function openRoom(r) {
+    viewedRoom = { id: r.id, name: r.name };
+    $('#mission-grid').innerHTML = '';
+    $('#room-lead').textContent = '';
+    $('#crumb-room').textContent = r.name;
+    $('#room-title').textContent = r.name;
+    $('#rooms-view').hidden = true; $('#room-view').hidden = false;
+    var asked = viewedRoom;
+    CC.sb.getMissions(r.id).then(function (missions) {
+      if (viewedRoom !== asked) return;  /* 그사이 다른 교실을 열었다 — 늦게 온 답은 버린다 */
+      $('#room-lead').textContent = missions.length ? '파일을 열면 이어서 할 수 있어요.' : '';
+      renderMissionGrid(missions);
+      showMyStatus($('#mission-grid'));
+    });
+  }
+  if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });
+  $('#crumb-play-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); switchTab('panel-missions'); });
+
   /* ── 인증 연동 ──────────────────────────────────── */
   function initAuth() {
     if (!CC.sb || !CC.sb.active()) {
       /* Supabase 미설정 → 로컬 전용 모드: 탭 숨기고 바로 플레이, 미션바 표시 */
       if ($('#login-link')) $('#login-link').hidden = true;
       if ($('#main-tabs')) $('#main-tabs').hidden = true;
+      $('#crumb-play-home').hidden = $('#crumb-play-home').nextElementSibling.hidden = true;  /* 교실 폴더가 없다 */
       bar.hidden = false;
       CC.SENTENCE_MISSIONS.forEach(function (m) {
         if (bar.querySelector('[data-id="' + m.id + '"]')) return;
-        var b = el('button', 'm-btn');
+        var b = el('button', 'tile m-btn');
         b.type = 'button';
         b.dataset.id = m.id;
+        b.innerHTML = '<span class="file" aria-hidden="true"><span class="fold"></span><span class="ext">TXT</span></span>';
         b.setAttribute('aria-pressed', m.id === CC.SENTENCE_MISSIONS[0].id ? 'true' : 'false');
-        b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
-        b.appendChild(el('span', 'm-title', m.title));
+        b.appendChild(el('span', 'name m-title', m.title));
         b.addEventListener('click', function () { loadMission(m.id); });
         bar.appendChild(b);
       });
@@ -832,24 +880,8 @@
       /* 교실 미션 로드 */
       CC.sb.myClassrooms().then(function (rooms) {
         console.log('[CC] myClassrooms:', rooms);
-        if (!rooms.length) {
-          console.warn('[CC] 교실 없음');
-          switchTab('panel-missions');
-          return;
-        }
-        currentClassroomId = rooms[0].id;
-
-        /* 상단에 교실 이름 표시 */
-        if ($('#classroom-name')) {
-          $('#classroom-name').textContent = rooms[0].name;
-          $('#classroom-name').hidden = false;
-        }
-
-        CC.sb.getMissions(currentClassroomId).then(function (missions) {
-          console.log('[CC] getMissions:', missions.length, '개');
-          renderMissionGrid(missions);
-          switchTab('panel-missions');
-        });
+        renderRooms(rooms);
+        switchTab('panel-missions');
       });
     });
 

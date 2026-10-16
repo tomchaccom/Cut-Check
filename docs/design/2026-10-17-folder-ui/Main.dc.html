@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>내 교실</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#555555}
+.folder{position:relative;width:100%;aspect-ratio:1.18/1}
+.folder .tab{position:absolute;left:0;top:0;width:42%;height:22%;border-radius:12px 18px 0 0;background:#E9DB2B}
+.folder .body{position:absolute;left:0;right:0;bottom:0;top:9%;border-radius:12px;background:#FFF23D;box-shadow:0 1px 0 rgba(0,0,0,.04),0 8px 18px rgba(0,0,0,.06)}
+.folder.gray .tab{background:#CFCFCF}.folder.gray .body{background:#EFEFEF}
+.folder.new .tab{background:transparent;border:2px dashed #BDBDBD;border-bottom:0}
+.folder.new .body{background:#FFFFFF;border:2px dashed #BDBDBD;box-shadow:none}
+.tile{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px;border:0;background:transparent;font:inherit;color:#111111;cursor:pointer;border-radius:14px;text-decoration:none}
+.tile:hover{background:#F6F6F6}
+.tile:focus-visible{outline:2px solid #111111;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans KR',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:900px;box-sizing:border-box;padding:32px clamp(16px,4vw,56px) 64px">
+<div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:0">
+<h1 style="margin:0;font-family:'Archivo',sans-serif;font-weight:500;font-size:clamp(64px,15.5vw,212px);line-height:.86;letter-spacing:-0.045em;white-space:nowrap">CUT:CHECK</h1>
+<div style="height:1px;background:#111111;margin-top:18px"></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;padding-top:12px">
+<p style="margin:0;max-width:620px;font-size:18px;line-height:1.5">문제를 쪼개고, 직접 깨뜨려 보고, 지켰는지는 내가 판단해요.<br>교실 폴더를 열어 오늘의 미션을 골라 주세요.</p>
+<div style="display:flex;gap:20px;align-items:flex-start">
+<button type="button" aria-label="보기 방식 바꾸기" style="display:flex;align-items:center;gap:6px;border:0;background:transparent;font:inherit;font-size:15px;color:#111111;cursor:pointer;min-height:44px">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#111111" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2" width="5" height="5"></rect><rect x="9" y="2" width="5" height="5"></rect><rect x="2" y="9" width="5" height="5"></rect><rect x="9" y="9" width="5" height="5"></rect></svg>보기</button>
+<button type="button" style="display:flex;align-items:center;gap:6px;border:0;background:transparent;font:inherit;font-size:15px;color:#111111;cursor:pointer;min-height:44px">
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#111111" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><circle cx="8" cy="5.5" r="1.8"></circle><path d="M4.6 12.4c.8-1.6 2-2.4 3.4-2.4s2.6.8 3.4 2.4"></path></svg>태인</button>
+</div>
+</div>
+<h2 style="margin:44px 0 18px;font-size:14px;font-weight:600;letter-spacing:.02em;color:#555555">내 교실</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:28px 22px">
+<sc-for list="{{rooms}}" as="room" hint-placeholder-count="4">
+<a class="tile" href="Classroom.dc.html">
+<span class="folder {{room.kind}}" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>
+<span style="font-size:15px;font-weight:500;text-align:center">{{room.name}}</span>
+<span style="font-size:13px;color:#555555;margin-top:-6px">{{room.meta}}</span>
+</a>
+</sc-for>
+<button type="button" class="tile">
+<span class="folder new" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>
+<span style="font-size:15px;font-weight:500">교실 코드로 들어가기</span>
+<span style="font-size:13px;color:#555555;margin-top:-6px">선생님께 받은 코드</span>
+</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+rooms: [
+{ name: '1학년 3반', meta: '미션 5개 · 2개 남음', kind: '' },
+{ name: '방과후 코딩반', meta: '미션 3개 · 다 했어요', kind: '' },
+{ name: '여름 캠프', meta: '지난 교실', kind: 'gray' }
+]
+};
+}
+}
+</script>
+</body>
+</html>
