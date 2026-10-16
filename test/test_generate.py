@@ -311,8 +311,21 @@ for pid in ('split-filter-join', 'split-transform-join'):
     t(f'{pid}: 모호한 "목록을 확인해" 는 걸린다', 'brief' in b, b)
 for pid in SPEC:
     k = next(iter(SPEC[pid]['keys']))
-    fb = _generate.BRIEF_FALLBACK[k].format(item='재료', iga='가', eunneun='는')
+    fb = _generate.BRIEF_FALLBACK[k].format(item='재료', iga='가', eunneun='는', eulreul='를')
     t(f'{pid}: 요청 기본 틀이 구할 값 규칙을 지킨다', re.search(KEY_TARGET[k], fb), fb)
+    t(f'{pid}: 요청 기본 틀에 항목 이름', '재료' in fb, fb)
+_, b = _generate._parse(U, {**copy.deepcopy(GOOD), 'brief': '모두 몇 개인지 알아내 주세요.'})
+t("'몇 개인지 알아내 주세요' 처럼 무엇인지 없으면 걸린다", any('항목 이름' in r for r in b.get('brief', [])), b)
+
+print('\n[숫자뿐인 자료로 "글자 빼고 더하기" 를 고르면 "숫자 더하기" 로 바꾼다]')
+_num = {**base(['1000', '2000', '500'], ['300', '700', '100'], itemName='금액'),
+        'brief': '금액을 모두 더하면 얼마인지 알려 주세요.', 'counter': {'name': '수요일 금액'},
+        'filterTarget': ['메모'], 'filterDesc': '메모 항목'}
+m, _ = quiet(generate, '숫자 더하기', 'int로 바꿔서 합계', fake('split-filter-num-sum', _num, _num, _num))
+t('유형이 split-num-sum', m['pipelineId'] == 'split-num-sum', m['pipelineId'])
+t('걸러낼 대상은 떼고, 바꾼 이유를 남긴다', 'pipelineParams' not in m and 'filterDesc' not in m
+  and any('숫자 더하기' in x for x in m['guard']['repaired']), m['guard'])
+t('반례도 새 유형으로 깨진다', m['inputs'][2]['v'] and m['guard']['fallback'] == [], m['guard'])
 
 print('\n[골라내기 유형은 걸러낼 대상 이름을 미션에 싣는다 — 카드 세부 이름]')
 m, _ = quiet(generate, '수업', '핵심', fake('split-filter-count', *[DATA['split-filter-count']] * 3))

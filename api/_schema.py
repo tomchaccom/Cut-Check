@@ -248,7 +248,7 @@ class _Base(BaseModel):
     brief: str = _max('brief', description=(
         '학생에게 오는 업무 요청. 한 문장, 존댓말(~해 주세요). 배경은 situation 에. '
         '어떻게 하는지(나누기, 중복 빼기 등)는 쓰지 않는다 — 일부러 모호하게. '
-        '무엇을 알아내야 하는지("몇 가지", "모두 얼마", "가장 큰")는 꼭 쓴다.'))
+        '무엇을 알아내야 하는지("몇 가지", "모두 얼마", "가장 큰")와 항목 이름(itemName 그대로)은 꼭 쓴다.'))
     situation: str = _max('situation', description='왜 이 일을 하는지. 한 문장, 존댓말로 "~요." 로 끝낸다 ("~해야 해요."). 덧붙임 금지.')
     itemName: str = _max('itemName', description='항목을 부르는 말 ("재료", "이름", "금액").')
     counter: Counter = Field(description='세 번째이자 마지막 자료. 반드시 반례.')
@@ -267,6 +267,9 @@ class _Base(BaseModel):
         if not re.search(KEY_TARGET[key], self.brief):
             bad.append(('brief', f"'{self.brief}' — 구할 값이 없음. '{KEY_TARGET[key].split('|')[0]}' 처럼 "
                                  '무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)'))
+        # '몇 개인지 알아내세요.' 가 통과했다 — 무엇이 몇 개인지가 없었다 (2026-10-17 배포 확인)
+        if self.itemName.strip() and self.itemName.strip() not in self.brief:
+            bad.append(('brief', f"'{self.brief}' — 무엇의 값인지 없음. 항목 이름 '{self.itemName.strip()}' 을 넣는다"))
         if bad:
             raise ValidationError.from_exception_data(type(self).__name__, [
                 InitErrorDetails(type=PydanticCustomError('guard', msg), loc=(field,), input=getattr(self, field, None))

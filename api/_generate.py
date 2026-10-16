@@ -206,6 +206,24 @@ def _make_counter(pid, d):
         d['counter'] = {**pick, 'name': name}
 
 
+def _retype(pid, m, bad):
+    """'글자 빼고 숫자 더하기' 를 골랐는데 자료가 전부 숫자면 뺄 글자가 없어 실패했다 (2026-10-17 배포 확인,
+    '숫자 더하기 / int로 바꿔서 합계'). 같은 자료로 '숫자 더하기' 유형으로 바꾼다 — 자료 내용은 그대로다."""
+    if pid != 'split-filter-num-sum' or not isinstance(m, dict):
+        return pid, m, bad
+    try:
+        items = [str(x).strip() for d in m['data'][:2] for x in d['items']]
+    except (KeyError, TypeError, IndexError):
+        return pid, m, bad
+    if not items or not all(re.fullmatch(r'-?\d+', x) for x in items):
+        return pid, m, bad
+    notes = m.pop('_repaired', [])
+    m = {k: v for k, v in m.items() if k not in ('filterTarget', 'filterDesc')}
+    m2, bad2 = _parse('split-num-sum', m)
+    m2['_repaired'] = notes + ["자료가 모두 숫자라 '숫자 더하기' 유형으로 바꿨어요"] + m2.get('_repaired', [])
+    return 'split-num-sum', m2, bad2
+
+
 def _parse(pid, raw):
     """→ (초안 dict | None, {칸: [사유]})"""
     data = raw if isinstance(raw, dict) else _json(raw)
@@ -278,9 +296,9 @@ BRIEF_FALLBACK = {  # 요청 기본 틀 — 구할 값만 말하고 방법은 �
     'count': '{item}{iga} 모두 몇 개인지 알려 주세요.', 'total': '{item}{iga} 모두 몇 개인지 알려 주세요.',
     'unique': '{item}{iga} 모두 몇 가지인지 알려 주세요.', 'filtered_count': '조건에 맞는 {item}{iga} 몇 개인지 알려 주세요.',
     'filtered': '조건에 맞는 {item}만 남긴 목록을 만들어 주세요.', 'sorted': '{item}{eunneun} 순서대로 놓은 목록을 만들어 주세요.',
-    'transformed': '{item} 목록을 깔끔하게 다시 만들어 주세요.', 'sum': '모두 더하면 얼마인지 알려 주세요.',
-    'filtered_sum': '숫자를 모두 더하면 얼마인지 알려 주세요.', 'max': '가장 큰 값이 얼마인지 알려 주세요.',
-    'min': '가장 작은 값이 얼마인지 알려 주세요.', 'group': '{item}마다 몇 번 나왔는지 알려 주세요.',
+    'transformed': '{item} 목록을 깔끔하게 다시 만들어 주세요.', 'sum': '{item}{eulreul} 모두 더하면 얼마인지 알려 주세요.',
+    'filtered_sum': '{item} 중 숫자를 모두 더하면 얼마인지 알려 주세요.', 'max': '가장 큰 {item}{iga} 얼마인지 알려 주세요.',
+    'min': '가장 작은 {item}{iga} 얼마인지 알려 주세요.', 'group': '{item}마다 몇 번 나왔는지 알려 주세요.',
 }
 
 
@@ -312,7 +330,8 @@ def _fallback(field, pid, m):
         return '오늘의 미션'
     if field == 'brief':
         key = next(iter(SPEC[pid]['keys']))
-        return BRIEF_FALLBACK[key].format(item=item, iga=_josa(item, '이가'), eunneun=_josa(item, '은는'))
+        return BRIEF_FALLBACK[key].format(item=item, iga=_josa(item, '이가'), eunneun=_josa(item, '은는'),
+                                          eulreul=_josa(item, '을를'))
     if field == 'situation':
         return ''
     if field == 'itemName':
@@ -398,6 +417,8 @@ def generate(lesson, key_point, call_llm=pickle_llm, feedback=None, t0=None):
     messages = [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': ask}]
     raw = call_llm(messages, schema, left())
     m, bad = _parse(pid, raw)
+    pid, m, bad = _retype(pid, m, bad)
+    schema = _ask_schema(pid)
     retried = 0
     while bad and retried < MAX_RETRY and left() > RETRY_NEEDS:
         retried += 1
@@ -416,6 +437,8 @@ def generate(lesson, key_point, call_llm=pickle_llm, feedback=None, t0=None):
         m2, bad2 = _parse(pid, raw)
         if m2 is not None:
             m, bad = m2, bad2
+            pid, m, bad = _retype(pid, m, bad)
+            schema = _ask_schema(pid)
 
     reasons = {f: v for f, v in bad.items()}  # 남은 사유 — 교사 화면에 '왜 기본 틀인지' 로 간다
     if m is None or any(f not in ORDER for f in bad):
