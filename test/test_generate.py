@@ -96,12 +96,13 @@ t('폴백 없음 · 재요청 없음 · LLM 이 고름',
 t('학생 화면 모양 — 자료 3개, 마지막이 반례', [i['id'] for i in m['inputs']] == ['d01', 'd02', 'd03']
   and m['inputs'][2].get('counter') is True, m['inputs'])
 t('미션에 method 가 없다 — 카드는 화면이 pipelineId 로 꺼낸다', 'method' not in m and m['pipelineId'] == U)
-t('성공 조건 보기는 코드 문장: 진짜(키마다) + 함정 둘',
-  sorted(o.get('key') or o['trap'] for o in m['define']['options']) == ['hardcode', 'luck', 'total', 'unique'], m['define'])
+t('성공 조건 보기는 코드 문장: 요청이 묻는 진짜 하나 + 함정 둘',
+  sorted(o.get('key') or o['trap'] for o in m['define']['options']) == ['hardcode', 'luck', 'unique'], m['define'])
 traps = sorted(str(o['trap']) for o in m['define']['options'])
-t('보기 = 하드코딩 1 + 진짜 2 + 요행 1', traps == ['None', 'None', 'hardcode', 'luck'], m['define']['options'])
+t('보기 = 하드코딩 1 + 진짜 1 + 요행 1', traps == ['None', 'hardcode', 'luck'], m['define']['options'])
 hard = next(o['v'] for o in m['define']['options'] if o['trap'] == 'hardcode')
-t('하드코딩 함정에 첫 자료의 실제 결과(3)가 들어간다', hard.startswith('3'), hard)
+t('하드코딩 함정은 어느 자료의 답인지 밝힌다', hard == '월요일 재료의 답과 같은 3이 나오면 성공', hard)
+t('보기는 모두 "성공" 으로 끝난다', all(o['v'].endswith('성공') for o in m['define']['options']), m['define']['options'])
 t('함정 보기에는 key 가 없다', all('key' not in o for o in m['define']['options'] if o['trap']))
 t('성공 질문은 존댓말', m['define']['q'].endswith('요?'))
 
@@ -196,7 +197,7 @@ nodup = {**DATA['split-group'], 'data': [{'name': '1반', 'items': ['A형', 'B�
 m, _ = quiet(generate, '딕셔너리', '빈도', fake('split-group', nodup, nodup, nodup))
 t('묶어 세기에 겹치는 항목이 없으면 하나 더 넣는다', m['inputs'][0]['v'] == 'A형,B형,O형,A형', m['inputs'][0])
 hard = next(o['v'] for o in m['define']['options'] if o['trap'] == 'hardcode')
-t("묶어 세기 하드코딩 함정은 'A형이 2번 나오면 성공'", hard == 'A형이 2번 나오면 성공', hard)
+t("묶어 세기 하드코딩 함정은 '1반처럼 A형이 2번 나오면 성공'", hard == '1반처럼 A형이 2번 나오면 성공', hard)
 t('보정이 없으면 repaired 는 비어 있다', quiet(generate, '리스트', '중복', fake(U, GOOD))[0]['guard']['repaired'] == [])
 
 print('\n[유형 고르기가 실패하면 키워드로]')
@@ -316,6 +317,11 @@ for pid in SPEC:
     t(f'{pid}: 요청 기본 틀에 항목 이름', '재료' in fb, fb)
 _, b = _generate._parse(U, {**copy.deepcopy(GOOD), 'brief': '모두 몇 개인지 알아내 주세요.'})
 t("'몇 개인지 알아내 주세요' 처럼 무엇인지 없으면 걸린다", any('항목 이름' in r for r in b.get('brief', [])), b)
+
+print('\n[정답 보기 문장 틀 — 14개 유형 모두 빈칸 없이 채워지고 같은 틀로 끝난다]')
+for k, tpl in _generate.CORRECT.items():
+    v = tpl.format(item='재료', iga='가', eunneun='는', eulreul='를')
+    t(f'{k}: {v}', '{' not in v and v.endswith('나오면 성공'), v)
 
 print('\n[숫자뿐인 자료로 "글자 빼고 더하기" 를 고르면 "숫자 더하기" 로 바꾼다]')
 _num = {**base(['1000', '2000', '500'], ['300', '700', '100'], itemName='금액'),

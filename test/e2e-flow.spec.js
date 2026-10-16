@@ -298,3 +298,12 @@ test('자료 3개로 실행 — 같은 코드를 자료마다 돌려 결과를 �
   await page.locator('#run-all').click();
   await expect(out).toContainText('주문서 03  →  1번째 줄', { timeout: 20000 });
 });
+
+test('성공 조건 화면은 받은 요청을 다시 보여 주고 묻는다', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await page.locator('#go-define').click();
+  await expect(page.locator('#define-brief')).toHaveText('주문서에 상품이 몇 개인지 알려 주세요.');
+  await expect(page.locator('#define-q')).toContainText('하나를 골라 주세요.');
+});
