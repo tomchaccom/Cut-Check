@@ -293,6 +293,9 @@
   /* Pyodide — Worker 에서 돌린다 (js/ui/pyworker.js 머리말).
    * file:// 처럼 Worker 를 못 만드는 곳에서는 예전처럼 메인 스레드에서 돈다 — 그때는 시간 제한이 없다. */
   var pyodideReady = false;
+  function runBtns(off) {   /* 실행 · 자료 3개로 실행 — 하나가 도는 동안 둘 다 꺼진다 */
+    ['#run-code', '#run-all'].forEach(function (id) { if ($(id)) $(id).disabled = off; });
+  }
   var py = (function () {
     var w = null, pending = null, seq = 0, main = null;
     var LOAD_FAIL = 'Python을 불러오지 못했어요. 코드는 계속 쓸 수 있어요.';
@@ -300,7 +303,7 @@
     function status(text, ready) {
       pyodideReady = ready;
       if ($('#pyodide-status')) $('#pyodide-status').textContent = text;
-      if ($('#run-code')) $('#run-code').disabled = !ready;
+      runBtns(!ready);
     }
 
     function boot() {
@@ -314,7 +317,7 @@
           clearTimeout(pending.timer);
           var cb = pending.cb; pending = null;
           pyodideReady = true;
-          if ($('#run-code')) $('#run-code').disabled = false;
+          runBtns(false);
           cb(d.output, d.error ? CC.pyerr.short(d.error) : '');
         }
       };
@@ -350,7 +353,7 @@
       }, 5000);
       pending = { id: id, cb: cb, timer: timer };
       pyodideReady = false;           /* 실행 중에는 화면을 오가도 버튼이 다시 켜지지 않는다 */
-      if ($('#run-code')) $('#run-code').disabled = true;
+      runBtns(true);
       w.postMessage({ id: id, code: code });
     }
 
@@ -400,7 +403,7 @@
     }
 
     /* 실행 버튼 */
-    if ($('#run-code')) $('#run-code').disabled = !pyodideReady;
+    runBtns(!pyodideReady);
 
     /* 판정/마무리 숨기기 */
     if ($('#code-output')) $('#code-output').hidden = true;
@@ -422,72 +425,87 @@
     });
   }
 
-  /* 실행 버튼 */
+  /* 코드 한 번 실행 → 기록. 학생의 data 줄은 같은 자리에서 바꿔 줄 번호를 지킨다.
+   * 없으면 앞에 한 줄을 붙이고 에러 줄 번호에서 1을 뺀다 */
+  function runWith(code, dataVal, cb) {
+    var dataLine = 'data = "' + dataVal.replace(/"/g, '\\"') + '"';
+    var hasData = /^data = ".*"/m.test(code);
+    var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
+    py.run(fullCode, function (output, error) {
+      if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
+      rec('s-code', { code: code, dataId: dataVal, output: output, error: error });
+      cb(output, error);
+    });
+  }
+
+  function showResult(text, isError) {
+    var resultEl = $('#code-result'), outputBox = $('#code-output');
+    if (!resultEl || !outputBox) return;
+    outputBox.hidden = false;
+    resultEl.textContent = text;
+    resultEl.style.color = isError ? 'var(--coral)' : 'var(--ink)';
+  }
+
+  /* 판정은 학생이 한다 — 시스템은 결과만 보여 준다 */
+  function showJudge() {
+    var judgeDiv = $('#code-judge');
+    if (!judgeDiv) return;
+    judgeDiv.hidden = false;
+    if ($('#code-judge-q')) $('#code-judge-q').textContent = '내 성공 조건을 지켰나요?';
+    var btnsDiv = $('#code-judge-btns');
+    if (!btnsDiv || btnsDiv.children.length) return;
+    var selectedVerdict = '';
+    ['지켰다', '지키지 못했다', '아직 모르겠다'].forEach(function (v) {
+      var b = el('button', 'judge-btn', v);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () {
+        btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+        selectedVerdict = v;
+        if ($('#code-judge-save')) $('#code-judge-save').disabled = false;
+      });
+      btnsDiv.appendChild(b);
+    });
+    $('#code-judge-save').addEventListener('click', function () {
+      rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
+      this.disabled = true; this.textContent = '저장됨';
+      btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
+      if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
+    });
+  }
+
+  /* 실행 — 고른 자료 하나로 */
   if ($('#run-code')) {
     $('#run-code').addEventListener('click', function () {
       if (!pyodideReady) return;
-      var code = $('#code-editor').value;
       var dataVal = $('#code-data-select') ? $('#code-data-select').value : '';
-
-      /* data 변수를 코드 앞에 주입 */
-      /* 학생의 data 줄은 같은 자리에서 바꿔 줄 번호를 지킨다. 없으면 앞에 한 줄을 붙이고 에러 줄 번호에서 1을 뺀다 */
-      var dataLine = 'data = "' + dataVal.replace(/"/g, '\\"') + '"';
-      var hasData = /^data = ".*"/m.test(code);
-      var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
-
-      py.run(fullCode, function (output, error) {
-        if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
-        /* 결과 표시 */
-        var resultEl = $('#code-result');
-        var outputBox = $('#code-output');
-        if (resultEl && outputBox) {
-          outputBox.hidden = false;
-          if (error) {
-            resultEl.textContent = error;
-            resultEl.style.color = 'var(--coral)';
-          } else {
-            resultEl.textContent = output || '출력된 것이 없어요.';
-            resultEl.style.color = 'var(--ink)';
-          }
-        }
-
-        /* 이벤트 기록 */
-        rec('s-code', { code: code, dataId: dataVal, output: output, error: error });
-
-        /* 판정 표시 */
-        if (!error) {
-          var judgeDiv = $('#code-judge');
-          if (judgeDiv) {
-            judgeDiv.hidden = false;
-            if ($('#code-judge-q')) {
-              $('#code-judge-q').textContent = '내 성공 조건을 지켰나요?';
-            }
-            /* 판정 버튼 */
-            var btnsDiv = $('#code-judge-btns');
-            if (btnsDiv && !btnsDiv.children.length) {
-              var selectedVerdict = '';
-              ['지켰다', '지키지 못했다', '아직 모르겠다'].forEach(function (v) {
-                var b = el('button', 'judge-btn', v);
-                b.type = 'button';
-                b.setAttribute('aria-pressed', 'false');
-                b.addEventListener('click', function () {
-                  btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
-                  b.setAttribute('aria-pressed', 'true');
-                  selectedVerdict = v;
-                  if ($('#code-judge-save')) $('#code-judge-save').disabled = false;
-                });
-                btnsDiv.appendChild(b);
-              });
-              $('#code-judge-save').addEventListener('click', function () {
-                rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
-                this.disabled = true; this.textContent = '저장됨';
-                btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
-                if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
-              });
-            }
-          }
-        }
+      runWith($('#code-editor').value, dataVal, function (output, error) {
+        showResult(error || output || '출력된 것이 없어요.', !!error);
+        if (!error) showJudge();
       });
+    });
+  }
+
+  /* 자료 3개로 실행 — 같은 코드를 자료만 바꿔 차례로 돌린다. 반례에서 결과가 달라지는 게 한눈에 보인다 */
+  if ($('#run-all')) {
+    $('#run-all').addEventListener('click', function () {
+      if (!pyodideReady || !M) return;
+      var code = $('#code-editor').value, lines = [], anyOk = false, i = 0;
+      showResult('실행 중...', false);
+      (function next() {
+        if (i >= M.inputs.length) {
+          showResult(lines.join('\n'), false);
+          if (anyOk) showJudge();
+          return;
+        }
+        var inp = M.inputs[i++];
+        runWith(code, inp.v, function (output, error) {
+          if (!error) anyOk = true;
+          lines.push(inp.name + '  →  ' + (error || String(output || '').trim() || '출력된 것이 없어요.'));
+          next();
+        });
+      })();
     });
   }
 
