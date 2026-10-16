@@ -61,8 +61,8 @@ body.notes .note { display: flex; gap: 6px; }
   padding: 3px 11px;
   white-space: nowrap;
 }
-.pill.now { background: var(--coral); color: #fff; }
-.pill.soon { background: var(--amber); color: #fff; }
+.pill.now { background: var(--coral); color: var(--paper); }
+.pill.soon { background: var(--amber); color: var(--paper); }
 .pill.calm { background: var(--surface-3); color: var(--ink-2); }
 
 /* ── 사고 단계 흐름 ──────────────────────────────── */
@@ -113,8 +113,8 @@ body.notes .note { display: flex; gap: 6px; }
 .trow .say { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
 .trow .say b { color: var(--ink); font-weight: 700; }
 .trow .meta { margin-left: auto; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; flex: none; font-variant-numeric: tabular-nums; }
-.trow.hot .av { background: var(--coral); color: #fff; }
-.trow.warm .av { background: var(--amber); color: #fff; }
+.trow.hot .av { background: var(--coral); color: var(--paper); }
+.trow.warm .av { background: var(--amber); color: var(--paper); }
 .trow.calm .av { background: var(--green-soft); color: var(--green); }
 .emptyrow { font-size: 13px; color: var(--ink-3); padding: 10px; }
 .trow .who.live { color: var(--green); }
