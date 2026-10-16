@@ -48,7 +48,9 @@ SYSTEM = '\n'.join([
 # ── LLM 호출 ────────────────────────────────────────────────
 
 API_URL = 'https://llm.pcl.kr/v1/chat/completions'
-MODEL = 'pickle-general'
+# 자체 서빙 pickle-general 은 2026-10-16 03시경부터 첫 토큰 전에 30초로 끊긴다. 같은 키의 유료 모델로 바꾸고,
+# 서버를 고르는 일은 코드 수정 없이 Vercel 환경변수 LLM_MODEL 로 한다.
+MODEL = os.environ.get('LLM_MODEL') or 'openai/gpt-5.4-mini'
 
 
 def _post(body, key, timeout):
@@ -56,6 +58,23 @@ def _post(body, key, timeout):
         'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())['choices'][0]['message']['content']
+
+
+def _flat(s, defs=None):
+    """게이트웨이 뒤 OpenAI 는 $defs·$ref 가 있거나 additionalProperties 가 빠진 객체가 있으면 400 을 낸다.
+    pydantic 스키마는 둘 다 해당돼 초안이 매번 json_object 로 내려갔다 (2026-10-16 eval 23/23)."""
+    defs = s.get('$defs', {}) if defs is None else defs
+    if isinstance(s, dict):
+        if '$ref' in s:
+            rest = {k: v for k, v in s.items() if k != '$ref'}
+            return _flat({**defs[s['$ref'].split('/')[-1]], **rest}, defs)
+        o = {k: _flat(v, defs) for k, v in s.items() if k != '$defs'}
+        if o.get('type') == 'object':
+            o.setdefault('additionalProperties', False)
+        return o
+    if isinstance(s, list):
+        return [_flat(v, defs) for v in s]
+    return s
 
 
 def pickle_llm(messages, schema, timeout):
@@ -69,7 +88,7 @@ def pickle_llm(messages, schema, timeout):
     body = {'model': MODEL, 'max_tokens': 1500, 'messages': messages}
     try:
         return _post({**body, 'response_format': {
-            'type': 'json_schema', 'json_schema': {'name': 'mission', 'schema': schema}}}, key, timeout)
+            'type': 'json_schema', 'json_schema': {'name': 'mission', 'schema': _flat(schema)}}}, key, timeout)
     except urllib.error.HTTPError as e:
         if e.code != 400:
             raise

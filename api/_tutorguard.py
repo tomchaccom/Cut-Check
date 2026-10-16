@@ -29,7 +29,8 @@ def problems(answer, mission, code=''):
     out = []
     if len(a) > MAX:
         out.append(f'{MAX}자 초과 ({len(a)}자)')
-    segs = SEGMENT.findall(a)
+    # `append()` · `for` 처럼 이름만 감싼 건 예시가 아니다. 이걸 세면 평범한 문법 답이 거의 다 막혔다 (2026-10-16 10건 중 6건)
+    segs = [x for x in SEGMENT.findall(a) if not re.fullmatch(r'`\w+(\(\))?`', x)]
     if len(segs) > 1:
         out.append('코드 예시가 둘 이상 — 한 줄 예시 하나만')
     for s in segs:
