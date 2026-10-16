@@ -237,3 +237,43 @@ test('다른 미션으로 바꾸면 앞 미션 코드가 남지 않는다', asyn
   await page.locator('#go-run').click();
   expect(await page.locator('#code-editor').inputValue()).not.toContain('앞 미션');
 });
+
+/* 내 기록 — 지금 미션의 것만, 코드 단계 결과로 (2026-10-17 학생 계정 검증에서 엉뚱한 값이 보였다) */
+async function openHistory(page) {
+  await page.evaluate(() => { document.querySelector('#main-tabs').hidden = false; });  // 로컬 모드는 탭을 숨긴다
+  await page.locator('.main-tab[data-panel="panel-history"]').click();
+}
+
+test('내 기록에는 지금 미션 것만, 코드 실행 결과와 내 판단이 남는다', async ({ page }) => {
+  test.setTimeout(120000);
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await waitPython(page);
+  await page.locator('#code-editor').fill('data = "a,b,a"\nprint(len(data.split(",")))\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toHaveText('3', { timeout: 10000 });
+  await page.locator('#code-judge .judge-btn').first().click();
+  await page.locator('#code-basis').fill('세 개가 나와서');
+  await page.locator('#code-judge-save').click();
+  await page.locator('#go-wrap').click();
+  await page.locator('#wrap-text').fill('앞 미션 정리');
+  await page.locator('#finish').click();
+
+  await openHistory(page);
+  const rec = page.locator('#history-list');
+  await expect(rec).toContainText('시험용 미션');
+  await expect(rec).toContainText('3');              // 코드 실행 결과
+  await expect(rec).toContainText('세 개가 나와서'); // 내 판단의 근거
+  await expect(rec).toContainText('앞 미션 정리');
+
+  await page.locator('.main-tab[data-panel="panel-play"]').click();
+  await page.locator('.m-btn[data-id="sm2"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').nth(1).click();
+  await page.locator('#reason-define').fill('둘째 미션 이유');
+  await page.locator('#go-method').click();
+  await openHistory(page);
+  await expect(rec).not.toContainText('앞 미션 정리');   // 다른 미션 기록이 섞이지 않는다
+  await expect(rec).not.toContainText('세 개가 나와서');
+});

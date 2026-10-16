@@ -21,6 +21,9 @@
   var state = {};
 
   var rec = function (type, payload) {
+    /* 어느 미션의 기록인지 담는다 — 로컬 저장소는 브라우저 하나에 모든 미션·계정이 섞인다 */
+    payload = payload || {};
+    if (M && payload.mid == null) payload.mid = M.id;
     var ev = CC.events.make(type, payload);
     if (CC.store) CC.store.push(ev);
     /* Supabase에도 저장 */
@@ -590,6 +593,8 @@
     if (panel) panel.classList.add('active');
     var tab = document.querySelector('.main-tab[data-panel="' + panelId + '"]');
     if (tab) tab.classList.add('active');
+    /* 미션을 마치고 목록으로 돌아오면 상태가 바로 바뀌어야 한다 — 목록을 열 때마다 다시 센다 */
+    if (panelId === 'panel-missions' && $('#mission-grid')) showMyStatus($('#mission-grid'));
   }
 
   document.querySelectorAll('.main-tab').forEach(function (t) {
@@ -622,8 +627,10 @@
       card.appendChild(el('div', 'mc-title', mData.title || ''));
       card.appendChild(el('div', 'mc-brief', mData.brief || ''));
 
-      /* 상태 판단 */
+      /* 상태 — 아래에서 내 기록을 받아 채운다 */
       var statusEl = el('span', 'mc-status st-none', '미시작');
+      statusEl.dataset.dbId = m.id || '';
+      statusEl.dataset.mid = mData.id || '';
       card.appendChild(statusEl);
 
       card.addEventListener('click', function () {
@@ -640,20 +647,52 @@
     });
   }
 
+  var STATUS = { none: ['st-none', '미시작'], doing: ['st-progress', '진행 중'], done: ['st-done', '완료'] };
+
+  /* 푼 미션 표시 — 이 학생의 기록만 본다. 반 전체 현황은 학생 화면에 띄우지 않는다 (CLAUDE.md) */
+  function showMyStatus(grid) {
+    if (!CC.sb || !CC.sb.active() || !currentClassroomId) return;
+    CC.sb.getMyEvents(currentClassroomId).then(function (evs) {
+      grid.querySelectorAll('.mc-status').forEach(function (st) {
+        var db = st.dataset.dbId, mid = st.dataset.mid;
+        var mine = evs.filter(function (e) { return db ? e._missionDbId === db : e.mid === mid; });
+        var s = STATUS[CC.fold.missionStatus(mine)];
+        st.className = 'mc-status ' + s[0];
+        st.textContent = s[1];
+      });
+    });
+  }
+
   /* ── 내 기록 렌더링 (형식 A: 판단 중심) ──────────── */
+  /* 내 기록의 재료 — 이 학생의, 이 미션의 이벤트만.
+   * Supabase 모드는 서버가 학생·미션별로 갖고 있다. 기본 미션(DB id 없음)과 로컬 모드는 mid 로 거른다. */
+  function myEvents(cb) {
+    var mine = function (e) { return e.mid === M.id; };
+    if (CC.sb && CC.sb.active() && currentClassroomId) {
+      CC.sb.getMyEvents(currentClassroomId, currentMissionDbId).then(function (evs) {
+        cb(currentMissionDbId ? evs : evs.filter(mine));
+      }, function () { cb([]); });
+    } else {
+      cb((CC.store ? CC.store.all() : []).filter(mine));
+    }
+  }
+
   function renderHistory() {
     var list = $('#history-list');
     list.innerHTML = '';
     /* 미션이 로드되지 않은 상태(DB에 미션 없음)면 빈 상태 표시 */
     if (!M) { $('#history-empty').hidden = false; return; }
-    var events = CC.store ? CC.store.all() : [];
+    myEvents(function (events) { drawHistory(list, events); });
+  }
+
+  function drawHistory(list, events) {
     if (!events.length) { $('#history-empty').hidden = false; return; }
     $('#history-empty').hidden = true;
 
     var defines = events.filter(function (e) { return e.type === 's-define' || e.type === 's-redefine'; });
     var methods = events.filter(function (e) { return e.type === 's-method' || e.type === 's-remethod'; });
-    var runs = events.filter(function (e) { return e.type === 's-run'; });
-    var judges = events.filter(function (e) { return e.type === 's-judge'; });
+    var codes = events.filter(function (e) { return e.type === 's-code'; });
+    var codeJudges = events.filter(function (e) { return e.type === 's-code-judge'; });
     var wraps = events.filter(function (e) { return e.type === 's-wrap'; });
 
     if (!defines.length) { $('#history-empty').hidden = false; return; }
@@ -698,47 +737,28 @@
       card.appendChild(methSection);
     }
 
-    /* 자료별 판정 — dataId별 마지막 run+judge만 표시 */
-    var latestByData = {};
-    runs.forEach(function (run, i) {
-      latestByData[run.dataId] = { run: run, runIdx: i, judge: judges[i] };
-    });
-
+    /* 코드 실행 — 자료마다 마지막 실행 결과. s-code 의 dataId 에는 자료 값이 들어 있다 */
+    var lastByData = {};
+    codes.forEach(function (c) { lastByData[c.dataId] = c; });
     var resultsSection = el('div', 'rc-results');
-    Object.keys(latestByData).forEach(function (dataId) {
-      var entry = latestByData[dataId];
-      var run = entry.run;
-      var judge = entry.judge;
-
-      /* 미션 데이터에서 이름과 원본 입력 찾기 */
-      var dataName = dataId;
-      var dataInput = '';
-      if (M && M.inputs) {
-        var found = M.inputs.filter(function (inp) { return inp.id === dataId; })[0];
-        if (found) { dataName = found.name; dataInput = found.v; }
-      }
-
+    (M.inputs || []).forEach(function (inp) {
+      var c = lastByData[inp.v];
+      if (!c) return;
       var row = el('div', 'rc-result-row');
-      var value = run.result && !run.result.err ? run.result.value : '오류';
-
-      if (judge) {
-        var vClass = judge.verdict === '지켰다' ? 'kept' : judge.verdict === '지키지 못했다' ? 'missed' : 'unsure';
-        var vIcon = judge.verdict === '지켰다' ? '✓' : judge.verdict === '지키지 못했다' ? '✗' : '?';
-        row.className = 'rc-result-row ' + vClass;
-        row.innerHTML = '<div class="rc-row-top">' +
-          '<span class="rc-data-name">' + esc(dataName) + '</span>' +
-          '<span class="rc-verdict-icon">' + vIcon + ' ' + esc(judge.verdict) + '</span>' +
-          '</div>' +
-          (dataInput ? '<div class="rc-data-input">' + esc(dataInput) + '</div>' : '') +
-          '<div class="rc-row-result">결과: <b>' + esc(String(value)) + '</b></div>' +
-          (judge.basis ? '<div class="rc-basis">"' + esc(judge.basis) + '"</div>' : '');
-      } else {
-        row.innerHTML = '<span class="rc-data-name">' + esc(dataName) + '</span>' +
-          (dataInput ? '<div class="rc-data-input">' + esc(dataInput) + '</div>' : '') +
-          '<div class="rc-row-result">결과: <b>' + esc(String(value)) + '</b></div>';
-      }
+      row.innerHTML = '<span class="rc-data-name">' + esc(inp.name) + '</span>' +
+        '<div class="rc-data-input">' + esc(inp.v) + '</div>' +
+        '<div class="rc-row-result">결과: <b>' + esc(c.error || String(c.output || '').trim() || '출력 없음') + '</b></div>';
       resultsSection.appendChild(row);
     });
+    /* 내 판단 — 학생이 스스로 내린 것. 시스템 판정이 아니다 */
+    var lastJudge = codeJudges[codeJudges.length - 1];
+    if (lastJudge) {
+      var jr = el('div', 'rc-result-row');
+      jr.innerHTML = '<div class="rc-row-top"><span class="rc-data-name">내 성공 조건을 지켰나요?</span>' +
+        '<span class="rc-verdict-icon">' + esc(lastJudge.verdict) + '</span></div>' +
+        (lastJudge.basis ? '<div class="rc-basis">"' + esc(lastJudge.basis) + '"</div>' : '');
+      resultsSection.appendChild(jr);
+    }
     card.appendChild(resultsSection);
 
     /* 마무리 */

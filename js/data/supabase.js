@@ -189,12 +189,19 @@
       if (!sb) return Promise.resolve([]);
       return sb.auth.getUser().then(function (res) {
         if (!res.data.user) return [];
-        var q = sb.from('student_events').select('event')
+        var q = sb.from('student_events').select('mission_id, event')
           .eq('student_id', res.data.user.id)
           .eq('classroom_id', classroomId)
           .order('created_at', { ascending: true });
         if (missionId) q = q.eq('mission_id', missionId);
-        return q.then(function (r) { return (r.data || []).map(function (row) { return row.event; }); });
+        /* _missionDbId: 내 미션 목록이 미션별 상태를 셀 때 쓴다 (이벤트 본문에는 DB id 가 없다) */
+        return q.then(function (r) {
+          return (r.data || []).map(function (row) {
+            var ev = {}; for (var k in row.event) ev[k] = row.event[k];
+            ev._missionDbId = row.mission_id;
+            return ev;
+          });
+        });
       });
     }
   };
