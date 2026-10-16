@@ -38,7 +38,8 @@ function launchOpts() {
   await p.locator('.define-card').first().click();
   await p.locator('#reason-define').fill(EVIL);
   await p.locator('#go-method').click();
-  for (const s of await p.locator('select.slot:visible').all()) await s.selectOption({ index: 1 });
+  for (const label of ['나누기', '겹친 것은 하나만', '개수 세기']) await p.locator('.card-pick', { hasText: label }).click();
+  await p.locator('.design-item select').first().selectOption('쉼표');
   await p.locator('#reason-method').fill(EVIL);
   await p.locator('#go-run').click();
   await p.locator('#tutor-open').click();

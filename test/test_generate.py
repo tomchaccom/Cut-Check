@@ -7,6 +7,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +15,7 @@ sys.path.insert(0, os.path.join(ROOT, 'api'))
 import _generate  # noqa: E402
 from _generate import GenerateError, by_keyword, generate  # noqa: E402
 from _pipeline import run  # noqa: E402
-from _schema import SPEC  # noqa: E402
+from _schema import KEY_TARGET, SPEC  # noqa: E402
 
 fail = 0
 
@@ -80,26 +81,23 @@ DATA = {  # 자료만 있는 초안 — 나머지 칸은 기본 틀이 채운다
 t('평가 셋이 14개 유형을 모두 덮는다', set(DATA) == set(SPEC))
 
 U = 'split-unique-count'
-GOOD = {**DATA[U],
-        'counter': {'name': '수요일 재료', 'text': '밥,우유,김치,밥,국', 'axis': 'count'},
-        'goals': {'unique': '겹친 재료는 한 번만 센 수가 나오면 성공', 'total': '들어온 재료 수가 다 나오면 성공'},
-        'sentences': {'sep': {'before': '재료 목록을', 'after': '기준으로 본다.'},
-                      'dedup': {'before': '같은 재료는', 'after': '.'},
-                      'output': {'before': '화면에', 'after': '만 띄운다.'}}}
+GOOD = {**DATA[U], 'brief': '이번 주 재료가 모두 몇 가지인지 알려 주세요.',
+        'counter': {'name': '수요일 재료'}}
 
 print('\n[한 번에 통과]')
 llm = fake(U, GOOD)
 m, _ = quiet(generate, '리스트', '중복', llm)
 t('유형 고르기 + 초안 = 두 번 불린다', len(llm.calls) == 2)
-t('유형 고르기는 작은 스키마, 초안은 그 유형 스키마만',
-  'pipelineId' in json.dumps(llm.calls[0]['schema']) and 'Steps_split_unique_count' in json.dumps(llm.calls[1]['schema']))
+t('초안 스키마에 성공 조건·방법 칸이 없다 — 코드가 쓴다',
+  'pipelineId' in json.dumps(llm.calls[0]['schema'])
+  and '"goals"' not in json.dumps(llm.calls[1]['schema']) and '"sentences"' not in json.dumps(llm.calls[1]['schema']))
 t('폴백 없음 · 재요청 없음 · LLM 이 고름',
   m['guard'] == {'fallback': [], 'reasons': {}, 'retried': 0, 'picked': 'llm', 'repaired': []}, m['guard'])
 t('학생 화면 모양 — 자료 3개, 마지막이 반례', [i['id'] for i in m['inputs']] == ['d01', 'd02', 'd03']
   and m['inputs'][2].get('counter') is True, m['inputs'])
-t('방법 문장은 빈칸 순서대로, 보기는 코드가 붙인다',
-  [s['slot'] for s in m['method']['sentences']] == ['sep', 'dedup', 'output']
-  and m['method']['sentences'][1]['options'] == ['각각 남긴다', '하나만 남긴다'])
+t('미션에 method 가 없다 — 카드는 화면이 pipelineId 로 꺼낸다', 'method' not in m and m['pipelineId'] == U)
+t('성공 조건 보기는 코드 문장: 진짜(키마다) + 함정 둘',
+  sorted(o.get('key') or o['trap'] for o in m['define']['options']) == ['hardcode', 'luck', 'total', 'unique'], m['define'])
 traps = sorted(str(o['trap']) for o in m['define']['options'])
 t('보기 = 하드코딩 1 + 진짜 2 + 요행 1', traps == ['None', 'None', 'hardcode', 'luck'], m['define']['options'])
 hard = next(o['v'] for o in m['define']['options'] if o['trap'] == 'hardcode')
@@ -117,17 +115,15 @@ t('재요청에 칸별 사유가 들어간다', 'brief' in llm.calls[2]['message
   and '반말' in llm.calls[2]['messages'][-1]['content'])
 t('재요청에 처음 답이 들어간다', llm.calls[2]['messages'][-2]['role'] == 'assistant')
 t('고쳐 왔으니 폴백 없음', m['guard']['fallback'] == [] and m['guard']['retried'] == 1, m['guard'])
-t('빈칸은 코드가 끼운다', m['method']['sentences'][0]['template'] == '재료 목록을 {sep} 기준으로 본다.',
-  m['method']['sentences'][0])
 t('처음 사유는 서버 로그에 남는다', '1차 사유' in log and 'brief' in log, log)
 
 print('\n[두 번 다 틀림 → 틀린 칸만 기본 틀로]')
 bad = copy.deepcopy(GOOD)
-bad['goals']['unique'] = '쉼표로 나눈 개수가 나오면 성공'
-bad['sentences']['sep'] = {'before': '쉼표', 'after': '나눈다.'}
+bad['brief'] = '재료 목록을 정리해 주세요.'  # 구할 값이 없다
 m, _ = quiet(generate, '리스트', '중복', fake(U, bad, bad, bad))
-t('goals · sentences 만 바뀐다', sorted(m['guard']['fallback']) == ['goals', 'sentences'], m['guard'])
-t('맞았던 칸은 LLM 것 그대로', m['brief'] == GOOD['brief'])
+t('brief 만 바뀐다', m['guard']['fallback'] == ['brief'], m['guard'])
+t('요청 기본 틀에는 구할 값이 있다', '몇' in m['brief'], m['brief'])
+t('맞았던 칸은 LLM 것 그대로', m['title'] == GOOD['title'])
 t('반례 이름은 LLM 것, 자료는 코드가 만든다', m['inputs'][2]['name'] == GOOD['counter']['name']
   and 'counter' not in m['guard']['fallback'], m['inputs'][2])
 
@@ -135,16 +131,17 @@ print('\n[빠진 칸을 채운 뒤에야 드러나는 칸도 갈아 끼운다]')
 hidden = {**DATA[U], 'brief': '재료 좀 세어봐'}  # 빠진 칸 때문에 1차엔 brief 가 안 보인다
 try:
     m, _ = quiet(generate, '수업', '핵심', fake(U, hidden, hidden, hidden))
-    t('counter · goals · sentences 다음에 brief 까지', m['guard']['fallback'][-1] == 'brief'
+    t('빠진 칸 다음에 brief 까지', m['guard']['fallback'][-1] == 'brief'
       and m['brief'] != hidden['brief'], m['guard'])
 except GenerateError as e:
-    t('counter · goals · sentences 다음에 brief 까지', False, e.reasons)
+    t('빠진 칸 다음에 brief 까지', False, e.reasons)
 
 print('\n[자료만 맞으면 나머지 기본 틀이 14개 유형 모두 검사를 통과하고, 코드가 만든 반례가 실제로 깨진다]')
 for pid, d in DATA.items():
     try:
         m, _ = quiet(generate, '수업', '핵심', fake(pid, d, d, d))
-        ok = {'goals', 'sentences'} <= set(m['guard']['fallback'])  # 반례는 기본 틀이 아니라 처음부터 코드가 만든다
+        first_key = next(iter(SPEC[pid]['keys']))
+        ok = re.search(KEY_TARGET[first_key], m['brief'])  # 기본 틀로 바뀌었든 아니든 최종 요청에 구할 값이 있다
         # 학생 화면에서 정말로 깨지는가 — 정답 빈칸으로 돌리면 반례 결과가 첫 자료와 달라야 한다
         slots = next(iter(SPEC[pid]['keys'].values()))
         params = m.get('pipelineParams', {})
@@ -159,13 +156,6 @@ nodata['data'][0]['items'] = ['항목1', '항목2', '항목3']
 llm = fake(U, nodata, nodata, GOOD)
 m, _ = quiet(generate, '리스트', '중복', llm)
 t('세 번째에 고쳐 오면 생성된다', len(llm.calls) == 4 and m['guard']['retried'] == 2 and not m['guard']['fallback'], m['guard'])
-
-print('\n[방법 문장 — 빈칸 뒤 조사]')
-josa = copy.deepcopy(GOOD)
-josa['sentences']['output'] = {'before': '', 'after': '을 보여준다.'}  # '개수을' — 보기마다 받침이 다르다
-m, _ = quiet(generate, '리스트', '중복', fake(U, josa, josa, josa))
-t("'{output}을' 은 막고 기본 틀로", 'sentences' in m['guard']['fallback']
-  and '을 보여준다' not in m['method']['sentences'][2]['template'], m['method']['sentences'][2])
 
 print('\n[재요청이 시간 초과면 이미 받은 초안으로 마무리]')
 first = {**GOOD, 'brief': '세어봐'}
@@ -311,14 +301,29 @@ try:
 finally:
     _generate.urllib.request.urlopen = _orig
 
-print('\n[방법 문장 길이는 빈칸 이름을 빼고 센다]')
-_g = copy.deepcopy(GOOD)
-_g['sentences']['output'] = {'before': '남은 항목을 세어서', 'after': '만 화면에 보여준다.'}  # 빈칸 빼면 22자, {output} 넣으면 30자
-_, _bad = _generate._parse(U, copy.deepcopy(_g))
-t('앞말+뒷말이 25자 안이면 통과', not any('자 안으로' in r for r in _bad.get('sentences', [])), _bad)
+print('\n[요청에는 구할 값이 있어야 한다]')
+from _schema import DRAFTS  # noqa: E402
+for brief, ok in [('이번 주 재료가 모두 몇 가지인지 알려 주세요.', True), ('재료 목록을 정리해 주세요.', False)]:
+    _, b = _generate._parse(U, {**copy.deepcopy(GOOD), 'brief': brief})
+    t(f"'{brief}' → {'통과' if ok else '걸림'}", ('brief' not in b) == ok, b)
+for pid in ('split-filter-join', 'split-transform-join'):
+    _, b = _generate._parse(pid, {**copy.deepcopy(DATA[pid]), 'brief': '이번 주 재료 목록을 확인해 주세요.'})
+    t(f'{pid}: 모호한 "목록을 확인해" 는 걸린다', 'brief' in b, b)
+for pid in SPEC:
+    k = next(iter(SPEC[pid]['keys']))
+    fb = _generate.BRIEF_FALLBACK[k].format(item='재료', iga='가', eunneun='는')
+    t(f'{pid}: 요청 기본 틀이 구할 값 규칙을 지킨다', re.search(KEY_TARGET[k], fb), fb)
+
+print('\n[골라내기 유형은 걸러낼 대상 이름을 미션에 싣는다 — 카드 세부 이름]')
+m, _ = quiet(generate, '수업', '핵심', fake('split-filter-count', *[DATA['split-filter-count']] * 3))
+t('filterDesc', m.get('filterDesc') == '알레르기 목록', m.get('filterDesc'))
+
+print('\n[검수 이유를 받아 다시 만들 때 프롬프트에 넣는다]')
+llm = fake(U, GOOD)
+quiet(lambda: generate('리스트', '중복', llm, feedback=['세 자료가 다른 이야기예요']))
+t('feedback 이 사용자 메시지에', '세 자료가 다른 이야기예요' in llm.calls[1]['messages'][-1]['content'])
 
 print('\n[보내는 스키마 — $ref 없이, 모든 객체가 닫혀 있다]')
-from _schema import DRAFTS  # noqa: E402
 
 
 def _objs(o):
@@ -338,5 +343,6 @@ for pid, M in DRAFTS.items():
     t(f'{pid}: maxLength 는 설명으로 (모델이 그 길이에서 자른다)', 'maxLength' not in json.dumps(f) and '자 안)' in json.dumps(f, ensure_ascii=False))
     t(f'{pid}: 객체마다 additionalProperties false', all(o.get('additionalProperties') is False for o in _objs(f)))
 
-print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
-sys.exit(1 if fail else 0)
+if __name__ == '__main__':
+    print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
+    sys.exit(1 if fail else 0)

@@ -91,6 +91,16 @@ t('문장형 접기 — 판정', sf.sJudges.length === 1 && sf.sJudges[0].verdic
 t('문장형 접기 — 마무리', sf.sWrap === '처음에는 전체 개수라고 생각했다.');
 t('문장형 접기 — 버전', sf.sDefineVer === 1 && sf.sMethodVer === 1);
 
+/* 카드 설계 — 새 기록은 cards, 예전 기록(slots 만)도 그대로 접힌다 */
+const card = [{ op: 'split', label: '나누기', detail: '기준: 쉼표' }, { op: 'count', label: '개수 세기', detail: '' }];
+const cs = CC.fold.fold([
+  CC.events.make(T.S_METHOD, { cards: card, reason: '쉼표니까', pipelineId: 'split-count' }),
+  CC.events.make(T.S_DESIGN, { define: '몇 개', cards: card, pipelineId: 'split-count' })
+], { now: now });
+t('카드 접기 — 방법', cs.sMethod && cs.sMethod.cards.length === 2 && cs.sMethod.cards[0].detail === '기준: 쉼표');
+t('카드 접기 — 설계', cs.sDesign && cs.sDesign.cards[1].label === '개수 세기');
+t('예전 기록은 cards 없이 slots 그대로', sf.sMethod.cards === undefined && sf.sMethod.slots.sep === '쉼표');
+
 // 재정의 시 버전 올라감
 const slog2 = slog.concat([
   CC.events.make(T.S_REDEFINE, { from: '전체 개수', to: '서로 다른 이름', reason: '중복이 있으니까' })

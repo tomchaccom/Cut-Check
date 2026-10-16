@@ -14,7 +14,7 @@
 LLM 이 바꿀 수 없는 것 — 빈칸 이름, 빈칸 보기 값, 정답 key, 하드코딩·요행 함정.
 보기 값은 엔진(_pipeline.py)의 의미와 맞물려 있고, 하드코딩 함정은 엔진을 돌려야
 나오는 "첫 자료의 실제 결과"라서 LLM 이 알 수 없다. 둘 다 코드가 쓴다.
-LLM 이 쓰는 것 — 상황·자료·반례, 진짜 성공 조건 문장(goals), 방법 문장 표현(sentences).
+LLM 이 쓰는 것 — 요청(구할 값을 말하는 한 문장)·상황·자료·반례의 이름. 성공 조건과 방법은 코드가 쓴다.
 
 빈칸은 유형이 아니라 연산마다 정한다. 그래서 엔진의 허용 조합 14개가
 손으로 표를 적지 않아도 전부 생성 대상이 된다.
@@ -59,12 +59,11 @@ DESC = {  # 유형 고르기에 쓰는 설명. 학생이 무엇을 처리하는�
     'split-filter-num-sum': '숫자와 글자가 섞인 목록에서 숫자만 골라 더하기',
 }
 
-KEY_MEAN = {  # 정답 key → 그 성공 조건이 가리키는 결과. goals 칸의 description 이 된다
-    'count': '항목 개수', 'total': '겹쳐도 전부 센 개수', 'unique': '겹치는 건 한 번만 센 개수',
-    'filtered_count': '조건에 맞는 항목의 개수', 'filtered': '조건에 맞는 항목만 남은 목록',
-    'sorted': '순서대로 늘어선 목록', 'transformed': '항목마다 정리된 목록',
-    'sum': '전부 더한 값', 'filtered_sum': '숫자만 골라 더한 값',
-    'max': '가장 큰 값', 'min': '가장 작은 값', 'group': '항목마다 나온 횟수',
+# 요청 문장에 있어야 하는 '구할 값' 말. 첫 번째 정답 key 로 고른다 (사람 결정 2026-10-16)
+KEY_TARGET = {
+    'count': r'몇', 'total': r'몇', 'unique': r'몇', 'filtered_count': r'몇', 'group': r'몇|횟수',
+    'sum': r'얼마|합|모두 더', 'filtered_sum': r'얼마|합|모두 더', 'max': r'가장|제일', 'min': r'가장|제일',
+    'sorted': r'순서|차례', 'filtered': r'만 남|빼고|뺀|없는|있는 것만|골라', 'transformed': r'깔끔|다듬|정리된|고친|바꾼',
 }
 
 
@@ -108,7 +107,6 @@ BANMAL = re.compile(r'(봐|해|야|지|어|니|자|래|줘|거든|잖아|냐)[.!
 YOU = re.compile(r'(^|\s)(너|네가|너의|너는|너도)(\s|$)')
 # 한 번에 읽혀야 한다. 중1은 덧붙인 설명을 읽지 않고, 안 읽으면 없는 것과 같다.
 ASIDE = re.compile(r'[()\[\]]|—|–| - |즉|예를 들어|참고로|왜냐하면|다시 말해|단,|※')
-METHOD = re.compile(r'쉼표|공백|줄바꿈|띄어쓰기|나누|나눈|나눠|자르|자른|잘라|반복')
 
 
 def _text_problem(v):
@@ -224,56 +222,6 @@ def counter_problems(pid, data, filter_target, counter):
     return bad
 
 
-# ── 방법 문장 ───────────────────────────────────────────────
-# LLM 은 "{sep}" 같은 자리표시를 넣은 문장을 쓰지 못했다 (평가 2회차 7건 모두 실패).
-# 그래서 빈칸 앞말·뒷말만 받고, 빈칸은 코드가 끼운다.
-
-STEP_EXAMPLE = {  # 빈칸 → (앞말, 뒷말). 스키마 예시이자 기본 틀
-    'sep': ('목록을', '기준으로 나눈다.'),
-    'dedup': ('같은 {item}{eunneun}', '.'),
-    'output': ('', '만 보여준다.'),
-    'dir': ('', '늘어놓는다.'),
-    'joinSep': ('', '기준으로 다시 잇는다.'),
-    'op': ('{item}마다', '.'),
-    'cond': ('{desc}에', '것만 남긴다.'),
-}
-STEP_EXAMPLE_NUM_COND = ('숫자가 아닌 항목은', '.')
-
-# 빈칸 바로 뒤에 붙는 조사. 보기마다 받침이 다르면 어느 한쪽이 틀린다 ("개수을", "공백로")
-JOSA_START = re.compile(r'^(을|를|이|가|은|는|과|와|으로|로)(?=$|\s|[.,])')
-
-
-def _has_batchim(word):
-    c = str(word).strip()[-1:] or ' '
-    return ('가' <= c <= '힣' and (ord(c) - 0xAC00) % 28 != 0) or c in '013678'
-
-
-def template(slot, parts):
-    """앞말 + {slot} + 뒷말. 뒷말이 문장부호·조사로 시작하면 붙여 쓴다."""
-    before, after = parts['before'].strip(), parts['after'].strip()
-    glue = '' if re.match(r'[.,!?]|만|' + JOSA_START.pattern[1:], after) else ' '
-    return ((before + ' ') if before else '') + '{' + slot + '}' + (glue + after if after else '')
-
-
-# 빈칸마다 문장에 있어야 하는 말. 평가에서 "가장 많이 나온 숫자는 [쉼표/공백] 입니다" 가 나왔다.
-# ponytail: 키워드 휴리스틱이라 뜻이 맞는데 다른 동사를 쓰면 기본 틀로 간다. 자주 걸리면 목록을 늘린다
-SLOT_VERB = {
-    'sep': r'나누|나눈|나눠|나눕|자르|자른|잘라|자릅|구분|기준',
-    'dedup': r'같은|겹치|겹친|중복|두 번|여러 번',
-    'output': r'보여|출력|띄우|띄운|나타|적는|쓴다|알려',
-    'dir': r'늘어|정렬|순서|놓는|세운',
-    'joinSep': r'잇|이어|합치|합친|합칩|붙인|붙여|붙입|연결',
-    'op': r'마다|각|하나씩|모든',
-    'cond': r'것만|남긴|남겨|남깁|고른|골라|고릅|거른|걸러|거릅|가려|가립|뺀|빼|찾',
-    'condNum': r'숫자|글자|항목|메모',
-}
-
-
-class StepParts(BaseModel):
-    before: str = Field(description='빈칸 앞에 오는 말. 없으면 빈 문자열.')
-    after: str = Field(description='빈칸 뒤에 오는 말. 평서문 "~한다." 로 끝낸다.')
-
-
 # ── 모델 ────────────────────────────────────────────────────
 
 class DataSet(BaseModel):
@@ -299,7 +247,8 @@ class _Base(BaseModel):
     title: str = _max('title', description='중학생이 바로 알아듣는 상황 이름. 명사형 ("급식 알레르기 찾기"). 컴퓨터 용어 금지.')
     brief: str = _max('brief', description=(
         '학생에게 오는 업무 요청. 한 문장, 존댓말(~해 주세요). 배경은 situation 에. '
-        '어떻게 하는지(나누기, 중복 빼기 등)는 쓰지 않는다 — 일부러 모호하게.'))
+        '어떻게 하는지(나누기, 중복 빼기 등)는 쓰지 않는다 — 일부러 모호하게. '
+        '무엇을 알아내야 하는지("몇 가지", "모두 얼마", "가장 큰")는 꼭 쓴다.'))
     situation: str = _max('situation', description='왜 이 일을 하는지. 한 문장, 존댓말로 "~요." 로 끝낸다 ("~해야 해요."). 덧붙임 금지.')
     itemName: str = _max('itemName', description='항목을 부르는 말 ("재료", "이름", "금액").')
     counter: Counter = Field(description='세 번째이자 마지막 자료. 반드시 반례.')
@@ -314,7 +263,10 @@ class _Base(BaseModel):
         if not any(f == 'data' for f, _ in bad):
             data = [d.model_dump() for d in self.data]
             bad += counter_problems(self.PID, data, getattr(self, 'filterTarget', None), self.counter.model_dump())
-        bad += self._check_goals() + self._check_steps(spec)
+        key = next(iter(spec['keys']))
+        if not re.search(KEY_TARGET[key], self.brief):
+            bad.append(('brief', f"'{self.brief}' — 구할 값이 없음. '{KEY_TARGET[key].split('|')[0]}' 처럼 "
+                                 '무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)'))
         if bad:
             raise ValidationError.from_exception_data(type(self).__name__, [
                 InitErrorDetails(type=PydanticCustomError('guard', msg), loc=(field,), input=getattr(self, field, None))
@@ -330,17 +282,13 @@ class _Base(BaseModel):
             'counter': ([self.counter.name], False),
             'brief': ([self.brief], True),
             'situation': ([self.situation], True),
-            'goals': (list(self.goals.model_dump().values()), True),
-            'sentences': ([template(k, v) for k, v in self.sentences.model_dump().items()], True),
         }
         if getattr(self, 'filterDesc', None) is not None:
             said['filterDesc'] = ([self.filterDesc], False)
         bad = []
         for field, (texts, speaks) in said.items():
             for t in texts:
-                # 방법 문장은 빈칸 이름('{joinSep}' 9자)을 빼고 센다 — 이름 길이로 한도가 빈칸마다 달라졌고,
-                # 모델에게는 '앞말과 뒷말 합쳐서' 라고 말한다
-                n = len(re.sub(r'\{\w+\}\s?', '', t)) if field == 'sentences' else len(t)
+                n = len(t)
                 if n > _LIMIT[field]:
                     bad.append((field, f"'{t}': {n}자 — {_LIMIT[field]}자 안으로"))
                     continue
@@ -365,39 +313,6 @@ class _Base(BaseModel):
             bad.append(('data', '묶어 세기 유형인데 같은 항목이 두 번 나오는 자료가 없음'))
         return bad
 
-    def _check_goals(self):
-        bad = []
-        for key, v in self.goals.model_dump().items():
-            if not re.search(r'성공(이다|입니다|이에요)?[.]?$', v.strip()):
-                bad.append(('goals', f"'{v}' — 결과 문장 '~하면 성공' 으로 끝나야 한다"))
-            m = METHOD.search(v)
-            if m:
-                bad.append(('goals', f"'{v}' 에 방법 '{m.group(0)}' — 통과 조건은 결과로만 쓴다"))
-        return bad
-
-    def _check_steps(self, spec):
-        bad = []
-        every = [v for opts in spec['slots'].values() for v in opts]
-        for slot, parts in self.sentences.model_dump().items():
-            tpl, words = template(slot, parts), parts['before'] + parts['after']
-            if not words.strip(' .'):
-                bad.append(('sentences', f'{slot} 의 앞말·뒷말이 비었음 — 무엇을 고르는 빈칸인지 알 수 없다'))
-            if '{' in words or '}' in words:
-                bad.append(('sentences', f"'{tpl}' 앞말·뒷말에 중괄호 — 빈칸은 코드가 끼운다"))
-            leak = [v for v in every if v in words]
-            if leak:
-                bad.append(('sentences', f"'{tpl}' 빈칸 밖에 보기 '{leak[0]}' — 답이 미리 적혀 있다"))
-            filled = tpl.replace('{' + slot + '}', spec['slots'][slot][0])
-            if not re.search(r'다[.]?$', filled):
-                bad.append(('sentences', f"'{tpl}' — 학생이 고른 방법은 '~한다.' 로 끝난다"))
-            verbs = SLOT_VERB['condNum' if slot == 'cond' and 'toNumber' in spec['ops'] else slot]
-            if not re.search(verbs, words):
-                bad.append(('sentences', f"'{tpl}' — 이 빈칸({slot})이 무엇을 정하는지 드러나지 않음"))
-            j = JOSA_START.match(parts['after'].strip())
-            if j and len({_has_batchim(o) for o in spec['slots'][slot]}) > 1:
-                bad.append(('sentences', f"'{tpl}' 빈칸 뒤 조사 '{j.group(1)}' 가 보기마다 맞지 않음"))
-        return bad
-
 
 def _data_desc(ops):
     need = ['앞 자료 2개. 두 자료에서는 대충 세운 기준도 통할 수 있어야 반례가 의미 있다.']
@@ -416,30 +331,8 @@ def _data_desc(ops):
 
 def _draft(pid):
     spec = SPEC[pid]
-    goals = create_model('Goals_' + pid.replace('-', '_'), **{
-        k: (str, _max('goals', description=f'진짜 성공 조건 문장 ({KEY_MEAN[k]}). 결과로만 쓴다 — 방법을 쓰면 정답 공개다. '
-                                           '반드시 "성공" 으로 끝낸다 ("~나오면 성공"). '
-                                           '"~할 수 있어야 한다" 로 쓰지 않는다.'))
-        for k in spec['keys']})
-    def verb_hint(slot):  # 검사기(SLOT_VERB)와 같은 목록을 모델에게 보여준다
-        key = 'condNum' if slot == 'cond' and 'toNumber' in spec['ops'] else slot
-        return ' / '.join(SLOT_VERB[key].split('|'))
-
-    def example(slot):
-        b, a = STEP_EXAMPLE_NUM_COND if slot == 'cond' and 'toNumber' in spec['ops'] else STEP_EXAMPLE[slot]
-        b = b.replace('{item}', '재료').replace('{eunneun}', '는').replace('{desc}', '알레르기 목록')
-        return f'앞말 "{b}", 뒷말 "{a}"'
-
-    steps = create_model('Steps_' + pid.replace('-', '_'), **{
-        slot: (StepParts, Field(description=(
-            f'학생이 빈칸에서 [{" / ".join(opts)}] 중 하나를 고르는 방법 문장. 빈칸 앞말과 뒷말만 쓴다. '
-            f'합쳐서 25자 안. 보기에 있는 말은 쓰지 않는다. 뒷말은 "~한다." 로 끝낸다. '
-            f'앞말이나 뒷말에 이 중 하나를 꼭 쓴다: {verb_hint(slot)}. 예: {example(slot)}')))
-        for slot, opts in spec['slots'].items()})
     fields = {
         'data': (list[DataSet], Field(min_length=2, max_length=2, description=_data_desc(spec['ops']))),
-        'goals': (goals, Field(description='진짜 성공 조건. 함정 보기는 코드가 붙인다.')),
-        'sentences': (steps, Field(description=f'방법 문장. 순서: {", ".join(spec["slots"])}.')),
     }
     if 'filter' in spec['ops']:
         fields['filterTarget'] = (list[str], Field(min_length=1, max_length=6, description=(

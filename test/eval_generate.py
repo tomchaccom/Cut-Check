@@ -19,6 +19,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'api'))
 import _generate  # noqa: E402
 from _generate import GenerateError, _parse, generate  # noqa: E402
+from _review import make_mission  # noqa: E402
 from _schema import DESC  # noqa: E402
 
 CASES = [  # (수업, 핵심, 기대 유형 — 참고용. 유형 선택은 LLM 판단이라 맞는지만 기록한다)
@@ -88,7 +89,7 @@ def run_case(i, lesson, key_point, expect):
     result = {'no': i, 'lesson': lesson, 'keyPoint': key_point, 'expect': expect}
     try:
         with redirect_stderr(log):
-            m = generate(lesson, key_point, call)
+            m = make_mission(lesson, key_point, call)
         result.update(ok=True, mission=m, guard=m['guard'])
     except GenerateError as e:
         result.update(ok=False, error=str(e), reasons=e.reasons)
@@ -128,6 +129,10 @@ def write_md(results, path):
     L.append(f'| 유형을 LLM 이 고름 | {sum(1 for r in ok if r["guard"]["picked"] == "llm")} / {len(ok)} |')
     L.append(f'| 유형이 기대와 같음 | {sum(1 for r in ok if r["mission"]["pipelineId"] == r["expect"])} / {len(ok)} |')
     L.append(f'| 나온 유형 가짓수 | {len({r["mission"]["pipelineId"] for r in ok})} |')
+    rv = [r['guard'].get('review', {}) for r in ok]
+    L.append(f'| 검수 1차 통과 | {sum(1 for x in rv if x.get("status") == "pass" and x.get("rounds") == 1)} / {len(ok)} |')
+    L.append(f'| 검수 통과 (재생성 포함) | {sum(1 for x in rv if x.get("status") == "pass")} / {len(ok)} |')
+    L.append(f'| 교사 검수로 넘어감 | {sum(1 for x in rv if x.get("status") == "teacher")} / {len(ok)} |')
     if times:
         L.append(f'| 미션 하나 걸린 시간 | 평균 {sum(times) / len(times) / 1000:.1f}초 · 최대 {max(times) / 1000:.1f}초 |')
     modes = {}
@@ -187,9 +192,9 @@ def write_md(results, path):
         L.append('\n| 성공 조건 보기 | 표시 |\n|---|---|')
         for o in m['define']['options']:
             L.append(f'| {md_cell(o["v"])} | {o["trap"] or "진짜 (" + o.get("key", "") + ")"} |')
-        L.append('\n방법 문장')
-        for s in m['method']['sentences']:
-            L.append(f'- {s["template"].replace("{" + s["slot"] + "}", "[" + " / ".join(s["options"]) + "]")}')
+        rv = m['guard'].get('review', {})
+        if rv.get('status') == 'teacher':
+            L.append('\n- 검수: ' + ' / '.join(rv.get('reasons', [])))
         L.append('\n| 자료 | 값 |\n|---|---|')
         for inp in m['inputs']:
             tag = f' (반례 · {inp.get("axis")})' if inp.get('counter') else ''

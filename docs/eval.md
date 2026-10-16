@@ -1,6 +1,6 @@
 # 미션 생성 평가
 
-실행 2026-10-16 14:18 · 모델 `openai/gpt-5.4-mini` · 수업 주제 10개
+실행 2026-10-17 01:07 · 모델 `openai/gpt-5.4-mini` · 수업 주제 10개
 
 `uv run --with-requirements requirements.txt python test/eval_generate.py` 로 다시 만든다. 원본 응답은 `docs/eval-raw.json`.
 
@@ -9,388 +9,460 @@
 | 항목 | 값 |
 |---|---|
 | 미션 생성 성공 | 10 / 10 |
-| 1차 응답이 검사를 바로 통과 | 2 / 10 |
-| 재요청 | 8 건 |
-| 기본 틀로 바뀐 칸이 없는 미션 | 6 / 10 |
-| 기본 틀로 바뀐 칸이 있는 미션 | 4 건 |
-| 자료를 보정한 미션 | 2 건 |
+| 1차 응답이 검사를 바로 통과 | 5 / 10 |
+| 재요청 | 6 건 |
+| 기본 틀로 바뀐 칸이 없는 미션 | 9 / 10 |
+| 기본 틀로 바뀐 칸이 있는 미션 | 1 건 |
+| 자료를 보정한 미션 | 1 건 |
 | 유형을 LLM 이 고름 | 10 / 10 |
-| 유형이 기대와 같음 | 9 / 10 |
-| 나온 유형 가짓수 | 6 |
-| 미션 하나 걸린 시간 | 평균 8.0초 · 최대 18.7초 |
-| HTTP `유형 · json_schema → ok` | 10회 · 평균 1.2초 |
-| HTTP `초안 · json_schema → ok` | 23회 · 평균 2.9초 |
+| 유형이 기대와 같음 | 8 / 10 |
+| 나온 유형 가짓수 | 7 |
+| 검수 1차 통과 | 8 / 10 |
+| 검수 통과 (재생성 포함) | 10 / 10 |
+| 교사 검수로 넘어감 | 0 / 10 |
+| 미션 하나 걸린 시간 | 평균 8.8초 · 최대 23.5초 |
+| HTTP `유형 · json_schema → ok` | 13회 · 평균 1.3초 |
+| HTTP `초안 · json_schema → ok` | 37회 · 평균 1.9초 |
 
 ### 검증에 걸린 칸 (시도 기준)
 
 | 칸 | 횟수 |
 |---|---|
-| `sentences` | 14 |
-| `situation` | 5 |
-| `goals` | 4 |
-| `brief` | 1 |
+| `brief` | 29 |
+| `title` | 16 |
+| `situation` | 16 |
+| `itemName` | 16 |
+| `counter` | 16 |
+| `data` | 16 |
+| `filterTarget` | 10 |
+| `filterDesc` | 10 |
 
 ## 주제별
 
 | # | 수업 | 기대 유형 | 나온 유형 | 시간 | LLM 호출 | 1차 검증 | 기본 틀 칸 | 결과 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 파이썬 리스트와 반복문. for문으로 하나씩 | `split-unique-count` | `split-unique-count` | 3.2초 | 2 | 통과 | - | 생성 |
-| 2 | 조건문 if-else. 조건이 참이면 A,  | `split-filter-count` | `split-filter-count` | 3.0초 | 2 | 통과 | - | 생성 |
-| 3 | 딕셔너리. 키와 값 쌍으로 저장 | `split-group` | `split-group` | 6.8초 | 4 | goals | - | 생성 |
-| 4 | 함수 정의와 호출. def로 만들고 여러 번 | `split-transform-join` | `split-transform-join` | 4.7초 | 3 | goals, sentences | - | 생성 |
-| 5 | 문자열 다루기. split, strip, r | `split-transform-join` | `split-transform-join` | 7.3초 | 4 | situation, sentences | sentences | 생성 |
-| 6 | 정렬. sorted와 sort의 차이 | `split-sort-join` | `split-sort-join` | 15.9초 | 3 | situation, goals | - | 생성 |
-| 7 | 숫자 형변환. int()로 문자열을 숫자로 | `split-num-sum` | `split-filter-num-sum` | 7.2초 | 4 | situation, sentences | sentences | 생성 |
-| 8 | 예외 처리. try-except | `split-filter-num-sum` | `split-filter-num-sum` | 18.7초 | 4 | sentences | sentences | 생성 |
-| 9 | 집합 set. 중복 없는 모음 | `split-unique-count` | `split-unique-count` | 5.5초 | 3 | situation, sentences | - | 생성 |
-| 10 | 파일 입출력. open, read | `split-filter-count` | `split-filter-count` | 7.2초 | 4 | brief, situation, sentences | sentences | 생성 |
+| 1 | 파이썬 리스트와 반복문. for문으로 하나씩 | `split-unique-count` | `split-unique-count` | 5.2초 | 3 | 통과 | - | 생성 |
+| 2 | 조건문 if-else. 조건이 참이면 A,  | `split-filter-count` | `split-filter-count` | 12.6초 | 7 | 통과 | - | 생성 |
+| 3 | 딕셔너리. 키와 값 쌍으로 저장 | `split-group` | `split-group` | 5.3초 | 3 | 통과 | - | 생성 |
+| 4 | 함수 정의와 호출. def로 만들고 여러 번 | `split-transform-join` | `split-transform-join` | 8.8초 | 5 | brief | brief | 생성 |
+| 5 | 문자열 다루기. split, strip, r | `split-transform-join` | `split-transform-join` | 8.6초 | 5 | brief | - | 생성 |
+| 6 | 정렬. sorted와 sort의 차이 | `split-sort-join` | `split-sort-join` | 5.6초 | 3 | 통과 | - | 생성 |
+| 7 | 숫자 형변환. int()로 문자열을 숫자로 | `split-num-sum` | `split-filter-num-sum` | 6.8초 | 4 | brief | - | 생성 |
+| 8 | 예외 처리. try-except | `split-filter-num-sum` | `split-filter-num-sum` | 23.5초 | 13 | brief | - | 생성 |
+| 9 | 집합 set. 중복 없는 모음 | `split-unique-count` | `split-unique-count` | 4.8초 | 3 | 통과 | - | 생성 |
+| 10 | 파일 입출력. open, read | `split-filter-count` | `split-filter-join` | 7.3초 | 4 | brief | - | 생성 |
 
 ## 상세
 
 ### 1. 파이썬 리스트와 반복문. for문으로 하나씩 꺼내서 처리하는 법
 
 - 핵심: 같은 값이 여러 번 있을 때 전체와 서로 다른 개수가 다르다
-- HTTP: 유형 ok 1.3초 → 초안 ok 1.9초
+- HTTP: 유형 ok 1.2초 → 초안 ok 1.9초 → 초안 ok 2.1초
 - 유형: `split-unique-count` (같은 항목이 겹쳐 나오는 목록에서 개수 세기) · 고른 쪽: llm
 - 초안 1차 검증 통과
+- 초안 2차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
 
-**중복개수세기** · `split-unique-count`
+**겹친 목록 세기** · `split-unique-count`
 
-> 목록을 보고 알맞게 세어 주세요.  
-> 같은 값이 여러 번 나오는 목록을 정리해야 해요.
+> 목록에서 몇 가지를 알아내 주세요.  
+> 같은 항목이 여러 번 들어 있어요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
-| 3이 나오면 성공 | hardcode |
 | 에러 안 나면 성공 | luck |
-| 전체 값의 수를 맞히면 성공 | 진짜 (total) |
-| 서로 다른 값의 수를 맞히면 성공 | 진짜 (unique) |
-
-방법 문장
-- 기록을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 같은 값은 [각각 남긴다 / 하나만 남긴다] 하나로 남긴다.
-- 남은 개수를 [남은 항목의 개수 / 항상 숫자 3]만 보여준다.
+| 겹치는 건 한 번만 센 수가 나오면 성공 | 진짜 (unique) |
+| 전체 자료 수가 나오면 성공 | 진짜 (total) |
+| 3이 나오면 성공 | hardcode |
 
 | 자료 | 값 |
 |---|---|
-| 월요일 기록 | `사과,배,사과,귤` |
-| 금요일 기록 | `사과,배,사과,귤,배` |
-| 화요일 기록 (반례 · count) | `사과,배` |
+| 월요일 목록 | `연필,지우개,연필,책` |
+| 수요일 목록 | `연필,공책,연필,책` |
+| 겹친 자료 (반례 · count) | `연필,지우개,연필,책,연필,공책` |
 
 ### 2. 조건문 if-else. 조건이 참이면 A, 거짓이면 B
 
 - 핵심: 어떤 기준으로 걸러내는지를 학생이 직접 정하게
-- HTTP: 유형 ok 1.1초 → 초안 ok 1.9초
+- HTTP: 유형 ok 1.2초 → 초안 ok 2.1초 → 초안 ok 2.1초 → 유형 ok 1.2초 → 초안 ok 2.1초 → 초안 ok 1.8초 → 초안 ok 2.1초
 - 유형: `split-filter-count` (조건에 맞는 항목만 골라 세기) · 고른 쪽: llm
 - 초안 1차 검증 통과
+- 초안 2차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
+- 초안 3차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
+- 초안 4차 검증 실패
+  - `brief` '어떤 것을 셀지 정해 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 5차 검증 통과
+- 초안 6차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
 
-**분류 개수** · `split-filter-count`
+**준비물 세기** · `split-filter-count`
 
-> 조건을 보고 셀 대상을 정해 주세요.  
-> 세 자료를 보고 어떤 것만 셀지 정해 주세요.
+> 준비물에서 몇 개를 셀지 알아내 주세요.  
+> 준비물을 확인해야 해요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
 | 에러 안 나면 성공 | luck |
-| 조건에 맞는 항목은 3개 나오면 성공 | 진짜 (filtered_count) |
+| 조건에 맞는 준비물 수가 나오면 성공 | 진짜 (filtered_count) |
 | 3이 나오면 성공 | hardcode |
-
-방법 문장
-- 자료를 [쉼표 / 공백 / 줄바꿈] 나눈다.
-- 조건에 맞는 것만 [있는 / 없는] 고른다.
-- 남은 개수를 [남은 항목의 개수 / 항상 숫자 3] 보여준다.
 
 | 자료 | 값 |
 |---|---|
-| 월요일 자료 | `참,거짓,참,참` |
-| 화요일 자료 | `거짓,참,거짓` |
-| 금요일 자료 (반례 · empty) | `거짓,사과,바나나,포도` |
+| 1반 준비물 | `물통,연필,공책,색연필` |
+| 2반 준비물 | `물통,연필,공책,지우개` |
+| 수요일 준비물 (반례 · empty) | `색연필,지우개,사과,바나나` |
 
-걸러낼 대상: 참
+걸러낼 대상: 물통, 연필, 공책
 
 ### 3. 딕셔너리. 키와 값 쌍으로 저장
 
 - 핵심: 같은 키가 여러 번 나오면 묶어서 센다
-- HTTP: 유형 ok 1.3초 → 초안 ok 1.6초 → 초안 ok 2.0초 → 초안 ok 2.0초
+- HTTP: 유형 ok 1.2초 → 초안 ok 1.9초 → 초안 ok 2.2초
 - 유형: `split-group` (같은 항목끼리 묶어 몇 번씩 나왔는지 세기) · 고른 쪽: llm
-- 초안 1차 검증 실패
-  - `goals` '같은 이름이 몇 번 나왔는지 묶어 셉니다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다
+- 초안 1차 검증 통과
 - 초안 2차 검증 실패
-  - `goals` '같은 이름이 몇 번 나왔는지 묶어 셉니다. 하면 성공': 29자 — 25자 안으로
-- 초안 3차 검증 통과
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
 
-**급식표정리** · `split-group`
+**급식 선호** · `split-group`
 
-> 급식표에서 같은 이름이 몇 번 나왔는지 세어 보세요.  
-> 같은 항목끼리 묶어 알아봐야 해요.
+> 급식 기록을 묶어 나온 횟수를 알아내세요.  
+> 같은 항목을 모아야 해요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
-| 같은 이름 수를 셉니다. 하면 성공 | 진짜 (group) |
-| 김치가 2번 나오면 성공 | hardcode |
 | 에러 안 나면 성공 | luck |
-
-방법 문장
-- 이름을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눕니다.
+| 항목마다 나온 횟수가 보이면 성공 | 진짜 (group) |
+| 우유가 2번 나오면 성공 | hardcode |
 
 | 자료 | 값 |
 |---|---|
-| 월요일 이름 | `김치,밥,국,김치` |
-| 수요일 이름 | `밥,국,김치,국` |
-| 화요일 이름 (반례 · count) | `김치,밥,국,김치,김치,밥` |
+| 월요일 항목 | `우유,빵,우유,사과` |
+| 화요일 항목 | `빵,우유,빵,바나나` |
+| 목요일 항목 (반례 · count) | `우유,빵,우유,사과,우유,빵` |
 
 ### 4. 함수 정의와 호출. def로 만들고 여러 번 호출
 
 - 핵심: 같은 작업을 항목마다 반복할 때 함수로 묶는다
-- HTTP: 유형 ok 1.0초 → 초안 ok 1.8초 → 초안 ok 1.9초
+- HTTP: 유형 ok 1.2초 → 초안 ok 2.0초 → 초안 ok 1.8초 → 초안 ok 1.9초 → 초안 ok 1.9초
 - 유형: `split-transform-join` (항목마다 앞뒤 공백 같은 것을 정리하기) · 고른 쪽: llm
 - 초안 1차 검증 실패
-  - `goals` '각 항목의 앞뒤 공백을 정리하면 성공' 에 방법 '공백' — 통과 조건은 결과로만 쓴다
-  - `sentences` '각 항목을 {sep} 정리한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
-- 초안 2차 검증 통과
+  - `brief` '항목마다 앞뒤 공백이 다른 자료를 정리해 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 2차 검증 실패
+  - `brief` '항목마다 앞뒤 공백이 있는 이름을 알아내 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 3차 검증 실패
+  - `brief` '항목마다 앞뒤 공백이 있는 이름을 찾아 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 4차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+- 기본 틀로 바뀐 칸: brief
 
 **공백 정리** · `split-transform-join`
 
-> 자료를 보고 같은 기준으로 정리해 주세요.  
-> 같은 기준으로 정리해야 해요.
+> 이름 목록을 깔끔하게 다시 만들어 주세요.  
+> 이름을 보기 좋게 맞춰야 해요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
-| 모든 항목이 같은 기준으로 정리되면 성공 | 진짜 (transformed) |
-| 사과,배,바나나가 나오면 성공 | hardcode |
+| 이름마다 깔끔해지면 성공 | 진짜 (transformed) |
+| 김철수,이영희,박민준이 나오면 성공 | hardcode |
 | 에러 안 나면 성공 | luck |
-
-방법 문장
-- 각 항목을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 각 자료마다 [앞뒤 공백을 없앤다 / 첫 글자만 남긴다] 하나씩 정리한다.
-- [쉼표 / 공백] 기준으로 다시 잇는다.
 
 | 자료 | 값 |
 |---|---|
-| 월요일 자료 | ` 사과,배 , 바나나` |
-| 화요일 자료 | ` 연필,공책 , 지우개` |
-| 금요일 자료 (반례 · invisible) | ` 연필 , 공책 , 지우개 ` |
+| 월요일 이름 | ` 김철수 ,이영희, 박민준 ` |
+| 화요일 이름 | ` 최수진 ,오지훈, 한서연 ` |
+| 한글 이름 (반례 · invisible) | ` 최수진 , 오지훈 , 한서연 ` |
 
 ### 5. 문자열 다루기. split, strip, replace
 
 - 핵심: 데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다
-- HTTP: 유형 ok 1.2초 → 초안 ok 2.5초 → 초안 ok 1.7초 → 초안 ok 1.9초
+- HTTP: 유형 ok 1.2초 → 초안 ok 1.7초 → 초안 ok 1.8초 → 초안 ok 1.5초 → 초안 ok 2.2초
 - 유형: `split-transform-join` (항목마다 앞뒤 공백 같은 것을 정리하기) · 고른 쪽: llm
 - 초안 1차 검증 실패
-  - `situation` '공백이 섞이면 같은 값도 다르게 보일 수 있습니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요
-  - `sentences` '앞뒤 공백을 {op} 없앱니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다
-  - `sentences` '앞뒤 공백을 {op} 없앱니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음
+  - `brief` '세 자료를 보고 같은 기준으로 정리해 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
 - 초안 2차 검증 실패
-  - `sentences` '문자를 {op} 정리합니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음
-- 초안 3차 검증 실패
-  - `sentences` '공백을 {op} 없앱니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다
-  - `sentences` '공백을 {op} 없앱니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음
-- 기본 틀로 바뀐 칸: sentences
+  - `brief` '세 자료에서 알아낼 것을 정해 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 3차 검증 통과
+- 초안 4차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
 
-**공백 정리하기** · `split-transform-join`
+**자료 나누기** · `split-transform-join`
 
-> 자료를 보고 항목을 정리해 주세요.  
-> 공백이 섞이면 같은 값도 다르게 보여요.
+> 세 자료에서 깔끔한 이름을 골라 주세요.  
+> 공백이 섞인 자료를 정리해야 해요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
 | 에러 안 나면 성공 | luck |
-| 항목마다 같은 모양으로 정리하면 성공 | 진짜 (transformed) |
-| 사과,배,포도,귤이 나오면 성공 | hardcode |
-
-방법 문장
-- 목록을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 문자마다 [앞뒤 공백을 없앤다 / 첫 글자만 남긴다].
-- [쉼표 / 공백] 기준으로 다시 잇는다.
+| 이름마다 깔끔해지면 성공 | 진짜 (transformed) |
+| 사과,배,복숭아가 나오면 성공 | hardcode |
 
 | 자료 | 값 |
 |---|---|
-| 메모 | `사과, 배 ,포도, 귤 ` |
-| 정리본 | `사과,배,포도,귤` |
-| 띄어쓰기 다른 문자 (반례 · count) | `사과, 배 ,포도, 귤 ,사과,사과` |
+| 월요일 자료 | ` 사과,배 , 복숭아 ` |
+| 화요일 자료 | `사과 , 배,복숭아` |
+| 공백 반대 (반례 · count) | ` 사과,배 , 복숭아 , 사과,사과 ` |
 
 ### 6. 정렬. sorted와 sort의 차이
 
 - 핵심: 순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다
-- HTTP: 유형 ok 1.1초 → 초안 ok 2.0초 → 초안 ok 12.8초
+- HTTP: 유형 ok 1.2초 → 초안 ok 2.2초 → 초안 ok 2.2초
 - 유형: `split-sort-join` (항목을 순서대로 늘어놓기) · 고른 쪽: llm
-- 초안 1차 검증 실패
-  - `situation` '같은 기준으로 책을 정리해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요
-  - `goals` '기준에 맞게 차례대로 늘어놓아야 성공합니다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다
-- 초안 2차 검증 통과
+- 초안 1차 검증 통과
+- 초안 2차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
 
-**도서 정리하기** · `split-sort-join`
+**간식 순서 맞추기** · `split-sort-join`
 
-> 책 목록을 보고 빈칸에 맞는 말을 골라 주세요.  
-> 같은 기준으로 책을 정리해요.
+> 간식 목록을 순서대로 늘려 주세요.  
+> 오늘 간식 시간에 맞춰야 해요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
-| 기준에 맞게 차례대로 늘어놓으면 성공 | 진짜 (sorted) |
+| 순서대로 늘어서면 성공 | 진짜 (sorted) |
+| 빵,사과,우유가 나오면 성공 | hardcode |
 | 에러 안 나면 성공 | luck |
-| 과학,국어,미술,수학이 나오면 성공 | hardcode |
-
-방법 문장
-- 목록을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 항목을 [가나다순으로 / 거꾸로] 순서대로 늘어놓는다.
-- 묶은 뒤 [쉼표 / 공백] 기준으로 다시 잇는다.
 
 | 자료 | 값 |
 |---|---|
-| 월요일 책 | `수학,국어,과학,미술` |
-| 수요일 책 | `체육,음악,영어,사회` |
-| 다른날 책 (반례 · count) | `수학,국어,과학,미술,수학,체육` |
+| 월요일 간식 | `사과,빵,우유` |
+| 화요일 간식 | `우유,사과,빵` |
+| 금요일 간식 (반례 · count) | `사과,빵,우유,사과,우유` |
 
 ### 7. 숫자 형변환. int()로 문자열을 숫자로
 
 - 핵심: 문자로 된 숫자는 더하기 전에 바꿔야 한다
-- HTTP: 유형 ok 1.3초 → 초안 ok 2.2초 → 초안 ok 2.0초 → 초안 ok 1.7초
+- HTTP: 유형 ok 1.2초 → 초안 ok 1.7초 → 초안 ok 1.6초 → 초안 ok 2.2초
 - 유형: `split-filter-num-sum` (숫자와 글자가 섞인 목록에서 숫자만 골라 더하기) · 고른 쪽: llm
 - 초안 1차 검증 실패
-  - `situation` '문자와 숫자가 섞여 있어서 숫자만 더해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요
-  - `sentences` '목록을 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
-- 초안 2차 검증 실패
-  - `sentences` '목록을 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
+  - `brief` '목록에서 숫자만 골라 더해 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 2차 검증 통과
 - 초안 3차 검증 실패
-  - `sentences` '목록에서 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
-- 기본 틀로 바뀐 칸: sentences
-- 자료 보정: '7개' → '7' (단위·쉼표를 뗐어요)
-- 자료 보정: '6개' → '6' (단위·쉼표를 뗐어요)
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
 - 자료 보정: 걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요
+- 자료 보정: 걸러낼 대상에 사과, 바나나, 포도 를 넣었어요
 
 **숫자만 더하기** · `split-filter-num-sum`
 
-> 목록에서 숫자만 골라 더해 주세요.  
-> 문자와 숫자가 섞여 있어서 숫자만 더해야 해요.
+> 목록에서 숫자만 골라 더해서 얼마인지 알아내 주세요.  
+> 문자와 숫자가 섞여 있어서 그래요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
+| 5가 나오면 성공 | hardcode |
 | 숫자만 더한 값이 나오면 성공 | 진짜 (filtered_sum) |
 | 에러 안 나면 성공 | luck |
-| 7이 나오면 성공 | hardcode |
-
-방법 문장
-- 목록을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 숫자가 아닌 항목은 [빼고 숫자만 남긴다 / 그대로 둔다].
 
 | 자료 | 값 |
 |---|---|
-| 첫 목록 | `3,사과,5,7` |
-| 둘째 목록 | `2,바나나,4,6` |
-| 숫자 섞인 목록 (반례 · empty) | `3,사과,5,7개,2,바나나,3` |
+| 첫째 자료 | `3,사과,2,바나나` |
+| 둘째 자료 | `1,4,포도,2` |
+| 셋째 자료 (반례 · empty) | `사과,바나나,포도,사과` |
 
-걸러낼 대상: 3, 사과, 5, 7개, 2, 바나나
+걸러낼 대상: 사과, 바나나, 포도
 
 ### 8. 예외 처리. try-except
 
 - 핵심: 숫자가 아닌 값이 섞여 있으면 계산이 멈춘다
-- HTTP: 유형 ok 1.2초 → 초안 ok 1.6초 → 초안 ok 2.8초 → 초안 ok 13.0초
+- HTTP: 유형 ok 1.3초 → 초안 ok 2.2초 → 초안 ok 1.7초 → 초안 ok 2.3초 → 유형 ok 1.7초 → 초안 ok 1.9초 → 초안 ok 1.7초 → 초안 ok 1.6초 → 초안 ok 2.3초 → 유형 ok 1.2초 → 초안 ok 2.1초 → 초안 ok 1.6초 → 초안 ok 1.9초
 - 유형: `split-filter-num-sum` (숫자와 글자가 섞인 목록에서 숫자만 골라 더하기) · 고른 쪽: llm
 - 초안 1차 검증 실패
-  - `sentences` '목록에서 {sep}을 골라 더해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다
-  - `sentences` '목록에서 {sep}을 골라 더해 주세요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
-  - `sentences` '목록에서 {sep}을 골라 더해 주세요.' 빈칸 뒤 조사 '을' 가 보기마다 맞지 않음
-- 초안 2차 검증 실패
-  - `sentences` '목록에서 숫자만 {sep} 골라 더한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
+  - `brief` '목록에서 숫자만 골라 더해주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 2차 검증 통과
 - 초안 3차 검증 실패
-  - `sentences` '목록에서 {sep} 숫자만 골라 더한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
-- 기본 틀로 바뀐 칸: sentences
-- 자료 보정: 걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요
-- 자료 보정: 걸러낼 대상에 나 를 넣었어요
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
+- 초안 4차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
+- 초안 5차 검증 실패
+  - `brief` '섞인 목록에서 더할 수 있는 값만 골라 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 6차 검증 실패
+  - `brief` '목록에서 몇 가지를 골라 더해 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 7차 검증 실패
+  - `brief` '숫자가 몇 개인지 더해 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 8차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
+- 초안 9차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
+- 초안 10차 검증 실패
+  - `brief` '세 자료에서 숫자만 찾아 더해주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 11차 검증 통과
+- 초안 12차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
 
-**숫자만 더하기** · `split-filter-num-sum`
+**숫자만찾기** · `split-filter-num-sum`
 
-> 숫자만 골라 더해 주세요.  
-> 숫자가 아닌 값이 섞여 있어요.
+> 세 자료에서 얼마를 더할지 알아내주세요.  
+> 숫자가 아닌 값이 섞이면 계산이 멈춰요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
 | 에러 안 나면 성공 | luck |
-| 15가 나오면 성공 | hardcode |
 | 숫자만 더한 값이 나오면 성공 | 진짜 (filtered_sum) |
-
-방법 문장
-- 목록을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 숫자가 아닌 항목은 [빼고 숫자만 남긴다 / 그대로 둔다].
+| 12가 나오면 성공 | hardcode |
 
 | 자료 | 값 |
 |---|---|
-| 첫째 목록 | `3,가,5,7` |
-| 둘째 목록 | `2,나,4,6` |
-| 다른 날 자료 (반례 · empty) | `가,나,가` |
+| 첫째자료 | `3,사과,7,배,2` |
+| 둘째자료 | `5,포도,1,수박,4` |
+| 셋째자료 (반례 · empty) | `사과,배,포도,수박,사과` |
 
-걸러낼 대상: 가, 나
+걸러낼 대상: 사과, 배, 포도, 수박
 
 ### 9. 집합 set. 중복 없는 모음
 
 - 핵심: 중복을 없애면 개수가 달라진다
-- HTTP: 유형 ok 1.2초 → 초안 ok 2.0초 → 초안 ok 2.3초
+- HTTP: 유형 ok 1.1초 → 초안 ok 1.7초 → 초안 ok 2.0초
 - 유형: `split-unique-count` (같은 항목이 겹쳐 나오는 목록에서 개수 세기) · 고른 쪽: llm
-- 초안 1차 검증 실패
-  - `situation` '중복을 없애서 수를 알아내야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요
-  - `sentences` '같은 항목은 {dedup} 하나만 남긴다.' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다
-- 초안 2차 검증 통과
+- 초안 1차 검증 통과
+- 초안 2차 검증 실패
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
 
 **중복 개수 세기** · `split-unique-count`
 
-> 겹친 항목을 보고 개수를 세어 주세요.  
-> 겹친 항목을 보고 수를 정해요.
+> 같은 항목이 겹쳐 나온 목록에서 몇 가지인지 알아보세요.  
+> 중복을 없애면 개수가 달라져요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
-| 3이 나오면 성공 | hardcode |
-| 같은 항목은 한 번만 세면 성공 | 진짜 (unique) |
-| 겹친 항목까지 모두 세면 성공 | 진짜 (total) |
 | 에러 안 나면 성공 | luck |
-
-방법 문장
-- 목록을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 같은 항목은 [각각 남긴다 / 하나만 남긴다] 남긴다.
-- 남은 항목의 수를 [남은 항목의 개수 / 항상 숫자 3]만 보여준다.
+| 전체 자료 수가 나오면 성공 | 진짜 (total) |
+| 겹치는 건 한 번만 센 수가 나오면 성공 | 진짜 (unique) |
+| 3이 나오면 성공 | hardcode |
 
 | 자료 | 값 |
 |---|---|
-| 월요일 목록 | `사과,배,사과,귤` |
-| 화요일 목록 | `사과,귤,배,배` |
-| 반복 목록 (반례 · count) | `사과,배` |
+| 월요일 자료 | `사과,배,사과,포도` |
+| 화요일 자료 | `배,사과,포도,배` |
+| 다른 날 자료 (반례 · count) | `사과,배` |
 
 ### 10. 파일 입출력. open, read
 
 - 핵심: 파일에서 읽은 줄마다 쓸 것만 골라낸다
-- HTTP: 유형 ok 1.3초 → 초안 ok 2.0초 → 초안 ok 1.7초 → 초안 ok 2.1초
-- 유형: `split-filter-count` (조건에 맞는 항목만 골라 세기) · 고른 쪽: llm
+- HTTP: 유형 ok 1.7초 → 초안 ok 1.9초 → 초안 ok 1.7초 → 초안 ok 2.1초
+- 유형: `split-filter-join` (조건에 맞는 항목만 골라 다시 이어 붙이기) · 고른 쪽: llm
 - 초안 1차 검증 실패
-  - `brief` '읽은 줄에서 필요한 것만 골라 세어 주십시오.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요
-  - `situation` '파일에서 읽은 줄만 보고 처리해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요
-  - `sentences` '줄을 {sep} 고릅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음
-  - `sentences` '남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음
-- 초안 2차 검증 실패
-  - `sentences` '남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음
+  - `brief` '파일에서 읽은 줄을 정리해 보세요.' — 구할 값이 없음. '만 남' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)
+- 초안 2차 검증 통과
 - 초안 3차 검증 실패
-  - `sentences` '남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음
-- 기본 틀로 바뀐 칸: sentences
+  - `title` Field required
+  - `brief` Field required
+  - `situation` Field required
+  - `itemName` Field required
+  - `counter` Field required
+  - `data` Field required
+  - `filterTarget` Field required
+  - `filterDesc` Field required
 
-**파일 줄 고르기** · `split-filter-count`
+**파일 줄 고르기** · `split-filter-join`
 
-> 읽은 줄에서 필요한 것만 골라 세어 주세요.  
-> 파일에서 읽은 줄만 보고 처리해야 해요.
+> 파일에서 읽은 줄에서 몇 가지를 골라야 해요.  
+> 읽은 내용을 다시 이어 붙여야 해요.
 
 | 성공 조건 보기 | 표시 |
 |---|---|
 | 에러 안 나면 성공 | luck |
-| 2개 나오면 성공 | 진짜 (filtered_count) |
-| 2가 나오면 성공 | hardcode |
-
-방법 문장
-- 목록을 [쉼표 / 공백 / 줄바꿈] 기준으로 나눈다.
-- 과일에 [있는 / 없는] 것만 남긴다.
-- [남은 항목의 개수 / 항상 숫자 3]만 보여준다.
+| 조건에 맞는 줄만 남으면 성공 | 진짜 (filtered) |
+| 사과,포도가 나오면 성공 | hardcode |
 
 | 자료 | 값 |
 |---|---|
-| 월요일 파일 | `사과,메모,배,공지` |
-| 화요일 파일 | `사과,연필,배,포도` |
-| 다음 파일 (반례 · empty) | `메모,공지,연필,포도` |
+| 월요일 기록 | `사과,배,포도` |
+| 화요일 기록 | `사과,감,포도` |
+| 금요일 줄 (반례 · count) | `사과,배,포도,사과,사과` |
 
-걸러낼 대상: 사과, 배
+걸러낼 대상: 사과, 포도
 

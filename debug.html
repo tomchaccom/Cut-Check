@@ -121,6 +121,8 @@ window.CC_SUPABASE = {
 <script src="js/core/events.js"></script>
 <script src="js/core/fold.js"></script>
 <script src="js/core/hangul.js"></script>
+<script src="js/core/pipeline.js"></script>
+<script src="js/core/cards.js"></script>
 <script>
 (function(){
   var log=document.getElementById('log');
@@ -187,7 +189,7 @@ window.CC_SUPABASE = {
       if(s){
         html+='<tr><td><b>'+esc(st.name)+'</b></td>'+
           '<td>'+(s.sDefine?badge(true,esc(s.sDefine.choice)):badge(null,'미정'))+'</td>'+
-          '<td>'+(s.sMethod?badge(true,s.sMethod.slots.sep+'/'+s.sMethod.slots.dedup):badge(null,'미정'))+'</td>'+
+          '<td>'+(s.sMethod?badge(true,esc(s.sMethod.cards?s.sMethod.cards.map(function(c){return c.label;}).join('→'):(s.sMethod.slots||{}).sep+'/'+(s.sMethod.slots||{}).dedup)):badge(null,'미정'))+'</td>'+
           '<td>'+badge(s.sRuns.length>0,s.sRuns.length+'건')+'</td>'+
           '<td>'+badge(s.sJudges.length>0,s.sJudges.length+'건')+'</td>'+
           '<td>'+(s.sWrap?badge(true,'완료'):badge(null,'미작성'))+'</td></tr>';
@@ -230,8 +232,7 @@ window.CC_SUPABASE = {
       area.innerHTML='<table class="d-table">'+
         '<tr><td><b>제목</b></td><td>'+esc(data.title)+'</td></tr>'+
         '<tr><td><b>요청</b></td><td>'+esc(data.brief)+'</td></tr>'+
-        '<tr><td><b>문장 1</b></td><td>'+esc(data.method.sentences[0].template)+'</td></tr>'+
-        '<tr><td><b>문장 2</b></td><td>'+esc(data.method.sentences[1].template)+'</td></tr>'+
+        '<tr><td><b>동작 카드</b></td><td>'+CC.cards.forMission(data).map(function(c){return esc(c.label)}).join(', ')+'</td></tr>'+
         '<tr><td><b>자료</b></td><td>'+data.inputs.map(function(i){return esc(i.name)+': '+esc(i.v)}).join('<br>')+'</td></tr>'+
         '<tr><td><b>중복 검증</b></td><td>'+badge(last.total!==last.unique,(last.total!==last.unique?'OK':'FAIL')+' (전체='+last.total+'/다른='+last.unique+')')+'</td></tr>'+
         '</table>';

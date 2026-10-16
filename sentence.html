@@ -65,8 +65,7 @@
         <p class="req-situation" id="situation" hidden style="font-size:13px;color:var(--ink-3);margin-top:8px"></p>
       </div>
       <div class="sample-box">
-        <span class="sample-label" id="sample-label">데이터 예시</span>
-        <code class="sample-data" id="sample-data"></code>
+        <div id="samples"></div>
       </div>
       <div class="step-action">
         <button class="btn primary" id="go-define">다음</button>
@@ -96,39 +95,10 @@
     <!-- 화면 3: 어떻게 할까 -->
     <section class="step" id="step3" tabindex="-1">
       <h2 class="step-title">어떻게 할까?</h2>
-      <div class="method-sentences">
-        <p class="sentence-frame" id="sent1">
-          <span class="sent-num">1</span>
-          주문서를
-          <span class="slot-wrap">
-            <select class="slot" id="slot-sep" aria-label="나누는 기준">
-              <option value="">선택하기</option>
-            </select>
-          </span>
-          기준으로 나눈다.
-        </p>
-        <p class="sentence-frame" id="sent2">
-          <span class="sent-num">2</span>
-          같은 이름은
-          <span class="slot-wrap">
-            <select class="slot" id="slot-dedup" aria-label="중복 처리">
-              <option value="">선택하기</option>
-            </select>
-          </span>.
-        </p>
-        <p class="sentence-frame" id="sent3">
-          <span class="sent-num">3</span>
-          <span class="slot-wrap">
-            <select class="slot" id="slot-output" aria-label="출력 값">
-              <option value="">선택하기</option>
-            </select>
-          </span>을 출력한다.
-        </p>
-      </div>
-      <div class="method-summary" id="method-summary" hidden>
-        <span class="summary-label">현재 방법 요약</span>
-        <p id="summary-text"></p>
-      </div>
+      <p class="card-hint">필요한 카드를 골라 순서대로 놓아 보세요.</p>
+      <div class="card-pool" id="card-pool" aria-label="고를 수 있는 카드"></div>
+      <h3 class="design-title">내 설계도</h3>
+      <ol class="design-list" id="design-list" aria-label="내 설계도"></ol>
       <label class="reason-label">이유
         <textarea class="reason" id="reason-method" placeholder="이 방법을 고른 이유를 적어보세요." rows="2"></textarea>
       </label>
@@ -280,6 +250,7 @@ window.CC_SUPABASE = {
 <script src="js/data/store.js"></script>
 <script src="js/core/missions.js"></script>
 <script src="js/core/pipeline.js"></script>
+<script src="js/core/cards.js"></script>
 <script src="js/core/engine.js"></script>
 <script src="js/core/pyerr.js"></script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>

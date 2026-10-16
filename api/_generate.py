@@ -23,8 +23,7 @@ import urllib.request
 from pydantic import ValidationError
 
 from _pipeline import run
-from _schema import (CHOICE, DESC, DRAFTS, SPEC, STEP_EXAMPLE, STEP_EXAMPLE_NUM_COND, counter_problems,
-                     failed_fields, template)
+from _schema import CHOICE, DESC, DRAFTS, SPEC, counter_problems, failed_fields
 
 DEFINE_Q = '언제 성공이라고 할 수 있을까요?'
 DEADLINE = 55     # 초. Vercel maxDuration 60 안에서 응답까지 끝낸다
@@ -41,6 +40,7 @@ SYSTEM = '\n'.join([
     '- 답, 방법, 고칠 곳을 문제에 쓰지 않는다. 문제는 일부러 모호하게 쓴다.',
     '- 학생에게 보이는 문장은 존댓말, 한 칸에 한 문장. 괄호·줄표·"예를 들어" 같은 덧붙임 없이 쓴다.',
     '- 칭찬하지 않는다. 한국어만 쓴다.',
+    '- 성공 조건과 처리 방법은 코드가 붙인다. 당신은 쓰지 않는다.',
     '- 각 칸의 description 과 글자 수("N자 안")를 따른다.',
     '',
     'JSON 하나만 응답한다.',
@@ -274,6 +274,15 @@ CORRECT = {  # 정답 보기 기본 문장 — 결과로만 쓴다
     'min': '가장 작은 값이 나오면 성공', 'group': '{item}마다 나온 횟수가 보이면 성공',
 }
 
+BRIEF_FALLBACK = {  # 요청 기본 틀 — 구할 값만 말하고 방법은 말하지 않는다
+    'count': '{item}{iga} 모두 몇 개인지 알려 주세요.', 'total': '{item}{iga} 모두 몇 개인지 알려 주세요.',
+    'unique': '{item}{iga} 모두 몇 가지인지 알려 주세요.', 'filtered_count': '조건에 맞는 {item}{iga} 몇 개인지 알려 주세요.',
+    'filtered': '조건에 맞는 {item}만 남긴 목록을 만들어 주세요.', 'sorted': '{item}{eunneun} 순서대로 놓은 목록을 만들어 주세요.',
+    'transformed': '{item} 목록을 깔끔하게 다시 만들어 주세요.', 'sum': '모두 더하면 얼마인지 알려 주세요.',
+    'filtered_sum': '숫자를 모두 더하면 얼마인지 알려 주세요.', 'max': '가장 큰 값이 얼마인지 알려 주세요.',
+    'min': '가장 작은 값이 얼마인지 알려 주세요.', 'group': '{item}마다 몇 번 나왔는지 알려 주세요.',
+}
+
 
 def _counter_candidates(pid, items1, items2, ft):
     ops = SPEC[pid]['ops']
@@ -302,7 +311,8 @@ def _fallback(field, pid, m):
     if field == 'title':
         return '오늘의 미션'
     if field == 'brief':
-        return '이 목록을 정리해 주세요.'
+        key = next(iter(SPEC[pid]['keys']))
+        return BRIEF_FALLBACK[key].format(item=item, iga=_josa(item, '이가'), eunneun=_josa(item, '은는'))
     if field == 'situation':
         return ''
     if field == 'itemName':
@@ -314,22 +324,10 @@ def _fallback(field, pid, m):
             if not counter_problems(pid, m['data'], ft, c):
                 return c
         return None
-    if field == 'goals':
-        return {k: CORRECT[k].format(item=item, iga=_josa(item, '이가')) for k in SPEC[pid]['keys']}
-    if field == 'sentences':
-        out = {}
-        for slot in SPEC[pid]['slots']:
-            num = slot == 'cond' and 'toNumber' in SPEC[pid]['ops']
-            before, after = STEP_EXAMPLE_NUM_COND if num else STEP_EXAMPLE[slot]
-            desc = m.get('filterDesc') or '목록'
-            before = before.replace('{item}', item).replace('{eunneun}', _josa(item, '은는')).replace(
-                '{desc}', desc if len(desc) <= 8 else '목록')
-            out[slot] = {'before': before, 'after': after}
-        return out
     return None  # data · filterTarget · json — 갈아 끼울 틀이 없다
 
 
-ORDER = ['itemName', 'filterDesc', 'title', 'brief', 'situation', 'counter', 'goals', 'sentences']
+ORDER = ['itemName', 'filterDesc', 'title', 'brief', 'situation', 'counter']
 
 
 # ── 함정 보기 (코드가 쓴다) ─────────────────────────────────
@@ -354,7 +352,9 @@ def _options(pid, m):
     first_key, slots = next(iter(SPEC[pid]['keys'].items()))
     value = run(pid, slots, {'filterTarget': ft} if ft else {}, ','.join(m['data'][0]['items']))['value']
     opts = [{'v': _hardcode(value), 'trap': 'hardcode'}]
-    opts += [{'v': v, 'trap': None, 'key': k} for k, v in m['goals'].items()]
+    item = m.get('itemName') or '항목'
+    opts += [{'v': CORRECT[k].format(item=item, iga=_josa(item, '이가')), 'trap': None, 'key': k}
+             for k in SPEC[pid]['keys']]
     opts.append({'v': '에러 안 나면 성공', 'trap': 'luck'})
     random.shuffle(opts)  # 늘 같은 자리에 있으면 학생은 내용이 아니라 자리를 외운다
     return opts
@@ -369,9 +369,6 @@ def _assemble(pid, m, lesson, key_point, guard):
         'brief': m['brief'], 'situation': m.get('situation', ''),
         'lesson': lesson, 'keyPoint': key_point,
         'define': {'q': DEFINE_Q, 'options': _options(pid, m)},
-        # 빈칸 보기는 코드가 붙인다 — LLM 은 문장 표현만 썼다
-        'method': {'sentences': [{'template': template(slot, m['sentences'][slot]), 'slot': slot, 'options': opts}
-                                 for slot, opts in SPEC[pid]['slots'].items()]},
         'inputs': [{'id': f'd0{i + 1}', 'name': d['name'], 'v': ','.join(d['items'])} for i, d in enumerate(m['data'])]
         + [{'id': 'd03', 'name': m['counter']['name'], 'v': m['counter']['text'],
             'counter': True, 'axis': m['counter']['axis']}],
@@ -379,6 +376,7 @@ def _assemble(pid, m, lesson, key_point, guard):
     }
     if m.get('filterTarget'):
         mission['pipelineParams'] = {'filterTarget': m['filterTarget']}
+        mission['filterDesc'] = m.get('filterDesc', '')
     return mission
 
 
@@ -388,17 +386,16 @@ class GenerateError(Exception):
         self.reasons = reasons
 
 
-def generate(lesson, key_point, call_llm=pickle_llm):
-    t0 = time.monotonic()
+def generate(lesson, key_point, call_llm=pickle_llm, feedback=None, t0=None):
+    t0 = t0 or time.monotonic()  # make_mission 이 주면 요청 전체 시간을 같이 쓴다
     left = lambda: DEADLINE - (time.monotonic() - t0)  # noqa: E731
 
     pid, picked = choose(lesson, key_point, call_llm, min(15, left()))
     schema = _ask_schema(pid)
-    messages = [
-        {'role': 'system', 'content': SYSTEM},
-        {'role': 'user', 'content': f'오늘 수업: {lesson}\n핵심: {key_point}\n유형: {DESC[pid]}\n\n'
-                                    '이 수업과 이어지는 문제 하나를 만드세요.'},
-    ]
+    ask = f'오늘 수업: {lesson}\n핵심: {key_point}\n유형: {DESC[pid]}\n\n이 수업과 이어지는 문제 하나를 만드세요.'
+    if feedback:  # 검수에서 걸린 이유 — 처음부터 다시 만들 때만 온다
+        ask += '\n\n지난번 문제는 검수에서 이렇게 걸렸습니다. 이번엔 피하세요:\n' + '\n'.join('- ' + f for f in feedback)
+    messages = [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': ask}]
     raw = call_llm(messages, schema, left())
     m, bad = _parse(pid, raw)
     retried = 0

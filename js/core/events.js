@@ -52,14 +52,14 @@
     /* 문장형 미션 */
     S_DEFINE: 's-define',          /* 성공 조건 선택 { choice, reason } */
     S_REDEFINE: 's-redefine',      /* 성공 조건 재선택 { from, to, reason } */
-    S_METHOD: 's-method',          /* 방법 확정 { slots, reason } */
-    S_REMETHOD: 's-remethod',      /* 방법 수정 { fromSlots, toSlots, reason } */
+    S_METHOD: 's-method',          /* 방법 확정 { cards, reason, pipelineId } — 예전 기록은 slots */
+    S_REMETHOD: 's-remethod',      /* 방법 수정 { toCards, reason } — 예전 기록은 toSlots */
     S_PREDICT: 's-predict',        /* 실행 전 예상 { dataId, predicted } */
     S_RUN: 's-run',                /* 자료 실행 { dataId, slots, result } */
     S_JUDGE: 's-judge',            /* 학생 판정 { runId, verdict, basis } */
     S_HELP: 's-help',              /* 도움 요청 { expected, stuck, runId } */
     S_WRAP: 's-wrap',              /* 마무리 문장 { text } */
-    S_DESIGN: 's-design',          /* 설계 제출 { define, slots, pipelineId } */
+    S_DESIGN: 's-design',          /* 설계 제출 { define, cards, pipelineId } — 예전 기록은 slots */
     S_CODE: 's-code',              /* 코드 실행 { code, dataId, output, error } */
     S_CODE_JUDGE: 's-code-judge',  /* 코드 결과 판정 { verdict, basis } */
     S_TUTOR: 's-tutor'             /* 튜터 질문 { question, answer, kind, refused } */

@@ -56,13 +56,11 @@
     M = CC.sentenceMission(id);
     if (!M) return;
 
-    /* 상태 초기화 — 슬롯을 미션의 sentences에서 동적으로 구성 */
-    var initSlots = {};
-    M.method.sentences.forEach(function (s) { initSlots[s.slot] = ''; });
+    /* 상태 초기화 */
     state = {
       defineChoice: '',
       defineReason: '',
-      slots: initSlots,
+      design: [],
       methodReason: '',
       methodVer: 0,
       defineVer: 0,
@@ -70,6 +68,7 @@
       judges: [],
       allDataDone: false,
       codeText: '',
+      skeleton: '',
       codeOutput: ''
     };
 
@@ -79,8 +78,12 @@
       if (M.situation) { $('#situation').textContent = M.situation; $('#situation').hidden = false; }
       else { $('#situation').hidden = true; }
     }
-    $('#sample-data').textContent = M.inputs[0].v;
-    $('#sample-label').textContent = M.inputs[0].name;
+    var samples = $('#samples');
+    samples.innerHTML = '';
+    M.inputs.slice(0, 2).forEach(function (inp) {   /* 반례는 코드 단계에서 — 처음엔 앞 두 자료만 */
+      samples.appendChild(el('span', 'sample-label', inp.name));
+      samples.appendChild(el('code', 'sample-data', inp.v));
+    });
     if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';
 
     /* 화면 2: 성공 조건 — 카드형 버튼으로 표시 */
@@ -114,44 +117,14 @@
     $('#reason-define').value = '';
     $('#go-method').disabled = true;
 
-    /* 화면 3: 방법 문장 전체를 미션 템플릿으로 재구성 */
-    var methodBox = document.querySelector('.method-sentences');
-    if (methodBox) {
-      methodBox.innerHTML = '';
-      M.method.sentences.forEach(function (sent, i) {
-        var parts = sent.template.split('{' + sent.slot + '}');
-        var p = el('p', 'sentence-frame');
-        p.appendChild(el('span', 'sent-num', String(i + 1)));
-        p.appendChild(document.createTextNode(parts[0] || ''));
-
-        var wrap = el('span', 'slot-wrap');
-        var sel = document.createElement('select');
-        sel.className = 'slot';
-        sel.id = 'slot-' + sent.slot;
-        sel.setAttribute('aria-label', sent.slot);
-        var defOpt = document.createElement('option');
-        defOpt.value = ''; defOpt.textContent = '선택하기';
-        sel.appendChild(defOpt);
-        sent.options.forEach(function (opt) {
-          var o = document.createElement('option');
-          o.value = opt; o.textContent = opt;
-          sel.appendChild(o);
-        });
-        sel.addEventListener('change', onSlotChange);
-        wrap.appendChild(sel);
-        p.appendChild(wrap);
-
-        p.appendChild(document.createTextNode(parts[1] || ''));
-        methodBox.appendChild(p);
-      });
-    }
+    /* 화면 3: 설계 카드 */
+    renderDesign();
 
     $('#reason-method').value = '';
-    $('#method-summary').hidden = true;
     $('#go-run').disabled = true;
 
-    /* 화면 4·5 초기화 */
-    if ($('#data-runner')) $('#data-runner').innerHTML = '';
+    /* 화면 4·5 초기화 — 앞 미션 코드가 남지 않게 에디터를 비운다 */
+    if ($('#code-editor')) $('#code-editor').value = '';
     if ($('#past-runs-list')) $('#past-runs-list').innerHTML = '';
     if ($('#past-runs')) $('#past-runs').hidden = true;
     if ($('#go-wrap')) $('#go-wrap').disabled = true;
@@ -181,30 +154,69 @@
     });
   }
 
-  function summarizeMethod() {
-    if (!M || !M.method) return '';
-    var parts = [];
-    M.method.sentences.forEach(function (s) {
-      var val = state.slots[s.slot];
-      if (!val) return;
-      parts.push(s.template.replace('{' + s.slot + '}', val));
+  /* ── 화면 3: 설계 카드 ────────────────────────── */
+  function picked() {   /* 기록·뼈대에 쓰는 모양 { op, label, detail:'기준: 쉼표' } */
+    return state.design.map(function (c) {
+      return { op: c.op, label: c.label, detail: c.detail ? c.detail.name + ': ' + c.choice : '' };
     });
-    return parts.length ? parts.join(' ') : '';
+  }
+
+  function summarizeMethod() {
+    return picked().map(function (c) { return CC.cards.text(c); }).join(' → ');
   }
 
   function checkMethodComplete() {
-    if (!M || !M.method) return false;
-    return M.method.sentences.every(function (s) { return !!state.slots[s.slot]; });
+    return state.design.length > 0 && state.design.every(function (c) { return !c.detail || !!c.choice; });
   }
 
-  function allDataJudged() {
-    var ver = state.methodVer;
-    for (var i = 0; i < M.inputs.length; i++) {
-      var run = findLatestRun(M.inputs[i].id, ver);
-      if (!run) return false;
-      if (!findJudgeForRun(run._idx)) return false;
-    }
-    return true;
+  function renderDesign() {
+    var pool = $('#card-pool'), list = $('#design-list');
+    pool.innerHTML = ''; list.innerHTML = '';
+    CC.cards.forMission(M).forEach(function (c) {
+      var b = el('button', 'card-pick', c.label);
+      b.type = 'button';
+      b.disabled = state.design.some(function (d) { return d.op === c.op; });
+      b.addEventListener('click', function () {
+        state.design.push({ op: c.op, label: c.label, detail: c.detail, choice: '' });
+        renderDesign();
+      });
+      pool.appendChild(b);
+    });
+    state.design.forEach(function (c, i) {
+      var li = el('li', 'design-item');
+      li.appendChild(el('span', 'num', (i + 1) + '.'));
+      li.appendChild(el('span', 'label', c.label));
+      if (c.detail) {
+        var sel = document.createElement('select');
+        sel.setAttribute('aria-label', c.label + ' ' + c.detail.name);
+        sel.appendChild(new Option('고르기', ''));
+        c.detail.options.forEach(function (o) { sel.appendChild(new Option(o, o)); });
+        sel.value = c.choice;
+        sel.addEventListener('change', function () { c.choice = sel.value; $('#go-run').disabled = !checkMethodComplete(); });
+        li.appendChild(sel);
+      }
+      var moves = el('span', 'moves');
+      [['card-up', '▲', '위로', -1], ['card-down', '▼', '아래로', 1]].forEach(function (b) {
+        var btn = el('button', b[0], b[1]);
+        btn.type = 'button';
+        btn.setAttribute('aria-label', c.label + ' ' + b[2]);
+        btn.disabled = (b[3] < 0 && i === 0) || (b[3] > 0 && i === state.design.length - 1);
+        btn.addEventListener('click', function () {
+          var j = i + b[3];
+          state.design[i] = state.design[j]; state.design[j] = c;
+          renderDesign();
+        });
+        moves.appendChild(btn);
+      });
+      var rm = el('button', 'card-remove', '✕');
+      rm.type = 'button';
+      rm.setAttribute('aria-label', c.label + ' 빼기');
+      rm.addEventListener('click', function () { state.design.splice(i, 1); renderDesign(); });
+      moves.appendChild(rm);
+      li.appendChild(moves);
+      list.appendChild(li);
+    });
+    $('#go-run').disabled = !checkMethodComplete();
   }
 
   function findLatestRun(dataId, methodVer) {
@@ -252,47 +264,20 @@
   $('#back-request').addEventListener('click', function () { showStep(1); });
 
   /* ── 화면 3 ────────────────────────────────────── */
-  function onSlotChange() {
-    /* 미션의 sentences에서 슬롯을 동적으로 읽는다 */
-    if (M && M.method) {
-      M.method.sentences.forEach(function (s) {
-        var sel = document.getElementById('slot-' + s.slot);
-        if (sel) state.slots[s.slot] = sel.value;
-      });
-    }
-    $('#go-run').disabled = !checkMethodComplete();
-    var summary = summarizeMethod();
-    if (summary) {
-      $('#method-summary').hidden = false;
-      $('#summary-text').textContent = summary;
-    } else {
-      $('#method-summary').hidden = true;
-    }
-  }
-  /* 슬롯 이벤트는 loadMission에서 동적 생성 시 등록됨 (line 114) */
-
   $('#reason-method').addEventListener('input', function () {
     state.methodReason = this.value.trim();
   });
 
   $('#go-run').addEventListener('click', function () {
     if (!checkMethodComplete()) return;
-    var slotsSnapshot = JSON.parse(JSON.stringify(state.slots));
+    var cardsSnapshot = picked();
     if (state.methodVer > 0) {
-      rec('s-remethod', {
-        fromSlots: null,
-        toSlots: slotsSnapshot,
-        reason: state.methodReason
-      });
+      rec('s-remethod', { toCards: cardsSnapshot, reason: state.methodReason });
     } else {
-      var methodPayload = { slots: slotsSnapshot, reason: state.methodReason };
-      if (M.pipelineId) methodPayload.pipelineId = M.pipelineId;
-      rec('s-method', methodPayload);
+      rec('s-method', { cards: cardsSnapshot, reason: state.methodReason, pipelineId: M.pipelineId || '' });
     }
     state.methodVer++;
-
-    /* 설계 제출 이벤트 */
-    rec('s-design', { define: state.defineChoice, slots: slotsSnapshot, pipelineId: M.pipelineId || '' });
+    rec('s-design', { define: state.defineChoice, cards: cardsSnapshot, pipelineId: M.pipelineId || '' });
 
     renderCodeStep();
     showStep(4);
@@ -374,14 +359,9 @@
     /* 설계도 표시 */
     if ($('#design-define')) $('#design-define').textContent = '성공: ' + state.defineChoice;
     if ($('#design-steps')) {
-      var steps = [];
-      if (M && M.method) {
-        M.method.sentences.forEach(function (s, i) {
-          var val = state.slots[s.slot] || '';
-          if (val) steps.push((i + 1) + '. ' + s.template.replace('{' + s.slot + '}', val));
-        });
-      }
-      $('#design-steps').innerHTML = steps.map(function (s) { return '<div>' + esc(s) + '</div>'; }).join('');
+      $('#design-steps').innerHTML = picked().map(function (c, i) {
+        return '<div>' + (i + 1) + '. ' + esc(CC.cards.text(c)) + '</div>';
+      }).join('');
     }
 
     /* 자료 드롭다운 — clone으로 이전 리스너 제거 */
@@ -398,26 +378,22 @@
       fresh.addEventListener('change', function () {
         if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + this.value + '"';
         var editor = $('#code-editor');
-        if (editor) editor.value = editor.value.replace(/^data = ".*"/m, 'data = "' + this.value + '"');
-      });
-    }
-
-    /* 코드 에디터 초기값 */
-    var editor = $('#code-editor');
-    if (editor && !editor.value) {
-      editor.value = 'data = "' + (M ? M.inputs[0].v : '') + '"\n\n# 설계도대로 코드를 써 보세요.\n\n';
-    }
-
-    /* Tab 키로 들여쓰기 */
-    if (editor) {
-      editor.addEventListener('keydown', function (e) {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          var start = this.selectionStart, end = this.selectionEnd;
-          this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
-          this.selectionStart = this.selectionEnd = start + 4;
+        if (editor) {
+          var line = 'data = ' + JSON.stringify(String(this.value));
+          var wasSkeleton = editor.value === state.skeleton;
+          editor.value = editor.value.replace(/^data = ".*"/m, function () { return line; });
+          /* 뼈대 그대로였으면 뼈대도 같이 옮겨, 다음 렌더에서 학생 코드로 오인되지 않게 한다 */
+          if (wasSkeleton) state.skeleton = editor.value;
         }
       });
+    }
+
+    /* 코드 에디터 — 비었거나 직전 뼈대 그대로일 때만 새 뼈대. 학생이 쓴 코드는 덮어쓰지 않는다 */
+    var editor = $('#code-editor');
+    if (editor && (!editor.value || editor.value === state.skeleton)) {
+      /* JSON 문자열은 보통 문자열에서 그대로 파이썬 문자열이다 — 자료에 " · \\ · 줄바꿈이 있어도 깨지지 않는다 */
+      state.skeleton = 'data = ' + JSON.stringify(M ? String(M.inputs[0].v) : '') + '\n# data 에 자료가 들어 있어요.\n' + CC.cards.skeleton(picked());
+      editor.value = state.skeleton;
     }
 
     /* 실행 버튼 */
@@ -430,6 +406,18 @@
   }
 
   /* 자료 변경 시 data 변수 업데이트 — renderCodeStep 내부에서만 등록 */
+
+  /* Tab 키로 들여쓰기 — 한 번만 단다. renderCodeStep 안에서 달면 설계를 고칠 때마다 쌓인다 */
+  if ($('#code-editor')) {
+    $('#code-editor').addEventListener('keydown', function (e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        var start = this.selectionStart, end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+      }
+    });
+  }
 
   /* 실행 버튼 */
   if ($('#run-code')) {
@@ -503,227 +491,6 @@
   /* 마무리 버튼 */
   if ($('#go-wrap')) {
     $('#go-wrap').addEventListener('click', function () { renderWrapStep(); showStep(5); });
-  }
-
-  /* ── 기존 화면 4 (하위 호환 — HTML에서 제거된 요소는 스킵) ── */
-  function renderRunStep() {
-    if ($('#cfg-define')) $('#cfg-define').textContent = state.defineChoice;
-    if ($('#cfg-method')) $('#cfg-method').textContent = summarizeMethod();
-
-    var runner = $('#data-runner');
-    if (!runner) return; /* 코드 작성 화면에서는 data-runner 없음 */
-    runner.innerHTML = '';
-
-    M.inputs.forEach(function (inp, idx) {
-      var card = el('div', 'data-card');
-      card.dataset.dataId = inp.id;
-      card.appendChild(el('div', 'data-name', inp.name));
-      card.appendChild(el('div', 'data-input', inp.v));
-
-      /* 이전 방법 결과 배너 */
-      var oldRun = null;
-      for (var i = state.runs.length - 1; i >= 0; i--) {
-        if (state.runs[i].dataId === inp.id && state.runs[i].methodVer < state.methodVer) {
-          oldRun = state.runs[i]; break;
-        }
-      }
-      if (oldRun) {
-        card.appendChild(el('div', 'old-method-banner',
-          '이전 방법의 결과: ' + (oldRun.result.err ? '실행 중단' : oldRun.result.value)));
-      }
-
-      /* 예상 입력 */
-      var predRow = el('div', 'predict-row');
-      var predLabel = el('label', null, '결과가 어떻게 나올 것 같나요?');
-      var predInput = el('input');
-      predInput.type = 'text';
-      predInput.placeholder = '예상한 결과 또는 "아직 모르겠어요"';
-      predLabel.appendChild(predInput);
-      predRow.appendChild(predLabel);
-      card.appendChild(predRow);
-
-      /* 실행 버튼 */
-      var runBtn = el('button', 'run-btn', '실행');
-      card.appendChild(runBtn);
-
-      /* 결과 영역 */
-      var resultArea = el('div');
-      card.appendChild(resultArea);
-
-      /* 이미 실행한 기록 복원 */
-      var existRun = findLatestRun(inp.id, state.methodVer);
-      if (existRun) {
-        renderResult(resultArea, existRun, inp, existRun._idx);
-        runBtn.textContent = '다시 실행';
-      }
-
-      runBtn.addEventListener('click', (function (dataInp, rArea, rBtn, pInput) {
-        return function () {
-          var predicted = pInput.value.trim() || '아직 모르겠어요';
-          rec('s-predict', { dataId: dataInp.id, predicted: predicted });
-
-          var result;
-          if (M.pipelineId && CC.pipeline) {
-            result = CC.pipeline.run(M.pipelineId, state.slots, M.pipelineParams || {}, dataInp.v);
-          } else {
-            result = CC.engine.runSentence(state.slots, dataInp.v);
-          }
-          var runRecord = {
-            dataId: dataInp.id,
-            predicted: predicted,
-            result: { err: result.err, type: result.type, value: result.value, steps: result.steps, msg: result.msg },
-            slots: JSON.parse(JSON.stringify(state.slots)),
-            defineChoice: state.defineChoice,
-            methodVer: state.methodVer,
-            defineVer: state.defineVer,
-            t: Date.now()
-          };
-          state.runs.push(runRecord);
-          var runIdx = state.runs.length - 1;
-
-          rec('s-run', { dataId: dataInp.id, slots: runRecord.slots, result: runRecord.result });
-          renderResult(rArea, runRecord, dataInp, runIdx);
-          rBtn.textContent = '다시 실행';
-          updateGoWrap();
-        };
-      })(inp, resultArea, runBtn, predInput));
-
-      runner.appendChild(card);
-    });
-
-    updateGoWrap();
-  }
-
-  function renderResult(container, runRecord, inp, runIdx) {
-    container.innerHTML = '';
-    var r = runRecord.result;
-
-    if (r.err) {
-      var errDiv = el('div', 'run-result error');
-      errDiv.textContent = r.msg || '실행 중 오류가 발생했어요.';
-      container.appendChild(errDiv);
-    } else {
-      var okDiv = el('div', 'run-result ok');
-
-      /* 결과 값 표시 — 타입별 분기 */
-      if (r.type === 'pairs' && r.value && typeof r.value === 'object' && !Array.isArray(r.value)) {
-        var pairsDiv = el('div', 'result-pairs');
-        Object.keys(r.value).forEach(function (k) {
-          var row = el('div', 'pair-row');
-          row.appendChild(el('span', 'pair-key', k));
-          row.appendChild(el('span', 'pair-sep', ' — '));
-          row.appendChild(el('span', 'pair-val', String(r.value[k])));
-          pairsDiv.appendChild(row);
-        });
-        okDiv.appendChild(pairsDiv);
-      } else if (Array.isArray(r.value)) {
-        okDiv.appendChild(el('div', 'result-value', r.value.join(', ')));
-      } else {
-        okDiv.appendChild(el('div', 'result-value', String(r.value)));
-      }
-
-      if (r.steps && r.steps.length) {
-        var stepsDiv = el('div', 'result-steps');
-        r.steps.forEach(function (s) {
-          var line = el('span');
-          if (s.label || s.op) {
-            /* 파이프라인 형식 */
-            var sv = Array.isArray(s.value) ? s.value.join(', ')
-              : (s.value && typeof s.value === 'object') ? JSON.stringify(s.value)
-              : String(s.value);
-            line.textContent = (s.label || s.op) + ' → ' + sv;
-          } else if (s.step === '나누기') {
-            line.textContent = s.sep + '로 나눔 → ' + (Array.isArray(s.result) ? s.result.join(', ') : s.result);
-          } else if (s.step === '중복 처리') {
-            line.textContent = s.dedup + ' → ' + (Array.isArray(s.result) ? s.result.join(', ') : s.result);
-          } else if (s.step === '출력') {
-            line.textContent = s.output + ' → ' + s.result;
-          }
-          stepsDiv.appendChild(line);
-        });
-        okDiv.appendChild(stepsDiv);
-      }
-      container.appendChild(okDiv);
-    }
-
-    /* 예상 표시 */
-    if (runRecord.predicted) {
-      var predDiv = el('div');
-      predDiv.style.cssText = 'font-size:13px;color:var(--ink-3);margin-top:8px';
-      predDiv.textContent = '예상: ' + runRecord.predicted;
-      container.appendChild(predDiv);
-    }
-
-    /* 판정 */
-    var judgeRow = el('div', 'judge-row');
-    var displayValue = r.err ? '실행 중단'
-      : (r.type === 'pairs' && typeof r.value === 'object') ? '(묶음 결과)'
-      : Array.isArray(r.value) ? r.value.join(', ')
-      : r.value;
-    judgeRow.appendChild(el('div', 'judge-q',
-      '내 성공 조건을 지켰나요?'));
-
-    var btns = el('div', 'judge-btns');
-    var verdicts = ['지켰다', '지키지 못했다', '아직 판단하기 어렵다'];
-    var selectedVerdict = '';
-    verdicts.forEach(function (v) {
-      var b = el('button', 'judge-btn', v);
-      b.type = 'button';
-      b.setAttribute('aria-pressed', 'false');
-      b.dataset.verdict = v;
-      btns.appendChild(b);
-    });
-    judgeRow.appendChild(btns);
-
-    judgeRow.appendChild(el('label', 'basis-label', '입력이나 출력에서 무엇을 보고 그렇게 생각했나요?'));
-    var basisInput = el('input', 'basis-input');
-    basisInput.type = 'text';
-    basisInput.placeholder = '근거를 적어보세요';
-    judgeRow.appendChild(basisInput);
-
-    var saveJudge = el('button', 'btn secondary', '판정 저장');
-    saveJudge.type = 'button';
-    saveJudge.disabled = true;
-    saveJudge.style.marginTop = '10px';
-    judgeRow.appendChild(saveJudge);
-
-    btns.querySelectorAll('.judge-btn').forEach(function (b) {
-      b.addEventListener('click', function () {
-        btns.querySelectorAll('.judge-btn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
-        b.setAttribute('aria-pressed', 'true');
-        selectedVerdict = b.dataset.verdict;
-        saveJudge.disabled = false;
-      });
-    });
-
-    saveJudge.addEventListener('click', function () {
-      state.judges.push({ runIdx: runIdx, verdict: selectedVerdict, basis: basisInput.value.trim(), t: Date.now() });
-      rec('s-judge', { runId: runIdx, verdict: selectedVerdict, basis: basisInput.value.trim() });
-      saveJudge.disabled = true;
-      saveJudge.textContent = '저장됨';
-      btns.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
-      basisInput.readOnly = true;
-      updateGoWrap();
-    });
-
-    /* 기존 판정 복원 */
-    var existJudge = findJudgeForRun(runIdx);
-    if (existJudge) {
-      btns.querySelectorAll('.judge-btn').forEach(function (b) {
-        if (b.dataset.verdict === existJudge.verdict) b.setAttribute('aria-pressed', 'true');
-        b.disabled = true;
-      });
-      basisInput.value = existJudge.basis || '';
-      basisInput.readOnly = true;
-      saveJudge.disabled = true;
-      saveJudge.textContent = '저장됨';
-    }
-
-    container.appendChild(judgeRow);
-  }
-
-  function updateGoWrap() {
-    $('#go-wrap').disabled = !allDataJudged();
   }
 
   /* 방법/성공 조건 수정 */
@@ -920,15 +687,9 @@
       var lastM = methods[methods.length - 1];
       var sl = lastM.slots || lastM.toSlots || {};
       var methSection = el('div', 'rc-section');
-      var methText = '';
-      if (M && M.method && M.method.sentences) {
-        methText = M.method.sentences.map(function (sent) {
-          var val = sl[sent.slot] || '';
-          return sent.template.replace('{' + sent.slot + '}', val);
-        }).join(' ');
-      } else {
-        methText = (sl.sep || '') + '로 나누고, ' + (sl.dedup || '') + ', ' + (sl.output || '');
-      }
+      var methText = lastM.cards || lastM.toCards
+        ? (lastM.cards || lastM.toCards).map(function (c) { return CC.cards.text(c); }).join(' → ')
+        : Object.keys(sl).map(function (k) { return sl[k]; }).filter(Boolean).join(' → ');  /* 예전 기록 */
       methSection.innerHTML = '<span class="rc-label">내가 정한 방법</span>' +
         '<span class="rc-value">' + esc(methText) + '</span>';
       if (methods.length > 1) {

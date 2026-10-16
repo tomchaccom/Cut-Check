@@ -277,6 +277,7 @@
       id: 'sm1',
       no: '01',
       type: 'sentence',
+      pipelineId: 'split-unique-count',
       stage: '분해',
       title: '창고에 주문서가 들어왔어요',
       brief: '주문서에 상품이 몇 개인지 알려 주세요.',
@@ -289,25 +290,6 @@
         ]
       },
 
-      method: {
-        sentences: [
-          {
-            template: '주문서를 {sep} 기준으로 나눈다.',
-            slot: 'sep',
-            options: ['쉼표', '공백', '줄바꿈']
-          },
-          {
-            template: '같은 이름은 {dedup}.',
-            slot: 'dedup',
-            options: ['각각 남긴다', '하나만 남긴다']
-          },
-          {
-            template: '{output}을 출력한다.',
-            slot: 'output',
-            options: ['남은 항목의 개수', '항상 숫자 3']
-          }
-        ]
-      },
 
       inputs: [
         { id: 'd01', name: '주문서 01', v: '사과,바나나,우유' },
@@ -333,6 +315,7 @@
       id: 'sm2',
       no: '02',
       type: 'sentence',
+      pipelineId: 'split-unique-count',
       stage: '출석 확인',
       title: '오늘 수업에 몇 명이 왔나요',
       brief: '오늘 수업에 온 학생이 몇 명인지 알려 주세요.',
@@ -345,25 +328,6 @@
         ]
       },
 
-      method: {
-        sentences: [
-          {
-            template: '출석부를 {sep} 기준으로 나눈다.',
-            slot: 'sep',
-            options: ['쉼표', '공백', '줄바꿈']
-          },
-          {
-            template: '같은 이름은 {dedup}.',
-            slot: 'dedup',
-            options: ['각각 남긴다', '하나만 남긴다']
-          },
-          {
-            template: '{output}을 출력한다.',
-            slot: 'output',
-            options: ['남은 항목의 개수', '항상 숫자 3']
-          }
-        ]
-      },
 
       inputs: [
         { id: 'd01', name: '월요일 출석부', v: '민수,지우,현우' },
@@ -383,6 +347,7 @@
       id: 'sm3',
       no: '03',
       type: 'sentence',
+      pipelineId: 'split-unique-count',
       stage: '메뉴 정리',
       title: '이번 주 급식 메뉴를 정리해주세요',
       brief: '이번 주 급식 메뉴가 몇 가지인지 정리해 주세요.',
@@ -395,25 +360,6 @@
         ]
       },
 
-      method: {
-        sentences: [
-          {
-            template: '메뉴판을 {sep} 기준으로 나눈다.',
-            slot: 'sep',
-            options: ['쉼표', '공백', '줄바꿈']
-          },
-          {
-            template: '같은 메뉴는 {dedup}.',
-            slot: 'dedup',
-            options: ['각각 남긴다', '하나만 남긴다']
-          },
-          {
-            template: '{output}을 출력한다.',
-            slot: 'output',
-            options: ['남은 항목의 개수', '항상 숫자 3']
-          }
-        ]
-      },
 
       inputs: [
         { id: 'd01', name: '월요일 메뉴', v: '밥,국,김치' },
@@ -434,6 +380,7 @@
       no: '04',
       type: 'sentence',
       pipelineId: 'split-filter-count',
+      filterDesc: '주의 재료 목록',
       pipelineParams: { filterTarget: ['우유', '달걀', '땅콩'] },
       stage: '걸러내기',
       title: '급식에서 주의 재료를 찾아주세요',
@@ -448,12 +395,6 @@
         ]
       },
 
-      method: {
-        sentences: [
-          { template: '재료 목록을 {sep} 기준으로 나눈다.', slot: 'sep', options: ['쉼표', '공백', '줄바꿈'] },
-          { template: '주의 재료 목록에 {cond} 것만 남긴다.', slot: 'cond', options: ['있는', '없는'] }
-        ]
-      },
 
       inputs: [
         { id: 'd01', name: '월요일 재료', v: '밥,우유,김치,떡' },

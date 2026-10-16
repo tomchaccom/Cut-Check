@@ -9,7 +9,8 @@ import sys
 from http.server import BaseHTTPRequestHandler
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _generate import GenerateError, generate  # noqa: E402
+from _generate import GenerateError  # noqa: E402
+from _review import make_mission  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -38,7 +39,7 @@ class handler(BaseHTTPRequestHandler):
         if not key_point:
             return self._send(400, {'error': '핵심을 입력해주세요.'})
         try:
-            self._send(200, generate(lesson, key_point))
+            self._send(200, make_mission(lesson, key_point))
         except GenerateError as e:
             # 사유는 로그에 남긴다 — 어떤 규칙이 얼마나 자주 걸리는지가 프롬프트 개선의 근거다 (docs/llm.md)
             print('[generate-mission] 실패', json.dumps(e.reasons, ensure_ascii=False), file=sys.stderr)

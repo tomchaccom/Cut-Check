@@ -32,35 +32,6 @@
       }
     ]
   },
-  "method": {
-    "sentences": [
-      {
-        "template": "목록을 {sep} 기준으로 나눈다.",
-        "slot": "sep",
-        "options": [
-          "쉼표",
-          "공백",
-          "줄바꿈"
-        ]
-      },
-      {
-        "template": "같은 count는 {dedup}.",
-        "slot": "dedup",
-        "options": [
-          "각각 남긴다",
-          "하나만 남긴다"
-        ]
-      },
-      {
-        "template": "{output}만 보여준다.",
-        "slot": "output",
-        "options": [
-          "남은 항목의 개수",
-          "항상 숫자 3"
-        ]
-      }
-    ]
-  },
   "inputs": [
     {
       "id": "d01",
