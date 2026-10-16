@@ -92,6 +92,9 @@ fixed.push(rd('js/ui/tutor.js').match(/UNAVAILABLE = '([^']+)'/)[1]);
 fixed.push(rd('js/ui/sentence.js').match(/LOAD_FAIL = '([^']+)'/)[1]);
 fixed.push(CC.pyerr.TIMEOUT, CC.pyerr.NO_INPUT);
 if (fixed.length !== 7) { console.log('  FAIL 고정 문장 수집: ' + fixed.length); fail2++; }
+/* 설계 카드 문구 — 학생 화면에 그대로 나간다. 고정 문장 개수(7) 확인 뒤에 더한다 */
+require('../js/core/pipeline.js'); require('../js/core/cards.js');
+CC.cards.ALL_LABELS.forEach(x => fixed.push(x));
 fixed.forEach(m => {
   /* 블록·주문서 같은 대상 단어 요구는 엔진 에러용 규칙이라 뺀다. 칭찬·해법·진단·코드·길이는 그대로 건다 */
   const why = check(m, 'fact').reasons.filter(x => x.indexOf('무엇에 대한 사실') < 0);
