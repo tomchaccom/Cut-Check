@@ -24,9 +24,9 @@ flowchart LR
     B --> C["③ 어떻게 할까?<br/>문장 빈칸 드롭다운 3개"]
     C --> D["④ 코드로 만들기<br/>빈 에디터"]
     D -->|"반례로 실행해 보니 깨짐"| C
-    style B fill:#fde2e2
-    style C fill:#fde2e2
-    style D fill:#fde2e2
+    style B fill:#fde2e2,stroke:#c0392b,color:#1a1a1a
+    style C fill:#fde2e2,stroke:#c0392b,color:#1a1a1a
+    style D fill:#fde2e2,stroke:#c0392b,color:#1a1a1a
 ```
 
 문제점 (빨간 칸)
@@ -43,10 +43,10 @@ flowchart LR
     B --> C["③ 어떻게 할까?<br/>동작 카드 고르기 · ▲▼ 순서<br/>필요한 카드만 세부"]
     C --> D["④ 코드로 만들기<br/>설계도가 주석 뼈대로"]
     D -->|"반례로 실행해 보니 깨짐<br/>→ 설계 수정"| C
-    style A fill:#e2f4e8
-    style B fill:#e2f4e8
-    style C fill:#e2f4e8
-    style D fill:#e2f4e8
+    style A fill:#e2f4e8,stroke:#2e7d4f,color:#1a1a1a
+    style B fill:#e2f4e8,stroke:#2e7d4f,color:#1a1a1a
+    style C fill:#e2f4e8,stroke:#2e7d4f,color:#1a1a1a
+    style D fill:#e2f4e8,stroke:#2e7d4f,color:#1a1a1a
 ```
 
 ### ③ 설계 화면 예시
@@ -90,8 +90,8 @@ flowchart TD
     V -->|"그래도 걸림"| F["걸린 칸만 기본 틀로 교체"]
     V -->|"통과"| O["교사 화면에 초안"]
     F --> O
-    style G fill:#fde2e2
-    style F fill:#fde2e2
+    style G fill:#fde2e2,stroke:#c0392b,color:#1a1a1a
+    style F fill:#fde2e2,stroke:#c0392b,color:#1a1a1a
 ```
 
 - 기본 틀로 바뀌는 칸이 거의 다 **방법 문장**과 **성공 조건** — LLM 이 잘 못 쓰는 칸을 LLM 에게 시키고 있었다.
@@ -112,10 +112,10 @@ flowchart TD
     J -->|"탈락 · 재생성 2번 안 됨<br/>· 남은 시간 25초 넘음"| G2["검수 이유 붙여<br/>처음부터 다시 생성"]
     G2 --> G
     J -->|"탈락 3번째 · 시간 부족<br/>· 검수 호출 실패"| TR["초안 + '검수 필요' 배지 + 이유<br/>→ 교사가 판단"]
-    style G fill:#e2f4e8
-    style C fill:#e2f4e8
-    style J fill:#fff4d6
-    style TR fill:#fff4d6
+    style G fill:#e2f4e8,stroke:#2e7d4f,color:#1a1a1a
+    style C fill:#e2f4e8,stroke:#2e7d4f,color:#1a1a1a
+    style J fill:#fff4d6,stroke:#b7791f,color:#1a1a1a
+    style TR fill:#fff4d6,stroke:#b7791f,color:#1a1a1a
 ```
 
 설계 카드는 서버가 만들지 않는다. 미션의 `pipelineId` 를 보고 학생 화면이 `js/core/cards.js` 에서 꺼낸다.
