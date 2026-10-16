@@ -128,6 +128,24 @@ test('강사 홈 — 학생은 가나다순 폴더, 말 걸 순간은 사실만'
   await expect(t.locator('details.more')).toBeAttached();                       // 분석 패널은 접혀서 남는다
 });
 
+test('학생 서랍 — 스스로 판단은 판단마다 근거가 남는다', async ({ context, page }) => {
+  await local(context);
+  await page.goto(BASE + '/sentence.html');
+  await page.evaluate(() => {
+    const now = Date.now();
+    localStorage.setItem('cutcheck.log.v1', JSON.stringify([
+      { v: 1, type: 's-code-judge', verdict: '지키지 못했다', basis: '첫 근거 6이 나와서', t: now - 60000, mid: 'sm1' },
+      { v: 1, type: 's-code-judge', verdict: '지켰다', basis: '둘째 근거 겹친 걸 뺐다', t: now, mid: 'sm1' }
+    ]));
+  });
+  await page.goto(BASE + '/teacher.html');
+  await page.getByRole('button', { name: '내 기록 열기' }).click();
+  const d = page.locator('#detail');
+  await expect(d).toContainText('첫 근거 6이 나와서');
+  await expect(d).toContainText('둘째 근거 겹친 걸 뺐다');
+  await expect(d).toContainText('스스로 깨뜨림');
+});
+
 test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({ context, page }) => {
   await local(context);
   await seedMission(page);

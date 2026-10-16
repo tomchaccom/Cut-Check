@@ -302,7 +302,10 @@
         /* "지키지 못했다" 였다가 바뀐 경우 — 자기 결과를 스스로 깨뜨린 순간 */
         var miss = seq.indexOf('지키지 못했다');
         if (miss !== -1 && miss < seq.length - 1) mark(dd, '스스로 깨뜨림');
-        if (lastJ.basis) was(dd, '“' + lastJ.basis + '”');
+        /* 판단마다 한 줄 — 앞선 근거도 지우지 않는다 (예전 활동 타임라인이 보여 주던 것) */
+        judges.forEach(function (j) {
+          was(dd, (j.t ? hm(j.t) + ' · ' : '') + j.verdict + (j.basis ? ' “' + j.basis + '”' : ''));
+        });
       });
     }
     if (v.sHelps) row(dl, '도움 요청', lastT(evs, ['s-help']), function (dd) { dd.textContent = v.sHelps + '번'; });
