@@ -105,6 +105,10 @@ import io  # noqa: E402
 from tutor import handler  # noqa: E402
 
 
+# .env 를 읽은 셸에서 돌리면 진짜 LLM 을 불러 200 이 났다 — 이 테스트는 네트워크 없이 핸들러만 본다
+os.environ.pop('PICKLE_API_KEY', None)
+
+
 def post(raw, length=None):
     h = handler.__new__(handler)
     h.headers = {'Content-Length': str(len(raw)) if length is None else length}
