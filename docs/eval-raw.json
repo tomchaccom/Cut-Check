@@ -6,54 +6,54 @@
   "expect": "split-unique-count",
   "ok": true,
   "mission": {
-   "id": "ai-1a145284bb0",
+   "id": "ai-1a145440612",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-unique-count",
-   "stage": "겹친 이름 세기",
-   "title": "겹친 이름 세기",
-   "brief": "목록에서 같은 이름이 몇 개인지 알아보세요.",
-   "situation": "같은 이름이 여러 번 적힌 목록을 정리해야 해요.",
+   "stage": "겹친 목록 세기",
+   "title": "겹친 목록 세기",
+   "brief": "같은 값이 여러 번 나오는 목록에서 몇 개인지 알아내 주세요.",
+   "situation": "목록에 같은 항목이 여러 번 들어 있어요.",
    "lesson": "파이썬 리스트와 반복문. for문으로 하나씩 꺼내서 처리하는 법",
    "keyPoint": "같은 값이 여러 번 있을 때 전체와 서로 다른 개수가 다르다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     },
-     {
       "v": "겹치는 건 한 번만 센 수가 나오면 성공",
       "trap": null,
       "key": "unique"
      },
      {
-      "v": "3이 나오면 성공",
-      "trap": "hardcode"
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
      },
      {
-      "v": "전체 이름 수가 나오면 성공",
+      "v": "전체 항목 수가 나오면 성공",
       "trap": null,
       "key": "total"
+     },
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
      }
     ]
    },
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 이름",
-     "v": "민수,지은,민수,하늘"
+     "name": "월요일 목록",
+     "v": "사과,바나나,사과,포도"
     },
     {
      "id": "d02",
-     "name": "화요일 이름",
-     "v": "민수,지은,하늘,도윤"
+     "name": "화요일 목록",
+     "v": "사과,바나나,포도,귤"
     },
     {
      "id": "d03",
-     "name": "금요일 목록",
-     "v": "민수,지은,민수,하늘,도윤",
+     "name": "다른 날 목록",
+     "v": "사과,바나나,사과,포도,귤",
      "counter": true,
      "axis": "count"
     }
@@ -65,11 +65,9 @@
     "picked": "llm",
     "repaired": [],
     "review": {
-     "status": "teacher",
-     "reasons": [
-      "요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나 — 성공 조건에 어떤 답이 맞는지 일부 드러나 있어 답을 바로 떠올릴 수 있습니다."
-     ],
-     "rounds": 3
+     "status": "pass",
+     "reasons": [],
+     "rounds": 1
     }
    }
   },
@@ -80,200 +78,55 @@
    "picked": "llm",
    "repaired": [],
    "review": {
-    "status": "teacher",
-    "reasons": [
-     "요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나 — 성공 조건에 어떤 답이 맞는지 일부 드러나 있어 답을 바로 떠올릴 수 있습니다."
-    ],
-    "rounds": 3
+    "status": "pass",
+    "reasons": [],
+    "rounds": 1
    }
   },
-  "ms": 25714,
+  "ms": 6449,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 6044,
+    "ms": 1358,
     "status": "ok",
     "chars": 35
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1780,
+    "ms": 1733,
     "status": "ok",
-    "chars": 235
+    "chars": 251
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1797,
+    "ms": 1786,
     "status": "ok",
-    "chars": 232
+    "chars": 254
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1477,
+    "ms": 1569,
     "status": "ok",
-    "chars": 235
-   },
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1638,
-    "status": "ok",
-    "chars": 35
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1435,
-    "status": "ok",
-    "chars": 230
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1527,
-    "status": "ok",
-    "chars": 234
-   },
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1744,
-    "status": "ok",
-    "chars": 35
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1660,
-    "status": "ok",
-    "chars": 243
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1564,
-    "status": "ok",
-    "chars": 246
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 5039,
-    "status": "ok",
-    "chars": 262
+    "chars": 260
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-unique-count\"}",
-   "{\"title\":\"겹친 목록 세기\",\"brief\":\"목록에서 같은 항목의 개수를 정해 주세요.\",\"situation\":\"같은 값이 여러 번 나올 수 있습니다.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"반대 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"금요일 목록\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]}]}",
-   "{\"title\":\"겹친 목록 세기\",\"brief\":\"목록에서 몇 개인지 알아내 주세요.\",\"situation\":\"같은 값이 여러 번 나올 수 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"다른 날 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"금요일 목록\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1이 목록에서 무엇을 몇 개인지 알아내야 하는지 알 수 있습니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 과일 목록이라 같은 이야기입니다.\"},\"noAnswer\":{\"ok\":false,\"why\":\"성공 조건에 정답 수와 방법이 이미 드러나 있습니다.\"},\"easy\":{\"ok\":true,\"why\":\"쉬운 말로 짧게 썼습니다.\"}}",
-   "{\"pipelineId\":\"split-unique-count\"}",
-   "{\"title\":\"겹친 목록 세기\",\"brief\":\"목록에서 몇 가지인지 알아내 주세요.\",\"situation\":\"같은 값이 여러 번 나오는 목록이에요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"한 항목\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"감\"]},{\"name\":\"화요일 목록\",\"items\":[\"사과\",\"감\",\"배\",\"사과\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1도 목록에서 몇 가지를 세어야 하는지 알 수 있다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 같은 주제의 겹친 목록 세기 이야기이다.\"},\"noAnswer\":{\"ok\":false,\"why\":\"성공 조건에 3이 나오면 성공이라고 답이 드러나 있다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적혀 있다.\"}}",
-   "{\"pipelineId\":\"split-unique-count\"}",
-   "{\"title\":\"겹친 목록 세기\",\"brief\":\"목록에서 항목 수를 살펴보세요.\",\"situation\":\"같은 물건 이름이 여러 번 적힌 목록을 정리해야 해요.\",\"itemName\":\"물건\",\"counter\":{\"name\":\"교복 목록\"},\"data\":[{\"name\":\"월요일 물건\",\"items\":[\"연필\",\"지우개\",\"연필\",\"공책\"]},{\"name\":\"화요일 물건\",\"items\":[\"연필\",\"지우개\",\"공책\",\"가방\"]}]}",
-   "{\"title\":\"겹친 이름 세기\",\"brief\":\"목록에서 같은 이름이 몇 개인지 알아보세요.\",\"situation\":\"같은 이름이 여러 번 적힌 목록을 정리해야 해요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"금요일 목록\"},\"data\":[{\"name\":\"월요일 이름\",\"items\":[\"민수\",\"지은\",\"민수\",\"하늘\"]},{\"name\":\"화요일 이름\",\"items\":[\"민수\",\"지은\",\"하늘\",\"도윤\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"같은 이름이 목록에 몇 번 있는지 세어야 한다는 뜻을 알 수 있습니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 이름 목록에 관한 내용이라 같은 이야기입니다.\"},\"noAnswer\":{\"ok\":false,\"why\":\"성공 조건에 어떤 답이 맞는지 일부 드러나 있어 답을 바로 떠올릴 수 있습니다.\"},\"easy\":{\"ok\":true,\"why\":\"쉬운 말로 짧게 적혀 있습니다.\"}}"
+   "{\"title\":\"겹친 목록 세기\",\"brief\":\"같은 값이 여러 번 나오는 목록에서 개수를 확인해 주세요.\",\"situation\":\"목록에 같은 항목이 여러 번 들어 있습니다.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"중복 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"바나나\",\"사과\",\"포도\"]},{\"name\":\"화요일 목록\",\"items\":[\"사과\",\"바나나\",\"포도\",\"귤\"]}]}",
+   "{\"title\":\"겹친 목록 세기\",\"brief\":\"같은 값이 여러 번 나오는 목록에서 몇 개인지 알아내 주세요.\",\"situation\":\"목록에 같은 항목이 여러 번 들어 있어요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"다른 날 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"바나나\",\"사과\",\"포도\"]},{\"name\":\"화요일 목록\",\"items\":[\"사과\",\"바나나\",\"포도\",\"귤\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"같은 값이 여러 번 나오는 목록에서 몇 개인지 알아내야 한다고 읽을 수 있어요.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 같은 종류의 목록과 항목을 다루고 있어 한 이야기예요.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에 정답이나 푸는 방법이 직접 드러나지는 않았어요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 되어 있어요.\"}}"
   ],
   "attempts": [
    {
     "situation": [
-     "'같은 값이 여러 번 나올 수 있습니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+     "'목록에 같은 항목이 여러 번 들어 있습니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
     ],
     "brief": [
-     "'목록에서 같은 항목의 개수를 정해 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {},
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ]
-   },
-   {},
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ]
-   },
-   {
-    "brief": [
-     "'목록에서 항목 수를 살펴보세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+     "'같은 값이 여러 번 나오는 목록에서 개수를 확인해 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
     ]
    },
    {},
@@ -306,21 +159,21 @@
   "expect": "split-filter-count",
   "ok": true,
   "mission": {
-   "id": "ai-1a1452876d9",
+   "id": "ai-1a1454422d4",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-filter-count",
-   "stage": "준비물 찾기",
-   "title": "준비물 찾기",
-   "brief": "조건에 맞는 준비물이 몇 개인지 알려 주세요.",
-   "situation": "수업에 맞는 준비물만 골라야 해요.",
+   "stage": "급식 재료",
+   "title": "급식 재료",
+   "brief": "조건에 맞는 재료가 몇 개인지 알려 주세요.",
+   "situation": "급식실에서 정리하려는 일이에요.",
    "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
    "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
-      "v": "3이 나오면 성공",
+      "v": "2가 나오면 성공",
       "trap": "hardcode"
      },
      {
@@ -328,7 +181,7 @@
       "trap": "luck"
      },
      {
-      "v": "조건에 맞는 준비물 수가 나오면 성공",
+      "v": "조건에 맞는 재료 수가 나오면 성공",
       "trap": null,
       "key": "filtered_count"
      }
@@ -337,32 +190,26 @@
    "inputs": [
     {
      "id": "d01",
-     "name": "1반 준비물",
-     "v": "연필,지우개,공책,색연필"
+     "name": "월요일 재료",
+     "v": "우유,계란,사과,빵"
     },
     {
      "id": "d02",
-     "name": "2반 준비물",
-     "v": "연필,공책,자,가위"
+     "name": "화요일 재료",
+     "v": "우유,계란,바나나,빵"
     },
     {
      "id": "d03",
-     "name": "금요일 준비물",
-     "v": "색연필,자,가위,사과",
+     "name": "목요일 재료",
+     "v": "사과,빵,바나나,사과",
      "counter": true,
      "axis": "empty"
     }
    ],
    "guard": {
-    "fallback": [
-     "brief"
-    ],
-    "reasons": {
-     "brief": [
-      "'준비물은 몇 개인지 찾아 주세': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-     ]
-    },
-    "retried": 2,
+    "fallback": [],
+    "reasons": {},
+    "retried": 1,
     "picked": "llm",
     "repaired": [],
     "review": {
@@ -373,23 +220,16 @@
    },
    "pipelineParams": {
     "filterTarget": [
-     "연필",
-     "공책",
-     "지우개"
+     "우유",
+     "계란"
     ]
    },
-   "filterDesc": "필요한 준비물"
+   "filterDesc": "알레르기 목록"
   },
   "guard": {
-   "fallback": [
-    "brief"
-   ],
-   "reasons": {
-    "brief": [
-     "'준비물은 몇 개인지 찾아 주세': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ]
-   },
-   "retried": 2,
+   "fallback": [],
+   "reasons": {},
+   "retried": 1,
    "picked": "llm",
    "repaired": [],
    "review": {
@@ -398,67 +238,50 @@
     "rounds": 1
    }
   },
-  "ms": 7544,
+  "ms": 7621,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1084,
+    "ms": 1240,
     "status": "ok",
     "chars": 35
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1685,
+    "ms": 2995,
     "status": "ok",
-    "chars": 283
+    "chars": 276
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1608,
+    "ms": 1556,
     "status": "ok",
-    "chars": 294
+    "chars": 282
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1628,
+    "ms": 1828,
     "status": "ok",
-    "chars": 287
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1536,
-    "status": "ok",
-    "chars": 244
+    "chars": 243
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-filter-count\"}",
-   "{\"title\":\"시험교재 찾기\",\"brief\":\"교재 세권에서 고를 대상을 찾아 세어 주세요.\",\"situation\":\"기준을 정해 골라야 해요.\",\"itemName\":\"교재\",\"counter\":{\"name\":\"수요일 교재\"},\"data\":[{\"name\":\"1반 교재\",\"items\":[\"수학\",\"영어\",\"과학\",\"사회\"]},{\"name\":\"2반 교재\",\"items\":[\"국어\",\"수학\",\"미술\",\"체육\"]}],\"filterTarget\":[\"수학\",\"영어\",\"과학\"],\"filterDesc\":\"시험교재\"}",
-   "{\"title\":\"준비물 고르기\",\"brief\":\"준비물에서 필요한 것만 골라 세어 주세요.\",\"situation\":\"수업에 맞는 물건만 골라야 해요.\",\"itemName\":\"준비물\",\"counter\":{\"name\":\"금요일 준비물\"},\"data\":[{\"name\":\"1반 준비물\",\"items\":[\"연필\",\"지우개\",\"공책\",\"색연필\"]},{\"name\":\"2반 준비물\",\"items\":[\"연필\",\"공책\",\"자\",\"가위\"]}],\"filterTarget\":[\"연필\",\"공책\",\"지우개\"],\"filterDesc\":\"필요한 준비물\"}",
-   "{\"title\":\"준비물 찾기\",\"brief\":\"준비물은 몇 개인지 찾아 주세\",\"situation\":\"수업에 맞는 준비물만 골라야 해요.\",\"itemName\":\"준비물\",\"counter\":{\"name\":\"금요일 준비물\"},\"data\":[{\"name\":\"1반 준비물\",\"items\":[\"연필\",\"지우개\",\"공책\",\"색연필\"]},{\"name\":\"2반 준비물\",\"items\":[\"연필\",\"공책\",\"자\",\"가위\"]}],\"filterTarget\":[\"연필\",\"공책\",\"지우개\"],\"filterDesc\":\"필요한 준비물\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1도 조건에 맞는 준비물이 몇 개인지 세어 보라는 뜻을 알 수 있어요.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 수업 준비물 목록이라 같은 이야기예요.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에 정답이나 푸는 방법이 바로 드러나지 않아요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 검사했어요.\"}}"
+   "{\"title\":\"급식 재료\",\"brief\":\"조건에 맞는 재료만 세어 주세요.\",\"situation\":\"급식실에서 정리하려는 일이에요.\",\"itemName\":\"재료\",\"counter\":{\"name\":\"목요일 재료\"},\"data\":[{\"name\":\"월요일 재료\",\"items\":[\"우유\",\"계란\",\"사과\",\"빵\"]},{\"name\":\"화요일 재료\",\"items\":[\"우유\",\"계란\",\"바나나\",\"빵\"]}],\"filterTarget\":[\"우유\",\"계란\"],\"filterDesc\":\"알레르기 목록\"}",
+   "{\"title\":\"급식 재료\",\"brief\":\"조건에 맞는 재료가 몇 개인지 알려 주세요.\",\"situation\":\"급식실에서 정리하려는 일이에요.\",\"itemName\":\"재료\",\"counter\":{\"name\":\"목요일 재료\"},\"data\":[{\"name\":\"월요일 재료\",\"items\":[\"우유\",\"계란\",\"사과\",\"빵\"]},{\"name\":\"화요일 재료\",\"items\":[\"우유\",\"계란\",\"바나나\",\"빵\"]}],\"filterTarget\":[\"우유\",\"계란\"],\"filterDesc\":\"알레르기 목록\"}",
+   "{\"understand\":{\"ok\":true,\"why\":\"조건에 맞는 재료가 몇 개인지 찾으라고 했으니 무엇을 구할지 알 수 있다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 급식 재료 목록이라 같은 이야기이다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만 보면 바로 답이나 푸는 방법은 드러나지 않는다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 썼다.\"}}"
   ],
   "attempts": [
    {
     "brief": [
-     "'교재 세권에서 고를 대상을 찾아 세어 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+     "'조건에 맞는 재료만 세어 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
     ]
    },
-   {
-    "brief": [
-     "'준비물에서 필요한 것만 골라 세어 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {
-    "brief": [
-     "'준비물은 몇 개인지 찾아 주세': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ]
-   },
+   {},
    {
     "title": [
      "Field required"
@@ -494,49 +317,49 @@
   "expect": "split-group",
   "ok": true,
   "mission": {
-   "id": "ai-1a1452888b9",
+   "id": "ai-1a145443a76",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-group",
-   "stage": "과일 묶어 세기",
-   "title": "과일 묶어 세기",
-   "brief": "세 자료를 보고 같은 항목이 몇 번씩 나왔는지 찾아보세요.",
-   "situation": "반마다 나온 과일 이름을 정리해야 해요.",
+   "stage": "과자 세기",
+   "title": "과자 세기",
+   "brief": "과자 이름별로 몇 번 나왔는지 알아보세요.",
+   "situation": "같은 이름이 몇 번씩 나왔는지 세어야 해요.",
    "lesson": "딕셔너리. 키와 값 쌍으로 저장",
    "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
-      "v": "사과가 2번 나오면 성공",
+      "v": "감자칩이 2번 나오면 성공",
       "trap": "hardcode"
+     },
+     {
+      "v": "과자마다 나온 횟수가 보이면 성공",
+      "trap": null,
+      "key": "group"
      },
      {
       "v": "에러 안 나면 성공",
       "trap": "luck"
-     },
-     {
-      "v": "과일마다 나온 횟수가 보이면 성공",
-      "trap": null,
-      "key": "group"
      }
     ]
    },
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 과일",
-     "v": "사과,배,사과,포도"
+     "name": "월요일 과자",
+     "v": "감자칩,초코파이,감자칩"
     },
     {
      "id": "d02",
-     "name": "화요일 과일",
-     "v": "배,사과,귤,배"
+     "name": "화요일 과자",
+     "v": "초코파이,새우깡,감자칩"
     },
     {
      "id": "d03",
-     "name": "금요일 과일",
-     "v": "사과,배,사과,포도,사과,배",
+     "name": "금요일 과자",
+     "v": "감자칩,초코파이,감자칩,감자칩,초코파이",
      "counter": true,
      "axis": "count"
     }
@@ -544,7 +367,7 @@
    "guard": {
     "fallback": [],
     "reasons": {},
-    "retried": 0,
+    "retried": 1,
     "picked": "llm",
     "repaired": [],
     "review": {
@@ -557,7 +380,7 @@
   "guard": {
    "fallback": [],
    "reasons": {},
-   "retried": 0,
+   "retried": 1,
    "picked": "llm",
    "repaired": [],
    "review": {
@@ -566,36 +389,49 @@
     "rounds": 1
    }
   },
-  "ms": 4527,
+  "ms": 17133,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1428,
+    "ms": 1027,
     "status": "ok",
     "chars": 28
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1608,
+    "ms": 1655,
     "status": "ok",
-    "chars": 245
+    "chars": 238
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1487,
+    "ms": 1536,
     "status": "ok",
-    "chars": 248
+    "chars": 237
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 12912,
+    "status": "ok",
+    "chars": 244
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-group\"}",
-   "{\"title\":\"과일 묶어 세기\",\"brief\":\"세 자료를 보고 같은 항목이 몇 번씩 나왔는지 찾아보세요.\",\"situation\":\"반마다 나온 과일 이름을 정리해야 해요.\",\"itemName\":\"과일\",\"counter\":{\"name\":\"금요일 과일\"},\"data\":[{\"name\":\"월요일 과일\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"화요일 과일\",\"items\":[\"배\",\"사과\",\"귤\",\"배\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중복된 과일이 몇 번 나왔는지 자료를 보고 찾으라는 뜻이다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 과일 이름을 적은 목록이라 같은 이야기이다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"어떤 과일이 몇 번인지 직접 알려주지 않고, 찾아보라고만 되어 있다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 요청을 적었다.\"}}"
+   "{\"title\":\"과자 묶기\",\"brief\":\"과자 이름별로 몇 번 나왔는지 알아보세요.\",\"situation\":\"같은 이름이 몇 번씩 나왔는지 세어야 합니다.\",\"itemName\":\"과자\",\"counter\":{\"name\":\"금요일 과자\"},\"data\":[{\"name\":\"월요일 과자\",\"items\":[\"감자칩\",\"초코파이\",\"감자칩\"]},{\"name\":\"화요일 과자\",\"items\":[\"초코파이\",\"새우깡\",\"감자칩\"]}]}",
+   "{\"title\":\"과자 세기\",\"brief\":\"과자 이름별로 몇 번 나왔는지 알아보세요.\",\"situation\":\"같은 이름이 몇 번씩 나왔는지 세어야 해요.\",\"itemName\":\"과자\",\"counter\":{\"name\":\"금요일 과자\"},\"data\":[{\"name\":\"월요일 과자\",\"items\":[\"감자칩\",\"초코파이\",\"감자칩\"]},{\"name\":\"화요일 과자\",\"items\":[\"초코파이\",\"새우깡\",\"감자칩\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"과자 이름마다 몇 번 나왔는지 세는 일이라는 것을 알 수 있다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 요일별로 나온 과자 목록이라 같은 이야기이다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에는 정답이나 세는 방법이 직접 드러나지 않는다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적혀 있다.\"}}"
   ],
   "attempts": [
+   {
+    "situation": [
+     "'같은 이름이 몇 번씩 나왔는지 세어야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ]
+   },
    {},
    {
     "title": [
@@ -626,151 +462,187 @@
   "expect": "split-transform-join",
   "ok": true,
   "mission": {
-   "id": "ai-1a14528a6dd",
+   "id": "ai-1a145448f30",
    "no": "AI",
    "type": "sentence",
-   "pipelineId": "split-transform-join",
-   "stage": "공백 정리하기",
-   "title": "공백 정리하기",
-   "brief": "문자열 목록을 깔끔하게 다시 만들어 주세요.",
-   "situation": "항목마다 앞뒤 공백을 없애야 해요.",
+   "pipelineId": "split-count",
+   "stage": "항목 수 세기",
+   "title": "항목 수 세기",
+   "brief": "목록을 보고 각각 몇 개인지 알려주세요.",
+   "situation": "같은 기준으로 세어야 해요.",
    "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
    "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     },
-     {
-      "v": "사과,배,복숭아가 나오면 성공",
+      "v": "3이 나오면 성공",
       "trap": "hardcode"
      },
      {
-      "v": "문자열마다 깔끔해지면 성공",
+      "v": "목록이 몇 개인지 나오면 성공",
       "trap": null,
-      "key": "transformed"
+      "key": "count"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
      }
     ]
    },
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 자료",
-     "v": " 사과,배 , 복숭아 "
+     "name": "월요일 목록",
+     "v": "우유,빵,달걀"
     },
     {
      "id": "d02",
-     "name": "화요일 자료",
-     "v": " 바나나 ,수박, 참외"
+     "name": "화요일 목록",
+     "v": "우유,빵,달걀,치즈"
     },
     {
      "id": "d03",
-     "name": "다른 날 자료",
-     "v": " 바나나 , 수박 , 참외 ",
+     "name": "다른날 목록",
+     "v": "우유,빵,달걀,우유,우유",
      "counter": true,
-     "axis": "invisible"
+     "axis": "count"
     }
    ],
    "guard": {
-    "fallback": [
-     "brief"
-    ],
-    "reasons": {
-     "brief": [
-      "'세 항목을 보고 몇 가지를 알아내 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-     ]
-    },
-    "retried": 2,
+    "fallback": [],
+    "reasons": {},
+    "retried": 0,
     "picked": "llm",
     "repaired": [],
     "review": {
      "status": "pass",
      "reasons": [],
-     "rounds": 1
+     "rounds": 2
     }
    }
   },
   "guard": {
-   "fallback": [
-    "brief"
-   ],
-   "reasons": {
-    "brief": [
-     "'세 항목을 보고 몇 가지를 알아내 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   "retried": 2,
+   "fallback": [],
+   "reasons": {},
+   "retried": 0,
    "picked": "llm",
    "repaired": [],
    "review": {
     "status": "pass",
     "reasons": [],
-    "rounds": 1
+    "rounds": 2
    }
   },
-  "ms": 7834,
+  "ms": 10605,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1641,
+    "ms": 1316,
     "status": "ok",
-    "chars": 37
+    "chars": 28
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1509,
+    "ms": 1746,
     "status": "ok",
-    "chars": 238
+    "chars": 227
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1707,
+    "ms": 1427,
     "status": "ok",
-    "chars": 236
+    "chars": 217
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1369,
+    "ms": 1645,
     "status": "ok",
-    "chars": 234
+    "chars": 263
+   },
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1117,
+    "status": "ok",
+    "chars": 28
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1606,
+    "ms": 1522,
     "status": "ok",
-    "chars": 264
+    "chars": 224
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1828,
+    "status": "ok",
+    "chars": 252
    }
   ],
   "raws": [
-   "{\"pipelineId\":\"split-transform-join\"}",
-   "{\"title\":\"공백 정리하기\",\"brief\":\"항목 세 개를 보고 같은 기준으로 정리해 주세요.\",\"situation\":\"항목마다 앞뒤 공백을 없애야 해요.\",\"itemName\":\"문자열\",\"counter\":{\"name\":\"공백 반례\"},\"data\":[{\"name\":\"월요일 자료\",\"items\":[\" 사과\",\"배 \",\" 복숭아 \"]},{\"name\":\"화요일 자료\",\"items\":[\" 바나나 \",\"수박\",\" 참외\"]}]}",
-   "{\"title\":\"공백 정리하기\",\"brief\":\"세 항목을 보고 무엇이 같은지 알아내 주세요.\",\"situation\":\"항목마다 앞뒤 공백을 없애야 해요.\",\"itemName\":\"문자열\",\"counter\":{\"name\":\"공백 반례\"},\"data\":[{\"name\":\"월요일 자료\",\"items\":[\" 사과\",\"배 \",\" 복숭아 \"]},{\"name\":\"화요일 자료\",\"items\":[\" 바나나 \",\"수박\",\" 참외\"]}]}",
-   "{\"title\":\"공백 정리하기\",\"brief\":\"세 항목을 보고 몇 가지를 알아내 주세요.\",\"situation\":\"항목마다 앞뒤 공백을 없애야 해요.\",\"itemName\":\"문자열\",\"counter\":{\"name\":\"공백 반례\"},\"data\":[{\"name\":\"월요일 자료\",\"items\":[\" 사과\",\"배 \",\" 복숭아 \"]},{\"name\":\"화요일 자료\",\"items\":[\" 바나나 \",\"수박\",\" 참외\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1이 문자열 목록의 앞뒤 공백을 없애서 깔끔하게 다시 만들라는 뜻을 알 수 있어요.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 과일 문자열 목록을 공백만 정리하는 같은 이야기예요.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에 정답이나 구체적인 풀이 방법이 바로 드러나지 않아요.\"},\"easy\":{\"ok\":true,\"why\":\"쉬운 말로 짧게 잘 썼어요.\"}}"
+   "{\"pipelineId\":\"split-count\"}",
+   "{\"title\":\"반복 수 세기\",\"brief\":\"자료 세 개로 각 목록의 항목 수를 알아내세요.\",\"situation\":\"같은 작업을 여러 번 해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"다른 목록\"},\"data\":[{\"name\":\"아침 목록\",\"items\":[\"우유\",\"빵\",\"계란\"]},{\"name\":\"점심 목록\",\"items\":[\"국\",\"밥\",\"김치\",\"과일\"]}]}",
+   "{\"title\":\"반복 수 세기\",\"brief\":\"목록이 몇 개인지 알아내세요.\",\"situation\":\"같은 작업을 여러 번 해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"다른 목록\"},\"data\":[{\"name\":\"아침 목록\",\"items\":[\"우유\",\"빵\",\"계란\"]},{\"name\":\"점심 목록\",\"items\":[\"국\",\"밥\",\"김치\",\"과일\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"중1도 목록이 몇 개인지 세어 달라는 뜻을 바로 알 수 있습니다.\"},\"sameStory\":{\"ok\":false,\"why\":\"아침·점심 목록과 다른 목록은 내용과 개수가 달라 같은 이야기로 보기 어렵습니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만 보면 정답이나 풀이 방법이 직접 드러나지 않습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 되어 있습니다.\"}}",
+   "{\"pipelineId\":\"split-count\"}",
+   "{\"title\":\"항목 수 세기\",\"brief\":\"목록을 보고 각각 몇 개인지 알려주세요.\",\"situation\":\"같은 기준으로 세어야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"다른날 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"우유\",\"빵\",\"달걀\"]},{\"name\":\"화요일 목록\",\"items\":[\"우유\",\"빵\",\"달걀\",\"치즈\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"중1도 목록을 세어 각각 몇 개인지 알려 달라는 뜻을 알 수 있습니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 먹을거리를 적은 목록이라 같은 이야기입니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만 보면 정답이나 푸는 방법이 바로 드러나지 않습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적혀 있습니다.\"}}"
   ],
   "attempts": [
    {
     "brief": [
-     "'항목 세 개를 보고 같은 기준으로 정리해 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+     "'자료 세 개로 각 목록의 항목 수를 알아내세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+    ]
+   },
+   {},
+   {
+    "title": [
+     "Field required"
+    ],
+    "brief": [
+     "Field required"
+    ],
+    "situation": [
+     "Field required"
+    ],
+    "itemName": [
+     "Field required"
+    ],
+    "counter": [
+     "Field required"
+    ],
+    "data": [
+     "Field required"
     ]
    },
    {
+    "title": [
+     "Field required"
+    ],
     "brief": [
-     "'세 항목을 보고 무엇이 같은지 알아내 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+     "Field required"
+    ],
+    "situation": [
+     "Field required"
+    ],
+    "itemName": [
+     "Field required"
+    ],
+    "counter": [
+     "Field required"
+    ],
+    "data": [
+     "Field required"
     ]
    },
-   {
-    "brief": [
-     "'세 항목을 보고 몇 가지를 알아내 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
+   {},
    {
     "title": [
      "Field required"
@@ -800,26 +672,26 @@
   "expect": "split-transform-join",
   "ok": true,
   "mission": {
-   "id": "ai-1a14528bf77",
+   "id": "ai-1a14544a775",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-transform-join",
-   "stage": "과일 정리하기",
-   "title": "과일 정리하기",
-   "brief": "깔끔한 기준을 찾아 주세요.",
-   "situation": "공백이 섞인 이름을 정리해야 해요.",
+   "stage": "급식 신청 정리",
+   "title": "급식 신청 정리",
+   "brief": "신청 이름이 깔끔한지 알려 주세요.",
+   "situation": "공백이 섞여 있어요.",
    "lesson": "문자열 다루기. split, strip, replace",
    "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
-      "v": "사과,배,복숭아가 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
       "v": "에러 안 나면 성공",
       "trap": "luck"
+     },
+     {
+      "v": "김밥,떡볶이,우유가 나오면 성공",
+      "trap": "hardcode"
      },
      {
       "v": "이름마다 깔끔해지면 성공",
@@ -831,18 +703,18 @@
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 이름",
-     "v": " 사과,배 , 복숭아 "
+     "name": "월요일 신청",
+     "v": " 김밥 , 떡볶이 , 우유 "
     },
     {
      "id": "d02",
-     "name": "화요일 이름",
-     "v": "사과 , 배,복숭아"
+     "name": "화요일 신청",
+     "v": "김밥,떡볶이,우유"
     },
     {
      "id": "d03",
-     "name": "공백 차이",
-     "v": " 사과,배 , 복숭아 , 사과,사과 ",
+     "name": "금요일 신청",
+     "v": " 김밥 , 떡볶이 , 우유 , 김밥 ,김밥",
      "counter": true,
      "axis": "count"
     }
@@ -872,47 +744,48 @@
     "rounds": 1
    }
   },
-  "ms": 6393,
+  "ms": 6247,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1284,
+    "ms": 1088,
     "status": "ok",
     "chars": 37
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1704,
+    "ms": 1674,
     "status": "ok",
-    "chars": 231
+    "chars": 220
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1701,
+    "ms": 1620,
     "status": "ok",
     "chars": 223
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1702,
+    "ms": 1863,
     "status": "ok",
-    "chars": 255
+    "chars": 270
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-transform-join\"}",
-   "{\"title\":\"과일 정리하기\",\"brief\":\"세 자료를 보고 맞는 기준을 정해 주세요.\",\"situation\":\"공백이 섞인 이름을 정리해야 해요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"공백 차이\"},\"data\":[{\"name\":\"월요일 이름\",\"items\":[\" 사과\",\"배 \",\" 복숭아 \"]},{\"name\":\"화요일 이름\",\"items\":[\"사과 \",\" 배\",\"복숭아\"]}]}",
-   "{\"title\":\"과일 정리하기\",\"brief\":\"깔끔한 기준을 찾아 주세요.\",\"situation\":\"공백이 섞인 이름을 정리해야 해요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"공백 차이\"},\"data\":[{\"name\":\"월요일 이름\",\"items\":[\" 사과\",\"배 \",\" 복숭아 \"]},{\"name\":\"화요일 이름\",\"items\":[\"사과 \",\" 배\",\"복숭아\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1도 공백이 섞인 이름을 어떻게 정리해야 하는지 찾으라는 뜻으로 읽을 수 있어요.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 과일 이름과 공백 정리 이야기로 이어져 있어요.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청만 있고 정답이나 푸는 방법은 바로 드러나지 않아요.\"},\"easy\":{\"ok\":true,\"why\":\"쉬운 말로 짧게 적혀 있어요.\"}}"
+   "{\"title\":\"급식 신청 정리\",\"brief\":\"신청 이름을 정리해 주십시오.\",\"situation\":\"공백이 섞여 있어요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"금요일 신청\"},\"data\":[{\"name\":\"월요일 신청\",\"items\":[\" 김밥 \",\" 떡볶이 \",\" 우유 \"]},{\"name\":\"화요일 신청\",\"items\":[\"김밥\",\"떡볶이\",\"우유\"]}]}",
+   "{\"title\":\"급식 신청 정리\",\"brief\":\"신청 이름이 깔끔한지 알려 주세요.\",\"situation\":\"공백이 섞여 있어요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"금요일 신청\"},\"data\":[{\"name\":\"월요일 신청\",\"items\":[\" 김밥 \",\" 떡볶이 \",\" 우유 \"]},{\"name\":\"화요일 신청\",\"items\":[\"김밥\",\"떡볶이\",\"우유\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"중1도 신청 이름이 공백 때문에 깔끔한지 확인해야 한다는 뜻을 알 수 있습니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 급식 신청 이름과 공백 정리 이야기로 이어집니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만으로는 어떤 이름이 깔끔한지 답이나 풀이가 바로 드러나지 않습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 간단하게 썼습니다.\"}}"
   ],
   "attempts": [
    {
     "brief": [
-     "'세 자료를 보고 맞는 기준을 정해 주세요.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+     "'신청 이름을 정리해 주십시오.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요",
+     "'신청 이름을 정리해 주십시오.' — 구할 값이 없음. '깔끔' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
     ]
    },
    {},
@@ -945,14 +818,14 @@
   "expect": "split-sort-join",
   "ok": true,
   "mission": {
-   "id": "ai-1a145290479",
+   "id": "ai-1a14544e195",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-sort-join",
-   "stage": "생활기록 정리",
-   "title": "생활기록 정리",
-   "brief": "메모들 사이의 순서를 알아내 주세요.",
-   "situation": "오늘 나온 메모를 같은 기준으로 정리해야 해요.",
+   "stage": "점심 준비",
+   "title": "점심 준비",
+   "brief": "세 자료의 순서를 살펴보세요.",
+   "situation": "같은 기준으로 늘어놓아야 해요.",
    "lesson": "정렬. sorted와 sort의 차이",
    "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
    "define": {
@@ -963,31 +836,31 @@
       "trap": "luck"
      },
      {
-      "v": "도윤,민서,지우,하늘이 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
       "v": "순서대로 늘어서면 성공",
       "trap": null,
       "key": "sorted"
+     },
+     {
+      "v": "빵,사과,우유,주스가 나오면 성공",
+      "trap": "hardcode"
      }
     ]
    },
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 메모",
-     "v": "지우,민서,하늘,도윤"
+     "name": "월요일 재료",
+     "v": "빵,우유,사과,주스"
     },
     {
      "id": "d02",
-     "name": "수요일 메모",
-     "v": "민서,하늘,도윤,지우"
+     "name": "수요일 재료",
+     "v": "주스,사과,빵,우유"
     },
     {
      "id": "d03",
-     "name": "금요일 메모",
-     "v": "지우,민서,하늘,도윤,지우,민서",
+     "name": "다른 재료",
+     "v": "빵,우유,사과,주스,빵,주스",
      "counter": true,
      "axis": "count"
     }
@@ -995,103 +868,110 @@
    "guard": {
     "fallback": [],
     "reasons": {},
-    "retried": 1,
+    "retried": 0,
     "picked": "llm",
     "repaired": [],
     "review": {
-     "status": "pass",
-     "reasons": [],
-     "rounds": 2
+     "status": "teacher",
+     "reasons": [
+      "세 자료가 같은 이야기인가 — 월요일·수요일 재료와 다른 재료가 같은 목록이 아니라 서로 다른 내용이다."
+     ],
+     "rounds": 3
     }
    }
   },
   "guard": {
    "fallback": [],
    "reasons": {},
-   "retried": 1,
+   "retried": 0,
    "picked": "llm",
    "repaired": [],
    "review": {
-    "status": "pass",
-    "reasons": [],
-    "rounds": 2
+    "status": "teacher",
+    "reasons": [
+     "세 자료가 같은 이야기인가 — 월요일·수요일 재료와 다른 재료가 같은 목록이 아니라 서로 다른 내용이다."
+    ],
+    "rounds": 3
    }
   },
-  "ms": 18342,
+  "ms": 14654,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1154,
+    "ms": 1017,
     "status": "ok",
     "chars": 32
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2042,
+    "ms": 1724,
     "status": "ok",
-    "chars": 243
+    "chars": 218
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1934,
+    "ms": 1710,
     "status": "ok",
-    "chars": 231
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 4267,
-    "status": "ok",
-    "chars": 254
+    "chars": 246
    },
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 2156,
+    "ms": 1326,
     "status": "ok",
     "chars": 32
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2147,
+    "ms": 1874,
     "status": "ok",
-    "chars": 245
+    "chars": 230
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2249,
+    "ms": 1980,
     "status": "ok",
-    "chars": 240
+    "chars": 268
+   },
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1062,
+    "status": "ok",
+    "chars": 32
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2379,
+    "ms": 2313,
     "status": "ok",
-    "chars": 256
+    "chars": 222
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1637,
+    "status": "ok",
+    "chars": 262
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-sort-join\"}",
-   "{\"title\":\"약속 순서 정리\",\"brief\":\"약속 목록을 기준에 맞게 늘어놓으세요.\",\"situation\":\"친구들과 만날 순서를 정해야 해요.\",\"itemName\":\"약속명\",\"counter\":{\"name\":\"순서가 다른 약속\"},\"data\":[{\"name\":\"월요일 약속\",\"items\":[\"도서관\",\"운동장\",\"분식집\",\"집\"]},{\"name\":\"수요일 약속\",\"items\":[\"집\",\"분식집\",\"운동장\",\"도서관\"]}]}",
-   "{\"title\":\"순서 정리\",\"brief\":\"약속의 순서를 알아내세요.\",\"situation\":\"친구들과 만날 순서를 정해야 해요.\",\"itemName\":\"약속명\",\"counter\":{\"name\":\"다른 날 약속\"},\"data\":[{\"name\":\"월요일 약속\",\"items\":[\"도서관\",\"운동장\",\"분식집\",\"집\"]},{\"name\":\"수요일 약속\",\"items\":[\"집\",\"분식집\",\"운동장\",\"도서관\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"무엇의 순서를 알아내야 하는지 알 수 있습니다.\"},\"sameStory\":{\"ok\":false,\"why\":\"월요일, 수요일, 다른 날 자료가 서로 같은 이야기인지 분명하지 않습니다.\"},\"noAnswer\":{\"ok\":false,\"why\":\"‘순서를 알아내세요’만 있고 어떻게 찾는지에 대한 힌트가 일부 보입니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적혀 있습니다.\"}}",
+   "{\"title\":\"항목 늘어놓기\",\"brief\":\"세 자료의 순서를 확인해 주세요.\",\"situation\":\"기준에 맞게 정리해야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"다른날목록\"},\"data\":[{\"name\":\"오전목록\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]},{\"name\":\"저녁목록\",\"items\":[\"귤\",\"사과\",\"포도\",\"배\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"세 자료의 순서를 비교해서 무엇이 맞는지 확인하면 된다.\"},\"sameStory\":{\"ok\":false,\"why\":\"세 자료는 서로 다른 목록이라 같은 이야기로 보기 어렵다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만으로는 정답 순서나 풀이가 바로 드러나지 않는다.\"},\"easy\":{\"ok\":true,\"why\":\"말이 짧고 쉬워서 중1이 읽기 쉽다.\"}}",
    "{\"pipelineId\":\"split-sort-join\"}",
-   "{\"title\":\"생활기록 정리\",\"brief\":\"반장님이 적은 메모를 알기 쉽게 정리해 주세요.\",\"situation\":\"오늘 적은 메모를 순서에 맞게 정리해야 해요.\",\"itemName\":\"메모\",\"counter\":{\"name\":\"수요일 메모\"},\"data\":[{\"name\":\"월요일 메모\",\"items\":[\"지우\",\"민서\",\"하늘\",\"도윤\"]},{\"name\":\"수요일 메모\",\"items\":[\"민서\",\"하늘\",\"도윤\",\"지우\"]}]}",
-   "{\"title\":\"생활기록 정리\",\"brief\":\"메모들 사이의 순서를 알아내 주세요.\",\"situation\":\"오늘 나온 메모를 같은 기준으로 정리해야 해요.\",\"itemName\":\"메모\",\"counter\":{\"name\":\"금요일 메모\"},\"data\":[{\"name\":\"월요일 메모\",\"items\":[\"지우\",\"민서\",\"하늘\",\"도윤\"]},{\"name\":\"수요일 메모\",\"items\":[\"민서\",\"하늘\",\"도윤\",\"지우\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1이 메모들 사이의 순서를 어떻게 정리해야 하는지 구하라는 뜻으로 읽을 수 있어요.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료는 모두 사람 이름이 적힌 메모라서 같은 이야기로 볼 수 있어요.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에 순서를 바로 알려 주는 답은 없어요.\"},\"easy\":{\"ok\":true,\"why\":\"쉬운 말로 짧게 썼어요.\"}}"
+   "{\"title\":\"목록 정리\",\"brief\":\"기준에 맞는 순서를 찾아주세요.\",\"situation\":\"세 자료를 같은 방식으로 살펴봐야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"금요일 목록\"},\"data\":[{\"name\":\"아침 준비\",\"items\":[\"지갑\",\"열쇠\",\"우산\",\"휴대폰\"]},{\"name\":\"책상 정리\",\"items\":[\"연필\",\"지우개\",\"공책\",\"자\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"중1 학생도 기준에 맞는 순서를 찾으라는 뜻을 이해할 수 있습니다.\"},\"sameStory\":{\"ok\":false,\"why\":\"세 자료가 아침 준비, 책상 정리, 금요일 목록으로 내용이 달라 같은 이야기가 아닙니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만으로는 정답이나 푸는 방법이 바로 드러나지 않습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적혀 있습니다.\"}}",
+   "{\"pipelineId\":\"split-sort-join\"}",
+   "{\"title\":\"점심 준비\",\"brief\":\"세 자료의 순서를 살펴보세요.\",\"situation\":\"같은 기준으로 늘어놓아야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"다른 재료\"},\"data\":[{\"name\":\"월요일 재료\",\"items\":[\"빵\",\"우유\",\"사과\",\"주스\"]},{\"name\":\"수요일 재료\",\"items\":[\"주스\",\"사과\",\"빵\",\"우유\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"세 자료의 순서를 비교해 무엇이 먼저인지 알아내야 한다고 읽을 수 있다.\"},\"sameStory\":{\"ok\":false,\"why\":\"월요일·수요일 재료와 다른 재료가 같은 목록이 아니라 서로 다른 내용이다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만으로는 정답이나 푸는 방법이 바로 드러나지 않는다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 간단하게 썼다.\"}}"
   ],
   "attempts": [
-   {
-    "brief": [
-     "'약속 목록을 기준에 맞게 늘어놓으세요.' — 구할 값이 없음. '순서' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
    {},
    {
     "title": [
@@ -1133,9 +1013,45 @@
      "Field required"
     ]
    },
+   {},
    {
+    "title": [
+     "Field required"
+    ],
     "brief": [
-     "'반장님이 적은 메모를 알기 쉽게 정리해 주세요.' — 구할 값이 없음. '순서' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+     "Field required"
+    ],
+    "situation": [
+     "Field required"
+    ],
+    "itemName": [
+     "Field required"
+    ],
+    "counter": [
+     "Field required"
+    ],
+    "data": [
+     "Field required"
+    ]
+   },
+   {
+    "title": [
+     "Field required"
+    ],
+    "brief": [
+     "Field required"
+    ],
+    "situation": [
+     "Field required"
+    ],
+    "itemName": [
+     "Field required"
+    ],
+    "counter": [
+     "Field required"
+    ],
+    "data": [
+     "Field required"
     ]
    },
    {},
@@ -1168,49 +1084,49 @@
   "expect": "split-num-sum",
   "ok": true,
   "mission": {
-   "id": "ai-1a14529590a",
+   "id": "ai-1a14544fa23",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-filter-num-sum",
-   "stage": "메모 정리",
-   "title": "메모 정리",
-   "brief": "목록에서 필요한 값들을 골라 합을 구해 주세요.",
-   "situation": "기록을 정리해야 해요.",
+   "stage": "숫자만 더하기",
+   "title": "숫자만 더하기",
+   "brief": "목록에서 숫자만 골라 모두 얼마인지 알아내 주세요.",
+   "situation": "문자와 숫자가 섞여 있어요.",
    "lesson": "숫자 형변환. int()로 문자열을 숫자로",
    "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
+      "v": "숫자만 더한 값이 나오면 성공",
+      "trap": null,
+      "key": "filtered_sum"
+     },
+     {
       "v": "에러 안 나면 성공",
       "trap": "luck"
      },
      {
-      "v": "8이 나오면 성공",
+      "v": "10이 나오면 성공",
       "trap": "hardcode"
-     },
-     {
-      "v": "숫자만 더한 값이 나오면 성공",
-      "trap": null,
-      "key": "filtered_sum"
      }
     ]
    },
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 메모",
-     "v": "3,사과,5,연필"
+     "name": "첫 번째 목록",
+     "v": "3,사과,5,배,2"
     },
     {
      "id": "d02",
-     "name": "화요일 메모",
-     "v": "2,책,4,7"
+     "name": "두 번째 목록",
+     "v": "1,연필,4,공책,6"
     },
     {
      "id": "d03",
-     "name": "수요일 메모",
-     "v": "사과,연필,책,사과",
+     "name": "글자만 목록",
+     "v": "사과,배,연필,공책,사과",
      "counter": true,
      "axis": "empty"
     }
@@ -1218,241 +1134,84 @@
    "guard": {
     "fallback": [],
     "reasons": {},
-    "retried": 0,
+    "retried": 1,
     "picked": "llm",
     "repaired": [
      "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요",
-     "걸러낼 대상에 사과, 연필, 책 를 넣었어요"
+     "걸러낼 대상에 사과, 배, 연필, 공책 를 넣었어요"
     ],
     "review": {
-     "status": "teacher",
-     "reasons": [
-      "요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나 — 숫자만 더하라는 방법이 이미 들어 있어 답이나 푸는 법이 보입니다."
-     ],
-     "rounds": 3
+     "status": "pass",
+     "reasons": [],
+     "rounds": 1
     }
    },
    "pipelineParams": {
     "filterTarget": [
      "사과",
+     "배",
      "연필",
-     "책"
+     "공책"
     ]
    },
-   "filterDesc": "합계 목록"
+   "filterDesc": "숫자 목록"
   },
   "guard": {
    "fallback": [],
    "reasons": {},
-   "retried": 0,
+   "retried": 1,
    "picked": "llm",
    "repaired": [
     "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요",
-    "걸러낼 대상에 사과, 연필, 책 를 넣었어요"
+    "걸러낼 대상에 사과, 배, 연필, 공책 를 넣었어요"
    ],
    "review": {
-    "status": "teacher",
-    "reasons": [
-     "요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나 — 숫자만 더하라는 방법이 이미 들어 있어 답이나 푸는 법이 보입니다."
-    ],
-    "rounds": 3
+    "status": "pass",
+    "reasons": [],
+    "rounds": 1
    }
   },
-  "ms": 21146,
+  "ms": 6354,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 2861,
+    "ms": 1192,
     "status": "ok",
     "chars": 37
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2039,
+    "ms": 1754,
     "status": "ok",
-    "chars": 298
+    "chars": 295
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 4968,
+    "ms": 1698,
     "status": "ok",
-    "chars": 305
+    "chars": 304
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1784,
+    "ms": 1706,
     "status": "ok",
-    "chars": 276
-   },
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1056,
-    "status": "ok",
-    "chars": 37
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2074,
-    "status": "ok",
-    "chars": 317
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1694,
-    "status": "ok",
-    "chars": 310
-   },
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1073,
-    "status": "ok",
-    "chars": 37
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1714,
-    "status": "ok",
-    "chars": 282
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1876,
-    "status": "ok",
-    "chars": 246
+    "chars": 250
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"숫자만 합하기\",\"brief\":\"목록에서 숫자만 골라 더해주세요.\",\"situation\":\"문자와 숫자가 섞여 있어서 숫자만 더해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"섞인 목록\"},\"data\":[{\"name\":\"첫째 목록\",\"items\":[\"3\",\"사과\",\"5\",\"배\",\"2\"]},{\"name\":\"둘째 목록\",\"items\":[\"4\",\"귤\",\"1\",\"7\",\"책\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"4\",\"1\",\"7\"],\"filterDesc\":\"숫자 목록\"}",
-   "{\"title\":\"숫자만 합하기\",\"brief\":\"목록에서 숫자만 골라 얼마인지 알아내 주세요.\",\"situation\":\"문자와 숫자가 섞여 있어서 숫자만 더해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"섞인 목록\"},\"data\":[{\"name\":\"첫째 목록\",\"items\":[\"3\",\"사과\",\"5\",\"배\",\"2\"]},{\"name\":\"둘째 목록\",\"items\":[\"4\",\"귤\",\"1\",\"7\",\"책\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"4\",\"1\",\"7\"],\"filterDesc\":\"숫자 목록\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1이 목록에서 숫자만 골라 더한 값을 구해야 한다고 알 수 있어요.\"},\"sameStory\":{\"ok\":false,\"why\":\"첫째·둘째 목록은 숫자와 과일이 섞인 계산 자료인데 섞인 목록은 과일만 있어 같은 이야기가 아니에요.\"},\"noAnswer\":{\"ok\":false,\"why\":\"요청과 상황에 숫자만 더하라고 이미 방법이 드러나 있어요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 핵심만 적혀 있어요.\"}}",
-   "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"숫자 고르기\",\"brief\":\"세 목록에서 숫자만 찾아 합을 비교해 주세요.\",\"situation\":\"숫자와 글자가 함께 있는 목록을 보고 정리해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"다른 장례 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"3\",\"사과\",\"5\",\"배\",\"2\"]},{\"name\":\"화요일 목록\",\"items\":[\"1\",\"귤\",\"4\",\"포도\",\"6\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"1\",\"4\",\"6\"],\"filterDesc\":\"숫자만 모은 목록\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1 학생이 세 목록에서 숫자만 골라 합을 비교하라고 알 수 있어요.\"},\"sameStory\":{\"ok\":false,\"why\":\"첫째와 둘째는 숫자와 글자가 섞인 목록인데 셋째는 과일만 있어 같은 이야기로 보기 어려워요.\"},\"noAnswer\":{\"ok\":false,\"why\":\"성공 조건에 숫자만 더하면 된다는 방법이 들어 있어 답을 하는 기준이 보이지만, 문제를 푸는 방향도 함께 알려져 있어요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 되어 있어 이해하기 쉬워요.\"}}",
-   "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"메모 정리\",\"brief\":\"목록에서 필요한 값들을 골라 합을 구해 주세요.\",\"situation\":\"기록을 정리해야 해요.\",\"itemName\":\"메모\",\"counter\":{\"name\":\"수요일 메모\"},\"data\":[{\"name\":\"월요일 메모\",\"items\":[\"3\",\"사과\",\"5\",\"연필\"]},{\"name\":\"화요일 메모\",\"items\":[\"2\",\"책\",\"4\",\"7\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"4\",\"7\"],\"filterDesc\":\"합계 목록\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"목록에서 필요한 값을 골라 합을 구하라는 뜻을 알 수 있습니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료가 모두 메모를 정리하는 같은 이야기입니다.\"},\"noAnswer\":{\"ok\":false,\"why\":\"숫자만 더하라는 방법이 이미 들어 있어 답이나 푸는 법이 보입니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 되어 있습니다.\"}}"
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록에서 숫자만 골라 더해 주세요.\",\"situation\":\"문자와 숫자가 섞여 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"글자만 목록\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"3\",\"사과\",\"5\",\"배\",\"2\"]},{\"name\":\"두 번째 목록\",\"items\":[\"1\",\"연필\",\"4\",\"공책\",\"6\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"1\",\"4\",\"6\"],\"filterDesc\":\"숫자 목록\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록에서 숫자만 골라 모두 얼마인지 알아내 주세요.\",\"situation\":\"문자와 숫자가 섞여 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"글자만 목록\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"3\",\"사과\",\"5\",\"배\",\"2\"]},{\"name\":\"두 번째 목록\",\"items\":[\"1\",\"연필\",\"4\",\"공책\",\"6\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"1\",\"4\",\"6\"],\"filterDesc\":\"숫자 목록\"}",
+   "{\"understand\":{\"ok\":true,\"why\":\"목록에서 숫자만 골라 모두 더한 값을 구하라는 뜻입니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 숫자와 글자가 섞인 목록에서 숫자를 찾는 같은 이야기입니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에 정답이나 풀이 방법이 직접 드러나지 않았습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 잘 썼습니다.\"}}"
   ],
   "attempts": [
    {
     "brief": [
-     "'목록에서 숫자만 골라 더해주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {},
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {},
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
+     "'목록에서 숫자만 골라 더해 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
     ]
    },
    {},
@@ -1491,14 +1250,14 @@
   "expect": "split-filter-num-sum",
   "ok": true,
   "mission": {
-   "id": "ai-1a14529af75",
+   "id": "ai-1a145453a07",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-filter-num-sum",
-   "stage": "섞인목록더하기",
-   "title": "섞인목록더하기",
-   "brief": "세 자료에서 얼마인지 알아봐 주세요.",
-   "situation": "숫자가 섞이면 계산이 멈춰요.",
+   "stage": "숫자 합",
+   "title": "숫자 합",
+   "brief": "숫자가 적힌 것만 모두 더해 주세요.",
+   "situation": "숫자가 아닌 값이 있어도 끝까지 계산해야 해요.",
    "lesson": "예외 처리. try-except",
    "keyPoint": "숫자가 아닌 값이 섞여 있으면 계산이 멈춘다",
    "define": {
@@ -1509,13 +1268,13 @@
       "trap": "luck"
      },
      {
+      "v": "15가 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
       "v": "숫자만 더한 값이 나오면 성공",
       "trap": null,
       "key": "filtered_sum"
-     },
-     {
-      "v": "10이 나오면 성공",
-      "trap": "hardcode"
      }
     ]
    },
@@ -1523,17 +1282,17 @@
     {
      "id": "d01",
      "name": "월요일 목록",
-     "v": "3,사과,5,연필,2"
+     "v": "3,사과,5,7,메모"
     },
     {
      "id": "d02",
      "name": "화요일 목록",
-     "v": "1,공책,4,가방,6"
+     "v": "2,바나나,4,6,쪽지"
     },
     {
      "id": "d03",
-     "name": "금요일 목록",
-     "v": "사과,연필,공책,가방,사과",
+     "name": "수요일 목록",
+     "v": "사과,메모,바나나,쪽지,사과",
      "counter": true,
      "axis": "empty"
     }
@@ -1541,154 +1300,137 @@
    "guard": {
     "fallback": [],
     "reasons": {},
-    "retried": 1,
+    "retried": 2,
     "picked": "llm",
     "repaired": [
      "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요",
-     "걸러낼 대상에 사과, 연필, 공책, 가방 를 넣었어요"
+     "걸러낼 대상에 사과, 메모, 바나나, 쪽지 를 넣었어요"
     ],
     "review": {
-     "status": "teacher",
-     "reasons": [
-      "중1이 요청을 읽고 무엇을 구해야 하는지 아는가 — 세 자료에서 무엇을 더해 얼마를 구하라는지와 숫자만 더할지 판단하기 어렵습니다.",
-      "요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나 — 성공 조건에 숫자만 더한 값과 정답처럼 보이는 값이 들어 있어 답이 드러납니다."
-     ],
-     "rounds": 3
+     "status": "pass",
+     "reasons": [],
+     "rounds": 2
     }
    },
    "pipelineParams": {
     "filterTarget": [
      "사과",
-     "연필",
-     "공책",
-     "가방"
+     "메모",
+     "바나나",
+     "쪽지"
     ]
    },
-   "filterDesc": "숫자만 모음"
+   "filterDesc": "숫자 목록"
   },
   "guard": {
    "fallback": [],
    "reasons": {},
-   "retried": 1,
+   "retried": 2,
    "picked": "llm",
    "repaired": [
     "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요",
-    "걸러낼 대상에 사과, 연필, 공책, 가방 를 넣었어요"
+    "걸러낼 대상에 사과, 메모, 바나나, 쪽지 를 넣었어요"
    ],
    "review": {
-    "status": "teacher",
-    "reasons": [
-     "중1이 요청을 읽고 무엇을 구해야 하는지 아는가 — 세 자료에서 무엇을 더해 얼마를 구하라는지와 숫자만 더할지 판단하기 어렵습니다.",
-     "요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나 — 성공 조건에 숫자만 더한 값과 정답처럼 보이는 값이 들어 있어 답이 드러납니다."
-    ],
-    "rounds": 3
+    "status": "pass",
+    "reasons": [],
+    "rounds": 2
    }
   },
-  "ms": 22040,
+  "ms": 16892,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1133,
+    "ms": 1139,
     "status": "ok",
     "chars": 37
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1714,
+    "ms": 1952,
+    "status": "ok",
+    "chars": 294
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1530,
+    "status": "ok",
+    "chars": 298
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1802,
     "status": "ok",
     "chars": 296
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1531,
+    "ms": 2053,
     "status": "ok",
-    "chars": 289
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1776,
-    "status": "ok",
-    "chars": 278
+    "chars": 291
    },
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1148,
+    "ms": 1271,
     "status": "ok",
     "chars": 37
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1692,
+    "ms": 1844,
     "status": "ok",
-    "chars": 312
+    "chars": 309
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2481,
-    "status": "ok",
-    "chars": 307
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1670,
-    "status": "ok",
-    "chars": 275
-   },
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 2604,
-    "status": "ok",
-    "chars": 37
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2160,
+    "ms": 1597,
     "status": "ok",
     "chars": 305
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2328,
+    "ms": 1455,
     "status": "ok",
-    "chars": 297
+    "chars": 304
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1796,
+    "ms": 2244,
     "status": "ok",
-    "chars": 269
+    "chars": 262
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록을 보고 숫자만 찾아 더해 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여 멈출 수 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫째 목록\",\"items\":[\"3\",\"사과\",\"5\",\"2\",\"바나나\"]},{\"name\":\"둘째 목록\",\"items\":[\"1\",\"포도\",\"4\",\"6\",\"배\"]}],\"filterTarget\":[\"사과\",\"바나나\",\"포도\",\"배\"],\"filterDesc\":\"숫자 제외\"}",
-   "{\"title\":\"숫자만 더하기\",\"brief\":\"숫자만 더해 얼마인지 알려 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫째 목록\",\"items\":[\"3\",\"사과\",\"5\",\"2\",\"바나나\"]},{\"name\":\"둘째 목록\",\"items\":[\"1\",\"포도\",\"4\",\"6\",\"배\"]}],\"filterTarget\":[\"사과\",\"바나나\",\"포도\",\"배\"],\"filterDesc\":\"숫자 제외\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1 학생도 숫자만 골라서 더한 값을 구하면 되는지 알 수 있어요.\"},\"sameStory\":{\"ok\":false,\"why\":\"첫째·둘째 목록은 숫자와 과일이 섞여 있고 다른 날 자료는 과일만 있어 같은 이야기로 보기 어려워요.\"},\"noAnswer\":{\"ok\":false,\"why\":\"요청에 숫자만 더하라고 이미 방법이 들어 있어 답을 바로 알기 쉬워요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 되어 있어요.\"}}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록에서 숫자만 골라 더해 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여서 계산이 멈출 수 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"3\",\"a\",\"5\",\"b\",\"2\"]},{\"name\":\"둘째 목록\",\"items\":[\"1\",\"c\",\"4\",\"d\",\"6\"]}],\"filterTarget\":[\"숫자\",\"정수\",\"음수\"],\"filterDesc\":\"숫자만 남기기\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록에서 숫자가 몇 개인지 알아봐 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여서 계산이 멈출 수 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"3\",\"a\",\"5\",\"b\",\"2\"]},{\"name\":\"둘째 목록\",\"items\":[\"1\",\"c\",\"4\",\"d\",\"6\"]}],\"filterTarget\":[\"숫자\",\"정수\",\"음수\"],\"filterDesc\":\"숫자만 남기기\"}",
+   "{\"title\":\"숫자 더하기\",\"brief\":\"목록에서 숫자가 얼마인지 알아봐 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여서 계산이 멈출 수 있어요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"3\",\"a\",\"5\",\"b\",\"2\"]},{\"name\":\"둘째 목록\",\"items\":[\"1\",\"c\",\"4\",\"d\",\"6\"]}],\"filterTarget\":[\"숫자\",\"정수\",\"음수\"],\"filterDesc\":\"숫자만 남기기\"}",
+   "{\"understand\":{\"ok\":true,\"why\":\"목록에서 숫자가 얼마인지 알아보라고 해서 중1도 무엇을 구해야 하는지 알 수 있습니다.\"},\"sameStory\":{\"ok\":false,\"why\":\"첫 번째와 둘째는 숫자와 문자가 섞인 목록이지만 다른 날 자료는 문자만 있어서 같은 이야기로 보기 어렵습니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에는 정답이나 푸는 방법이 직접 드러나지 않습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 핵심만 적었습니다.\"}}",
    "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"장바구니 분류\",\"brief\":\"세 자료를 살펴서 기준에 맞는 것만 찾아주세요.\",\"situation\":\"숫자가 섞이면 계산이 멈추는 상황입니다.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"다른 날 장바구니\"},\"data\":[{\"name\":\"월요일 장바구니\",\"items\":[\"사과\",\"3\",\"배\",\"5\",\"딸기\"]},{\"name\":\"화요일 장바구니\",\"items\":[\"2\",\"오렌지\",\"4\",\"포도\",\"6\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"4\",\"6\"],\"filterDesc\":\"정수 목록\"}",
-   "{\"title\":\"장바구니 분류\",\"brief\":\"세 자료에서 얼마만큼 들어 있는지 알아봐 주세요.\",\"situation\":\"숫자가 섞이면 계산이 멈춰요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"다른 날 장바구니\"},\"data\":[{\"name\":\"월요일 장바구니\",\"items\":[\"사과\",\"3\",\"배\",\"5\",\"딸기\"]},{\"name\":\"화요일 장바구니\",\"items\":[\"2\",\"오렌지\",\"4\",\"포도\",\"6\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"4\",\"6\"],\"filterDesc\":\"정수 목록\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1이 세 자료에 들어 있는 것이 얼마나 있는지 알아보면 된다.\"},\"sameStory\":{\"ok\":false,\"why\":\"세 자료가 장바구니 이야기이긴 하지만 과일 목록과 숫자가 섞여 있어 같은 자료로 보기 어렵다.\"},\"noAnswer\":{\"ok\":false,\"why\":\"숫자가 섞이면 계산이 멈춘다고 적혀 있어 어떻게 해야 할지 힌트가 들어 있다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적혀 있다.\"}}",
-   "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"섞인목록더하기\",\"brief\":\"세 자료에서 숫자만 찾아 더해 주십시오.\",\"situation\":\"숫자가 섞이면 계산이 멈출 수 있습니다.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"금요일 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"3\",\"사과\",\"5\",\"연필\",\"2\"]},{\"name\":\"화요일 목록\",\"items\":[\"1\",\"공책\",\"4\",\"가방\",\"6\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"1\",\"4\",\"6\"],\"filterDesc\":\"숫자만 모음\"}",
-   "{\"title\":\"섞인목록더하기\",\"brief\":\"세 자료에서 얼마인지 알아봐 주세요.\",\"situation\":\"숫자가 섞이면 계산이 멈춰요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"금요일 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"3\",\"사과\",\"5\",\"연필\",\"2\"]},{\"name\":\"화요일 목록\",\"items\":[\"1\",\"공책\",\"4\",\"가방\",\"6\"]}],\"filterTarget\":[\"3\",\"5\",\"2\",\"1\",\"4\",\"6\"],\"filterDesc\":\"숫자만 모음\"}",
-   "{\"understand\":{\"ok\":false,\"why\":\"세 자료에서 무엇을 더해 얼마를 구하라는지와 숫자만 더할지 판단하기 어렵습니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 날짜별로 섞인 목록을 보여 주어 같은 이야기입니다.\"},\"noAnswer\":{\"ok\":false,\"why\":\"성공 조건에 숫자만 더한 값과 정답처럼 보이는 값이 들어 있어 답이 드러납니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적었습니다.\"}}"
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"섞인 목록에서 숫자만 골라 더해 주세요.\",\"situation\":\"숫자가 아닌 값이 있어도 끝까지 계산해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"수요일 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"3\",\"사과\",\"5\",\"7\",\"메모\"]},{\"name\":\"화요일 목록\",\"items\":[\"2\",\"바나나\",\"4\",\"6\",\"쪽지\"]}],\"filterTarget\":[\"3\",\"5\",\"7\",\"2\",\"4\",\"6\"],\"filterDesc\":\"숫자 목록\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"숫자가 몇 개인지 알아내 주세요.\",\"situation\":\"숫자가 아닌 값이 있어도 끝까지 계산해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"수요일 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"3\",\"사과\",\"5\",\"7\",\"메모\"]},{\"name\":\"화요일 목록\",\"items\":[\"2\",\"바나나\",\"4\",\"6\",\"쪽지\"]}],\"filterTarget\":[\"3\",\"5\",\"7\",\"2\",\"4\",\"6\"],\"filterDesc\":\"숫자 목록\"}",
+   "{\"title\":\"숫자 합\",\"brief\":\"숫자가 적힌 것만 모두 더해 주세요.\",\"situation\":\"숫자가 아닌 값이 있어도 끝까지 계산해야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"수요일 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"3\",\"사과\",\"5\",\"7\",\"메모\"]},{\"name\":\"화요일 목록\",\"items\":[\"2\",\"바나나\",\"4\",\"6\",\"쪽지\"]}],\"filterTarget\":[\"3\",\"5\",\"7\",\"2\",\"4\",\"6\"],\"filterDesc\":\"숫자 목록\"}",
+   "{\"understand\":{\"ok\":true,\"why\":\"숫자가 적힌 것만 골라서 모두 더하라고 하니 중1도 무엇을 구해야 하는지 알 수 있어요.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 요일별 목록이라는 같은 형식의 이야기예요.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황 문장만 봐서는 답이나 풀이 방법이 바로 드러나지 않아요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 되어 있어요.\"}}"
   ],
   "attempts": [
    {
     "brief": [
-     "'목록을 보고 숫자만 찾아 더해 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+     "'목록에서 숫자만 골라 더해 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+    ]
+   },
+   {
+    "brief": [
+     "'목록에서 숫자가 몇 개인지 알아봐 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
     ]
    },
    {},
@@ -1745,73 +1487,13 @@
     ]
    },
    {
-    "situation": [
-     "'숫자가 섞이면 계산이 멈추는 상황입니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
     "brief": [
-     "'세 자료를 살펴서 기준에 맞는 것만 찾아주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {},
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
+     "'섞인 목록에서 숫자만 골라 더해 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
     ]
    },
    {
     "brief": [
-     "'세 자료에서 숫자만 찾아 더해 주십시오.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요",
-     "'세 자료에서 숫자만 찾아 더해 주십시오.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ],
-    "situation": [
-     "'숫자가 섞이면 계산이 멈출 수 있습니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+     "'숫자가 몇 개인지 알아내 주세요.' — 구할 값이 없음. '얼마' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
     ]
    },
    {},
@@ -1850,54 +1532,54 @@
   "expect": "split-unique-count",
   "ok": true,
   "mission": {
-   "id": "ai-1a14529c5cd",
+   "id": "ai-1a1454553ed",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-unique-count",
-   "stage": "중복 개수 세기",
-   "title": "중복 개수 세기",
-   "brief": "겹쳐 나온 항목에서 몇 가지인지 알아내세요.",
-   "situation": "중복을 없앤 뒤의 개수를 알아내야 해요.",
+   "stage": "겹친 목록 세기",
+   "title": "겹친 목록 세기",
+   "brief": "겹친 항목이 몇 개인지 알아내세요.",
+   "situation": "중복을 없애면 개수가 달라져요.",
    "lesson": "집합 set. 중복 없는 모음",
    "keyPoint": "중복을 없애면 개수가 달라진다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
-      "v": "겹치는 건 한 번만 센 수가 나오면 성공",
-      "trap": null,
-      "key": "unique"
-     },
-     {
-      "v": "전체 목록 수가 나오면 성공",
-      "trap": null,
-      "key": "total"
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
      },
      {
       "v": "에러 안 나면 성공",
       "trap": "luck"
      },
      {
-      "v": "3이 나오면 성공",
-      "trap": "hardcode"
+      "v": "전체 항목 수가 나오면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "겹치는 건 한 번만 센 수가 나오면 성공",
+      "trap": null,
+      "key": "unique"
      }
     ]
    },
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 목록",
+     "name": "첫 목록",
      "v": "사과,배,사과,포도"
     },
     {
      "id": "d02",
-     "name": "수요일 목록",
-     "v": "배,포도,사과,배"
+     "name": "둘째 목록",
+     "v": "배,포도,귤,배"
     },
     {
      "id": "d03",
-     "name": "금요일 목록",
-     "v": "사과,배",
+     "name": "화요일 목록",
+     "v": "사과,배,사과,포도,귤",
      "counter": true,
      "axis": "count"
     }
@@ -1905,7 +1587,7 @@
    "guard": {
     "fallback": [],
     "reasons": {},
-    "retried": 0,
+    "retried": 1,
     "picked": "llm",
     "repaired": [],
     "review": {
@@ -1918,7 +1600,7 @@
   "guard": {
    "fallback": [],
    "reasons": {},
-   "retried": 0,
+   "retried": 1,
    "picked": "llm",
    "repaired": [],
    "review": {
@@ -1927,36 +1609,52 @@
     "rounds": 1
    }
   },
-  "ms": 5547,
+  "ms": 6328,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1447,
+    "ms": 1060,
     "status": "ok",
     "chars": 35
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2475,
+    "ms": 1686,
     "status": "ok",
-    "chars": 238
+    "chars": 227
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1623,
+    "ms": 1638,
     "status": "ok",
-    "chars": 249
+    "chars": 224
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1942,
+    "status": "ok",
+    "chars": 271
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-unique-count\"}",
-   "{\"title\":\"중복 개수 세기\",\"brief\":\"겹쳐 나온 항목에서 몇 가지인지 알아내세요.\",\"situation\":\"중복을 없앤 뒤의 개수를 알아내야 해요.\",\"itemName\":\"목록\",\"counter\":{\"name\":\"금요일 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"수요일 목록\",\"items\":[\"배\",\"포도\",\"사과\",\"배\"]}]}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중복된 항목을 한 번씩만 세어 몇 가지인지 구하면 됩니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 사과, 배, 포도 목록으로 같은 이야기입니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에 정답 계산 방법이 직접 드러나지 않습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 검사할 수 있게 써 있습니다.\"}}"
+   "{\"title\":\"중복 항목 세기\",\"brief\":\"겹친 항목을 보고 개수를 세어 보세요.\",\"situation\":\"중복을 없애면 개수가 달라집니다.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"화요일 항목\"},\"data\":[{\"name\":\"첫 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"둘째 목록\",\"items\":[\"배\",\"포도\",\"귤\",\"배\"]}]}",
+   "{\"title\":\"겹친 목록 세기\",\"brief\":\"겹친 항목이 몇 개인지 알아내세요.\",\"situation\":\"중복을 없애면 개수가 달라져요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"화요일 목록\"},\"data\":[{\"name\":\"첫 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"둘째 목록\",\"items\":[\"배\",\"포도\",\"귤\",\"배\"]}]}",
+   "{\"understand\":{\"ok\":true,\"why\":\"겹친 항목이 몇 개인지 알아내라고 했으니, 목록들에서 겹치는 것을 세어야 한다고 알 수 있다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 사과, 배, 포도, 귤 같은 목록 이야기로 이어져 있다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만으로는 정답 숫자나 푸는 방법이 바로 드러나지 않는다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 묻고 있다.\"}}"
   ],
   "attempts": [
+   {
+    "situation": [
+     "'중복을 없애면 개수가 달라집니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "brief": [
+     "'겹친 항목을 보고 개수를 세어 보세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
+    ]
+   },
    {},
    {
     "title": [
@@ -1987,49 +1685,49 @@
   "expect": "split-filter-count",
   "ok": true,
   "mission": {
-   "id": "ai-1a1452a44ea",
+   "id": "ai-1a145456b3b",
    "no": "AI",
    "type": "sentence",
-   "pipelineId": "split-filter-count",
-   "stage": "줄 개수 찾기",
-   "title": "줄 개수 찾기",
-   "brief": "읽은 줄에서 몇 개인지 알아내 주세요.",
-   "situation": "기록을 확인해요.",
+   "pipelineId": "split-filter-join",
+   "stage": "파일 줄 고르기",
+   "title": "파일 줄 고르기",
+   "brief": "파일에서 읽은 줄을 보고 필요한 것만 골라 이어 주세요.",
+   "situation": "기록을 다시 써야 해요.",
    "lesson": "파일 입출력. open, read",
    "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
      {
-      "v": "조건에 맞는 기록 수가 나오면 성공",
-      "trap": null,
-      "key": "filtered_count"
+      "v": "메모가 나오면 성공",
+      "trap": "hardcode"
      },
      {
       "v": "에러 안 나면 성공",
       "trap": "luck"
      },
      {
-      "v": "1이 나오면 성공",
-      "trap": "hardcode"
+      "v": "조건에 맞는 줄만 남으면 성공",
+      "trap": null,
+      "key": "filtered"
      }
     ]
    },
    "inputs": [
     {
      "id": "d01",
-     "name": "아침 기록",
-     "v": "준비,출석,정리,청소"
+     "name": "아침 줄",
+     "v": "사과,메모,우유,연필"
     },
     {
      "id": "d02",
-     "name": "점심 기록",
-     "v": "식사,정리,휴식,청소"
+     "name": "점심 줄",
+     "v": "물,책,메모,공책"
     },
     {
      "id": "d03",
-     "name": "다음날 기록",
-     "v": "준비,출석,청소,식사",
+     "name": "다른시간 줄",
+     "v": "사과,우유,연필,물",
      "counter": true,
      "axis": "empty"
     }
@@ -2037,284 +1735,65 @@
    "guard": {
     "fallback": [],
     "reasons": {},
-    "retried": 1,
+    "retried": 0,
     "picked": "llm",
     "repaired": [],
     "review": {
      "status": "pass",
      "reasons": [],
-     "rounds": 3
+     "rounds": 1
     }
    },
    "pipelineParams": {
     "filterTarget": [
-     "정리"
+     "메모",
+     "책"
     ]
    },
-   "filterDesc": "정리한 개수"
+   "filterDesc": "적어야 할 목록"
   },
   "guard": {
    "fallback": [],
    "reasons": {},
-   "retried": 1,
+   "retried": 0,
    "picked": "llm",
    "repaired": [],
    "review": {
     "status": "pass",
     "reasons": [],
-    "rounds": 3
+    "rounds": 1
    }
   },
-  "ms": 32379,
+  "ms": 6352,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1376,
+    "ms": 1316,
     "status": "ok",
     "chars": 34
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1761,
+    "ms": 2705,
     "status": "ok",
-    "chars": 273
+    "chars": 282
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1615,
-    "status": "ok",
-    "chars": 279
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1602,
-    "status": "ok",
-    "chars": 272
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2089,
-    "status": "ok",
-    "chars": 243
-   },
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1159,
-    "status": "ok",
-    "chars": 34
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1955,
-    "status": "ok",
-    "chars": 283
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1588,
-    "status": "ok",
-    "chars": 276
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2017,
-    "status": "ok",
-    "chars": 252
-   },
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1214,
-    "status": "ok",
-    "chars": 35
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 12970,
-    "status": "ok",
-    "chars": 267
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1561,
+    "ms": 2328,
     "status": "ok",
     "chars": 266
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1463,
-    "status": "ok",
-    "chars": 231
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-filter-join\"}",
-   "{\"title\":\"파일줄고르기\",\"brief\":\"파일에서 읽은 항목만 다루어 주세요.\",\"situation\":\"명단을 정리해야 해요.\",\"itemName\":\"파일\",\"counter\":{\"name\":\"다른명단\"},\"data\":[{\"name\":\"월요일 파일\",\"items\":[\"사과\",\"배\",\"메모\",\"귤\"]},{\"name\":\"화요일 파일\",\"items\":[\"포도\",\"메모\",\"딸기\",\"감\"]}],\"filterTarget\":[\"메모\",\"사과\",\"포도\"],\"filterDesc\":\"남길 항목\"}",
-   "{\"title\":\"파일줄고르기\",\"brief\":\"파일에서 읽은 것 중 남길 것만 찾아 주세요.\",\"situation\":\"명단을 다시 적어야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"다른명단\"},\"data\":[{\"name\":\"월요일 파일\",\"items\":[\"사과\",\"배\",\"메모\",\"귤\"]},{\"name\":\"화요일 파일\",\"items\":[\"포도\",\"메모\",\"딸기\",\"감\"]}],\"filterTarget\":[\"메모\",\"사과\",\"포도\"],\"filterDesc\":\"남길 것\"}",
-   "{\"title\":\"파일줄고르기\",\"brief\":\"파일에서 남길 것만 알려 주세요.\",\"situation\":\"명단을 다시 적어야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"다른명단\"},\"data\":[{\"name\":\"월요일 파일\",\"items\":[\"사과\",\"배\",\"메모\",\"귤\"]},{\"name\":\"화요일 파일\",\"items\":[\"포도\",\"메모\",\"딸기\",\"감\"]}],\"filterTarget\":[\"메모\",\"사과\",\"포도\"],\"filterDesc\":\"남길 것\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"조건에 맞는 항목만 남긴 목록을 만들라는 뜻을 알 수 있어요.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료 모두 명단을 다시 적는 같은 이야기로 보여요.\"},\"noAnswer\":{\"ok\":false,\"why\":\"어떤 항목을 남길지와 예시가 함께 보여서 푸는 방법이 드러나요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 잘 썼어요.\"}}",
-   "{\"pipelineId\":\"split-filter-join\"}",
-   "{\"title\":\"줄 고르기\",\"brief\":\"파일에서 필요한 줄만 남겨 주세요.\",\"situation\":\"모두 조건에 맞게 다시 이어 붙여야 합니다.\",\"itemName\":\"줄\",\"counter\":{\"name\":\"반대 목록\"},\"data\":[{\"name\":\"첫 기록\",\"items\":[\"사과\",\"배\",\"귤\",\"포도\"]},{\"name\":\"둘째 기록\",\"items\":[\"토끼\",\"고양이\",\"거북이\",\"햄스터\"]}],\"filterTarget\":[\"배\",\"고양이\",\"햄스터\"],\"filterDesc\":\"고르기\"}",
-   "{\"title\":\"줄 고르기\",\"brief\":\"파일에서 필요한 줄만 남겨 주세요.\",\"situation\":\"파일에서 필요한 줄만 확인해요.\",\"itemName\":\"줄\",\"counter\":{\"name\":\"반대 목록\"},\"data\":[{\"name\":\"첫 기록\",\"items\":[\"사과\",\"배\",\"귤\",\"포도\"]},{\"name\":\"둘째 기록\",\"items\":[\"토끼\",\"고양이\",\"거북이\",\"햄스터\"]}],\"filterTarget\":[\"배\",\"고양이\",\"햄스터\"],\"filterDesc\":\"고르기\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1도 파일에서 필요한 줄만 남기라는 뜻을 알 수 있어요.\"},\"sameStory\":{\"ok\":false,\"why\":\"과일 목록과 동물 목록이 섞여 있어 같은 이야기로 보기 어려워요.\"},\"noAnswer\":{\"ok\":false,\"why\":\"조건에 맞는 줄만 남기면 된다는 힌트가 있어 답하는 방법이 드러나요.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 적혀 있어요.\"}}",
-   "{\"pipelineId\":\"split-filter-count\"}",
-   "{\"title\":\"줄 세기\",\"brief\":\"읽은 줄에서 필요한 것만 세어 주세요.\",\"situation\":\"기록을 확인해야 합니다.\",\"itemName\":\"기록\",\"counter\":{\"name\":\"다음날 기록\"},\"data\":[{\"name\":\"아침 기록\",\"items\":[\"준비\",\"출석\",\"정리\",\"청소\"]},{\"name\":\"점심 기록\",\"items\":[\"식사\",\"정리\",\"휴식\",\"청소\"]}],\"filterTarget\":[\"정리\"],\"filterDesc\":\"정리한 개수\"}",
-   "{\"title\":\"줄 개수 찾기\",\"brief\":\"읽은 줄에서 몇 개인지 알아내 주세요.\",\"situation\":\"기록을 확인해요.\",\"itemName\":\"기록\",\"counter\":{\"name\":\"다음날 기록\"},\"data\":[{\"name\":\"아침 기록\",\"items\":[\"준비\",\"출석\",\"정리\",\"청소\"]},{\"name\":\"점심 기록\",\"items\":[\"식사\",\"정리\",\"휴식\",\"청소\"]}],\"filterTarget\":[\"정리\"],\"filterDesc\":\"정리한 개수\"}",
-   "{\"understand\":{\"ok\":true,\"why\":\"중1도 읽은 자료에서 몇 개인지 알아내라고 한 뜻을 알 수 있다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료는 모두 기록에서 항목 수를 세는 같은 이야기이다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황에 바로 답이 들어 있지 않다.\"},\"easy\":{\"ok\":true,\"why\":\"쉬운 말로 짧게 썼다.\"}}"
+   "{\"title\":\"파일 줄 고르기\",\"brief\":\"파일에서 읽은 줄을 보고 필요한 것만 골라 이어 주세요.\",\"situation\":\"기록을 다시 써야 해요.\",\"itemName\":\"줄\",\"counter\":{\"name\":\"다른시간 줄\"},\"data\":[{\"name\":\"아침 줄\",\"items\":[\"사과\",\"메모\",\"우유\",\"연필\"]},{\"name\":\"점심 줄\",\"items\":[\"물\",\"책\",\"메모\",\"공책\"]}],\"filterTarget\":[\"메모\",\"책\"],\"filterDesc\":\"적어야 할 목록\"}",
+   "{\"understand\":{\"ok\":true,\"why\":\"읽은 줄에서 필요한 것만 골라 이어 써야 한다는 할 일을 알 수 있습니다.\"},\"sameStory\":{\"ok\":true,\"why\":\"세 자료가 모두 줄 이름과 그 안의 항목을 적은 같은 종류의 목록입니다.\"},\"noAnswer\":{\"ok\":true,\"why\":\"요청과 상황만으로는 무엇을 골라야 하는지나 답이 바로 드러나지 않습니다.\"},\"easy\":{\"ok\":true,\"why\":\"짧고 쉬운 말로 쓰여 있습니다.\"}}"
   ],
   "attempts": [
-   {
-    "brief": [
-     "'파일에서 읽은 항목만 다루어 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {
-    "brief": [
-     "'파일에서 읽은 것 중 남길 것만 찾아 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {
-    "brief": [
-     "'파일에서 남길 것만 알려 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {
-    "situation": [
-     "'모두 조건에 맞게 다시 이어 붙여야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "brief": [
-     "'파일에서 필요한 줄만 남겨 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {
-    "brief": [
-     "'파일에서 필요한 줄만 남겨 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {
-    "title": [
-     "Field required"
-    ],
-    "brief": [
-     "Field required"
-    ],
-    "situation": [
-     "Field required"
-    ],
-    "itemName": [
-     "Field required"
-    ],
-    "counter": [
-     "Field required"
-    ],
-    "data": [
-     "Field required"
-    ],
-    "filterTarget": [
-     "Field required"
-    ],
-    "filterDesc": [
-     "Field required"
-    ]
-   },
-   {
-    "situation": [
-     "'기록을 확인해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "brief": [
-     "'읽은 줄에서 필요한 것만 세어 주세요.' — 구할 값이 없음. '몇' 처럼 무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)"
-    ]
-   },
    {},
    {
     "title": [
