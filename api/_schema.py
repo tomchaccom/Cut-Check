@@ -258,13 +258,13 @@ def template(slot, parts):
 # 빈칸마다 문장에 있어야 하는 말. 평가에서 "가장 많이 나온 숫자는 [쉼표/공백] 입니다" 가 나왔다.
 # ponytail: 키워드 휴리스틱이라 뜻이 맞는데 다른 동사를 쓰면 기본 틀로 간다. 자주 걸리면 목록을 늘린다
 SLOT_VERB = {
-    'sep': r'나누|나눈|나눠|자르|자른|잘라|구분|기준',
+    'sep': r'나누|나눈|나눠|나눕|자르|자른|잘라|자릅|구분|기준',
     'dedup': r'같은|겹치|겹친|중복|두 번|여러 번',
     'output': r'보여|출력|띄우|띄운|나타|적는|쓴다|알려',
     'dir': r'늘어|정렬|순서|놓는|세운',
-    'joinSep': r'잇|이어|합치|합친|붙인|붙여|연결',
+    'joinSep': r'잇|이어|합치|합친|합칩|붙인|붙여|붙입|연결',
     'op': r'마다|각|하나씩|모든',
-    'cond': r'것만|남긴|남겨|고른|골라|거른|걸러|뺀|빼|찾',
+    'cond': r'것만|남긴|남겨|남깁|고른|골라|고릅|거른|걸러|거릅|가려|가립|뺀|빼|찾',
     'condNum': r'숫자|글자|항목|메모',
 }
 
@@ -418,6 +418,10 @@ def _draft(pid):
                                            '반드시 "성공" 으로 끝낸다 ("~나오면 성공"). '
                                            '"~할 수 있어야 한다" 로 쓰지 않는다.'))
         for k in spec['keys']})
+    def verb_hint(slot):  # 검사기(SLOT_VERB)와 같은 목록을 모델에게 보여준다
+        key = 'condNum' if slot == 'cond' and 'toNumber' in spec['ops'] else slot
+        return ' / '.join(SLOT_VERB[key].split('|'))
+
     def example(slot):
         b, a = STEP_EXAMPLE_NUM_COND if slot == 'cond' and 'toNumber' in spec['ops'] else STEP_EXAMPLE[slot]
         b = b.replace('{item}', '재료').replace('{eunneun}', '는').replace('{desc}', '알레르기 목록')
@@ -427,7 +431,7 @@ def _draft(pid):
         slot: (StepParts, Field(description=(
             f'학생이 빈칸에서 [{" / ".join(opts)}] 중 하나를 고르는 방법 문장. 빈칸 앞말과 뒷말만 쓴다. '
             f'합쳐서 25자 안. 보기에 있는 말은 쓰지 않는다. 뒷말은 "~한다." 로 끝낸다. '
-            f'빈칸이 무엇을 정하는지 동사로 드러낸다. 예: {example(slot)}')))
+            f'앞말이나 뒷말에 이 중 하나를 꼭 쓴다: {verb_hint(slot)}. 예: {example(slot)}')))
         for slot, opts in spec['slots'].items()})
     fields = {
         'data': (list[DataSet], Field(min_length=2, max_length=2, description=_data_desc(spec['ops']))),

@@ -10,6 +10,7 @@
 
 LLM 호출은 call_llm(messages, schema, timeout) 로 주입받는다. 테스트는 가짜를 넣는다.
 """
+import http.client
 import json
 import os
 import random
@@ -54,21 +55,34 @@ MODEL = os.environ.get('LLM_MODEL') or 'openai/gpt-5.4-mini'
 
 
 def _post(body, key, timeout):
-    req = urllib.request.Request(API_URL, data=json.dumps(body).encode(), method='POST', headers={
-        'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read())['choices'][0]['message']['content']
+    """게이트웨이가 가끔 504·502 를 낸다 (2026-10-16 eval 20회 중 2회, 9초쯤). 남은 시간 안에서 한 번만 다시 보낸다."""
+    end = time.monotonic() + timeout
+    for attempt in (1, 2):
+        req = urllib.request.Request(API_URL, data=json.dumps(body).encode(), method='POST', headers={
+            'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key})
+        try:
+            with urllib.request.urlopen(req, timeout=max(1, end - time.monotonic())) as r:
+                return json.loads(r.read())['choices'][0]['message']['content']
+        except urllib.error.HTTPError as e:
+            if e.code not in (502, 503, 504) or attempt == 2 or end - time.monotonic() < 5:
+                raise
+        except (http.client.RemoteDisconnected, ConnectionResetError):
+            if attempt == 2 or end - time.monotonic() < 5:
+                raise
 
 
 def _flat(s, defs=None):
     """게이트웨이 뒤 OpenAI 는 $defs·$ref 가 있거나 additionalProperties 가 빠진 객체가 있으면 400 을 낸다.
-    pydantic 스키마는 둘 다 해당돼 초안이 매번 json_object 로 내려갔다 (2026-10-16 eval 23/23)."""
+    pydantic 스키마는 둘 다 해당돼 초안이 매번 json_object 로 내려갔다 (2026-10-16 eval 23/23).
+    maxLength 는 설명 글로 옮긴다 — 그대로 주면 그 길이에서 문장을 자른다 (situation 9/21, goals 8/25)."""
     defs = s.get('$defs', {}) if defs is None else defs
     if isinstance(s, dict):
         if '$ref' in s:
             rest = {k: v for k, v in s.items() if k != '$ref'}
             return _flat({**defs[s['$ref'].split('/')[-1]], **rest}, defs)
-        o = {k: _flat(v, defs) for k, v in s.items() if k != '$defs'}
+        o = {k: _flat(v, defs) for k, v in s.items() if k not in ('$defs', 'maxLength')}
+        if 'maxLength' in s:  # 스키마로 주면 모델이 그 길이에서 말을 자른다 ('…실행하면 성'). 길이는 pydantic 이 검사한다
+            o['description'] = (o.get('description', '') + f" ({s['maxLength']}자 안)").strip()
         if o.get('type') == 'object':
             o.setdefault('additionalProperties', False)
         return o
@@ -131,7 +145,10 @@ def _repair(pid, d):
                     ds['items'][i] = m.group(1).replace(',', '')
                     notes.append(f"'{x}' → '{ds['items'][i]}' (단위·쉼표를 뗐어요)")
         if 'filter' in ops:  # 숫자가 아닌 항목이 곧 걸러낼 대상이다
-            ft = list(d.get('filterTarget') or [])
+            # 모델이 숫자를 넣어 오기도 했다 — 숫자를 거르면 더할 게 없고, 여기에 단어를 더하면 6개를 넘는다
+            ft = [x for x in (d.get('filterTarget') or []) if not integer(str(x))]
+            if ft != list(d.get('filterTarget') or []):
+                notes.append('걸러낼 대상에서 숫자를 뺐어요')
             words = [x.strip() for ds in data[:2] for x in ds.get('items', []) if not integer(x) and x.strip() not in ft]
             if words:
                 d['filterTarget'] = ft + list(dict.fromkeys(words))
@@ -236,6 +253,8 @@ def _counter_candidates(pid, items1, items2, ft):
         yield {'name': other, 'text': ','.join(' ' + x.strip() + ' ' for x in items2), 'axis': 'invisible'}
     for extra in ([items1[0], items2[0]], items2[:2], items2[:1]):
         yield {'name': other, 'text': ','.join(items1 + extra), 'axis': 'count'}
+    # 있던 항목만 더하면 서로 다른 개수가 그대로라, 두 자료의 개수가 같으면 위 후보가 전부 안 깨진다
+    yield {'name': other, 'text': ','.join(items1[:2]), 'axis': 'count'}
     if 'toNumber' in ops and 'filter' not in ops:  # 최댓값·최솟값은 끝값이 바뀌어야 깨진다
         nums = [int(x) for x in items1]
         for v in (max(nums) + 100, min(nums) - 1):

@@ -257,6 +257,50 @@ if key:
     os.environ['PICKLE_API_KEY'] = key
 t('키가 없으면 502 와 사람이 읽는 말', code == 502 and '다시 시도' in body['error'], (code, body))
 
+print('\n[eval 에서 실패한 두 경우]')
+_m = {'itemName': '과일', 'data': [{'name': 'a', 'items': ['사과', '배', '사과', '귤']},
+                                 {'name': 'b', 'items': ['배', '사과', '배', '귤']}]}
+t('두 자료의 개수가 같아도 반례 기본 틀이 나온다', _generate._fallback('counter', 'split-unique-count', _m) is not None)
+_d = {'filterTarget': ['1', '2', '3', '4', '5', '6'], 'data': [{'name': 'a', 'items': ['1', '2', '3', '간식']},
+                                                              {'name': 'b', 'items': ['4', '5', '메모', '6']}]}
+_generate._repair('split-filter-num-sum', _d)
+t('숫자 거르기 유형은 걸러낼 대상에서 숫자를 뺀다', _d['filterTarget'] == ['간식', '메모'], _d['filterTarget'])
+
+print('\n[게이트웨이 504 는 한 번 다시 보낸다]')
+import urllib.error  # noqa: E402
+
+
+class _Resp(io.BytesIO):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+
+_calls = []
+
+
+def _fake_urlopen(req, timeout):
+    _calls.append(timeout)
+    if len(_calls) == 1:
+        raise urllib.error.HTTPError(req.full_url, 504, 'Gateway Timeout', {}, None)
+    return _Resp(json.dumps({'choices': [{'message': {'content': '{"ok":1}'}}]}).encode())
+
+
+_orig = _generate.urllib.request.urlopen
+_generate.urllib.request.urlopen = _fake_urlopen
+try:
+    t('504 뒤 재시도해서 응답을 받는다', _generate._post({}, 'k', 30) == '{"ok":1}' and len(_calls) == 2, _calls)
+    _calls.clear()
+    try:
+        _generate._post({}, 'k', 3)
+        t('남은 시간이 5초 안이면 다시 보내지 않는다', False)
+    except urllib.error.HTTPError:
+        t('남은 시간이 5초 안이면 다시 보내지 않는다', len(_calls) == 1, _calls)
+finally:
+    _generate.urllib.request.urlopen = _orig
+
 print('\n[보내는 스키마 — $ref 없이, 모든 객체가 닫혀 있다]')
 from _schema import DRAFTS  # noqa: E402
 
@@ -275,6 +319,7 @@ def _objs(o):
 for pid, M in DRAFTS.items():
     f = _generate._flat(M.model_json_schema())
     t(f'{pid}: $ref·$defs 없음', '$ref' not in json.dumps(f) and '$defs' not in json.dumps(f))
+    t(f'{pid}: maxLength 는 설명으로 (모델이 그 길이에서 자른다)', 'maxLength' not in json.dumps(f) and '자 안)' in json.dumps(f, ensure_ascii=False))
     t(f'{pid}: 객체마다 additionalProperties false', all(o.get('additionalProperties') is False for o in _objs(f)))
 
 print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
