@@ -250,6 +250,20 @@
   </form>
 </dialog>
 
+<button id="tutor-open" class="tutor-open" type="button" hidden>파이썬 문법 물어보기</button>
+<dialog id="tutor" class="tutor" aria-labelledby="tutor-title">
+  <div class="tutor-head">
+    <h2 id="tutor-title">파이썬 문법 물어보기</h2>
+    <button id="tutor-close" type="button" aria-label="닫기">×</button>
+  </div>
+  <p class="tutor-note">문법이나 에러 뜻을 물어볼 수 있어요. 코드는 직접 써요.</p>
+  <div id="tutor-log" class="tutor-log"></div>
+  <form id="tutor-form" class="tutor-form">
+    <textarea id="tutor-q" rows="2" maxlength="300" placeholder="예: split 은 뭐예요?"></textarea>
+    <button id="tutor-send" class="btn primary" type="submit">보내기</button>
+  </form>
+</dialog>
+
 <script>
 window.CC_SUPABASE = {
   url: 'https://btmhdsdabulgevgmrwyq.supabase.co',
@@ -268,6 +282,7 @@ window.CC_SUPABASE = {
 <script src="js/core/pipeline.js"></script>
 <script src="js/core/engine.js"></script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+<script src="js/ui/tutor.js"></script>
 <script src="js/ui/sentence.js"></script>
 </body>
 </html>

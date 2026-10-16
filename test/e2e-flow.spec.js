@@ -100,3 +100,38 @@ test('학생이 설계도를 내면 교사 화면에 알림이 뜬다', async ({
   await t.reload();
   await expect(t.locator('.toast')).toHaveCount(0);     // 새로고침해도 쏟아지지 않는다
 });
+
+test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await expect(page.locator('#tutor-open')).toBeHidden();
+  await page.locator('#go-define').click();
+  await expect(page.locator('#tutor-open')).toBeHidden();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  await expect(page.locator('#tutor-open')).toBeHidden();
+  for (const s of await page.locator('select.slot:visible').all()) await s.selectOption({ index: 1 });
+  await page.locator('#go-run').click();
+  await expect(page.locator('#tutor-open')).toBeVisible();
+  await page.locator('#back-method').click();
+  await expect(page.locator('#tutor-open')).toBeHidden();
+});
+
+test('튜터: 서버가 없으면 쓸 수 없다고만 말하고, 있으면 답한다', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  await studentToCode(page);
+  await page.locator('#tutor-open').click();
+  await page.locator('#tutor-q').fill('split 이 뭐예요?');
+  await page.locator('#tutor-send').click();
+  await expect(page.locator('.tutor-msg.ai').last()).toHaveText('지금은 튜터를 쓸 수 없어요.');
+
+  await page.route('**/api/tutor', r => r.fulfill({ contentType: 'application/json',
+    body: JSON.stringify({ kind: 'syntax', answer: '`"a b".split()` 처럼 쓰면 나눈 목록이 나와요.', refused: false }) }));
+  await page.locator('#tutor-q').fill('split 이 뭐예요?');
+  await page.locator('#tutor-send').click();
+  await expect(page.locator('.tutor-msg.ai').last()).toContainText('나눈 목록');
+  const evs = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.log.v1') || '[]'));
+  expect(evs.filter(e => e.type === 's-tutor').length).toBe(2);
+});

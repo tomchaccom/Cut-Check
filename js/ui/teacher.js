@@ -322,6 +322,15 @@
       bs5.appendChild(el('div', 'v', s.sHelps + '회'));
       g.appendChild(bs5);
     }
+    if (s.sTutor && s.sTutor.length) {
+      var bt = el('div', 'dbox');
+      bt.appendChild(el('span', 'k', '튜터에게 물은 것 (' + s.sTutor.length + '회)'));
+      s.sTutor.forEach(function (x) {
+        bt.appendChild(el('div', 'v', 'Q. ' + x.question));
+        bt.appendChild(el('div', 'v', 'A. ' + x.answer));
+      });
+      g.appendChild(bt);
+    }
     if (s.sWrap) {
       var bs6 = el('div', 'dbox');
       bs6.appendChild(el('span', 'k', '마무리'));

@@ -97,6 +97,12 @@ const slog2 = slog.concat([
 const sf2 = CC.fold.fold(slog2, { now: now });
 t('문장형 재정의 후 버전 증가', sf2.sDefineVer === 2 && sf2.sDefine.choice === '서로 다른 이름');
 
+// ── 튜터 질문
+const tv = CC.events.make(T.S_TUTOR, { question: 'split 이 뭐예요?', answer: '문자열을 나눠요.', kind: 'syntax', refused: false });
+t('튜터 이벤트 생성', tv.type === 's-tutor');
+const tf = CC.fold.fold([tv], { now: Date.now() });
+t('튜터 질문을 접는다', tf.sTutor.length === 1 && tf.sTutor[0].question === 'split 이 뭐예요?' && tf.sTutor[0].kind === 'syntax' && tf.sTutor[0].refused === false);
+
 // ── 교사 알림: 새로 생긴 설계도 제출과 코드 판정만
 console.log('\n[알림] 비교');
 const st = (id, name, d, j) => ({ id, name, sDesignCount: d, sCodeJudges: new Array(j).fill({}) });
