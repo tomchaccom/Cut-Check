@@ -302,19 +302,73 @@
 
   /* ── 화면 4: 코드 작성 ────────────────────────── */
 
-  /* Pyodide 로딩 */
+  /* Pyodide — Worker 에서 돌린다 (js/ui/pyworker.js 머리말).
+   * file:// 처럼 Worker 를 못 만드는 곳에서는 예전처럼 메인 스레드에서 돈다 — 그때는 시간 제한이 없다. */
   var pyodideReady = false;
-  var pyodideObj = null;
-  if (typeof loadPyodide === 'function') {
-    loadPyodide().then(function (py) {
-      pyodideObj = py;
-      pyodideReady = true;
-      if ($('#pyodide-status')) $('#pyodide-status').textContent = 'Python 준비 완료';
-      if ($('#run-code')) $('#run-code').disabled = false;
-    }).catch(function () {
-      if ($('#pyodide-status')) $('#pyodide-status').textContent = 'Python 로드 실패';
-    });
-  }
+  var py = (function () {
+    var w = null, pending = null, seq = 0, main = null;
+    var LOAD_FAIL = 'Python을 불러오지 못했어요. 코드는 계속 쓸 수 있어요.';
+
+    function status(text, ready) {
+      pyodideReady = ready;
+      if ($('#pyodide-status')) $('#pyodide-status').textContent = text;
+      if ($('#run-code')) $('#run-code').disabled = !ready;
+    }
+
+    function boot() {
+      status('Python 로딩 중...', false);
+      try { w = new Worker('js/ui/pyworker.js'); } catch (e) { w = null; return bootMain(); }
+      w.onmessage = function (e) {
+        var d = e.data;
+        if (d.type === 'ready') status('Python 준비 완료', true);
+        else if (d.type === 'load-error') status(LOAD_FAIL, false);
+        else if (d.type === 'done' && pending && pending.id === d.id) {
+          clearTimeout(pending.timer);
+          var cb = pending.cb; pending = null;
+          pyodideReady = true;
+          if ($('#run-code')) $('#run-code').disabled = false;
+          cb(d.output, d.error ? CC.pyerr.short(d.error) : '');
+        }
+      };
+      w.onerror = function (e) {
+        e.preventDefault();           /* 처리했다 — 페이지 에러로 올리지 않는다 */
+        if (pending) { clearTimeout(pending.timer); pending = null; }
+        w = null; bootMain();
+      };
+    }
+
+    function bootMain() {
+      if (typeof loadPyodide !== 'function') return status(LOAD_FAIL, false);
+      loadPyodide().then(function (p) {
+        p.runPython('import builtins\ndef _no_input(*a):\n    raise RuntimeError("__NO_INPUT__")\nbuiltins.input = _no_input');
+        main = p; status('Python 준비 완료', true);
+      }, function () { status(LOAD_FAIL, false); });
+    }
+
+    function run(code, cb) {
+      if (main) {
+        main.runPython('import io, sys; sys.stdout = io.StringIO()');
+        var err = '';
+        try { main.runPython(code); } catch (x) { err = CC.pyerr.short(String((x && x.message) || x)); }
+        return cb(main.runPython('sys.stdout.getvalue()'), err);
+      }
+      if (!w) return;
+      var id = ++seq;
+      var timer = setTimeout(function () {
+        pending = null;
+        w.terminate();
+        boot();                       /* 새 worker 가 준비될 때까지 실행 버튼은 꺼져 있다 */
+        cb('', CC.pyerr.TIMEOUT);
+      }, 5000);
+      pending = { id: id, cb: cb, timer: timer };
+      pyodideReady = false;           /* 실행 중에는 화면을 오가도 버튼이 다시 켜지지 않는다 */
+      if ($('#run-code')) $('#run-code').disabled = true;
+      w.postMessage({ id: id, code: code });
+    }
+
+    boot();
+    return { run: run };
+  })();
 
   function renderCodeStep() {
     /* 설계도 표시 */
@@ -380,73 +434,65 @@
   /* 실행 버튼 */
   if ($('#run-code')) {
     $('#run-code').addEventListener('click', function () {
-      if (!pyodideReady || !pyodideObj) return;
+      if (!pyodideReady) return;
       var code = $('#code-editor').value;
       var dataVal = $('#code-data-select') ? $('#code-data-select').value : '';
 
       /* data 변수를 코드 앞에 주입 */
       var fullCode = 'data = "' + dataVal.replace(/"/g, '\\"') + '"\n' + code.replace(/^data = ".*"\n?/m, '');
 
-      /* stdout 캡처 */
-      pyodideObj.runPython('import io, sys; sys.stdout = io.StringIO()');
-      var output = '', error = '';
-      try {
-        pyodideObj.runPython(fullCode);
-        output = pyodideObj.runPython('sys.stdout.getvalue()');
-      } catch (e) {
-        error = String(e.message || e).split('\n').slice(-2).join('\n');
-      }
-
-      /* 결과 표시 */
-      var resultEl = $('#code-result');
-      var outputBox = $('#code-output');
-      if (resultEl && outputBox) {
-        outputBox.hidden = false;
-        if (error) {
-          resultEl.textContent = error;
-          resultEl.style.color = 'var(--coral)';
-        } else {
-          resultEl.textContent = output || '출력된 것이 없어요.';
-          resultEl.style.color = 'var(--ink)';
-        }
-      }
-
-      /* 이벤트 기록 */
-      rec('s-code', { code: code, dataId: dataVal, output: output, error: error });
-
-      /* 판정 표시 */
-      if (!error) {
-        var judgeDiv = $('#code-judge');
-        if (judgeDiv) {
-          judgeDiv.hidden = false;
-          if ($('#code-judge-q')) {
-            $('#code-judge-q').textContent = '내 성공 조건을 지켰나요?';
+      py.run(fullCode, function (output, error) {
+        /* 결과 표시 */
+        var resultEl = $('#code-result');
+        var outputBox = $('#code-output');
+        if (resultEl && outputBox) {
+          outputBox.hidden = false;
+          if (error) {
+            resultEl.textContent = error;
+            resultEl.style.color = 'var(--coral)';
+          } else {
+            resultEl.textContent = output || '출력된 것이 없어요.';
+            resultEl.style.color = 'var(--ink)';
           }
-          /* 판정 버튼 */
-          var btnsDiv = $('#code-judge-btns');
-          if (btnsDiv && !btnsDiv.children.length) {
-            var selectedVerdict = '';
-            ['지켰다', '지키지 못했다', '아직 모르겠다'].forEach(function (v) {
-              var b = el('button', 'judge-btn', v);
-              b.type = 'button';
-              b.setAttribute('aria-pressed', 'false');
-              b.addEventListener('click', function () {
-                btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
-                b.setAttribute('aria-pressed', 'true');
-                selectedVerdict = v;
-                if ($('#code-judge-save')) $('#code-judge-save').disabled = false;
+        }
+
+        /* 이벤트 기록 */
+        rec('s-code', { code: code, dataId: dataVal, output: output, error: error });
+
+        /* 판정 표시 */
+        if (!error) {
+          var judgeDiv = $('#code-judge');
+          if (judgeDiv) {
+            judgeDiv.hidden = false;
+            if ($('#code-judge-q')) {
+              $('#code-judge-q').textContent = '내 성공 조건을 지켰나요?';
+            }
+            /* 판정 버튼 */
+            var btnsDiv = $('#code-judge-btns');
+            if (btnsDiv && !btnsDiv.children.length) {
+              var selectedVerdict = '';
+              ['지켰다', '지키지 못했다', '아직 모르겠다'].forEach(function (v) {
+                var b = el('button', 'judge-btn', v);
+                b.type = 'button';
+                b.setAttribute('aria-pressed', 'false');
+                b.addEventListener('click', function () {
+                  btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+                  b.setAttribute('aria-pressed', 'true');
+                  selectedVerdict = v;
+                  if ($('#code-judge-save')) $('#code-judge-save').disabled = false;
+                });
+                btnsDiv.appendChild(b);
               });
-              btnsDiv.appendChild(b);
-            });
-            $('#code-judge-save').addEventListener('click', function () {
-              rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
-              this.disabled = true; this.textContent = '저장됨';
-              btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
-              if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
-            });
+              $('#code-judge-save').addEventListener('click', function () {
+                rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
+                this.disabled = true; this.textContent = '저장됨';
+                btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
+                if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
+              });
+            }
           }
         }
-      }
+      });
     });
   }
 

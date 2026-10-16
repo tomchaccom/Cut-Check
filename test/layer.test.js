@@ -4,6 +4,7 @@ global.window = {};
 require('../js/core/events.js');
 require('../js/core/fold.js');
 require('../js/core/hangul.js'); require('../js/core/alerts.js');
+require('../js/core/pyerr.js');
 const CC = global.window.CC;
 const T = CC.events.T;
 
@@ -130,9 +131,17 @@ const df = CC.fold.fold([
 ], { now: Date.now() });
 t('설계도 제출 횟수를 접는다', df.sDesignCount === 2);
 
+console.log('\n[파이썬 에러] 위치와 사실만');
+const tb = 'Traceback (most recent call last):\n  File "/lib/python311.zip/_pyodide/_base.py", line 571, in eval_code\n' +
+  '  File "<exec>", line 3, in <module>\nNameError: name \'pars\' is not defined';
+t('줄 번호와 마지막 줄', CC.pyerr.short(tb) === "3번째 줄: NameError: name 'pars' is not defined");
+t('input() 은 쓸 수 없다고 알려준다', /input\(\)을 쓸 수 없어요/.test(CC.pyerr.short('RuntimeError: __NO_INPUT__')));
+t('줄 번호가 없으면 마지막 줄만', CC.pyerr.short('SyntaxError: invalid syntax') === 'SyntaxError: invalid syntax');
+t('원인을 해석하지 않는다', !/때문|하세요|넣으|고치/.test(CC.pyerr.short(tb)));
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
