@@ -10,6 +10,7 @@
 
 LLM 호출은 call_llm(messages, schema, timeout) 로 주입받는다. 테스트는 가짜를 넣는다.
 """
+import http.client
 import json
 import os
 import random
@@ -33,13 +34,14 @@ MAX_RETRY = 2     # 자료는 기본 틀이 없어서, 시간이 남으면 한 �
 SYSTEM = '\n'.join([
     '당신은 중학교 1학년 수업에 쓸 데이터 정리 문제를 만든다.',
     '학생은 문제를 보고 성공 조건과 처리 방법을 스스로 정한 뒤, 자료 세 개로 실행해 보고 판단한다.',
-    '세 번째 자료는 반례다. 앞 두 자료로 대충 세운 기준이 여기서 깨져야 한다.',
+    '세 번째 자료는 반례다. 반례 자료는 코드가 실제로 돌려 보고 만든다 — 당신은 반례의 이름만 짓는다.',
+    '그래서 앞 두 자료는 같은 상황의 자료로, 대충 세운 기준도 통하게 만든다.',
     '',
     '지키는 것',
     '- 답, 방법, 고칠 곳을 문제에 쓰지 않는다. 문제는 일부러 모호하게 쓴다.',
     '- 학생에게 보이는 문장은 존댓말, 한 칸에 한 문장. 괄호·줄표·"예를 들어" 같은 덧붙임 없이 쓴다.',
     '- 칭찬하지 않는다. 한국어만 쓴다.',
-    '- 각 칸의 description 과 글자 수(maxLength)를 따른다.',
+    '- 각 칸의 description 과 글자 수("N자 안")를 따른다.',
     '',
     'JSON 하나만 응답한다.',
 ])
@@ -54,21 +56,34 @@ MODEL = os.environ.get('LLM_MODEL') or 'openai/gpt-5.4-mini'
 
 
 def _post(body, key, timeout):
-    req = urllib.request.Request(API_URL, data=json.dumps(body).encode(), method='POST', headers={
-        'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read())['choices'][0]['message']['content']
+    """게이트웨이가 가끔 504·502 를 낸다 (2026-10-16 eval 20회 중 2회, 9초쯤). 남은 시간 안에서 한 번만 다시 보낸다."""
+    end = time.monotonic() + timeout
+    for attempt in (1, 2):
+        req = urllib.request.Request(API_URL, data=json.dumps(body).encode(), method='POST', headers={
+            'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key})
+        try:
+            with urllib.request.urlopen(req, timeout=max(1, end - time.monotonic())) as r:
+                return json.loads(r.read())['choices'][0]['message']['content']
+        except urllib.error.HTTPError as e:
+            if e.code not in (502, 503, 504) or attempt == 2 or end - time.monotonic() < 5:
+                raise
+        except (http.client.RemoteDisconnected, ConnectionResetError):
+            if attempt == 2 or end - time.monotonic() < 5:
+                raise
 
 
 def _flat(s, defs=None):
     """게이트웨이 뒤 OpenAI 는 $defs·$ref 가 있거나 additionalProperties 가 빠진 객체가 있으면 400 을 낸다.
-    pydantic 스키마는 둘 다 해당돼 초안이 매번 json_object 로 내려갔다 (2026-10-16 eval 23/23)."""
+    pydantic 스키마는 둘 다 해당돼 초안이 매번 json_object 로 내려갔다 (2026-10-16 eval 23/23).
+    maxLength 는 설명 글로 옮긴다 — 그대로 주면 그 길이에서 문장을 자른다 (situation 9/21, goals 8/25)."""
     defs = s.get('$defs', {}) if defs is None else defs
     if isinstance(s, dict):
         if '$ref' in s:
             rest = {k: v for k, v in s.items() if k != '$ref'}
             return _flat({**defs[s['$ref'].split('/')[-1]], **rest}, defs)
-        o = {k: _flat(v, defs) for k, v in s.items() if k != '$defs'}
+        o = {k: _flat(v, defs) for k, v in s.items() if k not in ('$defs', 'maxLength')}
+        if 'maxLength' in s:  # 스키마로 주면 모델이 그 길이에서 말을 자른다 ('…실행하면 성'). 길이는 pydantic 이 검사한다
+            o['description'] = (o.get('description', '') + f" ({s['maxLength']}자 안)").strip()
         if o.get('type') == 'object':
             o.setdefault('additionalProperties', False)
         return o
@@ -131,7 +146,11 @@ def _repair(pid, d):
                     ds['items'][i] = m.group(1).replace(',', '')
                     notes.append(f"'{x}' → '{ds['items'][i]}' (단위·쉼표를 뗐어요)")
         if 'filter' in ops:  # 숫자가 아닌 항목이 곧 걸러낼 대상이다
-            ft = list(d.get('filterTarget') or [])
+            # 모델이 숫자나 '숫자'·'문자' 같은 분류 이름을 넣어 오기도 했다 — 자료에 실제로 있는 글자 항목만 둔다
+            have = {x.strip() for ds in data[:2] for x in ds.get('items', [])}
+            ft = [x for x in (d.get('filterTarget') or []) if not integer(str(x)) and str(x).strip() in have]
+            if ft != list(d.get('filterTarget') or []):
+                notes.append('걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요')
             words = [x.strip() for ds in data[:2] for x in ds.get('items', []) if not integer(x) and x.strip() not in ft]
             if words:
                 d['filterTarget'] = ft + list(dict.fromkeys(words))
@@ -157,6 +176,36 @@ def _repair(pid, d):
             notes.append(f"'{its[0]}' 를 한 번 더 넣었어요 (겹치는 항목이 있어야 묶어 셀 수 있어요)")
 
 
+def _ask_schema(pid):
+    """모델에게는 반례의 이름만 묻는다. 반례가 학생 기준을 깨는지는 돌려 봐야 아는데,
+    모델은 이 계산을 자주 틀렸다 (2026-10-16 eval 성공 미션 18개 중 9개가 반례만 기본 틀)."""
+    s = DRAFTS[pid].model_json_schema()
+    s['properties']['counter'] = {
+        'type': 'object', 'description': ('세 번째 자료의 이름. 앞 자료와 같은 상황의 다른 날·다른 반 ("금요일 재료"). '
+                                          '"반례"·"예시" 같은 말은 쓰지 않는다 — 학생이 함정인 걸 미리 안다. 자료 내용은 코드가 만든다.'),
+        'properties': {'name': {**s['$defs']['Counter']['properties']['name']}}, 'required': ['name']}
+    return s
+
+
+def _make_counter(pid, d):
+    """반례 자료는 코드가 만든다: 앞 자료로 후보를 만들고, 정답으로 실제로 돌려서 깨지는 첫 후보를 쓴다.
+    이름은 모델이 지은 것을 둔다. 자료가 아직 틀려서 후보를 못 돌리면 그대로 두고 검사에 맡긴다."""
+    c = d.get('counter') if isinstance(d.get('counter'), dict) else {}
+    data, ft = d.get('data'), d.get('filterTarget') or []
+    try:
+        items1, items2 = [str(x) for x in data[0]['items']], [str(x) for x in data[1]['items']]
+        rows = [{'items': items1}, {'items': items2}]
+        pick = next((x for x in _counter_candidates(pid, items1, items2, ft)
+                     if not counter_problems(pid, rows, ft, x)), None)
+    except Exception:  # noqa: BLE001 — 자료 칸이 깨진 초안. 그 사유는 pydantic 이 따로 낸다
+        return
+    if pick:
+        name = str(c.get('name') or '')
+        if not name.strip() or re.search(r'반례|예시|함정|보조', name):  # 이름이 함정을 알려 버린다
+            name = pick['name']
+        d['counter'] = {**pick, 'name': name}
+
+
 def _parse(pid, raw):
     """→ (초안 dict | None, {칸: [사유]})"""
     data = raw if isinstance(raw, dict) else _json(raw)
@@ -164,6 +213,7 @@ def _parse(pid, raw):
         return None, {'json': ['JSON 이 아님']}
     data.pop('pipelineId', None)
     _repair(pid, data)
+    _make_counter(pid, data)
     try:
         DRAFTS[pid].model_validate(data)
         return data, {}
@@ -234,8 +284,11 @@ def _counter_candidates(pid, items1, items2, ft):
         yield {'name': other, 'text': ','.join(rest), 'axis': 'empty'}
     if 'transform' in ops:  # 눈에 안 보이는 앞뒤 공백
         yield {'name': other, 'text': ','.join(' ' + x.strip() + ' ' for x in items2), 'axis': 'invisible'}
-    for extra in ([items1[0], items2[0]], items2[:2], items2[:1]):
+    new = [x for x in items2 if x not in items1][:1]  # 둘째 자료에만 있는 항목 — 서로 다른 개수가 바뀐다
+    for extra in ([items1[0], items2[0]], items2[:2], items2[:1], new):
         yield {'name': other, 'text': ','.join(items1 + extra), 'axis': 'count'}
+    # 있던 항목만 더하면 서로 다른 개수가 그대로라, 두 자료의 개수가 같으면 위 후보가 전부 안 깨진다
+    yield {'name': other, 'text': ','.join(items1[:2]), 'axis': 'count'}
     if 'toNumber' in ops and 'filter' not in ops:  # 최댓값·최솟값은 끝값이 바뀌어야 깨진다
         nums = [int(x) for x in items1]
         for v in (max(nums) + 100, min(nums) - 1):
@@ -340,7 +393,7 @@ def generate(lesson, key_point, call_llm=pickle_llm):
     left = lambda: DEADLINE - (time.monotonic() - t0)  # noqa: E731
 
     pid, picked = choose(lesson, key_point, call_llm, min(15, left()))
-    schema = DRAFTS[pid].model_json_schema()
+    schema = _ask_schema(pid)
     messages = [
         {'role': 'system', 'content': SYSTEM},
         {'role': 'user', 'content': f'오늘 수업: {lesson}\n핵심: {key_point}\n유형: {DESC[pid]}\n\n'

@@ -6,14 +6,14 @@
   "expect": "split-unique-count",
   "ok": true,
   "mission": {
-   "id": "ai-1a143003704",
+   "id": "ai-1a14324dd7f",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-unique-count",
-   "stage": "겹친 목록 개수 세기",
-   "title": "겹친 목록 개수 세기",
-   "brief": "같은 값이 여러 번 나오는 목록을 보고 개수를 정리해 주세요.",
-   "situation": "목록을 보고 같은 값이 여러 번 나오는지 확인해야 해요",
+   "stage": "중복개수세기",
+   "title": "중복개수세기",
+   "brief": "목록을 보고 알맞게 세어 주세요.",
+   "situation": "같은 값이 여러 번 나오는 목록을 정리해야 해요.",
    "lesson": "파이썬 리스트와 반복문. for문으로 하나씩 꺼내서 처리하는 법",
    "keyPoint": "같은 값이 여러 번 있을 때 전체와 서로 다른 개수가 다르다",
    "define": {
@@ -24,18 +24,541 @@
       "trap": "hardcode"
      },
      {
-      "v": "서로 다른 항목만 세면 성공",
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "전체 값의 수를 맞히면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "서로 다른 값의 수를 맞히면 성공",
       "trap": null,
       "key": "unique"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "기록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
      },
+     {
+      "template": "같은 값은 {dedup} 하나로 남긴다.",
+      "slot": "dedup",
+      "options": [
+       "각각 남긴다",
+       "하나만 남긴다"
+      ]
+     },
+     {
+      "template": "남은 개수를 {output}만 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "월요일 기록",
+     "v": "사과,배,사과,귤"
+    },
+    {
+     "id": "d02",
+     "name": "금요일 기록",
+     "v": "사과,배,사과,귤,배"
+    },
+    {
+     "id": "d03",
+     "name": "화요일 기록",
+     "v": "사과,배",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [],
+    "reasons": {},
+    "retried": 0,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [],
+   "reasons": {},
+   "retried": 0,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 3184,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1279,
+    "status": "ok",
+    "chars": 35
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1900,
+    "status": "ok",
+    "chars": 454
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-unique-count\"}",
+   "{\"title\":\"중복개수세기\",\"brief\":\"목록을 보고 알맞게 세어 주세요.\",\"situation\":\"같은 값이 여러 번 나오는 목록을 정리해야 해요.\",\"itemName\":\"기록\",\"counter\":{\"name\":\"화요일 기록\"},\"data\":[{\"name\":\"월요일 기록\",\"items\":[\"사과\",\"배\",\"사과\",\"귤\"]},{\"name\":\"금요일 기록\",\"items\":[\"사과\",\"배\",\"사과\",\"귤\",\"배\"]}],\"goals\":{\"unique\":\"서로 다른 값의 수를 맞히면 성공\",\"total\":\"전체 값의 수를 맞히면 성공\"},\"sentences\":{\"sep\":{\"before\":\"기록을\",\"after\":\"기준으로 나눈다.\"},\"dedup\":{\"before\":\"같은 값은\",\"after\":\"하나로 남긴다.\"},\"output\":{\"before\":\"남은 개수를\",\"after\":\"만 보여준다.\"}}}"
+  ],
+  "attempts": [
+   {}
+  ]
+ },
+ {
+  "no": 2,
+  "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
+  "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
+  "expect": "split-filter-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a14324e932",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-filter-count",
+   "stage": "분류 개수",
+   "title": "분류 개수",
+   "brief": "조건을 보고 셀 대상을 정해 주세요.",
+   "situation": "세 자료를 보고 어떤 것만 셀지 정해 주세요.",
+   "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
+   "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
      {
       "v": "에러 안 나면 성공",
       "trap": "luck"
      },
      {
-      "v": "전체 항목을 모두 세면 성공",
+      "v": "조건에 맞는 항목은 3개 나오면 성공",
       "trap": null,
-      "key": "total"
+      "key": "filtered_count"
+     },
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "자료를 {sep} 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "조건에 맞는 것만 {cond} 고른다.",
+      "slot": "cond",
+      "options": [
+       "있는",
+       "없는"
+      ]
+     },
+     {
+      "template": "남은 개수를 {output} 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "월요일 자료",
+     "v": "참,거짓,참,참"
+    },
+    {
+     "id": "d02",
+     "name": "화요일 자료",
+     "v": "거짓,참,거짓"
+    },
+    {
+     "id": "d03",
+     "name": "금요일 자료",
+     "v": "거짓,사과,바나나,포도",
+     "counter": true,
+     "axis": "empty"
+    }
+   ],
+   "guard": {
+    "fallback": [],
+    "reasons": {},
+    "retried": 0,
+    "picked": "llm",
+    "repaired": []
+   },
+   "pipelineParams": {
+    "filterTarget": [
+     "참"
+    ]
+   }
+  },
+  "guard": {
+   "fallback": [],
+   "reasons": {},
+   "retried": 0,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 2995,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1070,
+    "status": "ok",
+    "chars": 35
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1922,
+    "status": "ok",
+    "chars": 462
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-filter-count\"}",
+   "{\"title\":\"분류 개수\",\"brief\":\"조건을 보고 셀 대상을 정해 주세요.\",\"situation\":\"세 자료를 보고 어떤 것만 셀지 정해 주세요.\",\"itemName\":\"자료\",\"counter\":{\"name\":\"금요일 자료\"},\"data\":[{\"name\":\"월요일 자료\",\"items\":[\"참\",\"거짓\",\"참\",\"참\"]},{\"name\":\"화요일 자료\",\"items\":[\"거짓\",\"참\",\"거짓\"]}],\"goals\":{\"filtered_count\":\"조건에 맞는 항목은 3개 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"자료를\",\"after\":\"나눈다.\"},\"cond\":{\"before\":\"조건에 맞는 것만\",\"after\":\"고른다.\"},\"output\":{\"before\":\"남은 개수를\",\"after\":\"보여준다.\"}},\"filterTarget\":[\"참\"],\"filterDesc\":\"참인 항목\"}"
+  ],
+  "attempts": [
+   {}
+  ]
+ },
+ {
+  "no": 3,
+  "lesson": "딕셔너리. 키와 값 쌍으로 저장",
+  "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
+  "expect": "split-group",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1432503bf",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-group",
+   "stage": "급식표정리",
+   "title": "급식표정리",
+   "brief": "급식표에서 같은 이름이 몇 번 나왔는지 세어 보세요.",
+   "situation": "같은 항목끼리 묶어 알아봐야 해요.",
+   "lesson": "딕셔너리. 키와 값 쌍으로 저장",
+   "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "같은 이름 수를 셉니다. 하면 성공",
+      "trap": null,
+      "key": "group"
+     },
+     {
+      "v": "김치가 2번 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "이름을 {sep} 기준으로 나눕니다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "월요일 이름",
+     "v": "김치,밥,국,김치"
+    },
+    {
+     "id": "d02",
+     "name": "수요일 이름",
+     "v": "밥,국,김치,국"
+    },
+    {
+     "id": "d03",
+     "name": "화요일 이름",
+     "v": "김치,밥,국,김치,김치,밥",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [],
+    "reasons": {},
+    "retried": 2,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [],
+   "reasons": {},
+   "retried": 2,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 6797,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1252,
+    "status": "ok",
+    "chars": 28
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1621,
+    "status": "ok",
+    "chars": 337
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1960,
+    "status": "ok",
+    "chars": 343
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1961,
+    "status": "ok",
+    "chars": 333
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-group\"}",
+   "{\"title\":\"급식표정리\",\"brief\":\"급식표에서 같은 이름이 몇 번 나왔는지 세어 보세요.\",\"situation\":\"같은 항목끼리 묶어 알아봐야 해요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"화요일 이름\"},\"data\":[{\"name\":\"월요일 이름\",\"items\":[\"김치\",\"밥\",\"국\",\"김치\"]},{\"name\":\"수요일 이름\",\"items\":[\"밥\",\"국\",\"김치\",\"국\"]}],\"goals\":{\"group\":\"같은 이름이 몇 번 나왔는지 묶어 셉니다.\"},\"sentences\":{\"sep\":{\"before\":\"이름을\",\"after\":\"기준으로 나눕니다.\"}}}",
+   "{\"title\":\"급식표정리\",\"brief\":\"급식표에서 같은 이름이 몇 번 나왔는지 세어 보세요.\",\"situation\":\"같은 항목끼리 묶어 알아봐야 해요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"화요일 이름\"},\"data\":[{\"name\":\"월요일 이름\",\"items\":[\"김치\",\"밥\",\"국\",\"김치\"]},{\"name\":\"수요일 이름\",\"items\":[\"밥\",\"국\",\"김치\",\"국\"]}],\"goals\":{\"group\":\"같은 이름이 몇 번 나왔는지 묶어 셉니다. 하면 성공\"},\"sentences\":{\"sep\":{\"before\":\"이름을\",\"after\":\"기준으로 나눕니다.\"}}}",
+   "{\"title\":\"급식표정리\",\"brief\":\"급식표에서 같은 이름이 몇 번 나왔는지 세어 보세요.\",\"situation\":\"같은 항목끼리 묶어 알아봐야 해요.\",\"itemName\":\"이름\",\"counter\":{\"name\":\"화요일 이름\"},\"data\":[{\"name\":\"월요일 이름\",\"items\":[\"김치\",\"밥\",\"국\",\"김치\"]},{\"name\":\"수요일 이름\",\"items\":[\"밥\",\"국\",\"김치\",\"국\"]}],\"goals\":{\"group\":\"같은 이름 수를 셉니다. 하면 성공\"},\"sentences\":{\"sep\":{\"before\":\"이름을\",\"after\":\"기준으로 나눕니다.\"}}}"
+  ],
+  "attempts": [
+   {
+    "goals": [
+     "'같은 이름이 몇 번 나왔는지 묶어 셉니다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "goals": [
+     "'같은 이름이 몇 번 나왔는지 묶어 셉니다. 하면 성공': 29자 — 25자 안으로"
+    ]
+   },
+   {}
+  ]
+ },
+ {
+  "no": 4,
+  "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
+  "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
+  "expect": "split-transform-join",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a143251632",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-transform-join",
+   "stage": "공백 정리",
+   "title": "공백 정리",
+   "brief": "자료를 보고 같은 기준으로 정리해 주세요.",
+   "situation": "같은 기준으로 정리해야 해요.",
+   "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
+   "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "모든 항목이 같은 기준으로 정리되면 성공",
+      "trap": null,
+      "key": "transformed"
+     },
+     {
+      "v": "사과,배,바나나가 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "각 항목을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "각 자료마다 {op} 하나씩 정리한다.",
+      "slot": "op",
+      "options": [
+       "앞뒤 공백을 없앤다",
+       "첫 글자만 남긴다"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 다시 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "월요일 자료",
+     "v": " 사과,배 , 바나나"
+    },
+    {
+     "id": "d02",
+     "name": "화요일 자료",
+     "v": " 연필,공책 , 지우개"
+    },
+    {
+     "id": "d03",
+     "name": "금요일 자료",
+     "v": " 연필 , 공책 , 지우개 ",
+     "counter": true,
+     "axis": "invisible"
+    }
+   ],
+   "guard": {
+    "fallback": [],
+    "reasons": {},
+    "retried": 1,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [],
+   "reasons": {},
+   "retried": 1,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 4722,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1000,
+    "status": "ok",
+    "chars": 37
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1787,
+    "status": "ok",
+    "chars": 433
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1932,
+    "status": "ok",
+    "chars": 429
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-transform-join\"}",
+   "{\"title\":\"공백 정리\",\"brief\":\"자료를 보고 필요하면 같은 기준으로 정리해 주세요.\",\"situation\":\"항목마다 같은 작업을 해야 해요.\",\"itemName\":\"문자열\",\"counter\":{\"name\":\"줄바꿈 자료\"},\"data\":[{\"name\":\"월요일 자료\",\"items\":[\" 사과\",\"배 \",\" 바나나\"]},{\"name\":\"화요일 자료\",\"items\":[\" 연필\",\"공책 \",\" 지우개\"]}],\"goals\":{\"transformed\":\"각 항목의 앞뒤 공백을 정리하면 성공\"},\"sentences\":{\"sep\":{\"before\":\"각 항목을\",\"after\":\"정리한다.\"},\"op\":{\"before\":\"각 자료마다\",\"after\":\"같은 작업을 반복한다.\"},\"joinSep\":{\"before\":\"\",\"after\":\"기준으로 다시 잇는다.\"}}}",
+   "{\"title\":\"공백 정리\",\"brief\":\"자료를 보고 같은 기준으로 정리해 주세요.\",\"situation\":\"같은 기준으로 정리해야 해요.\",\"itemName\":\"문자열\",\"counter\":{\"name\":\"금요일 자료\"},\"data\":[{\"name\":\"월요일 자료\",\"items\":[\" 사과\",\"배 \",\" 바나나\"]},{\"name\":\"화요일 자료\",\"items\":[\" 연필\",\"공책 \",\" 지우개\"]}],\"goals\":{\"transformed\":\"모든 항목이 같은 기준으로 정리되면 성공\"},\"sentences\":{\"sep\":{\"before\":\"각 항목을\",\"after\":\"기준으로 나눈다.\"},\"op\":{\"before\":\"각 자료마다\",\"after\":\"하나씩 정리한다.\"},\"joinSep\":{\"before\":\"\",\"after\":\"기준으로 다시 잇는다.\"}}}"
+  ],
+  "attempts": [
+   {
+    "goals": [
+     "'각 항목의 앞뒤 공백을 정리하면 성공' 에 방법 '공백' — 통과 조건은 결과로만 쓴다"
+    ],
+    "sentences": [
+     "'각 항목을 {sep} 정리한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {}
+  ]
+ },
+ {
+  "no": 5,
+  "lesson": "문자열 다루기. split, strip, replace",
+  "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
+  "expect": "split-transform-join",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1432532e4",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-transform-join",
+   "stage": "공백 정리하기",
+   "title": "공백 정리하기",
+   "brief": "자료를 보고 항목을 정리해 주세요.",
+   "situation": "공백이 섞이면 같은 값도 다르게 보여요.",
+   "lesson": "문자열 다루기. split, strip, replace",
+   "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "항목마다 같은 모양으로 정리하면 성공",
+      "trap": null,
+      "key": "transformed"
+     },
+     {
+      "v": "사과,배,포도,귤이 나오면 성공",
+      "trap": "hardcode"
      }
     ]
    },
@@ -51,7 +574,672 @@
       ]
      },
      {
-      "template": "같은 항목은 {dedup}.",
+      "template": "문자마다 {op}.",
+      "slot": "op",
+      "options": [
+       "앞뒤 공백을 없앤다",
+       "첫 글자만 남긴다"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 다시 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "메모",
+     "v": "사과, 배 ,포도, 귤 "
+    },
+    {
+     "id": "d02",
+     "name": "정리본",
+     "v": "사과,배,포도,귤"
+    },
+    {
+     "id": "d03",
+     "name": "띄어쓰기 다른 문자",
+     "v": "사과, 배 ,포도, 귤 ,사과,사과",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "sentences"
+    ],
+    "reasons": {
+     "sentences": [
+      "'공백을 {op} 없앱니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
+      "'공백을 {op} 없앱니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [
+    "sentences"
+   ],
+   "reasons": {
+    "sentences": [
+     "'공백을 {op} 없앱니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
+     "'공백을 {op} 없앱니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 7345,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1210,
+    "status": "ok",
+    "chars": 37
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 2491,
+    "status": "ok",
+    "chars": 429
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1744,
+    "status": "ok",
+    "chars": 421
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1898,
+    "status": "ok",
+    "chars": 420
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-transform-join\"}",
+   "{\"title\":\"공백 정리하기\",\"brief\":\"자료를 보고 항목을 정리해 주세요.\",\"situation\":\"공백이 섞이면 같은 값도 다르게 보일 수 있습니다.\",\"itemName\":\"문자\",\"counter\":{\"name\":\"띄어쓰기 다른 문자\"},\"data\":[{\"name\":\"메모\",\"items\":[\"사과\",\" 배 \",\"포도\",\" 귤 \"]},{\"name\":\"정리본\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]}],\"goals\":{\"transformed\":\"항목마다 같은 모양으로 정리하면 성공\"},\"sentences\":{\"sep\":{\"before\":\"문자를\",\"after\":\"나눕니다.\"},\"op\":{\"before\":\"앞뒤 공백을\",\"after\":\"없앱니다.\"},\"joinSep\":{\"before\":\"정리한 문자를\",\"after\":\"이어 붙입니다.\"}}}",
+   "{\"title\":\"공백 정리하기\",\"brief\":\"자료를 보고 항목을 정리해 주세요.\",\"situation\":\"공백이 섞이면 같은 값도 다르게 보여요.\",\"itemName\":\"문자\",\"counter\":{\"name\":\"띄어쓰기 다른 문자\"},\"data\":[{\"name\":\"메모\",\"items\":[\"사과\",\" 배 \",\"포도\",\" 귤 \"]},{\"name\":\"정리본\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]}],\"goals\":{\"transformed\":\"항목마다 같은 모양으로 정리하면 성공\"},\"sentences\":{\"sep\":{\"before\":\"문자를\",\"after\":\"나눕니다.\"},\"op\":{\"before\":\"문자를\",\"after\":\"정리합니다.\"},\"joinSep\":{\"before\":\"정리한 문자를\",\"after\":\"이어 붙입니다.\"}}}",
+   "{\"title\":\"공백 정리하기\",\"brief\":\"자료를 보고 항목을 정리해 주세요.\",\"situation\":\"공백이 섞이면 같은 값도 다르게 보여요.\",\"itemName\":\"문자\",\"counter\":{\"name\":\"띄어쓰기 다른 문자\"},\"data\":[{\"name\":\"메모\",\"items\":[\"사과\",\" 배 \",\"포도\",\" 귤 \"]},{\"name\":\"정리본\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]}],\"goals\":{\"transformed\":\"항목마다 같은 모양으로 정리하면 성공\"},\"sentences\":{\"sep\":{\"before\":\"문자를\",\"after\":\"나눕니다.\"},\"op\":{\"before\":\"공백을\",\"after\":\"없앱니다.\"},\"joinSep\":{\"before\":\"정리한 문자를\",\"after\":\"이어 붙입니다.\"}}}"
+  ],
+  "attempts": [
+   {
+    "situation": [
+     "'공백이 섞이면 같은 값도 다르게 보일 수 있습니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'앞뒤 공백을 {op} 없앱니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
+     "'앞뒤 공백을 {op} 없앱니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'문자를 {op} 정리합니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'공백을 {op} 없앱니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
+     "'공백을 {op} 없앱니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 6,
+  "lesson": "정렬. sorted와 sort의 차이",
+  "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
+  "expect": "split-sort-join",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a1432570f7",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-sort-join",
+   "stage": "도서 정리하기",
+   "title": "도서 정리하기",
+   "brief": "책 목록을 보고 빈칸에 맞는 말을 골라 주세요.",
+   "situation": "같은 기준으로 책을 정리해요.",
+   "lesson": "정렬. sorted와 sort의 차이",
+   "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "기준에 맞게 차례대로 늘어놓으면 성공",
+      "trap": null,
+      "key": "sorted"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "과학,국어,미술,수학이 나오면 성공",
+      "trap": "hardcode"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "항목을 {dir} 순서대로 늘어놓는다.",
+      "slot": "dir",
+      "options": [
+       "가나다순으로",
+       "거꾸로"
+      ]
+     },
+     {
+      "template": "묶은 뒤 {joinSep} 기준으로 다시 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "월요일 책",
+     "v": "수학,국어,과학,미술"
+    },
+    {
+     "id": "d02",
+     "name": "수요일 책",
+     "v": "체육,음악,영어,사회"
+    },
+    {
+     "id": "d03",
+     "name": "다른날 책",
+     "v": "수학,국어,과학,미술,수학,체육",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [],
+    "reasons": {},
+    "retried": 1,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [],
+   "reasons": {},
+   "retried": 1,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 15890,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1086,
+    "status": "ok",
+    "chars": 32
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 2048,
+    "status": "ok",
+    "chars": 435
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 12752,
+    "status": "ok",
+    "chars": 427
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-sort-join\"}",
+   "{\"title\":\"도서 정리하기\",\"brief\":\"책 목록을 보고 빈칸에 맞는 말을 골라 주세요.\",\"situation\":\"같은 기준으로 책을 정리해야 합니다.\",\"itemName\":\"책\",\"counter\":{\"name\":\"다른날 책\"},\"data\":[{\"name\":\"월요일 책\",\"items\":[\"수학\",\"국어\",\"과학\",\"미술\"]},{\"name\":\"수요일 책\",\"items\":[\"체육\",\"음악\",\"영어\",\"사회\"]}],\"goals\":{\"sorted\":\"기준에 맞게 차례대로 늘어놓아야 성공합니다.\"},\"sentences\":{\"sep\":{\"before\":\"목록을\",\"after\":\"기준으로 나눈다.\"},\"dir\":{\"before\":\"항목을\",\"after\":\"순서대로 늘어놓는다.\"},\"joinSep\":{\"before\":\"묶은 뒤\",\"after\":\"기준으로 다시 잇는다.\"}}}",
+   "{\"title\":\"도서 정리하기\",\"brief\":\"책 목록을 보고 빈칸에 맞는 말을 골라 주세요.\",\"situation\":\"같은 기준으로 책을 정리해요.\",\"itemName\":\"책\",\"counter\":{\"name\":\"다른날 책\"},\"data\":[{\"name\":\"월요일 책\",\"items\":[\"수학\",\"국어\",\"과학\",\"미술\"]},{\"name\":\"수요일 책\",\"items\":[\"체육\",\"음악\",\"영어\",\"사회\"]}],\"goals\":{\"sorted\":\"기준에 맞게 차례대로 늘어놓으면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을\",\"after\":\"기준으로 나눈다.\"},\"dir\":{\"before\":\"항목을\",\"after\":\"순서대로 늘어놓는다.\"},\"joinSep\":{\"before\":\"묶은 뒤\",\"after\":\"기준으로 다시 잇는다.\"}}}"
+  ],
+  "attempts": [
+   {
+    "situation": [
+     "'같은 기준으로 책을 정리해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "goals": [
+     "'기준에 맞게 차례대로 늘어놓아야 성공합니다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {}
+  ]
+ },
+ {
+  "no": 7,
+  "lesson": "숫자 형변환. int()로 문자열을 숫자로",
+  "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
+  "expect": "split-num-sum",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a143258d26",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-filter-num-sum",
+   "stage": "숫자만 더하기",
+   "title": "숫자만 더하기",
+   "brief": "목록에서 숫자만 골라 더해 주세요.",
+   "situation": "문자와 숫자가 섞여 있어서 숫자만 더해야 해요.",
+   "lesson": "숫자 형변환. int()로 문자열을 숫자로",
+   "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "숫자만 더한 값이 나오면 성공",
+      "trap": null,
+      "key": "filtered_sum"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "7이 나오면 성공",
+      "trap": "hardcode"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "숫자가 아닌 항목은 {cond}.",
+      "slot": "cond",
+      "options": [
+       "빼고 숫자만 남긴다",
+       "그대로 둔다"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "첫 목록",
+     "v": "3,사과,5,7"
+    },
+    {
+     "id": "d02",
+     "name": "둘째 목록",
+     "v": "2,바나나,4,6"
+    },
+    {
+     "id": "d03",
+     "name": "숫자 섞인 목록",
+     "v": "3,사과,5,7개,2,바나나,3",
+     "counter": true,
+     "axis": "empty"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "sentences"
+    ],
+    "reasons": {
+     "sentences": [
+      "'목록에서 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": [
+     "'7개' → '7' (단위·쉼표를 뗐어요)",
+     "'6개' → '6' (단위·쉼표를 뗐어요)",
+     "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요"
+    ]
+   },
+   "pipelineParams": {
+    "filterTarget": [
+     "3",
+     "사과",
+     "5",
+     "7개",
+     "2",
+     "바나나"
+    ]
+   }
+  },
+  "guard": {
+   "fallback": [
+    "sentences"
+   ],
+   "reasons": {
+    "sentences": [
+     "'목록에서 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": [
+    "'7개' → '7' (단위·쉼표를 뗐어요)",
+    "'6개' → '6' (단위·쉼표를 뗐어요)",
+    "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요"
+   ]
+  },
+  "ms": 7214,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1346,
+    "status": "ok",
+    "chars": 37
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 2190,
+    "status": "ok",
+    "chars": 451
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1978,
+    "status": "ok",
+    "chars": 450
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1692,
+    "status": "ok",
+    "chars": 451
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-filter-num-sum\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록에서 숫자만 골라 더해 주세요.\",\"situation\":\"문자와 숫자가 섞여 있어서 숫자만 더해야 합니다.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"숫자 섞인 목록\"},\"data\":[{\"name\":\"첫 목록\",\"items\":[\"3\",\"사과\",\"5\",\"7개\"]},{\"name\":\"둘째 목록\",\"items\":[\"2\",\"바나나\",\"4\",\"6개\"]}],\"goals\":{\"filtered_sum\":\"숫자만 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을\",\"after\":\"살펴봅니다.\"},\"cond\":{\"before\":\"숫자가 아닌 항목은\",\"after\":\"남기지 않습니다.\"}},\"filterTarget\":[\"3\",\"사과\",\"5\",\"7개\",\"2\",\"바나나\"],\"filterDesc\":\"숫자 목록\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록에서 숫자만 골라 더해 주세요.\",\"situation\":\"문자와 숫자가 섞여 있어서 숫자만 더해야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"숫자 섞인 목록\"},\"data\":[{\"name\":\"첫 목록\",\"items\":[\"3\",\"사과\",\"5\",\"7개\"]},{\"name\":\"둘째 목록\",\"items\":[\"2\",\"바나나\",\"4\",\"6개\"]}],\"goals\":{\"filtered_sum\":\"숫자만 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을\",\"after\":\"살펴봅니다.\"},\"cond\":{\"before\":\"숫자가 아닌 항목은\",\"after\":\"남기지 않습니다.\"}},\"filterTarget\":[\"3\",\"사과\",\"5\",\"7개\",\"2\",\"바나나\"],\"filterDesc\":\"숫자 목록\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"목록에서 숫자만 골라 더해 주세요.\",\"situation\":\"문자와 숫자가 섞여 있어서 숫자만 더해야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"숫자 섞인 목록\"},\"data\":[{\"name\":\"첫 목록\",\"items\":[\"3\",\"사과\",\"5\",\"7개\"]},{\"name\":\"둘째 목록\",\"items\":[\"2\",\"바나나\",\"4\",\"6개\"]}],\"goals\":{\"filtered_sum\":\"숫자만 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록에서\",\"after\":\"살펴봅니다.\"},\"cond\":{\"before\":\"숫자가 아닌 항목은\",\"after\":\"남기지 않습니다.\"}},\"filterTarget\":[\"3\",\"사과\",\"5\",\"7개\",\"2\",\"바나나\"],\"filterDesc\":\"숫자 목록\"}"
+  ],
+  "attempts": [
+   {
+    "situation": [
+     "'문자와 숫자가 섞여 있어서 숫자만 더해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'목록을 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'목록을 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'목록에서 {sep} 살펴봅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 8,
+  "lesson": "예외 처리. try-except",
+  "keyPoint": "숫자가 아닌 값이 섞여 있으면 계산이 멈춘다",
+  "expect": "split-filter-num-sum",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a14325d632",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-filter-num-sum",
+   "stage": "숫자만 더하기",
+   "title": "숫자만 더하기",
+   "brief": "숫자만 골라 더해 주세요.",
+   "situation": "숫자가 아닌 값이 섞여 있어요.",
+   "lesson": "예외 처리. try-except",
+   "keyPoint": "숫자가 아닌 값이 섞여 있으면 계산이 멈춘다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "15가 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "숫자만 더한 값이 나오면 성공",
+      "trap": null,
+      "key": "filtered_sum"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "숫자가 아닌 항목은 {cond}.",
+      "slot": "cond",
+      "options": [
+       "빼고 숫자만 남긴다",
+       "그대로 둔다"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "첫째 목록",
+     "v": "3,가,5,7"
+    },
+    {
+     "id": "d02",
+     "name": "둘째 목록",
+     "v": "2,나,4,6"
+    },
+    {
+     "id": "d03",
+     "name": "다른 날 자료",
+     "v": "가,나,가",
+     "counter": true,
+     "axis": "empty"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "sentences"
+    ],
+    "reasons": {
+     "sentences": [
+      "'목록에서 {sep} 숫자만 골라 더한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": [
+     "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요",
+     "걸러낼 대상에 나 를 넣었어요"
+    ]
+   },
+   "pipelineParams": {
+    "filterTarget": [
+     "가",
+     "나"
+    ]
+   }
+  },
+  "guard": {
+   "fallback": [
+    "sentences"
+   ],
+   "reasons": {
+    "sentences": [
+     "'목록에서 {sep} 숫자만 골라 더한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": [
+    "걸러낼 대상에서 자료에 없는 말과 숫자를 뺐어요",
+    "걸러낼 대상에 나 를 넣었어요"
+   ]
+  },
+  "ms": 18699,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 1195,
+    "status": "ok",
+    "chars": 37
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 1642,
+    "status": "ok",
+    "chars": 417
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 2829,
+    "status": "ok",
+    "chars": 416
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 13028,
+    "status": "ok",
+    "chars": 416
+   }
+  ],
+  "raws": [
+   "{\"pipelineId\":\"split-filter-num-sum\"}",
+   "{\"title\":\"숫자 더하기\",\"brief\":\"숫자만 골라 더해 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여 있어요.\",\"itemName\":\"값\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫째 목록\",\"items\":[\"3\",\"가\",\"5\",\"7\"]},{\"name\":\"둘째 목록\",\"items\":[\"2\",\"나\",\"4\",\"6\"]}],\"goals\":{\"filtered_sum\":\"숫자만 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록에서\",\"after\":\"을 골라 더해 주세요.\"},\"cond\":{\"before\":\"숫자가 아닌 값은\",\"after\":\"남겨 둡니다.\"}},\"filterTarget\":[\"3\",\"가\",\"5\"],\"filterDesc\":\"숫자 골라내기\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"숫자만 골라 더해 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여 있어요.\",\"itemName\":\"값\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫째 목록\",\"items\":[\"3\",\"가\",\"5\",\"7\"]},{\"name\":\"둘째 목록\",\"items\":[\"2\",\"나\",\"4\",\"6\"]}],\"goals\":{\"filtered_sum\":\"숫자만 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록에서 숫자만\",\"after\":\"골라 더한다.\"},\"cond\":{\"before\":\"숫자가 아닌 값은\",\"after\":\"남겨 둔다.\"}},\"filterTarget\":[\"3\",\"가\",\"5\"],\"filterDesc\":\"숫자 골라내기\"}",
+   "{\"title\":\"숫자만 더하기\",\"brief\":\"숫자만 골라 더해 주세요.\",\"situation\":\"숫자가 아닌 값이 섞여 있어요.\",\"itemName\":\"값\",\"counter\":{\"name\":\"반례 목록\"},\"data\":[{\"name\":\"첫째 목록\",\"items\":[\"3\",\"가\",\"5\",\"7\"]},{\"name\":\"둘째 목록\",\"items\":[\"2\",\"나\",\"4\",\"6\"]}],\"goals\":{\"filtered_sum\":\"숫자만 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록에서\",\"after\":\"숫자만 골라 더한다.\"},\"cond\":{\"before\":\"숫자가 아닌 값은\",\"after\":\"남겨 둔다.\"}},\"filterTarget\":[\"3\",\"가\",\"5\"],\"filterDesc\":\"숫자 골라내기\"}"
+  ],
+  "attempts": [
+   {
+    "sentences": [
+     "'목록에서 {sep}을 골라 더해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'목록에서 {sep}을 골라 더해 주세요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'목록에서 {sep}을 골라 더해 주세요.' 빈칸 뒤 조사 '을' 가 보기마다 맞지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'목록에서 숫자만 {sep} 골라 더한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'목록에서 {sep} 숫자만 골라 더한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 9,
+  "lesson": "집합 set. 중복 없는 모음",
+  "keyPoint": "중복을 없애면 개수가 달라진다",
+  "expect": "split-unique-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a14325ebd6",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-unique-count",
+   "stage": "중복 개수 세기",
+   "title": "중복 개수 세기",
+   "brief": "겹친 항목을 보고 개수를 세어 주세요.",
+   "situation": "겹친 항목을 보고 수를 정해요.",
+   "lesson": "집합 set. 중복 없는 모음",
+   "keyPoint": "중복을 없애면 개수가 달라진다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "같은 항목은 한 번만 세면 성공",
+      "trap": null,
+      "key": "unique"
+     },
+     {
+      "v": "겹친 항목까지 모두 세면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "같은 항목은 {dedup} 남긴다.",
       "slot": "dedup",
       "options": [
        "각각 남긴다",
@@ -59,7 +1247,7 @@
       ]
      },
      {
-      "template": "{output}만 보여준다.",
+      "template": "남은 항목의 수를 {output}만 보여준다.",
       "slot": "output",
       "options": [
        "남은 항목의 개수",
@@ -71,139 +1259,110 @@
    "inputs": [
     {
      "id": "d01",
-     "name": "첫 자료",
-     "v": "사과,사과,배,포도"
+     "name": "월요일 목록",
+     "v": "사과,배,사과,귤"
     },
     {
      "id": "d02",
-     "name": "둘째 자료",
-     "v": "연필,지우개,연필,공책"
+     "name": "화요일 목록",
+     "v": "사과,귤,배,배"
     },
     {
      "id": "d03",
-     "name": "다른 날 자료",
-     "v": "사과,사과,배,포도,사과,연필",
+     "name": "반복 목록",
+     "v": "사과,배",
      "counter": true,
      "axis": "count"
     }
    ],
    "guard": {
-    "fallback": [
-     "counter",
-     "sentences"
-    ],
-    "reasons": {
-     "counter": [
-      "정답(unique) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-      "정답(total) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-      "'월요일,월요일,화요일,수요일' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다",
-      "axis=sep 인데 쉼표 말고 다른 구분자가 없음"
-     ],
-     "sentences": [
-      "'목록에서 {sep}로 구분해 센다.' 빈칸 뒤 조사 '로' 가 보기마다 맞지 않음",
-      "'남은 개수는 {output}로 적는다.' 빈칸 뒤 조사 '로' 가 보기마다 맞지 않음"
-     ]
-    },
+    "fallback": [],
+    "reasons": {},
     "retried": 1,
     "picked": "llm",
     "repaired": []
    }
   },
   "guard": {
-   "fallback": [
-    "counter",
-    "sentences"
-   ],
-   "reasons": {
-    "counter": [
-     "정답(unique) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-     "정답(total) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-     "'월요일,월요일,화요일,수요일' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다",
-     "axis=sep 인데 쉼표 말고 다른 구분자가 없음"
-    ],
-    "sentences": [
-     "'목록에서 {sep}로 구분해 센다.' 빈칸 뒤 조사 '로' 가 보기마다 맞지 않음",
-     "'남은 개수는 {output}로 적는다.' 빈칸 뒤 조사 '로' 가 보기마다 맞지 않음"
-    ]
-   },
+   "fallback": [],
+   "reasons": {},
    "retried": 1,
    "picked": "llm",
    "repaired": []
   },
-  "ms": 11355,
+  "ms": 5538,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 1079,
+    "ms": 1179,
     "status": "ok",
     "chars": 35
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2417,
+    "ms": 2043,
     "status": "ok",
-    "chars": 515
+    "chars": 450
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 7853,
-    "status": 504
+    "ms": 2312,
+    "status": "ok",
+    "chars": 443
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-unique-count\"}",
-   "{\"title\":\"겹친 목록 개수 세기\",\"brief\":\"같은 값이 여러 번 나오는 목록을 보고 개수를 정리해 주세요.\",\"situation\":\"목록을 보고 같은 값이 여러 번 나오는지 확인해야 해요\",\"itemName\":\"항목\",\"counter\":{\"name\":\"마지막 자료\",\"text\":\"월요일,월요일,화요일,수요일\",\"axis\":\"sep\"},\"data\":[{\"name\":\"첫 자료\",\"items\":[\"사과\",\"사과\",\"배\",\"포도\"]},{\"name\":\"둘째 자료\",\"items\":[\"연필\",\"지우개\",\"연필\",\"공책\"]}],\"goals\":{\"unique\":\"서로 다른 항목만 세면 성공\",\"total\":\"전체 항목을 모두 세면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록에서 \",\"after\":\"로 구분해 센다.\"},\"dedup\":{\"before\":\"같은 항목은 \",\"after\":\"한 번만 남긴다.\"},\"output\":{\"before\":\"남은 개수는 \",\"after\":\"로 적는다.\"}}}"
+   "{\"title\":\"중복 개수 세기\",\"brief\":\"겹친 항목을 보고 개수를 세어 주세요.\",\"situation\":\"중복을 없애서 수를 알아내야 합니다.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"반복 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"귤\"]},{\"name\":\"화요일 목록\",\"items\":[\"사과\",\"귤\",\"배\",\"배\"]}],\"goals\":{\"unique\":\"같은 항목은 한 번만 세면 성공\",\"total\":\"겹친 항목까지 모두 세면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을\",\"after\":\"기준으로 나눈다.\"},\"dedup\":{\"before\":\"같은 항목은\",\"after\":\"하나만 남긴다.\"},\"output\":{\"before\":\"남은 항목의 수를\",\"after\":\"만 보여준다.\"}}}",
+   "{\"title\":\"중복 개수 세기\",\"brief\":\"겹친 항목을 보고 개수를 세어 주세요.\",\"situation\":\"겹친 항목을 보고 수를 정해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"반복 목록\"},\"data\":[{\"name\":\"월요일 목록\",\"items\":[\"사과\",\"배\",\"사과\",\"귤\"]},{\"name\":\"화요일 목록\",\"items\":[\"사과\",\"귤\",\"배\",\"배\"]}],\"goals\":{\"unique\":\"같은 항목은 한 번만 세면 성공\",\"total\":\"겹친 항목까지 모두 세면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을\",\"after\":\"기준으로 나눈다.\"},\"dedup\":{\"before\":\"같은 항목은\",\"after\":\"남긴다.\"},\"output\":{\"before\":\"남은 항목의 수를\",\"after\":\"만 보여준다.\"}}}"
   ],
   "attempts": [
    {
-    "counter": [
-     "정답(unique) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-     "정답(total) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-     "'월요일,월요일,화요일,수요일' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다",
-     "axis=sep 인데 쉼표 말고 다른 구분자가 없음"
+    "situation": [
+     "'중복을 없애서 수를 알아내야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
     ],
     "sentences": [
-     "'목록에서 {sep}로 구분해 센다.' 빈칸 뒤 조사 '로' 가 보기마다 맞지 않음",
-     "'남은 개수는 {output}로 적는다.' 빈칸 뒤 조사 '로' 가 보기마다 맞지 않음"
+     "'같은 항목은 {dedup} 하나만 남긴다.' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다"
     ]
-   }
+   },
+   {}
   ]
  },
  {
-  "no": 2,
-  "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
-  "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
+  "no": 10,
+  "lesson": "파일 입출력. open, read",
+  "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
   "expect": "split-filter-count",
   "ok": true,
   "mission": {
-   "id": "ai-1a1430062a6",
+   "id": "ai-1a1432607e1",
    "no": "AI",
    "type": "sentence",
    "pipelineId": "split-filter-count",
-   "stage": "조건에 맞는 항목 세기",
-   "title": "조건에 맞는 항목 세기",
-   "brief": "조건에 맞는 항목만 골라 세어 주세요.",
-   "situation": "같은 기준으로 자료를 살펴보아야 해요.",
-   "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
-   "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
+   "stage": "파일 줄 고르기",
+   "title": "파일 줄 고르기",
+   "brief": "읽은 줄에서 필요한 것만 골라 세어 주세요.",
+   "situation": "파일에서 읽은 줄만 보고 처리해야 해요.",
+   "lesson": "파일 입출력. open, read",
+   "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
    "define": {
     "q": "언제 성공이라고 할 수 있을까요?",
     "options": [
-     {
-      "v": "1이 나오면 성공",
-      "trap": "hardcode"
-     },
      {
       "v": "에러 안 나면 성공",
       "trap": "luck"
      },
      {
-      "v": "조건에 맞는 재료가 3개이면 성공",
+      "v": "2개 나오면 성공",
       "trap": null,
       "key": "filtered_count"
+     },
+     {
+      "v": "2가 나오면 성공",
+      "trap": "hardcode"
      }
     ]
    },
@@ -239,20 +1398,20 @@
    "inputs": [
     {
      "id": "d01",
-     "name": "월요일 재료",
-     "v": "사과,배,포도,귤,과일"
+     "name": "월요일 파일",
+     "v": "사과,메모,배,공지"
     },
     {
      "id": "d02",
-     "name": "화요일 재료",
-     "v": "사과,키위,포도,복숭아,과일"
+     "name": "화요일 파일",
+     "v": "사과,연필,배,포도"
     },
     {
      "id": "d03",
-     "name": "남은 수",
-     "v": "사과 배 포도 귤",
+     "name": "다음 파일",
+     "v": "메모,공지,연필,포도",
      "counter": true,
-     "axis": "count"
+     "axis": "empty"
     }
    ],
    "guard": {
@@ -261,19 +1420,17 @@
     ],
     "reasons": {
      "sentences": [
-      "'모양에 따라 {sep} 나눕니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-      "'남은 개수를 {output} 셀 수 있습니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+      "'남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
      ]
     },
     "retried": 2,
     "picked": "llm",
-    "repaired": [
-     "걸러낼 대상 과일·과일 를 자료에 넣었어요"
-    ]
+    "repaired": []
    },
    "pipelineParams": {
     "filterTarget": [
-     "과일"
+     "사과",
+     "배"
     ]
    }
   },
@@ -283,1542 +1440,71 @@
    ],
    "reasons": {
     "sentences": [
-     "'모양에 따라 {sep} 나눕니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'남은 개수를 {output} 셀 수 있습니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+     "'남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
     ]
    },
    "retried": 2,
    "picked": "llm",
-   "repaired": [
-    "걸러낼 대상 과일·과일 를 자료에 넣었어요"
-   ]
+   "repaired": []
   },
-  "ms": 11169,
+  "ms": 7177,
   "http": [
    {
     "step": "유형",
     "mode": "json_schema",
-    "ms": 4423,
+    "ms": 1315,
     "status": "ok",
     "chars": 35
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2572,
+    "ms": 1987,
     "status": "ok",
-    "chars": 523
+    "chars": 464
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 1979,
-    "status": "ok",
-    "chars": 520
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2192,
-    "status": "ok",
-    "chars": 512
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-filter-count\"}",
-   "{\"title\":\"조건에 맞는 항목 세기\",\"brief\":\"조건에 맞는 항목만 골라 세어 주십시오.\",\"situation\":\"같은 기준으로 자료를 살펴보아야 합니다.\",\"itemName\":\"재료\",\"counter\":{\"name\":\"남은 수\",\"text\":\"조건에 맞는 재료의 수를 세어야 합니다.\",\"axis\":\"count\"},\"data\":[{\"name\":\"월요일 재료\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]},{\"name\":\"화요일 재료\",\"items\":[\"사과\",\"키위\",\"포도\",\"복숭아\"]}],\"goals\":{\"filtered_count\":\"조건에 맞는 재료는 3개입니다.\"},\"sentences\":{\"sep\":{\"before\":\"목록에서\",\"after\":\"나눕니다.\"},\"cond\":{\"before\":\"조건에 맞는 것을\",\"after\":\"가립니다.\"},\"output\":{\"before\":\"남은 개수를\",\"after\":\"셀 수 있습니다.\"}},\"filterTarget\":[\"과일\"],\"filterDesc\":\"과일\"}",
-   "{\"title\":\"조건에 맞는 항목 세기\",\"brief\":\"조건에 맞는 항목만 골라 세어 주세요.\",\"situation\":\"같은 기준으로 자료를 살펴보아야 해요.\",\"itemName\":\"재료\",\"counter\":{\"name\":\"남은 수\",\"text\":\"조건에 맞는 재료의 수를 세어야 해요.\",\"axis\":\"count\"},\"data\":[{\"name\":\"월요일 재료\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]},{\"name\":\"화요일 재료\",\"items\":[\"사과\",\"키위\",\"포도\",\"복숭아\"]}],\"goals\":{\"filtered_count\":\"조건에 맞는 재료가 3개이면 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을\",\"after\":\"나눕니다.\"},\"cond\":{\"before\":\"조건에 맞는 것을\",\"after\":\"가립니다.\"},\"output\":{\"before\":\"남은 개수를\",\"after\":\"셀 수 있습니다.\"}},\"filterTarget\":[\"과일\"],\"filterDesc\":\"과일\"}",
-   "{\"title\":\"조건에 맞는 항목 세기\",\"brief\":\"조건에 맞는 항목만 골라 세어 주세요.\",\"situation\":\"같은 기준으로 자료를 살펴보아야 해요.\",\"itemName\":\"재료\",\"counter\":{\"name\":\"남은 수\",\"text\":\"사과 배 포도 귤\",\"axis\":\"count\"},\"data\":[{\"name\":\"월요일 재료\",\"items\":[\"사과\",\"배\",\"포도\",\"귤\"]},{\"name\":\"화요일 재료\",\"items\":[\"사과\",\"키위\",\"포도\",\"복숭아\"]}],\"goals\":{\"filtered_count\":\"조건에 맞는 재료가 3개이면 성공\"},\"sentences\":{\"sep\":{\"before\":\"모양에 따라\",\"after\":\"나눕니다.\"},\"cond\":{\"before\":\"조건에 맞는 것을\",\"after\":\"골라냅니다.\"},\"output\":{\"before\":\"남은 개수를\",\"after\":\"셀 수 있습니다.\"}},\"filterTarget\":[\"과일\"],\"filterDesc\":\"과일\"}"
-  ],
-  "attempts": [
-   {
-    "brief": [
-     "'조건에 맞는 항목만 골라 세어 주십시오.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "situation": [
-     "'같은 기준으로 자료를 살펴보아야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "counter": [
-     "'조건에 맞는 재료의 수를 세어야 합니' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로",
-     "'조건에 맞는 재료의 수를 세어야 합니' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-    ],
-    "goals": [
-     "'조건에 맞는 재료는 3개입니다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'목록에서 {sep} 나눕니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'조건에 맞는 것을 {cond} 가립니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음",
-     "'남은 개수를 {output} 셀 수 있습니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   {
-    "counter": [
-     "'조건에 맞는 재료의 수를 세어야 해요' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로",
-     "'조건에 맞는 재료의 수를 세어야 해요' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-    ],
-    "sentences": [
-     "'목록을 {sep} 나눕니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'조건에 맞는 것을 {cond} 가립니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음",
-     "'남은 개수를 {output} 셀 수 있습니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   {
-    "sentences": [
-     "'모양에 따라 {sep} 나눕니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'남은 개수를 {output} 셀 수 있습니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
-    ]
-   }
-  ]
- },
- {
-  "no": 3,
-  "lesson": "딕셔너리. 키와 값 쌍으로 저장",
-  "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
-  "expect": "split-group",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a1430094e1",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-group",
-   "stage": "같은 항목 묶어 세기",
-   "title": "같은 항목 묶어 세기",
-   "brief": "세 자료를 보고 같은 항목을 묶어 정리해 주세요.",
-   "situation": "첫 두 자료를 보고 세 번째 자료까지 맞게 정리해요.",
-   "lesson": "딕셔너리. 키와 값 쌍으로 저장",
-   "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "사과가 2번 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     },
-     {
-      "v": "항목마다 나온 횟수가 보이면 성공",
-      "trap": null,
-      "key": "group"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준으로 나눈다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "첫 자료",
-     "v": "사과,배,사과,포도"
-    },
-    {
-     "id": "d02",
-     "name": "둘째 자료",
-     "v": "배,사과,귤,배"
-    },
-    {
-     "id": "d03",
-     "name": "같은 항목",
-     "v": "사과 배 사과 포도",
-     "counter": true,
-     "axis": "count"
-    }
-   ],
-   "guard": {
-    "fallback": [
-     "goals",
-     "sentences"
-    ],
-    "reasons": {
-     "sentences": [
-      "'표를 보고 {sep} 같은 항목을 나누어 셉니다.': 27자 — 25자 안으로"
-     ],
-     "goals": [
-      "'세 자료에서 같은 항목이 나온 횟수를 맞게 적' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-     ]
-    },
-    "retried": 2,
-    "picked": "llm",
-    "repaired": []
-   }
-  },
-  "guard": {
-   "fallback": [
-    "goals",
-    "sentences"
-   ],
-   "reasons": {
-    "sentences": [
-     "'표를 보고 {sep} 같은 항목을 나누어 셉니다.': 27자 — 25자 안으로"
-    ],
-    "goals": [
-     "'세 자료에서 같은 항목이 나온 횟수를 맞게 적' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ]
-   },
-   "retried": 2,
-   "picked": "llm",
-   "repaired": []
-  },
-  "ms": 12858,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 978,
-    "status": "ok",
-    "chars": 28
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2158,
-    "status": "ok",
-    "chars": 421
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 1796,
-    "status": "ok",
-    "chars": 393
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 7924,
-    "status": 504
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-group\"}",
-   "{\"title\":\"같은 항목 묶어 세기\",\"brief\":\"세 자료를 보고 같은 항목을 묶어 정리해 주세요.\",\"situation\":\"첫 두 자료를 보고 세 번째 자료까지 맞게 정리해 보아\",\"itemName\":\"항목\",\"counter\":{\"name\":\"같은 항목\",\"text\":\"같은 항목이 여러 번 나오면 하나로 묶어 셉니다.\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫 자료\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"둘째 자료\",\"items\":[\"배\",\"사과\",\"귤\",\"배\"]}],\"goals\":{\"group\":\"세 자료에서 같은 항목이 나온 횟수를 맞게 적\" },\"sentences\":{\"sep\":{\"before\":\"세 자료를 보고\",\"after\":\"같은 항목이 몇 번 나왔는지 정리합니다.\"}}}",
-   "{\"title\":\"같은 항목 묶어 세기\",\"brief\":\"세 자료를 보고 같은 항목을 묶어 정리해 주세요.\",\"situation\":\"첫 두 자료를 보고 세 번째 자료까지 맞게 정리해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"같은 항목\",\"text\":\"사과 배 사과 포도\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫 자료\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"둘째 자료\",\"items\":[\"배\",\"사과\",\"귤\",\"배\"]}],\"goals\":{\"group\":\"세 자료에서 같은 항목이 나온 횟수를 맞게 적\" },\"sentences\":{\"sep\":{\"before\":\"표를 보고\",\"after\":\"같은 항목을 나누어 셉니다.\"}}}"
-  ],
-  "attempts": [
-   {
-    "situation": [
-     "'첫 두 자료를 보고 세 번째 자료까지 맞게 정리해 보아': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "sentences": [
-     "'세 자료를 보고 {sep} 같은 항목이 몇 번 나왔는지 정리합니다.': 37자 — 25자 안으로",
-     "'세 자료를 보고 {sep} 같은 항목이 몇 번 나왔는지 정리합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
-    ],
-    "counter": [
-     "'같은 항목이 여러 번 나오면 하나로 ' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로",
-     "'같은 항목이 여러 번 나오면 하나로 ' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-    ],
-    "goals": [
-     "'세 자료에서 같은 항목이 나온 횟수를 맞게 적' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ]
-   },
-   {
-    "sentences": [
-     "'표를 보고 {sep} 같은 항목을 나누어 셉니다.': 27자 — 25자 안으로"
-    ],
-    "goals": [
-     "'세 자료에서 같은 항목이 나온 횟수를 맞게 적' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ]
-   }
-  ]
- },
- {
-  "no": 4,
-  "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
-  "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
-  "expect": "split-transform-join",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a14300bf71",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-transform-join",
-   "stage": "항목 정리 함수 찾기",
-   "title": "항목 정리 함수 찾기",
-   "brief": "자료를 보고 같은 정리 방법을 찾아보세요.",
-   "situation": "같은 정리를 여러 항목에 해야 해요.",
-   "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
-   "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "사과,배,포도가 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "자료마다 깔끔해지면 성공",
-      "trap": null,
-      "key": "transformed"
-     },
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준으로 나눈다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     },
-     {
-      "template": "자료마다 {op}.",
-      "slot": "op",
-      "options": [
-       "앞뒤 공백을 없앤다",
-       "첫 글자만 남긴다"
-      ]
-     },
-     {
-      "template": "{joinSep} 기준으로 다시 잇는다.",
-      "slot": "joinSep",
-      "options": [
-       "쉼표",
-       "공백"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "첫째 자료",
-     "v": " 사과,배 , 포도"
-    },
-    {
-     "id": "d02",
-     "name": "둘째 자료",
-     "v": " 수박, 참외,토마토"
-    },
-    {
-     "id": "d03",
-     "name": "반례 자료",
-     "v": "사과\n배\n포도 ",
-     "counter": true,
-     "axis": "invisible"
-    }
-   ],
-   "guard": {
-    "fallback": [
-     "goals",
-     "sentences"
-    ],
-    "reasons": {
-     "goals": [
-      "'항목마다 같은 정리를 함수로 묶어 실행하면 성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-     ],
-     "sentences": [
-      "'앞뒤 공백을 {sep} 없애서 정리합니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
-      "'앞뒤 공백을 {sep} 없애서 정리합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-      "'같은 작업을 {op} 묶는 함수를 만듭니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음",
-      "'한 번에 {joinSep} 처리합니다.' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
-     ]
-    },
-    "retried": 2,
-    "picked": "llm",
-    "repaired": []
-   }
-  },
-  "guard": {
-   "fallback": [
-    "goals",
-    "sentences"
-   ],
-   "reasons": {
-    "goals": [
-     "'항목마다 같은 정리를 함수로 묶어 실행하면 성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'앞뒤 공백을 {sep} 없애서 정리합니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
-     "'앞뒤 공백을 {sep} 없애서 정리합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'같은 작업을 {op} 묶는 함수를 만듭니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음",
-     "'한 번에 {joinSep} 처리합니다.' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   "retried": 2,
-   "picked": "llm",
-   "repaired": []
-  },
-  "ms": 10895,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 4463,
-    "status": "ok",
-    "chars": 37
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2340,
-    "status": "ok",
-    "chars": 466
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2047,
-    "status": "ok",
-    "chars": 463
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2042,
-    "status": "ok",
-    "chars": 478
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-transform-join\"}",
-   "{\"title\":\"항목 정리 함수 찾기\",\"brief\":\"자료를 보고 공통된 정리 기준을 알아보세요.\",\"situation\":\"같은 정리를 여러 항목에 해야 합니다.\",\"itemName\":\"자료\",\"counter\":{\"name\":\"반례 자료\",\"text\":\"사과\\n배\\n포도 \",\"axis\":\"invisible\"},\"data\":[{\"name\":\"첫째 자료\",\"items\":[\" 사과\",\"배 \",\" 포도\"]},{\"name\":\"둘째 자료\",\"items\":[\" 수박\",\" 참외\",\"토마토\"]}],\"goals\":{\"transformed\":\"항목마다 같은 정리를 함수로 묶어 실행하면 성\"\n},\"sentences\":{\"sep\":{\"before\":\"항목을\",\"after\":\"정리합니다.\"},\"op\":{\"before\":\"\",\"after\":\"함수를 만듭니다.\"},\"joinSep\":{\"before\":\"\",\"after\":\"한 번에 처리합니다.\"}}}",
-   "{\"title\":\"항목 정리 함수 찾기\",\"brief\":\"자료를 보고 같은 정리 방법을 찾아보세요.\",\"situation\":\"같은 정리를 여러 항목에 해야 해요.\",\"itemName\":\"자료\",\"counter\":{\"name\":\"반례 자료\",\"text\":\"사과\\n배\\n포도 \",\"axis\":\"invisible\"},\"data\":[{\"name\":\"첫째 자료\",\"items\":[\" 사과\",\"배 \",\" 포도\"]},{\"name\":\"둘째 자료\",\"items\":[\" 수박\",\" 참외\",\"토마토\"]}],\"goals\":{\"transformed\":\"항목마다 같은 정리를 함수로 묶어 실행하면 성\"},\"sentences\":{\"sep\":{\"before\":\"항목을\",\"after\":\"정리합니다.\"},\"op\":{\"before\":\"\",\"after\":\"함수를 만듭니다.\"},\"joinSep\":{\"before\":\"\",\"after\":\"한 번에 처리합니다.\"}}}",
-   "{\"title\":\"항목 정리 함수 찾기\",\"brief\":\"자료를 보고 같은 정리 방법을 찾아보세요.\",\"situation\":\"같은 정리를 여러 항목에 해야 해요.\",\"itemName\":\"자료\",\"counter\":{\"name\":\"반례 자료\",\"text\":\"사과\\n배\\n포도 \",\"axis\":\"invisible\"},\"data\":[{\"name\":\"첫째 자료\",\"items\":[\" 사과\",\"배 \",\" 포도\"]},{\"name\":\"둘째 자료\",\"items\":[\" 수박\",\" 참외\",\"토마토\"]}],\"goals\":{\"transformed\":\"항목마다 같은 정리를 함수로 묶어 실행하면 성\"},\"sentences\":{\"sep\":{\"before\":\"앞뒤 공백을\",\"after\":\"없애서 정리합니다.\"},\"op\":{\"before\":\"같은 작업을\",\"after\":\"묶는 함수를 만듭니다.\"},\"joinSep\":{\"before\":\"한 번에\",\"after\":\"처리합니다.\"}}}"
-  ],
-  "attempts": [
-   {
-    "situation": [
-     "'같은 정리를 여러 항목에 해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "goals": [
-     "'항목마다 같은 정리를 함수로 묶어 실행하면 성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'항목을 {sep} 정리합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'{op} 함수를 만듭니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음",
-     "'{joinSep} 한 번에 처리합니다.' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   {
-    "goals": [
-     "'항목마다 같은 정리를 함수로 묶어 실행하면 성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'항목을 {sep} 정리합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'{op} 함수를 만듭니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음",
-     "'{joinSep} 한 번에 처리합니다.' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   {
-    "goals": [
-     "'항목마다 같은 정리를 함수로 묶어 실행하면 성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'앞뒤 공백을 {sep} 없애서 정리합니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
-     "'앞뒤 공백을 {sep} 없애서 정리합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'같은 작업을 {op} 묶는 함수를 만듭니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음",
-     "'한 번에 {joinSep} 처리합니다.' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
-    ]
-   }
-  ]
- },
- {
-  "no": 5,
-  "lesson": "문자열 다루기. split, strip, replace",
-  "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
-  "expect": "split-transform-join",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a14300ed0b",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-transform-join",
-   "stage": "공백 정리하기",
-   "title": "공백 정리하기",
-   "brief": "자료를 살펴보고 같은 기준으로 정리해 주세요.",
-   "situation": "앞뒤 공백이 결과를 흐릴 수 있으니 정리해야 해요.",
-   "lesson": "문자열 다루기. split, strip, replace",
-   "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "사과,배,딸기가 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     },
-     {
-      "v": "문자열마다 깔끔해지면 성공",
-      "trap": null,
-      "key": "transformed"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준으로 나눈다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     },
-     {
-      "template": "문자열마다 {op}.",
-      "slot": "op",
-      "options": [
-       "앞뒤 공백을 없앤다",
-       "첫 글자만 남긴다"
-      ]
-     },
-     {
-      "template": "{joinSep} 기준으로 다시 잇는다.",
-      "slot": "joinSep",
-      "options": [
-       "쉼표",
-       "공백"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "과일 목록",
-     "v": " 사과,배 , 딸기 "
-    },
-    {
-     "id": "d02",
-     "name": "간식 목록",
-     "v": " 과자, 음료 ,빵"
-    },
-    {
-     "id": "d03",
-     "name": "다른 날 자료",
-     "v": " 과자 , 음료 , 빵 ",
-     "counter": true,
-     "axis": "invisible"
-    }
-   ],
-   "guard": {
-    "fallback": [
-     "counter",
-     "goals",
-     "sentences"
-    ],
-    "reasons": {
-     "counter": [
-      "정답(transformed) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-      "axis=sep 인데 쉼표 말고 다른 구분자가 없음"
-     ],
-     "goals": [
-      "'항목마다 앞뒤 공백이 없어야 성공해요.' — 결과 문장 '~하면 성공' 으로 끝나야 한다",
-      "'항목마다 앞뒤 공백이 없어야 성공해요.' 에 방법 '공백' — 통과 조건은 결과로만 쓴다"
-     ],
-     "sentences": [
-      "'공백을 {op} 정리합니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
-      "'공백을 {op} 정리합니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
-     ]
-    },
-    "retried": 1,
-    "picked": "llm",
-    "repaired": []
-   }
-  },
-  "guard": {
-   "fallback": [
-    "counter",
-    "goals",
-    "sentences"
-   ],
-   "reasons": {
-    "counter": [
-     "정답(transformed) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-     "axis=sep 인데 쉼표 말고 다른 구분자가 없음"
-    ],
-    "goals": [
-     "'항목마다 앞뒤 공백이 없어야 성공해요.' — 결과 문장 '~하면 성공' 으로 끝나야 한다",
-     "'항목마다 앞뒤 공백이 없어야 성공해요.' 에 방법 '공백' — 통과 조건은 결과로만 쓴다"
-    ],
-    "sentences": [
-     "'공백을 {op} 정리합니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
-     "'공백을 {op} 정리합니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   "retried": 1,
-   "picked": "llm",
-   "repaired": []
-  },
-  "ms": 11672,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1121,
-    "status": "ok",
-    "chars": 37
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2648,
-    "status": "ok",
-    "chars": 462
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 7900,
-    "status": 504
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-transform-join\"}",
-   "{\"title\":\"공백 정리하기\",\"brief\":\"자료를 살펴보고 같은 기준으로 정리해 주세요.\",\"situation\":\"앞뒤 공백이 결과를 흐릴 수 있으니 정리해야 해요.\",\"itemName\":\"문자열\",\"counter\":{\"name\":\"반례 문자열\",\"text\":\"사과,배,딸기\",\"axis\":\"sep\"},\"data\":[{\"name\":\"과일 목록\",\"items\":[\" 사과\",\"배 \",\" 딸기 \"]},{\"name\":\"간식 목록\",\"items\":[\" 과자\",\" 음료 \",\"빵\"]}],\"goals\":{\"transformed\":\"항목마다 앞뒤 공백이 없어야 성공해요.\"},\"sentences\":{\"sep\":{\"before\":\"항목을\",\"after\":\"나눠 적습니다.\"},\"op\":{\"before\":\"공백을\",\"after\":\"정리합니다.\"},\"joinSep\":{\"before\":\"\",\"after\":\"기준으로 다시 잇습니다.\"}}}"
-  ],
-  "attempts": [
-   {
-    "counter": [
-     "정답(transformed) 결과가 첫 자료와 같음 — 결과를 외운 학생이 안 깨진다",
-     "axis=sep 인데 쉼표 말고 다른 구분자가 없음"
-    ],
-    "goals": [
-     "'항목마다 앞뒤 공백이 없어야 성공해요.' — 결과 문장 '~하면 성공' 으로 끝나야 한다",
-     "'항목마다 앞뒤 공백이 없어야 성공해요.' 에 방법 '공백' — 통과 조건은 결과로만 쓴다"
-    ],
-    "sentences": [
-     "'공백을 {op} 정리합니다.' 빈칸 밖에 보기 '공백' — 답이 미리 적혀 있다",
-     "'공백을 {op} 정리합니다.' — 이 빈칸(op)이 무엇을 정하는지 드러나지 않음"
-    ]
-   }
-  ]
- },
- {
-  "no": 6,
-  "lesson": "정렬. sorted와 sort의 차이",
-  "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
-  "expect": "split-sort-join",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a143011b19",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-sort-join",
-   "stage": "기준에 맞게 늘어놓기",
-   "title": "기준에 맞게 늘어놓기",
-   "brief": "자료를 보고 같은 기준으로 정리해 주세요.",
-   "situation": "뒤섞인 항목을 같은 순서로 보여 줘야 해요.",
-   "lesson": "정렬. sorted와 sort의 차이",
-   "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "배,복숭아,사과,포도가 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "같은 기준이면 같은 차례로 나와야 성공",
-      "trap": null,
-      "key": "sorted"
-     },
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준에 맞게 늘어놓습니다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     },
-     {
-      "template": "순서를 {dir} 정합니다.",
-      "slot": "dir",
-      "options": [
-       "가나다순으로",
-       "거꾸로"
-      ]
-     },
-     {
-      "template": "항목을 {joinSep} 이어 봅니다.",
-      "slot": "joinSep",
-      "options": [
-       "쉼표",
-       "공백"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "첫째 자료",
-     "v": "사과,배,포도,복숭아"
-    },
-    {
-     "id": "d02",
-     "name": "둘째 자료",
-     "v": "겨울,봄,여름,가을"
-    },
-    {
-     "id": "d03",
-     "name": "반례 자료",
-     "v": "봄 여름 가을 겨울",
-     "counter": true,
-     "axis": "count"
-    }
-   ],
-   "guard": {
-    "fallback": [],
-    "reasons": {},
-    "retried": 2,
-    "picked": "llm",
-    "repaired": []
-   }
-  },
-  "guard": {
-   "fallback": [],
-   "reasons": {},
-   "retried": 2,
-   "picked": "llm",
-   "repaired": []
-  },
-  "ms": 11789,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 4289,
-    "status": "ok",
-    "chars": 32
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2573,
-    "status": "ok",
-    "chars": 489
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2867,
+    "ms": 1726,
     "status": "ok",
     "chars": 467
    },
    {
     "step": "초안",
     "mode": "json_schema",
-    "ms": 2057,
+    "ms": 2145,
     "status": "ok",
-    "chars": 468
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-sort-join\"}",
-   "{\"title\":\"연습자료 정렬하기\",\"brief\":\"자료를 읽고 기준을 스스로 정해 보세요.\",\"situation\":\"뒤섞인 자료를 같은 기준으로 보여 줘야 해요.\",\"itemName\":\"자료\",\"counter\":{\"name\":\"반례 자료\",\"text\":\"자료가 하나만 달라도 기준을 다시 살펴보아야 해요.\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫째 자료\",\"items\":[\"사과\",\"배\",\"포도\",\"복숭아\"]},{\"name\":\"둘째 자료\",\"items\":[\"겨울\",\"봄\",\"여름\",\"가을\"]}],\"goals\":{\"sorted\":\"기준이 같으면 같은 차례로 늘어날 때 성공\"},\"sentences\":{\"sep\":{\"before\":\"이 자료들을 \",\"after\":\"기준에 맞게 늘어놓습니다.\"},\"dir\":{\"before\":\"순서를 \",\"after\":\"정합니다.\"},\"joinSep\":{\"before\":\"목록을 \",\"after\":\"이어 봅니다.\"}}}",
-   "{\"title\":\"정렬 기준 찾기\",\"brief\":\"자료를 보고 맞는 기준을 찾아 주세요.\",\"situation\":\"뒤섞인 항목을 같은 차례로 늘어놓아야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"반례 자료\",\"text\":\"초록 노랑 분홍 하양 보라\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫째 자료\",\"items\":[\"사과\",\"배\",\"포도\",\"복숭아\"]},{\"name\":\"둘째 자료\",\"items\":[\"겨울\",\"봄\",\"여름\",\"가을\"]}],\"goals\":{\"sorted\":\"같은 기준이면 같은 차례로 나와야 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을 \",\"after\":\"기준에 맞게 늘어놓습니다.\"},\"dir\":{\"before\":\"순서를 \",\"after\":\"정합니다.\"},\"joinSep\":{\"before\":\"항목을 \",\"after\":\"이어 봅니다.\"}}}",
-   "{\"title\":\"기준에 맞게 늘어놓기\",\"brief\":\"자료를 보고 같은 기준으로 정리해 주세요.\",\"situation\":\"뒤섞인 항목을 같은 순서로 보여 줘야 해요.\",\"itemName\":\"항목\",\"counter\":{\"name\":\"반례 자료\",\"text\":\"봄 여름 가을 겨울\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫째 자료\",\"items\":[\"사과\",\"배\",\"포도\",\"복숭아\"]},{\"name\":\"둘째 자료\",\"items\":[\"겨울\",\"봄\",\"여름\",\"가을\"]}],\"goals\":{\"sorted\":\"같은 기준이면 같은 차례로 나와야 성공\"},\"sentences\":{\"sep\":{\"before\":\"목록을 \",\"after\":\"기준에 맞게 늘어놓습니다.\"},\"dir\":{\"before\":\"순서를 \",\"after\":\"정합니다.\"},\"joinSep\":{\"before\":\"항목을 \",\"after\":\"이어 봅니다.\"}}}"
-  ],
-  "attempts": [
-   {
-    "sentences": [
-     "'이 자료들을 {sep} 기준에 맞게 늘어놓습니다.': 27자 — 25자 안으로"
-    ],
-    "counter": [
-     "'자료가 하나만 달라도 기준을 다시 살' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로",
-     "'자료가 하나만 달라도 기준을 다시 살' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-    ]
-   },
-   {
-    "counter": [
-     "'초록 노랑 분홍 하양 보라' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-    ]
-   },
-   {}
-  ]
- },
- {
-  "no": 7,
-  "lesson": "숫자 형변환. int()로 문자열을 숫자로",
-  "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
-  "expect": "split-num-sum",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a143013a1d",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-filter-num-sum",
-   "stage": "목록 정리",
-   "title": "목록 정리",
-   "brief": "문자와 숫자가 섞인 목록에서 숫자만 골라 더해 보아요.",
-   "situation": "",
-   "lesson": "숫자 형변환. int()로 문자열을 숫자로",
-   "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "숫자만 골라 더한 값이 나오면 성공",
-      "trap": null,
-      "key": "filtered_sum"
-     },
-     {
-      "v": "7이 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준으로 나눈다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     },
-     {
-      "template": "숫자가 아닌 항목은 {cond}.",
-      "slot": "cond",
-      "options": [
-       "빼고 숫자만 남긴다",
-       "그대로 둔다"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "첫 번째 목록",
-     "v": "2,사과,5,배"
-    },
-    {
-     "id": "d02",
-     "name": "두 번째 목록",
-     "v": "1,7,메모,3"
-    },
-    {
-     "id": "d03",
-     "name": "마지막 목록",
-     "v": "",
-     "counter": true,
-     "axis": "empty"
-    }
-   ],
-   "guard": {
-    "fallback": [
-     "situation",
-     "sentences"
-    ],
-    "reasons": {
-     "situation": [
-      "'문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-     ],
-     "sentences": [
-      "'빈칸에 들어갈 말은 {sep} 이어진 말의 뜻을 정합니다.': 32자 — 25자 안으로",
-      "'빈칸에 들어갈 말은 {cond} 이어진 말의 뜻을 정합니다.': 33자 — 25자 안으로",
-      "'빈칸에 들어갈 말은 {sep} 이어진 말의 뜻을 정합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-      "'빈칸에 들어갈 말은 {cond} 이어진 말의 뜻을 정합니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
-     ]
-    },
-    "retried": 2,
-    "picked": "llm",
-    "repaired": [
-     "걸러낼 대상에 사과, 배, 메모 를 넣었어요"
-    ]
-   },
-   "pipelineParams": {
-    "filterTarget": [
-     "숫자",
-     "문자",
-     "사과",
-     "배",
-     "메모"
-    ]
-   }
-  },
-  "guard": {
-   "fallback": [
-    "situation",
-    "sentences"
-   ],
-   "reasons": {
-    "situation": [
-     "'문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "sentences": [
-     "'빈칸에 들어갈 말은 {sep} 이어진 말의 뜻을 정합니다.': 32자 — 25자 안으로",
-     "'빈칸에 들어갈 말은 {cond} 이어진 말의 뜻을 정합니다.': 33자 — 25자 안으로",
-     "'빈칸에 들어갈 말은 {sep} 이어진 말의 뜻을 정합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'빈칸에 들어갈 말은 {cond} 이어진 말의 뜻을 정합니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   "retried": 2,
-   "picked": "llm",
-   "repaired": [
-    "걸러낼 대상에 사과, 배, 메모 를 넣었어요"
-   ]
-  },
-  "ms": 7939,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1023,
-    "status": "ok",
-    "chars": 37
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2276,
-    "status": "ok",
-    "chars": 478
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2295,
-    "status": "ok",
-    "chars": 466
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2341,
-    "status": "ok",
-    "chars": 495
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"목록 정리\",\"brief\":\"문자와 숫자가 섞인 목록에서 숫자만 잘 골라 더하는지 살펴봅니다.\",\"situation\":\"문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾\"\n,\"itemName\":\"목록\",\"counter\":{\"name\":\"마지막 목록\",\"text\":\"3\",\"axis\":\"empty\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"2\",\"사과\",\"5\",\"배\"]},{\"name\":\"두 번째 목록\",\"items\":[\"1\",\"7\",\"메모\",\"3\"]}],\"goals\":{\"filtered_sum\":\"숫자만 골라 더한 값이 나와야 성공합니다.\"},\"sentences\":{\"sep\":{\"before\":\"숫자만 \",\"after\":\"고릅니다.\"},\"cond\":{\"before\":\"문자는\",\"after\":\"빼고 진행합니다.\"}},\"filterTarget\":[\"숫자\",\"문자\"],\"filterDesc\":\"숫자 목록\"}",
-   "{\"title\":\"목록 정리\",\"brief\":\"문자와 숫자가 섞인 목록에서 숫자만 골라 더해 보아요.\",\"situation\":\"문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾\",\"itemName\":\"목록\",\"counter\":{\"name\":\"마지막 목록\",\"text\":\"\",\"axis\":\"empty\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"2\",\"사과\",\"5\",\"배\"]},{\"name\":\"두 번째 목록\",\"items\":[\"1\",\"7\",\"메모\",\"3\"]}],\"goals\":{\"filtered_sum\":\"숫자만 골라 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"숫자만 \",\"after\":\"고릅니다.\"},\"cond\":{\"before\":\"문자는\",\"after\":\"빼고 진행합니다.\"}},\"filterTarget\":[\"숫자\",\"문자\"],\"filterDesc\":\"숫자 목록\"}",
-   "{\"title\":\"목록 정리\",\"brief\":\"문자와 숫자가 섞인 목록에서 숫자만 골라 더해 보아요.\",\"situation\":\"문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾\",\"itemName\":\"목록\",\"counter\":{\"name\":\"마지막 목록\",\"text\":\"\",\"axis\":\"empty\"},\"data\":[{\"name\":\"첫 번째 목록\",\"items\":[\"2\",\"사과\",\"5\",\"배\"]},{\"name\":\"두 번째 목록\",\"items\":[\"1\",\"7\",\"메모\",\"3\"]}],\"goals\":{\"filtered_sum\":\"숫자만 골라 더한 값이 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"빈칸에 들어갈 말은\",\"after\":\"이어진 말의 뜻을 정합니다.\"},\"cond\":{\"before\":\"빈칸에 들어갈 말은\",\"after\":\"이어진 말의 뜻을 정합니다.\"}},\"filterTarget\":[\"숫자\",\"문자\"],\"filterDesc\":\"숫자 목록\"}"
-  ],
-  "attempts": [
-   {
-    "brief": [
-     "'문자와 숫자가 섞인 목록에서 숫자만 잘 골라 더하는지 살펴봅니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "situation": [
-     "'문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "counter": [
-     "axis=empty 인데 결과가 비어 있지 않음"
-    ],
-    "goals": [
-     "'숫자만 골라 더한 값이 나와야 성공합니다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'숫자만 {sep} 고릅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'문자는 {cond} 빼고 진행합니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   {
-    "situation": [
-     "'문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "sentences": [
-     "'숫자만 {sep} 고릅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'문자는 {cond} 빼고 진행합니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   {
-    "situation": [
-     "'문자와 숫자가 함께 들어 있는 목록을 보고 더할 값을찾': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "sentences": [
-     "'빈칸에 들어갈 말은 {sep} 이어진 말의 뜻을 정합니다.': 32자 — 25자 안으로",
-     "'빈칸에 들어갈 말은 {cond} 이어진 말의 뜻을 정합니다.': 33자 — 25자 안으로",
-     "'빈칸에 들어갈 말은 {sep} 이어진 말의 뜻을 정합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
-     "'빈칸에 들어갈 말은 {cond} 이어진 말의 뜻을 정합니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
-    ]
-   }
-  ]
- },
- {
-  "no": 8,
-  "lesson": "예외 처리. try-except",
-  "keyPoint": "숫자가 아닌 값이 섞여 있으면 계산이 멈춘다",
-  "expect": "split-filter-num-sum",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a143016a25",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-filter-num-sum",
-   "stage": "숫자만 더하기",
-   "title": "숫자만 더하기",
-   "brief": "숫자가 아닌 값이 섞인 목록에서 더할 값을 찾아보세요.",
-   "situation": "",
-   "lesson": "예외 처리. try-except",
-   "keyPoint": "숫자가 아닌 값이 섞여 있으면 계산이 멈춘다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "숫자만 골라 더하면 성공",
-      "trap": null,
-      "key": "filtered_sum"
-     },
-     {
-      "v": "15가 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준으로 나눈다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     },
-     {
-      "template": "숫자가 아닌 항목은 {cond}.",
-      "slot": "cond",
-      "options": [
-       "빼고 숫자만 남긴다",
-       "그대로 둔다"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "첫째 자료",
-     "v": "3,사과,5,7"
-    },
-    {
-     "id": "d02",
-     "name": "둘째 자료",
-     "v": "2,8,메모,1"
-    },
-    {
-     "id": "d03",
-     "name": "다른 날 자료",
-     "v": "숫자가 아닌 값,글자,사과,메모,숫자가 아닌 값",
-     "counter": true,
-     "axis": "empty"
-    }
-   ],
-   "guard": {
-    "fallback": [
-     "situation",
-     "counter",
-     "sentences"
-    ],
-    "reasons": {
-     "situation": [
-      "'숫자가 아닌 값이 섞여 있으면 계산이 멈추므로 숫자만을': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-     ],
-     "sentences": [
-      "'숫자가 아닌 값은 {cond} 빼고 숫자만 남깁니다.': 29자 — 25자 안으로",
-      "'숫자만 {sep} 더합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
-     ],
-     "counter": [
-      "정답(filtered_sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
-      "'숫자와 글자가 섞인 값은 다시 넣지 ' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로",
-      "'숫자와 글자가 섞인 값은 다시 넣지 ' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다",
-      "axis=invisible 인데 앞뒤 공백 항목이 없음"
-     ]
-    },
-    "retried": 1,
-    "picked": "llm",
-    "repaired": [
-     "걸러낼 대상에 사과, 메모 를 넣었어요"
-    ]
-   },
-   "pipelineParams": {
-    "filterTarget": [
-     "숫자가 아닌 값",
-     "글자",
-     "사과",
-     "메모"
-    ]
-   }
-  },
-  "guard": {
-   "fallback": [
-    "situation",
-    "counter",
-    "sentences"
-   ],
-   "reasons": {
-    "situation": [
-     "'숫자가 아닌 값이 섞여 있으면 계산이 멈추므로 숫자만을': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "sentences": [
-     "'숫자가 아닌 값은 {cond} 빼고 숫자만 남깁니다.': 29자 — 25자 안으로",
-     "'숫자만 {sep} 더합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
-    ],
-    "counter": [
-     "정답(filtered_sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
-     "'숫자와 글자가 섞인 값은 다시 넣지 ' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로",
-     "'숫자와 글자가 섞인 값은 다시 넣지 ' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다",
-     "axis=invisible 인데 앞뒤 공백 항목이 없음"
-    ]
-   },
-   "retried": 1,
-   "picked": "llm",
-   "repaired": [
-    "걸러낼 대상에 사과, 메모 를 넣었어요"
-   ]
-  },
-  "ms": 12295,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1470,
-    "status": "ok",
-    "chars": 37
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2967,
-    "status": "ok",
-    "chars": 501
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 7855,
-    "status": 504
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-filter-num-sum\"}",
-   "{\"title\":\"숫자만 더하기\",\"brief\":\"숫자가 아닌 값이 섞인 목록에서 더할 값을 찾아보세요.\",\"situation\":\"숫자가 아닌 값이 섞여 있으면 계산이 멈추므로 숫자만을\" ,\"itemName\":\"자료\",\"counter\":{\"name\":\"마지막 자료\",\"text\":\"숫자와 글자가 섞인 값은 다시 넣지 않는다.\",\"axis\":\"invisible\"},\"data\":[{\"name\":\"첫째 자료\",\"items\":[\"3\",\"사과\",\"5\",\"7\"]},{\"name\":\"둘째 자료\",\"items\":[\"2\",\"8\",\"메모\",\"1\"]}],\"goals\":{\"filtered_sum\":\"숫자만 골라 더하면 성공\"},\"sentences\":{\"sep\":{\"before\":\"숫자만\",\"after\":\"더합니다.\"},\"cond\":{\"before\":\"숫자가 아닌 값은\",\"after\":\"빼고 숫자만 남깁니다.\"}},\"filterTarget\":[\"숫자가 아닌 값\",\"글자\"],\"filterDesc\":\"글자 목록\"}"
-  ],
-  "attempts": [
-   {
-    "situation": [
-     "'숫자가 아닌 값이 섞여 있으면 계산이 멈추므로 숫자만을': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "sentences": [
-     "'숫자가 아닌 값은 {cond} 빼고 숫자만 남깁니다.': 29자 — 25자 안으로",
-     "'숫자만 {sep} 더합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
-    ],
-    "counter": [
-     "정답(filtered_sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
-     "'숫자와 글자가 섞인 값은 다시 넣지 ' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로",
-     "'숫자와 글자가 섞인 값은 다시 넣지 ' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다",
-     "axis=invisible 인데 앞뒤 공백 항목이 없음"
-    ]
-   }
-  ]
- },
- {
-  "no": 9,
-  "lesson": "집합 set. 중복 없는 모음",
-  "keyPoint": "중복을 없애면 개수가 달라진다",
-  "expect": "split-unique-count",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a143018a40",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-unique-count",
-   "stage": "중복 없는 목록 세기",
-   "title": "중복 없는 목록 세기",
-   "brief": "자료 세 개를 보고 겹치는 항목을 정해 주세요.",
-   "situation": "세 자료를 보고 같은 항목이 섞여 있는지 살펴봐요",
-   "lesson": "집합 set. 중복 없는 모음",
-   "keyPoint": "중복을 없애면 개수가 달라진다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "3이 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     },
-     {
-      "v": "전체 목록 수가 나오면 성공",
-      "trap": null,
-      "key": "total"
-     },
-     {
-      "v": "겹치는 건 한 번만 센 수가 나오면 성공",
-      "trap": null,
-      "key": "unique"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준으로 나눈다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     },
-     {
-      "template": "같은 목록은 {dedup}.",
-      "slot": "dedup",
-      "options": [
-       "각각 남긴다",
-       "하나만 남긴다"
-      ]
-     },
-     {
-      "template": "{output}만 보여준다.",
-      "slot": "output",
-      "options": [
-       "남은 항목의 개수",
-       "항상 숫자 3"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "첫 번째 자료",
-     "v": "사과,배,사과,포도"
-    },
-    {
-     "id": "d02",
-     "name": "두 번째 자료",
-     "v": "연필,지우개,연필,자"
-    },
-    {
-     "id": "d03",
-     "name": "세 번째 자료",
-     "v": "빨강 파랑 빨강 초록 사과",
-     "counter": true,
-     "axis": "count"
-    }
-   ],
-   "guard": {
-    "fallback": [
-     "goals",
-     "sentences"
-    ],
-    "reasons": {
-     "goals": [
-      "'세 자료의 항목을 모두 모아 중복 없이 세면성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-     ],
-     "sentences": [
-      "'같은 항목은 {dedup} 하나만 남긴다.' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다",
-      "'남은 항목의 {output} 개수를 쓴다.' 빈칸 밖에 보기 '남은 항목의 개수' — 답이 미리 적혀 있다"
-     ]
-    },
-    "retried": 2,
-    "picked": "llm",
-    "repaired": []
-   }
-  },
-  "guard": {
-   "fallback": [
-    "goals",
-    "sentences"
-   ],
-   "reasons": {
-    "goals": [
-     "'세 자료의 항목을 모두 모아 중복 없이 세면성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'같은 항목은 {dedup} 하나만 남긴다.' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다",
-     "'남은 항목의 {output} 개수를 쓴다.' 빈칸 밖에 보기 '남은 항목의 개수' — 답이 미리 적혀 있다"
-    ]
-   },
-   "retried": 2,
-   "picked": "llm",
-   "repaired": []
-  },
-  "ms": 8218,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1281,
-    "status": "ok",
-    "chars": 35
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2559,
-    "status": "ok",
-    "chars": 525
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2324,
-    "status": "ok",
-    "chars": 526
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2051,
-    "status": "ok",
-    "chars": 522
-   }
-  ],
-  "raws": [
-   "{\"pipelineId\":\"split-unique-count\"}",
-   "{\"title\":\"중복 없는 목록 세기\",\"brief\":\"자료 세 개를 보고 겹치는 항목을 정해 주십시오.\",\"situation\":\"세 자료를 보고 같은 항목이 섞여 있는지 살펴봐야 해요\",\"itemName\":\"목록\",\"counter\":{\"name\":\"세 번째 자료\",\"text\":\"빨강 파랑 빨강 초록\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫 번째 자료\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"두 번째 자료\",\"items\":[\"연필\",\"지우개\",\"연필\",\"자\"]}],\"goals\":{\"unique\":\"같은 항목을 한 번씩만 세어도 성공\",\"total\":\"세 자료의 항목을 모두 모아 중복 없이 셀 수\" },\"sentences\":{\"sep\":{\"before\":\"항목을 \",\"after\":\"기준으로 나눈다.\"},\"dedup\":{\"before\":\"같은 항목은 \",\"after\":\"하나만 남긴다.\"},\"output\":{\"before\":\"남은 항목의 \",\"after\":\"개수를 쓴다.\"}}}",
-   "{\"title\":\"중복 없는 목록 세기\",\"brief\":\"자료 세 개를 보고 겹치는 항목을 정해 주세요.\",\"situation\":\"세 자료를 보고 같은 항목이 섞여 있는지 살펴봐야 해요\",\"itemName\":\"목록\",\"counter\":{\"name\":\"세 번째 자료\",\"text\":\"빨강 파랑 빨강 초록 사과\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫 번째 자료\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"두 번째 자료\",\"items\":[\"연필\",\"지우개\",\"연필\",\"자\"]}],\"goals\":{\"unique\":\"같은 항목을 한 번씩만 세면 성공\",\"total\":\"세 자료의 항목을 모두 모아 중복 없이 세면성\" },\"sentences\":{\"sep\":{\"before\":\"항목을 \",\"after\":\"기준으로 나눈다.\"},\"dedup\":{\"before\":\"같은 항목은 \",\"after\":\"하나만 남긴다.\"},\"output\":{\"before\":\"남은 항목의 \",\"after\":\"개수를 쓴다.\"}}}",
-   "{\"title\":\"중복 없는 목록 세기\",\"brief\":\"자료 세 개를 보고 겹치는 항목을 정해 주세요.\",\"situation\":\"세 자료를 보고 같은 항목이 섞여 있는지 살펴봐요\",\"itemName\":\"목록\",\"counter\":{\"name\":\"세 번째 자료\",\"text\":\"빨강 파랑 빨강 초록 사과\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫 번째 자료\",\"items\":[\"사과\",\"배\",\"사과\",\"포도\"]},{\"name\":\"두 번째 자료\",\"items\":[\"연필\",\"지우개\",\"연필\",\"자\"]}],\"goals\":{\"unique\":\"같은 항목을 한 번씩만 세면 성공\",\"total\":\"세 자료의 항목을 모두 모아 중복 없이 세면성\"},\"sentences\":{\"sep\":{\"before\":\"항목을 \",\"after\":\"기준으로 나눈다.\"},\"dedup\":{\"before\":\"같은 항목은 \",\"after\":\"하나만 남긴다.\"},\"output\":{\"before\":\"남은 항목의 \",\"after\":\"개수를 쓴다.\"}}}"
-  ],
-  "attempts": [
-   {
-    "brief": [
-     "'자료 세 개를 보고 겹치는 항목을 정해 주십시오.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
-    ],
-    "counter": [
-     "'빨강 파랑 빨강 초록' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-    ],
-    "goals": [
-     "'세 자료의 항목을 모두 모아 중복 없이 셀 수' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'같은 항목은 {dedup} 하나만 남긴다.' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다",
-     "'남은 항목의 {output} 개수를 쓴다.' 빈칸 밖에 보기 '남은 항목의 개수' — 답이 미리 적혀 있다"
-    ]
-   },
-   {
-    "goals": [
-     "'세 자료의 항목을 모두 모아 중복 없이 세면성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'같은 항목은 {dedup} 하나만 남긴다.' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다",
-     "'남은 항목의 {output} 개수를 쓴다.' 빈칸 밖에 보기 '남은 항목의 개수' — 답이 미리 적혀 있다"
-    ]
-   },
-   {
-    "goals": [
-     "'세 자료의 항목을 모두 모아 중복 없이 세면성' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
-    ],
-    "sentences": [
-     "'같은 항목은 {dedup} 하나만 남긴다.' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다",
-     "'남은 항목의 {output} 개수를 쓴다.' 빈칸 밖에 보기 '남은 항목의 개수' — 답이 미리 적혀 있다"
-    ]
-   }
-  ]
- },
- {
-  "no": 10,
-  "lesson": "파일 입출력. open, read",
-  "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
-  "expect": "split-filter-count",
-  "ok": true,
-  "mission": {
-   "id": "ai-1a14301b6ed",
-   "no": "AI",
-   "type": "sentence",
-   "pipelineId": "split-filter-count",
-   "stage": "파일에서 줄 고르기",
-   "title": "파일에서 줄 고르기",
-   "brief": "파일에서 읽은 줄만 보고 알맞은 것만 골라 세어 주세요.",
-   "situation": "",
-   "lesson": "파일 입출력. open, read",
-   "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
-   "define": {
-    "q": "언제 성공이라고 할 수 있을까요?",
-    "options": [
-     {
-      "v": "에러 안 나면 성공",
-      "trap": "luck"
-     },
-     {
-      "v": "4가 나오면 성공",
-      "trap": "hardcode"
-     },
-     {
-      "v": "성공",
-      "trap": null,
-      "key": "filtered_count"
-     }
-    ]
-   },
-   "method": {
-    "sentences": [
-     {
-      "template": "목록을 {sep} 기준으로 나눈다.",
-      "slot": "sep",
-      "options": [
-       "쉼표",
-       "공백",
-       "줄바꿈"
-      ]
-     },
-     {
-      "template": "이름에 {cond} 것만 남긴다.",
-      "slot": "cond",
-      "options": [
-       "있는",
-       "없는"
-      ]
-     },
-     {
-      "template": "{output}만 보여준다.",
-      "slot": "output",
-      "options": [
-       "남은 항목의 개수",
-       "항상 숫자 3"
-      ]
-     }
-    ]
-   },
-   "inputs": [
-    {
-     "id": "d01",
-     "name": "첫 번째 파일",
-     "v": "민수,지수,민수,하늘"
-    },
-    {
-     "id": "d02",
-     "name": "두 번째 파일",
-     "v": "지수,서연,하늘,민수"
-    },
-    {
-     "id": "d03",
-     "name": "다른 날 자료",
-     "v": "서연,사과,바나나,포도",
-     "counter": true,
-     "axis": "empty"
-    }
-   ],
-   "guard": {
-    "fallback": [
-     "situation",
-     "counter",
-     "sentences"
-    ],
-    "reasons": {
-     "situation": [
-      "'한 파일의 줄들을 보고 같은 기준에 맞는 것만 찾아야해': 반말 — 학생 화면은 존댓말로 쓴다"
-     ],
-     "counter": [
-      "'같은 이름이 여러 번 나오면 하나로 ' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-     ],
-     "sentences": [
-      "'남은 줄의 {output} 개수를 센다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
-     ]
-    },
-    "retried": 1,
-    "picked": "llm",
-    "repaired": []
-   },
-   "pipelineParams": {
-    "filterTarget": [
-     "민수",
-     "지수",
-     "하늘"
-    ]
-   }
-  },
-  "guard": {
-   "fallback": [
-    "situation",
-    "counter",
-    "sentences"
-   ],
-   "reasons": {
-    "situation": [
-     "'한 파일의 줄들을 보고 같은 기준에 맞는 것만 찾아야해': 반말 — 학생 화면은 존댓말로 쓴다"
-    ],
-    "counter": [
-     "'같은 이름이 여러 번 나오면 하나로 ' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
-    ],
-    "sentences": [
-     "'남은 줄의 {output} 개수를 센다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
-    ]
-   },
-   "retried": 1,
-   "picked": "llm",
-   "repaired": []
-  },
-  "ms": 11436,
-  "http": [
-   {
-    "step": "유형",
-    "mode": "json_schema",
-    "ms": 1225,
-    "status": "ok",
-    "chars": 35
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 2357,
-    "status": "ok",
-    "chars": 536
-   },
-   {
-    "step": "초안",
-    "mode": "json_schema",
-    "ms": 7852,
-    "status": 504
+    "chars": 467
    }
   ],
   "raws": [
    "{\"pipelineId\":\"split-filter-count\"}",
-   "{\"title\":\"파일에서 줄 고르기\",\"brief\":\"파일에서 읽은 줄만 보고 알맞은 것만 골라 세어 주세요.\",\"situation\":\"한 파일의 줄들을 보고 같은 기준에 맞는 것만 찾아야해\",\"itemName\":\"줄\",\"counter\":{\"name\":\"이름\",\"text\":\"같은 이름이 여러 번 나오면 하나로 친다\",\"axis\":\"count\"},\"data\":[{\"name\":\"첫 번째 파일\",\"items\":[\"민수\",\"지수\",\"민수\",\"하늘\"]},{\"name\":\"두 번째 파일\",\"items\":[\"지수\",\"서연\",\"하늘\",\"민수\"]}],\"goals\":{\"filtered_count\":\"성공\"},\"sentences\":{\"sep\":{\"before\":\"줄에서\",\"after\":\"빈칸을 기준으로 나눈다.\"},\"cond\":{\"before\":\"이름이\",\"after\":\"같은 것만 남긴다.\"},\"output\":{\"before\":\"남은 줄의\",\"after\":\"개수를 센다.\"}},\"filterTarget\":[\"민수\",\"지수\",\"하늘\"],\"filterDesc\":\"이름\"}"
+   "{\"title\":\"파일 줄 고르기\",\"brief\":\"읽은 줄에서 필요한 것만 골라 세어 주십시오.\",\"situation\":\"파일에서 읽은 줄만 보고 처리해야 합니다.\",\"itemName\":\"줄\",\"counter\":{\"name\":\"다음 파일\"},\"data\":[{\"name\":\"월요일 파일\",\"items\":[\"사과\",\"메모\",\"배\",\"공지\"]},{\"name\":\"화요일 파일\",\"items\":[\"사과\",\"연필\",\"배\",\"포도\"]}],\"goals\":{\"filtered_count\":\"2개 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"줄을\",\"after\":\"고릅니다.\"},\"cond\":{\"before\":\"필요한 줄만\",\"after\":\"남깁니다.\"},\"output\":{\"before\":\"남은 줄의\",\"after\":\"개수를 셉니다.\"}},\"filterTarget\":[\"사과\",\"배\"],\"filterDesc\":\"과일\"}",
+   "{\"title\":\"파일 줄 고르기\",\"brief\":\"읽은 줄에서 필요한 것만 골라 세어 주세요.\",\"situation\":\"파일에서 읽은 줄만 보고 처리해야 해요.\",\"itemName\":\"줄\",\"counter\":{\"name\":\"다음 파일\"},\"data\":[{\"name\":\"월요일 파일\",\"items\":[\"사과\",\"메모\",\"배\",\"공지\"]},{\"name\":\"화요일 파일\",\"items\":[\"사과\",\"연필\",\"배\",\"포도\"]}],\"goals\":{\"filtered_count\":\"2개 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"줄을\",\"after\":\"기준으로 나눕니다.\"},\"cond\":{\"before\":\"필요한 줄만\",\"after\":\"남깁니다.\"},\"output\":{\"before\":\"남은 줄의\",\"after\":\"개수를 셉니다.\"}},\"filterTarget\":[\"사과\",\"배\"],\"filterDesc\":\"과일\"}",
+   "{\"title\":\"파일 줄 고르기\",\"brief\":\"읽은 줄에서 필요한 것만 골라 세어 주세요.\",\"situation\":\"파일에서 읽은 줄만 보고 처리해야 해요.\",\"itemName\":\"줄\",\"counter\":{\"name\":\"다음 파일\"},\"data\":[{\"name\":\"월요일 파일\",\"items\":[\"사과\",\"메모\",\"배\",\"공지\"]},{\"name\":\"화요일 파일\",\"items\":[\"사과\",\"연필\",\"배\",\"포도\"]}],\"goals\":{\"filtered_count\":\"2개 나오면 성공\"},\"sentences\":{\"sep\":{\"before\":\"줄을\",\"after\":\"기준으로 나눕니다.\"},\"cond\":{\"before\":\"필요한 줄만\",\"after\":\"남깁니다.\"},\"output\":{\"before\":\"남은 줄의\",\"after\":\"개수를 셉니다.\"}},\"filterTarget\":[\"사과\",\"배\"],\"filterDesc\":\"과일\"}"
   ],
   "attempts": [
    {
-    "situation": [
-     "'한 파일의 줄들을 보고 같은 기준에 맞는 것만 찾아야해': 반말 — 학생 화면은 존댓말로 쓴다"
+    "brief": [
+     "'읽은 줄에서 필요한 것만 골라 세어 주십시오.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
     ],
-    "counter": [
-     "'같은 이름이 여러 번 나오면 하나로 ' — 앞 자료에 나온 항목이 하나도 없음. 같은 상황의 다른 자료여야 한다"
+    "situation": [
+     "'파일에서 읽은 줄만 보고 처리해야 합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
     ],
     "sentences": [
-     "'남은 줄의 {output} 개수를 센다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+     "'줄을 {sep} 고릅니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "sentences": [
+     "'남은 줄의 {output} 개수를 셉니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
     ]
    }
   ]
