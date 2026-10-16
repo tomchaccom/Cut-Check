@@ -55,6 +55,7 @@
       sDefineVer: 0,
 
       /* 코드 작성 */
+      sDesignCount: 0,
       sDesign: null,         /* { define, slots, pipelineId } */
       sCodes: [],            /* [{ code, dataId, output, error, t }] */
       sCodeJudges: []        /* [{ verdict, basis, t }] */
@@ -124,7 +125,8 @@
       case 's-wrap':
         s.sWrap = e.text; break;
       case 's-design':
-        s.sDesign = { define: e.define, slots: e.slots, pipelineId: e.pipelineId }; break;
+        s.sDesign = { define: e.define, slots: e.slots, pipelineId: e.pipelineId };
+        s.sDesignCount++; break;
       case 's-code':
         s.sCodes.push({ code: e.code, dataId: e.dataId, output: e.output, error: e.error, t: e.t }); break;
       case 's-code-judge':

@@ -3,6 +3,7 @@
 global.window = {};
 require('../js/core/events.js');
 require('../js/core/fold.js');
+require('../js/core/hangul.js'); require('../js/core/alerts.js');
 const CC = global.window.CC;
 const T = CC.events.T;
 
@@ -96,9 +97,36 @@ const slog2 = slog.concat([
 const sf2 = CC.fold.fold(slog2, { now: now });
 t('문장형 재정의 후 버전 증가', sf2.sDefineVer === 2 && sf2.sDefine.choice === '서로 다른 이름');
 
+// ── 교사 알림: 새로 생긴 설계도 제출과 코드 판정만
+console.log('\n[알림] 비교');
+const st = (id, name, d, j) => ({ id, name, sDesignCount: d, sCodeJudges: new Array(j).fill({}) });
+const a0 = CC.alerts.snap([st('a1', '민지', 0, 0), st('a2', '준호', 1, 0)]);
+t('첫 렌더는 알리지 않는다', CC.alerts.diff(null, a0).length === 0);
+const a1 = CC.alerts.snap([st('a1', '민지', 1, 0), st('a2', '준호', 1, 0)]);
+const d1 = CC.alerts.diff(a0, a1);
+t('새 설계도 제출 하나', d1.length === 1 && d1[0].id === 'a1' && d1[0].kind === 'design');
+const a2 = CC.alerts.snap([st('a1', '민지', 1, 1), st('a2', '준호', 1, 0)]);
+t('새 코드 판정 하나', CC.alerts.diff(a1, a2).length === 1 && CC.alerts.diff(a1, a2)[0].kind === 'code');
+t('변화가 없으면 없다', CC.alerts.diff(a2, a2).length === 0);
+const a3 = CC.alerts.snap([st('a1', '민지', 1, 2), st('a2', '준호', 1, 0), st('a3', '서연', 1, 0)]);
+const d3 = CC.alerts.diff(a2, a3);
+t('같은 학생 반복 판정도 새 판정이다', d3.some(x => x.id === 'a1' && x.kind === 'code'));
+t('새로 들어온 학생의 제출도 알린다', d3.some(x => x.id === 'a3' && x.kind === 'design'));
+t('문구는 조사를 계산한다', CC.alerts.say({ name: '민지', kind: 'design' }) === '민지가 설계도를 냈어요.'
+  && CC.alerts.say({ name: '준호', kind: 'code' }) === '준호가 코드 결과를 판정했어요.'
+  && CC.alerts.say({ name: '서연', kind: 'design' }) === '서연이 설계도를 냈어요.');
+t('문구에 순서·시간·판정 결과가 없다', !/첫|번째|분|초|지켰|못했/.test(
+  CC.alerts.say({ name: 'x', kind: 'design' }) + CC.alerts.say({ name: 'x', kind: 'code' })));
+
+const df = CC.fold.fold([
+  CC.events.make(T.S_DESIGN, { define: 'a', slots: {}, pipelineId: '' }),
+  CC.events.make(T.S_DESIGN, { define: 'b', slots: {}, pipelineId: '' })
+], { now: Date.now() });
+t('설계도 제출 횟수를 접는다', df.sDesignCount === 2);
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'llmguard.js', 'asks.js', 'pipeline.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');

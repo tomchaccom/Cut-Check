@@ -225,3 +225,7 @@ body.notes .note { display: flex; gap: 6px; }
   gap: 16px;
 }
 .foot b { color: var(--ink-2); margin-right: 4px; }
+.toasts { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; max-width: calc(100vw - 32px); }
+.toast { background: var(--surface); border: 1px solid var(--line-strong, var(--line)); border-radius: 10px; padding: 10px 14px; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.alerts-title { font-size: 13px; margin: 0 0 6px; color: var(--ink-2); }
+.alert-list { margin: 0 0 16px; padding-left: 18px; font-size: 14px; }
