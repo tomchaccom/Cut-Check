@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>파이썬 풀이</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#555555}
+.step{font-size:14px;padding:10px 0;color:#555555;text-decoration:none;border-bottom:2px solid transparent}
+.step.on{color:#111111;font-weight:600;border-bottom-color:#111111}
+.ln{color:#A0A0A0;text-align:right;user-select:none}
+.cm{color:#6B6B6B}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:999px;font:inherit;font-size:16px;cursor:pointer;text-decoration:none}
+.judge{min-height:44px;padding:0 16px;border:1px solid #111111;border-radius:999px;background:#FFFFFF;font:inherit;font-size:15px;color:#111111;cursor:pointer}
+.rt{width:100%;border-collapse:collapse;font-size:15px}
+.rt th{text-align:left;font-size:13px;font-weight:500;color:#555555;padding:0 12px 10px 0;border-bottom:1px solid #111111}
+.rt td{padding:14px 12px 14px 0;border-bottom:1px solid #E3E3E3;vertical-align:middle}
+.rt .data{font-family:'IBM Plex Mono',monospace;color:#444444}
+.rt .out{font-family:'Archivo',sans-serif;font-size:28px;font-weight:500;text-align:right;padding-right:0}
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans KR',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:1000px;box-sizing:border-box;padding:32px clamp(16px,4vw,56px) 64px">
+<div style="max-width:1280px;margin:0 auto">
+<nav aria-label="위치" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;min-height:44px">
+<a href="Main.dc.html" style="text-decoration:none">내 교실</a><span aria-hidden="true" style="color:#888888">/</span><a href="Classroom.dc.html" style="text-decoration:none">1학년 3반</a><span aria-hidden="true" style="color:#888888">/</span><span>급식 재료 몇 가지?</span>
+</nav>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(44px,7vw,96px);line-height:1;letter-spacing:-0.04em">급식 재료 몇 가지?</h1>
+<nav aria-label="단계" style="display:flex;flex-wrap:wrap;gap:28px;border-bottom:1px solid #111111;margin-top:18px">
+<a class="step" href="#">01 문제</a><a class="step" href="#">02 성공</a><a class="step" href="Mission.dc.html">03 설계</a><a class="step on" href="#" aria-current="step">04 코딩</a><a class="step" href="#">05 정리</a>
+</nav>
+<div style="max-width:880px;display:flex;flex-direction:column;gap:16px;margin-top:28px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px">
+<p style="margin:0;font-size:15px;color:#555555">내 설계도가 주석으로 들어가 있어요. 주석 아래에 한 줄씩 써 보세요.</p>
+<button type="button" class="btn" style="border:1px solid #111111;background:#FFFFFF;color:#111111;min-height:44px;font-size:15px">파이썬 문법 물어보기</button>
+</div>
+<div role="textbox" aria-label="파이썬 코드" aria-multiline="true" style="border:1px solid #111111;border-radius:16px;overflow-x:auto;background:#FFFFFF">
+<div style="display:grid;grid-template-columns:36px 1fr;column-gap:16px;padding:20px 22px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:15px;line-height:1.8;white-space:pre">
+<span class="ln">1</span><span>data = <span style="background:#FFF7A8;border-radius:4px">"우유,빵,우유,사과"</span></span>
+<span class="ln">2</span><span class="cm"># 1. 나누기 (기준: 쉼표)</span>
+<span class="ln">3</span><span>items = data.split(",")</span>
+<span class="ln">4</span><span class="cm"># 2. 겹친 것은 하나만</span>
+<span class="ln">5</span><span>items = set(items)</span>
+<span class="ln">6</span><span class="cm"># 3. 개수 세기</span>
+<span class="ln">7</span><span>print(len(items))</span>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" class="btn" style="border:0;background:#111111;color:#FFFFFF;font-weight:600">자료 3개로 실행</button>
+<button type="button" class="btn" style="border:1px solid #111111;background:#FFFFFF;color:#111111">고른 자료로 실행</button>
+<a href="Mission.dc.html" class="btn" style="border:1px solid #CFCFCF;color:#111111">설계 고치기</a>
+</div>
+<div style="overflow-x:auto;margin-top:12px">
+<table class="rt">
+<caption style="text-align:left;font-size:15px;font-weight:600;padding-bottom:12px">실행 결과</caption>
+<thead><tr><th scope="col">자료</th><th scope="col">내용</th><th scope="col" style="text-align:right;padding-right:0">결과</th></tr></thead>
+<tbody>
+<tr><td>월요일 재료</td><td class="data">우유,빵,우유,사과</td><td class="out">3</td></tr>
+<tr><td>화요일 재료</td><td class="data">빵,계란,빵,우유</td><td class="out">3</td></tr>
+<tr><td>수요일 재료 <span style="margin-left:6px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#FFF23D">새로 온 자료</span></td><td class="data">우유,빵,우유,사과,계란,김</td><td class="out">5</td></tr>
+</tbody>
+</table>
+</div>
+<div style="margin-top:8px;background:#F6F6F6;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+<p style="margin:0;font-size:15px;line-height:1.5"><span style="font-size:13px;color:#555555">내가 정한 성공</span><br>겹치는 재료는 한 번만 센 수가 나오면 성공</p>
+<p style="margin:0;font-size:17px;font-weight:600">내 성공 조건을 지켰나요?</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="judge">지켰다</button><button type="button" class="judge">지키지 못했다</button><button type="button" class="judge">아직 모르겠다</button></div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

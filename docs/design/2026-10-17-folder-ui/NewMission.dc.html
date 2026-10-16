@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>미션 만들기</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#555555}
+.lb{display:flex;flex-direction:column;gap:8px;font-size:13px;color:#555555}
+.in{font:inherit;font-size:16px;color:#111111;min-height:48px;padding:0 14px;border:1px solid #111111;border-radius:12px;background:#FFFFFF;box-sizing:border-box;width:100%}
+.in.mono{font-family:'IBM Plex Mono',monospace;font-size:15px}
+.sec{border-top:1px solid #111111;padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.sec h3{margin:0;font-size:15px;font-weight:600}
+.opt{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid #E3E3E3;font-size:15px}
+.kind{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid #111111}
+.kind.real{background:#111111;color:#FFFFFF;border-color:#111111}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border:1px solid #111111;border-radius:999px;font-size:14px}
+.chip.extra{border-style:dashed;color:#555555}
+.drow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center}
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans KR',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:1300px;box-sizing:border-box;padding:32px clamp(16px,4vw,56px) 64px">
+<div style="max-width:1280px;margin:0 auto">
+<nav aria-label="위치" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;min-height:44px">
+<a href="Teacher.dc.html" style="text-decoration:none">1학년 3반</a><span aria-hidden="true" style="color:#888888">/</span><span>미션 만들기</span>
+</nav>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(56px,11vw,150px);line-height:.95;letter-spacing:-0.04em">새 미션</h1>
+<div style="height:1px;background:#111111;margin-top:18px"></div>
+<div style="display:flex;flex-wrap:wrap;gap:56px;margin-top:28px">
+<section aria-label="수업 입력" style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<p style="margin:0;font-size:15px;color:#555555;line-height:1.5">오늘 수업을 적으면 AI 가 이야기를 쓰고, 성공 조건과 설계 카드는 코드가 붙여요. 내보내기 전에 한 번 더 검수해요.</p>
+<label class="lb">오늘 수업<input class="in" value="리스트에서 중복 빼고 세기"></label>
+<label class="lb">핵심<input class="in" value="set 으로 서로 다른 개수"></label>
+<button type="button" style="align-self:flex-start;min-height:48px;padding:0 24px;border:0;border-radius:999px;background:#111111;color:#FFFFFF;font:inherit;font-size:16px;font-weight:600;cursor:pointer">초안 만들기</button>
+<p style="margin:0;font-size:13px;color:#555555">보통 10초쯤 걸려요.</p>
+</section>
+<section aria-label="초안" style="flex:999 1 600px;min-width:0;display:flex;flex-direction:column;gap:22px">
+<div role="status" style="display:flex;flex-direction:column;gap:6px;padding:16px 18px;border-radius:14px;background:#FFF23D">
+<span style="font-size:15px;font-weight:600">검수 필요 — 학생에게 내기 전에 확인해 주세요</span>
+<span style="font-size:14px;line-height:1.5">· 세 자료가 같은 이야기인가 — 셋째 자료에만 문구가 섞여 있어요.</span>
+</div>
+<div class="sec">
+<h3>문제</h3>
+<label class="lb">문제 이름<input class="in" value="급식 재료 몇 가지?"></label>
+<label class="lb">학생에게 오는 요청<input class="in" value="이번 주 급식 재료가 모두 몇 가지인지 알려 주세요."></label>
+</div>
+<div class="sec">
+<h3>자료 <span style="font-weight:400;font-size:13px;color:#555555">— 쉼표로 이어 써요. 마지막 자료가 반례예요</span></h3>
+<div class="drow"><input class="in" aria-label="자료 1 이름" value="월요일 재료"><input class="in mono" aria-label="자료 1 내용" value="우유,빵,우유,사과"></div>
+<div class="drow"><input class="in" aria-label="자료 2 이름" value="화요일 재료"><input class="in mono" aria-label="자료 2 내용" value="빵,계란,빵,우유"></div>
+<div class="drow"><span style="display:flex;flex-direction:column;gap:6px"><input class="in" aria-label="반례 이름" value="수요일 재료"><span style="font-size:12px;color:#555555">반례 · 개수 변화</span></span><input class="in mono" aria-label="반례 내용" value="우유,빵,우유,사과,연필,김" style="border-style:dashed"></div>
+</div>
+<div class="sec">
+<h3>성공 조건 보기 <span style="font-weight:400;font-size:13px;color:#555555">— 학생에게는 무엇이 진짜인지 안 보여요</span></h3>
+<div>
+<div class="opt"><span>겹치는 재료는 한 번만 센 수가 나오면 성공</span><span class="kind real">진짜</span></div>
+<div class="opt"><span>월요일 재료의 답과 같은 3이 나오면 성공</span><span class="kind">함정 · 외우기</span></div>
+<div class="opt"><span>에러 없이 끝나기만 하면 성공</span><span class="kind">함정 · 운</span></div>
+</div>
+</div>
+<div class="sec">
+<h3>설계 카드 <span style="font-weight:400;font-size:13px;color:#555555">— 순서는 학생이 정해요. 채점하지 않아요</span></h3>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<span class="chip">나누기 · 쉼표 / 공백 / 줄바꿈</span><span class="chip">겹친 것은 하나만</span><span class="chip">개수 세기</span><span class="chip extra">순서대로 늘어놓기 · 없어도 되는 카드</span>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;border-top:1px solid #111111;padding-top:18px">
+<button type="button" style="min-height:48px;padding:0 24px;border:0;border-radius:999px;background:#111111;color:#FFFFFF;font:inherit;font-size:16px;font-weight:600;cursor:pointer">확정하고 교실에 올리기</button>
+<button type="button" style="min-height:48px;padding:0 20px;border:1px solid #111111;border-radius:999px;background:#FFFFFF;font:inherit;font-size:16px;color:#111111;cursor:pointer">다시 만들기</button>
+<button type="button" style="min-height:48px;padding:0 20px;border:0;background:transparent;font:inherit;font-size:16px;color:#555555;cursor:pointer;text-decoration:underline">취소</button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

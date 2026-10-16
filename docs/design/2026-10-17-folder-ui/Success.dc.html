@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>미션 성공 조건</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#555555}
+.step{font-size:14px;padding:10px 0;color:#555555;text-decoration:none;border-bottom:2px solid transparent}
+.step.on{color:#111111;font-weight:600;border-bottom-color:#111111}
+.opt{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 18px;border:1px solid #D6D6D6;border-radius:14px;font-size:16px;cursor:pointer}
+.opt:hover{border-color:#111111}
+.opt.on{border:2px solid #111111;background:#FFF23D}
+.opt input{width:18px;height:18px;margin:0;accent-color:#111111}
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans KR',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:900px;box-sizing:border-box;padding:32px clamp(16px,4vw,56px) 64px">
+<div style="max-width:1280px;margin:0 auto">
+<nav aria-label="위치" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;min-height:44px">
+<a href="Main.dc.html" style="text-decoration:none">내 교실</a><span aria-hidden="true" style="color:#888888">/</span><a href="Classroom.dc.html" style="text-decoration:none">1학년 3반</a><span aria-hidden="true" style="color:#888888">/</span><span>급식 재료 몇 가지?</span>
+</nav>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(44px,7vw,96px);line-height:1;letter-spacing:-0.04em">급식 재료 몇 가지?</h1>
+<nav aria-label="단계" style="display:flex;flex-wrap:wrap;gap:28px;border-bottom:1px solid #111111;margin-top:18px">
+<a class="step" href="#">01 문제</a><a class="step on" href="#" aria-current="step">02 성공</a><a class="step" href="Mission.dc.html">03 설계</a><a class="step" href="Code.dc.html">04 코딩</a><a class="step" href="Wrap.dc.html">05 정리</a>
+</nav>
+<div style="display:flex;flex-wrap:wrap;gap:56px;margin-top:32px">
+<section aria-label="받은 요청" style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<p style="margin:0;font-size:24px;line-height:1.45;font-weight:500">이번 주 급식 재료가 모두 몇 가지인지 알려 주세요.</p>
+<p style="margin:0;font-size:15px;color:#555555;line-height:1.5">급식실 선생님이 다음 주 장보기 목록을 정하려고 해요.</p>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px">
+<dt style="color:#555555">월요일 재료</dt><dd style="margin:0;font-family:'IBM Plex Mono',monospace">우유,빵,우유,사과</dd>
+<dt style="color:#555555">화요일 재료</dt><dd style="margin:0;font-family:'IBM Plex Mono',monospace">빵,계란,빵,우유</dd>
+</dl>
+</section>
+<section aria-label="성공 조건" style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:18px">
+<fieldset style="margin:0;padding:0;border:0;display:flex;flex-direction:column;gap:10px">
+<legend style="padding:0;margin-bottom:12px"><span style="display:block;font-size:22px;font-weight:600">어떤 결과가 나오면 성공일까요?</span><span style="display:block;margin-top:6px;font-size:15px;color:#555555">하나를 골라 주세요. 나중에 다시 정할 수 있어요.</span></legend>
+<label class="opt"><input type="radio" name="goal">월요일 재료의 답과 같은 3이 나오면 성공</label>
+<label class="opt on"><input type="radio" name="goal" checked>겹치는 재료는 한 번만 센 수가 나오면 성공</label>
+<label class="opt"><input type="radio" name="goal">에러 없이 끝나기만 하면 성공</label>
+</fieldset>
+<label style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:#555555">왜 그렇게 생각했나요?
+<textarea rows="2" placeholder="생각나는 대로 적어 주세요." style="font:inherit;font-size:15px;color:#111111;padding:12px;border:1px solid #CFCFCF;border-radius:12px;resize:vertical"></textarea></label>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<a href="Mission.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-size:16px;font-weight:600">설계하러 가기</a>
+<a href="#" style="display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border-radius:999px;border:1px solid #111111;text-decoration:none;font-size:16px">요청 다시 보기</a>
+</div>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

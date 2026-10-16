@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>미션 설계</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#555555}
+.step{font-size:14px;padding:10px 0;color:#555555;text-decoration:none;border-bottom:2px solid transparent}
+.step.on{color:#111111;font-weight:600;border-bottom-color:#111111}
+.chip{min-height:44px;padding:0 18px;border:1px solid #111111;border-radius:999px;background:#FFFFFF;font:inherit;font-size:15px;color:#111111;cursor:pointer}
+.chip:disabled{border-color:#D6D6D6;color:#A3A3A3;cursor:default}
+.mine{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 6px 0 18px;border-radius:999px;background:#FFF23D;font-size:15px;font-weight:600}
+.mine select{min-height:32px;padding:0 6px;border:0;border-radius:999px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#111111}
+.x{width:26px;height:26px;border:0;border-radius:50%;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.x:hover{background:rgba(0,0,0,.08)}
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans KR',system-ui,sans-serif;color:#111111;background:#FFFFFF;min-height:860px;box-sizing:border-box;padding:32px clamp(16px,4vw,56px) 64px">
+<div style="max-width:1280px;margin:0 auto">
+<nav aria-label="위치" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;min-height:44px">
+<a href="Main.dc.html" style="text-decoration:none">내 교실</a><span aria-hidden="true" style="color:#888888">/</span><a href="Classroom.dc.html" style="text-decoration:none">1학년 3반</a><span aria-hidden="true" style="color:#888888">/</span><span>급식 재료 몇 가지?</span>
+</nav>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(44px,7vw,96px);line-height:1;letter-spacing:-0.04em">급식 재료 몇 가지?</h1>
+<nav aria-label="단계" style="display:flex;flex-wrap:wrap;gap:28px;border-bottom:1px solid #111111;margin-top:18px">
+<a class="step" href="#">01 문제</a><a class="step" href="#">02 성공</a><a class="step on" href="#" aria-current="step">03 설계</a><a class="step" href="Code.dc.html">04 코딩</a><a class="step" href="#">05 정리</a>
+</nav>
+<div style="display:flex;flex-wrap:wrap;gap:56px;margin-top:32px">
+<section aria-label="받은 요청" style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<p style="margin:0;font-size:24px;line-height:1.45;font-weight:500">이번 주 급식 재료가 모두 몇 가지인지 알려 주세요.</p>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px">
+<dt style="color:#555555">월요일 재료</dt><dd style="margin:0;font-family:'IBM Plex Mono',monospace">우유,빵,우유,사과</dd>
+<dt style="color:#555555">화요일 재료</dt><dd style="margin:0;font-family:'IBM Plex Mono',monospace">빵,계란,빵,우유</dd>
+</dl>
+<p style="margin:0;font-size:15px;line-height:1.5;border-top:1px solid #E3E3E3;padding-top:14px"><span style="font-size:13px;color:#555555">내가 정한 성공</span><br>겹치는 재료는 한 번만 센 수가 나오면 성공</p>
+</section>
+<section aria-label="설계" style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:22px;font-weight:600">어떻게 할까?</h2>
+<p style="margin:0;font-size:15px;color:#555555">할 일을 눌러 담고, 위에서 아래로 순서를 맞춰 보세요.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="chip" disabled>개수 세기</button>
+<button type="button" class="chip" disabled>겹친 것은 하나만</button>
+<button type="button" class="chip" disabled>나누기</button>
+<button type="button" class="chip">순서대로 늘어놓기</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:1px solid #111111;padding-top:18px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+<h3 style="margin:0;font-size:15px;font-weight:600">내 설계도</h3>
+<button type="button" style="min-height:44px;border:0;background:transparent;font:inherit;font-size:14px;color:#555555;cursor:pointer;text-decoration:underline">처음부터</button>
+</div>
+<ol aria-label="내 설계도" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+<li style="display:flex;align-items:center;gap:10px;min-height:38px;padding:0 6px 0 12px;border-radius:10px;background:#FFF23D">
+<span style="font-size:13px;color:#6B6B6B;width:14px">{{r.no}}</span>
+<span style="font-size:14px;font-weight:600">{{r.label}}</span>
+<sc-if value="{{r.detail}}" hint-placeholder-val="{{false}}"><select aria-label="나누는 기준" style="min-height:28px;padding:0 6px;border:0;border-radius:999px;background:#FFFFFF;font:inherit;font-size:13px;color:#111111"><option>쉼표</option><option>공백</option><option>줄바꿈</option></select></sc-if>
+<span style="margin-left:6px;display:flex;gap:0">
+<button type="button" class="x" aria-label="{{r.label}} 위로" disabled="{{r.first}}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#111111" stroke-width="1.6" aria-hidden="true"><path d="M2.5 7.5L6 4l3.5 3.5"></path></svg></button>
+<button type="button" class="x" aria-label="{{r.label}} 아래로" disabled="{{r.last}}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#111111" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></button>
+<button type="button" class="x" aria-label="{{r.label}} 빼기"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#111111" stroke-width="1.6" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"></path></svg></button>
+</span>
+</li>
+</sc-for>
+</ol>
+</div>
+<label style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:#555555">이렇게 한 이유
+<textarea rows="2" placeholder="생각나는 대로 적어 주세요." style="font:inherit;font-size:15px;color:#111111;padding:12px;border:1px solid #CFCFCF;border-radius:12px;resize:vertical"></textarea></label>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<a href="Code.dc.html" style="display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border-radius:999px;background:#111111;color:#FFFFFF;text-decoration:none;font-size:16px;font-weight:600">코드로 옮기기</a>
+<a href="#" style="display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border-radius:999px;border:1px solid #111111;text-decoration:none;font-size:16px">성공 조건 다시 정하기</a>
+</div>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+renderVals() {
+const labels = [['나누기', true], ['겹친 것은 하나만', false], ['개수 세기', false]];
+return { rows: labels.map(([label, detail], i) => ({ no: i + 1, label, detail, first: i === 0, last: i === labels.length - 1 })) };
+}
+}
+</script>
+</body>
+</html>
