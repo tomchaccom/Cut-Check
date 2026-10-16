@@ -83,5 +83,21 @@ const cfg = { sep: ',', targets: ['우유'] };
   }
 });
 
+/* 학생 화면 고정 문장: 튜터 거절 · 튜터 불가 · 파이썬 불러오기 실패 · 시간 초과 · input() */
+require('../js/core/pyerr.js');
+const fs = require('fs'), rd = f => fs.readFileSync(__dirname + '/../' + f, 'utf8');
+const fixed = [];
+(rd('api/_tutor.py').match(/REFUSE = \{[\s\S]*?\n\}/)[0].match(/: '([^']+)'/g) || []).forEach(x => fixed.push(x.slice(3, -1)));
+fixed.push(rd('js/ui/tutor.js').match(/UNAVAILABLE = '([^']+)'/)[1]);
+fixed.push(rd('js/ui/sentence.js').match(/LOAD_FAIL = '([^']+)'/)[1]);
+fixed.push(CC.pyerr.TIMEOUT, CC.pyerr.NO_INPUT);
+if (fixed.length !== 7) { console.log('  FAIL 고정 문장 수집: ' + fixed.length); fail2++; }
+fixed.forEach(m => {
+  /* 블록·주문서 같은 대상 단어 요구는 엔진 에러용 규칙이라 뺀다. 칭찬·해법·진단·코드·길이는 그대로 건다 */
+  const why = check(m, 'fact').reasons.filter(x => x.indexOf('무엇에 대한 사실') < 0);
+  console.log((why.length ? '  FAIL' : '  ok  ') + ' fixed: ' + m);
+  if (why.length) { console.log('       → ' + why.join(' / ')); fail2++; }
+});
+
 console.log('\n' + (fail2 ? `실제 문장 실패 ${fail2}건` : '실제 문장 전부 통과'));
 process.exit(fail || fail2 ? 1 : 0);

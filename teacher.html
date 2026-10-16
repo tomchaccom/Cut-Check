@@ -273,7 +273,8 @@ window.CC_SUPABASE = {
   function loadStudentEvents() {
     if (!selectedRoom || !CC.sb.active()) return;
     CC.sb.getClassroomEvents(selectedRoom.id).then(function (rows) {
-      if (!rows || !rows.length) { if (CC._alertsLoaded) CC._alertsLoaded(); return; }
+      if (!rows) return; /* 조회 실패 — 이전 상태 유지, 기준선을 새로 잡지 않는다 */
+      if (!rows.length) { if (CC._alertsLoaded) CC._alertsLoaded(); return; }
 
       /* sid 별로 이벤트를 묶어서 fold */
       var evs = rows.map(function (r) {

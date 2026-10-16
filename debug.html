@@ -158,7 +158,7 @@ window.CC_SUPABASE = {
 
     // 5. 학생+이벤트
     var students=await CC.sb.getClassroomStudents(classroomId);
-    var events=await CC.sb.getClassroomEvents(classroomId);
+    var events=(await CC.sb.getClassroomEvents(classroomId))||[];
     setCard('event',events.length>0,students.length+'명 / 활동 '+events.length+'건');
     addLog('학생: '+students.length+'명, 이벤트: '+events.length+'건','ok');
 

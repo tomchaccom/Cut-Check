@@ -122,6 +122,8 @@ t('새로 들어온 학생의 제출도 알린다', d3.some(x => x.id === 'a3' &
 t('문구는 조사를 계산한다', CC.alerts.say({ name: '민지', kind: 'design' }) === '민지가 설계도를 냈어요.'
   && CC.alerts.say({ name: '준호', kind: 'code' }) === '준호가 코드 결과를 판정했어요.'
   && CC.alerts.say({ name: '서연', kind: 'design' }) === '서연이 설계도를 냈어요.');
+t('이름이 나이면 내가', CC.alerts.say({ name: '나', kind: 'design' }) === '내가 설계도를 냈어요.'
+  && CC.alerts.say({ name: '나', kind: 'code' }) === '내가 코드 결과를 판정했어요.');
 t('문구에 순서·시간·판정 결과가 없다', !/첫|번째|분|초|지켰|못했/.test(
   CC.alerts.say({ name: 'x', kind: 'design' }) + CC.alerts.say({ name: 'x', kind: 'code' })));
 
