@@ -54,9 +54,13 @@ async function waitPython(page) {
 
 test('교사 화면에서 초안을 만들 수 있다 (LLM 고정 응답)', async ({ context, page }) => {
   await local(context);
+  const fixture = require('./fixtures/mission.json');
+  const draft = { ...fixture, guard: { ...(fixture.guard || {}), fallback: [], reasons: {},
+    review: { status: 'teacher', reasons: ['세 자료가 같은 이야기인가 — 셋째만 문구예요'], rounds: 3 } } };
+  delete draft.method;
   await page.route('**/api/generate-mission', r => r.fulfill({
     contentType: 'application/json',
-    body: JSON.stringify(require('./fixtures/mission.json'))
+    body: JSON.stringify(draft)
   }));
   await page.goto(BASE + '/teacher.html');
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
@@ -65,6 +69,9 @@ test('교사 화면에서 초안을 만들 수 있다 (LLM 고정 응답)', asyn
   await page.locator('#gen-key').fill('같은 값이 여러 번 나올 때');
   await gen.click();
   await expect(page.locator('#confirm-mission')).toBeVisible();
+  await expect(page.locator('#gen-result')).toContainText('검수 필요');
+  await expect(page.locator('#gen-result')).toContainText('셋째만 문구예요');
+  await expect(page.locator('#gen-result')).toContainText('헷갈리는 카드');
 });
 
 test('학생 해결 → 설계도 → 코드 → 완료 → 교사 화면', async ({ context, page }) => {

@@ -141,6 +141,8 @@ window.CC_SUPABASE = {
 <script src="js/core/fold.js"></script>
 <script src="js/core/hangul.js"></script>
 <script src="js/core/alerts.js"></script>
+<script src="js/core/pipeline.js"></script>
+<script src="js/core/cards.js"></script>
 <script src="js/data/api.js"></script>
 <script src="js/data/store.js"></script>
 <script src="js/core/blocks.js"></script>
@@ -445,6 +447,12 @@ window.CC_SUPABASE = {
       draft += '<span style="font-size:13px;font-weight:700;color:var(--amber)">초안 — 수정 후 확정하세요</span>';
       if (pipeLabel) draft += '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">' + esc(pipeLabel) + '</span>';
       draft += '</div>';
+      var rv = guard.review;
+      if (rv && rv.status === 'teacher') {
+        draft += '<div role="status" style="background:var(--amber-soft,#FFF3DC);border:1px solid var(--amber);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px">' +
+          '<b style="color:var(--amber)">검수 필요</b> — 학생에게 내기 전에 확인해 주세요.<ul style="margin:4px 0 0 18px;padding:0">' +
+          rv.reasons.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+      }
 
       /* 문제 이름 */
       draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 이름' + fb('title') + '</label>';
@@ -457,7 +465,7 @@ window.CC_SUPABASE = {
       /* 성공 조건 — 문제 내용 바로 아래 */
       if (m.define && m.define.options) {
         draft += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px">';
-        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">성공 조건 보기 (학생이 고르는 선택지)' + fb('goals') + '</div>';
+        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">성공 조건 보기 (학생이 고르는 선택지)' + '</div>';
         m.define.options.forEach(function (o) {
           var bg, label;
           if (o.trap === 'hardcode') { bg = 'var(--coral-soft)'; label = '<span style="color:var(--coral);font-size:11px;font-weight:700">하드코딩 함정</span>'; }
@@ -469,14 +477,15 @@ window.CC_SUPABASE = {
         draft += '</div>';
       }
 
-      /* 방법 문장 — 학생이 빈칸을 고르는 문장. 빈칸은 [보기/보기] 로 보인다 */
-      if (m.method && m.method.sentences) {
+      /* 설계 카드 — 학생 화면과 같은 표(js/core/cards.js). 헷갈리는 카드는 교사에게만 표시 */
+      var cards = CC.cards.forMission(m);
+      if (cards.length) {
         draft += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px">';
-        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">방법 문장 (학생이 빈칸을 고름)' + fb('sentences') + '</div>';
-        m.method.sentences.forEach(function (st) {
-          var parts = st.template.split('{' + st.slot + '}');
-          draft += '<div style="font-size:13px;padding:3px 0">' + esc(parts[0]) +
-            '<b style="color:var(--blue,#3A7BD5)">[' + esc(st.options.join(' / ')) + ']</b>' + esc(parts[1] || '') + '</div>';
+        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">설계 카드 (학생이 골라 순서를 정함)</div>';
+        cards.forEach(function (c) {
+          draft += '<div style="font-size:13px;padding:3px 0">' + esc(c.label) +
+            (c.detail ? ' <b style="color:var(--blue,#3A7BD5)">[' + esc(c.detail.name + ': ' + c.detail.options.join(' / ')) + ']</b>' : '') +
+            (c.decoy ? ' <span style="font-size:11px;color:var(--ink-3)">헷갈리는 카드</span>' : '') + '</div>';
         });
         draft += '</div>';
       }
@@ -485,7 +494,7 @@ window.CC_SUPABASE = {
       draft += '<div style="padding:8px 10px;background:var(--green-soft);border:1px solid var(--green);border-radius:8px;margin-bottom:10px;font-size:12.5px;line-height:1.6">';
       draft += '<b style="color:var(--green)">적용된 핵심 개념</b><br>';
       draft += '<b>수업:</b> ' + esc(m.lesson || '') + ' · <b>핵심:</b> ' + esc(m.keyPoint || '') + '<br>';
-      draft += '<b>유형:</b> ' + esc(pipeLabel) + ' — 학생이 ' + (m.method && m.method.sentences ? m.method.sentences.length : 0) + '개 빈칸을 선택';
+      draft += '<b>유형:</b> ' + esc(pipeLabel) + ' — 카드 ' + cards.filter(function (c) { return !c.decoy; }).length + '장으로 설계';
       draft += '</div>';
 
       /* 자료 편집 */
