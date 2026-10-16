@@ -343,5 +343,6 @@ for pid, M in DRAFTS.items():
     t(f'{pid}: maxLength 는 설명으로 (모델이 그 길이에서 자른다)', 'maxLength' not in json.dumps(f) and '자 안)' in json.dumps(f, ensure_ascii=False))
     t(f'{pid}: 객체마다 additionalProperties false', all(o.get('additionalProperties') is False for o in _objs(f)))
 
-print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
-sys.exit(1 if fail else 0)
+if __name__ == '__main__':
+    print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
+    sys.exit(1 if fail else 0)
