@@ -141,7 +141,7 @@ for pid, d in DATA.items():
     try:
         m, _ = quiet(generate, '수업', '핵심', fake(pid, d, d, d))
         first_key = next(iter(SPEC[pid]['keys']))
-        ok = 'brief' in m['guard']['fallback'] or re.search(KEY_TARGET[first_key], m['brief'])  # DATA 의 요청엔 구할 값이 없다
+        ok = re.search(KEY_TARGET[first_key], m['brief'])  # 기본 틀로 바뀌었든 아니든 최종 요청에 구할 값이 있다
         # 학생 화면에서 정말로 깨지는가 — 정답 빈칸으로 돌리면 반례 결과가 첫 자료와 달라야 한다
         slots = next(iter(SPEC[pid]['keys'].values()))
         params = m.get('pipelineParams', {})
@@ -306,6 +306,9 @@ from _schema import DRAFTS  # noqa: E402
 for brief, ok in [('이번 주 재료가 모두 몇 가지인지 알려 주세요.', True), ('재료 목록을 정리해 주세요.', False)]:
     _, b = _generate._parse(U, {**copy.deepcopy(GOOD), 'brief': brief})
     t(f"'{brief}' → {'통과' if ok else '걸림'}", ('brief' not in b) == ok, b)
+for pid in ('split-filter-join', 'split-transform-join'):
+    _, b = _generate._parse(pid, {**copy.deepcopy(DATA[pid]), 'brief': '이번 주 재료 목록을 확인해 주세요.'})
+    t(f'{pid}: 모호한 "목록을 확인해" 는 걸린다', 'brief' in b, b)
 for pid in SPEC:
     k = next(iter(SPEC[pid]['keys']))
     fb = _generate.BRIEF_FALLBACK[k].format(item='재료', iga='가', eunneun='는')

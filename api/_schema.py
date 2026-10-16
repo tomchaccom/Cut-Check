@@ -59,19 +59,11 @@ DESC = {  # 유형 고르기에 쓰는 설명. 학생이 무엇을 처리하는�
     'split-filter-num-sum': '숫자와 글자가 섞인 목록에서 숫자만 골라 더하기',
 }
 
-KEY_MEAN = {  # 정답 key → 그 성공 조건이 가리키는 결과. goals 칸의 description 이 된다
-    'count': '항목 개수', 'total': '겹쳐도 전부 센 개수', 'unique': '겹치는 건 한 번만 센 개수',
-    'filtered_count': '조건에 맞는 항목의 개수', 'filtered': '조건에 맞는 항목만 남은 목록',
-    'sorted': '순서대로 늘어선 목록', 'transformed': '항목마다 정리된 목록',
-    'sum': '전부 더한 값', 'filtered_sum': '숫자만 골라 더한 값',
-    'max': '가장 큰 값', 'min': '가장 작은 값', 'group': '항목마다 나온 횟수',
-}
-
 # 요청 문장에 있어야 하는 '구할 값' 말. 첫 번째 정답 key 로 고른다 (사람 결정 2026-10-16)
 KEY_TARGET = {
     'count': r'몇', 'total': r'몇', 'unique': r'몇', 'filtered_count': r'몇', 'group': r'몇|횟수',
     'sum': r'얼마|합|모두 더', 'filtered_sum': r'얼마|합|모두 더', 'max': r'가장|제일', 'min': r'가장|제일',
-    'sorted': r'순서|차례', 'filtered': r'목록|명단', 'transformed': r'목록|명단',
+    'sorted': r'순서|차례', 'filtered': r'만 남|빼고|뺀|없는|있는 것만|골라', 'transformed': r'깔끔|다듬|정리된|고친|바꾼',
 }
 
 
