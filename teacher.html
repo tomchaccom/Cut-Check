@@ -84,7 +84,7 @@
             <textarea id="gen-lesson" rows="2" placeholder="예: 파이썬 리스트와 for 반복문" style="width:100%;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);resize:vertical;font-family:inherit"></textarea>
           </div>
           <div>
-            <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:4px">핵심 포인트는?</label>
+            <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:4px">핵심은?</label>
             <textarea id="gen-key" rows="2" placeholder="예: 중복 데이터를 구분하는 법" style="width:100%;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);resize:vertical;font-family:inherit"></textarea>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
@@ -183,6 +183,11 @@ window.CC_SUPABASE = {
     $('#t-logout').addEventListener('click', function () {
       CC.sb.signOut().then(function () { window.location.href = 'auth.html'; });
     });
+  } else {
+    /* 로컬 모드 — 교실은 서버에만 있다. 서버가 없어도 이 브라우저의 기록으로
+     * 대시보드는 열려야 한다 (CLAUDE.md: 서버를 필수로 만들지 않는다). */
+    $('#classroom-selector').hidden = true;
+    $('#dashboard').hidden = false;
   }
 
   /* 교실 목록 로드 */
@@ -301,7 +306,9 @@ window.CC_SUPABASE = {
     'split-sort-join': '정렬', 'split-num-sum': '합계',
     'split-num-max': '최대값', 'split-num-min': '최소값',
     'split-group': '묶어서 세기', 'split-transform-join': '정리하기',
-    'split-filter-num-sum': '걸러서 합계'
+    'split-filter-num-sum': '걸러서 합계',
+    'split-filter-unique-count': '걸러서 세기', 'split-filter-sort-join': '걸러서 정렬',
+    'split-transform-unique-count': '정리해서 세기'
   };
 
   function loadMissions() {
@@ -410,6 +417,15 @@ window.CC_SUPABASE = {
       /* ── 초안 편집 폼 ── */
       /* PIPE_LABEL은 미션 카드 렌더링(위)에서 이미 정의됨 — 재사용 */
       var pipeLabel = m.pipelineId ? (PIPE_LABEL[m.pipelineId] || m.pipelineId) : '';
+      /* LLM 이 검사에 두 번 걸려 기본 틀로 갈아 끼운 칸. 숨기지 않고 사유와 함께 보인다 */
+      var guard = m.guard || { fallback: [], reasons: {} };
+      var fb = function (field) {
+        if (guard.fallback.indexOf(field) === -1) return '';
+        return ' <span title="' + esc((guard.reasons[field] || []).join('\n')) + '" style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--amber-soft,#FFF3DC);color:var(--amber)">기본 틀로 채워졌어요</span>';
+      };
+      /* 자료는 기본 틀이 없다. 코드가 관계만 고친 경우(단위 떼기 등)는 따로 알린다 */
+      var repaired = (guard.repaired || []);
+      var AXIS = { count: '개수 변화', sep: '구분자 변화', empty: '빈 결과', invisible: '보이지 않는 차이' };
       var inputStyle = 'width:100%;padding:8px 12px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit';
 
       var draft = '<div style="background:var(--surface-2);border:2px solid var(--amber);border-radius:12px;padding:16px;margin-top:8px">';
@@ -419,17 +435,17 @@ window.CC_SUPABASE = {
       draft += '</div>';
 
       /* 문제 이름 */
-      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 이름</label>';
+      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 이름' + fb('title') + '</label>';
       draft += '<input id="draft-title" style="' + inputStyle + ';margin-bottom:10px" value="' + esc(m.title) + '">';
 
       /* 문제 내용 */
-      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 내용 (학생에게 보이는 업무 요청)</label>';
+      draft += '<label style="font-size:12px;font-weight:600;color:var(--ink-2)">문제 내용 (학생에게 보이는 업무 요청)' + fb('brief') + '</label>';
       draft += '<input id="draft-brief" style="' + inputStyle + ';margin-bottom:10px" value="' + esc(m.brief) + '">';
 
       /* 성공 조건 — 문제 내용 바로 아래 */
       if (m.define && m.define.options) {
         draft += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px">';
-        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">성공 조건 보기 (학생이 고르는 선택지)</div>';
+        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">성공 조건 보기 (학생이 고르는 선택지)' + fb('goals') + '</div>';
         m.define.options.forEach(function (o) {
           var bg, label;
           if (o.trap === 'hardcode') { bg = 'var(--coral-soft)'; label = '<span style="color:var(--coral);font-size:11px;font-weight:700">하드코딩 함정</span>'; }
@@ -437,6 +453,18 @@ window.CC_SUPABASE = {
           else { bg = 'var(--green-soft)'; label = '<span style="color:var(--green);font-size:11px;font-weight:700">진짜 성공</span>'; }
           draft += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;margin-bottom:3px;border-radius:6px;background:' + bg + ';font-size:13px">';
           draft += '<span>' + esc(o.v) + '</span>' + label + '</div>';
+        });
+        draft += '</div>';
+      }
+
+      /* 방법 문장 — 학생이 빈칸을 고르는 문장. 빈칸은 [보기/보기] 로 보인다 */
+      if (m.method && m.method.sentences) {
+        draft += '<div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px">';
+        draft += '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px">방법 문장 (학생이 빈칸을 고름)' + fb('sentences') + '</div>';
+        m.method.sentences.forEach(function (st) {
+          var parts = st.template.split('{' + st.slot + '}');
+          draft += '<div style="font-size:13px;padding:3px 0">' + esc(parts[0]) +
+            '<b style="color:var(--blue,#3A7BD5)">[' + esc(st.options.join(' / ')) + ']</b>' + esc(parts[1] || '') + '</div>';
         });
         draft += '</div>';
       }
@@ -449,13 +477,14 @@ window.CC_SUPABASE = {
       draft += '</div>';
 
       /* 자료 편집 */
-      draft += '<div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px">자료 (쉼표로 구분)</div>';
+      draft += '<div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px">자료 (쉼표로 구분)' +
+        (repaired.length ? ' <span title="' + esc(repaired.join('\n')) + '" style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--blue-soft,#E8F0FC);color:var(--blue,#3A7BD5)">자동으로 손봤어요</span>' : '') + '</div>';
       (m.inputs || []).forEach(function (inp, i) {
         var isCounter = (i === (m.inputs || []).length - 1);
         draft += '<div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">';
         draft += '<input class="draft-data-name" data-idx="' + i + '" style="' + inputStyle + ';flex:0 0 120px" value="' + esc(inp.name) + '">';
         draft += '<input class="draft-data-val" data-idx="' + i + '" style="' + inputStyle + ';flex:1;font-family:var(--mono)" value="' + esc(inp.v) + '">';
-        if (isCounter) draft += '<span style="font-size:11px;color:var(--coral);white-space:nowrap;font-weight:600">반례</span>';
+        if (isCounter) draft += '<span style="font-size:11px;color:var(--coral);white-space:nowrap;font-weight:600">반례' + (AXIS[inp.axis] ? ' · ' + AXIS[inp.axis] : '') + fb('counter') + '</span>';
         draft += '</div>';
       });
 
@@ -470,6 +499,7 @@ window.CC_SUPABASE = {
 
       /* 확정 — 편집된 값을 반영 */
       $('#confirm-mission').addEventListener('click', function () {
+        delete m.guard;  /* 교사 화면 전용 — 학생 기록에 섞이지 않게 저장 전에 뗀다 */
         m.title = ($('#draft-title').value || '').trim() || m.title;
         m.brief = ($('#draft-brief').value || '').trim() || m.brief;
         document.querySelectorAll('.draft-data-name').forEach(function (el) {

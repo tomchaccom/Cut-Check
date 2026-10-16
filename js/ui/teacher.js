@@ -441,7 +441,11 @@
 
     /* 문장형 활동이 있는 학생 별도 표시 */
     var sActive = C.students.filter(function (s) { return s.sDefine || s.sRuns.length; });
-    if (sActive.length) {
+    if (!(CC.sb && CC.sb.active())) {
+      /* 로컬 모드 — 이 브라우저의 기록을 열어볼 문이 있어야 한다.
+       * 문장형만 한 학생은 어느 명단 칸에도 안 들어갈 수 있다. */
+      liveBanner();
+    } else if (sActive.length) {
       var banner = document.querySelector('#livebar');
       if (banner) {
         banner.className = 'livebar on';

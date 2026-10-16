@@ -79,9 +79,10 @@
       /* 결과를 보고 기준을 고친 학생 — 이 제품에서 가장 강한 학습 신호 */
       var revised = stage >= 3 && r() < 0.22;
 
-      return {
-        id: 'st' + i,
-        name: name,
+      /* 실제 학생과 같은 모양에서 시작한다. 목업에만 없는 필드가 생기면
+       * 교사 화면이 목업을 그리다 멈춘다 (sRuns·sJudges 가 그렇게 터졌다). */
+      return Object.assign(CC.fold.empty('st' + i, name), {
+        live: false,
         stage: stage,
         define: define,
         why: why,
@@ -95,7 +96,7 @@
         blocks: stage >= 2
           ? (r() < 0.5 ? ['input', 'cut', 'save'] : ['input', 'cut', 'loop', 'check'])
           : []
-      };
+      });
     });
   }
 

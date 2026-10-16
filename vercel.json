@@ -2,5 +2,8 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/", "destination": "/landing.html" }
-  ]
+  ],
+  "functions": {
+    "api/generate-mission.py": { "maxDuration": 60 }
+  }
 }

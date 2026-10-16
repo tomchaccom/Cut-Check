@@ -1,0 +1,172 @@
+"""생성 미션 검사기(api/_schema.py) 검증.
+
+docs/llm.md 7절대로 통과해야 하는 것보다 **막아야 하는 것을 더 많이** 넣는다.
+이 검사기의 일은 통과시키는 게 아니라 막는 것이다.
+
+  uv run --with-requirements requirements.txt python test/test_missionguard.py
+"""
+import copy
+import json
+import os
+import subprocess
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'api'))
+from _schema import (CHOICE, DRAFTS, SPEC, _LIMIT, _brief_problem, _plain_problem,  # noqa: E402
+                     _sentence_problem, _text_problem, failed_fields)
+from pydantic import ValidationError  # noqa: E402
+
+fail = 0
+
+
+def t(name, cond, extra=''):
+    global fail
+    print(('  ok  ' if cond else '  FAIL') + ' ' + name)
+    if not cond:
+        fail += 1
+        if extra:
+            print('       → ' + str(extra)[:300])
+
+
+def check(pid, m):
+    try:
+        DRAFTS[pid].model_validate(m)
+        return {}
+    except ValidationError as e:
+        return failed_fields(e)
+
+
+U, F = 'split-unique-count', 'split-filter-count'
+GOOD = {
+    U: {'title': '급식 재료 확인', 'brief': '이번 주 급식 재료 목록을 확인해 주세요.', 'situation': '우리 반이 급식 당번이에요.',
+        'itemName': '재료',
+        'data': [{'name': '월요일 재료', 'items': ['밥', '우유', '김치']}, {'name': '화요일 재료', 'items': ['빵', '국', '떡']}],
+        'counter': {'name': '수요일 재료', 'text': '밥,우유,김치,밥,국', 'axis': 'count'},
+        'goals': {'unique': '겹친 재료는 한 번만 센 수가 나오면 성공', 'total': '들어온 재료 수가 다 나오면 성공'},
+        'sentences': {'sep': {'before': '재료 목록을', 'after': '기준으로 본다.'},
+                      'dedup': {'before': '같은 재료는', 'after': '.'}, 'output': {'before': '화면에', 'after': '만 띄운다.'}}},
+    F: {'title': '급식 알레르기 찾기', 'brief': '주의할 재료가 몇 개인지 알려 주세요.', 'situation': '우리 반이 급식 당번이에요.',
+        'itemName': '재료', 'filterTarget': ['우유', '달걀'], 'filterDesc': '알레르기 목록',
+        'data': [{'name': '월요일 재료', 'items': ['밥', '우유', '김치']}, {'name': '화요일 재료', 'items': ['빵', '달걀', '국', '우유']}],
+        'counter': {'name': '수요일 재료', 'text': '밥 우유 김치 달걀', 'axis': 'sep'},
+        'goals': {'filtered_count': '주의 재료 수가 나오면 성공'},
+        'sentences': {'sep': {'before': '재료 목록을', 'after': '기준으로 본다.'},
+                      'cond': {'before': '알레르기 목록에', 'after': '것만 본다.'},
+                      'output': {'before': '화면에', 'after': '만 띄운다.'}}},
+}
+
+print('\n[통과해야 하는 것]')
+for pid, m in GOOD.items():
+    r = check(pid, m)
+    t(pid, not r, r)
+
+
+def broken(pid, why, edit, field):
+    m = copy.deepcopy(GOOD[pid])
+    edit(m)
+    r = check(pid, m)
+    t(f'[{field}] {why}', field in r, r or '통과해버림')
+
+
+def setp(path, value):
+    def f(m):
+        cur = m
+        for k in path[:-1]:
+            cur = cur[k]
+        cur[path[-1]] = value
+    return f
+
+
+print('\n[막아야 하는 것]')
+broken(U, '칭찬', setp(['situation'], '정말 잘했어요.'), 'situation')
+broken(U, '반말 brief', setp(['brief'], '급식 재료 좀 세어봐.'), 'brief')
+broken(U, "학생을 '너'라고 부름", setp(['brief'], '너 이거 정리해 주세요.'), 'brief')
+broken(U, 'brief 가 답을 암시', setp(['brief'], '중복을 빼고 세어 주세요.'), 'brief')
+broken(U, '두 문장', setp(['brief'], '목록이 왔어요. 확인해 주세요.'), 'brief')
+broken(U, '괄호 덧붙임', setp(['situation'], '급식 당번이에요(이번 주만).'), 'situation')
+broken(U, "'예를 들어' 부연", setp(['brief'], '예를 들어 재료를 확인해 주세요.'), 'brief')
+broken(U, '요청이 40자 넘음', setp(['brief'], '이번 주 월요일부터 금요일까지 급식에 들어간 재료 목록을 전부 확인해 주세요.'), 'brief')
+broken(U, '한자 섞임', setp(['title'], '給食 재료'), 'title')
+broken(U, '코드 조각', setp(['situation'], 'items.split(",") 해요.'), 'situation')
+broken(U, '반례가 첫 자료와 결과가 같음', setp(['counter', 'text'], '빵,국,떡,빵'), 'counter')
+broken(U, 'axis=sep 인데 쉼표만 있음', setp(['counter'], {'name': 'x', 'text': '밥,우유', 'axis': 'sep'}), 'counter')
+broken(U, 'axis=invisible 인데 공백 없음', setp(['counter'], {'name': 'x', 'text': '밥,우유', 'axis': 'invisible'}), 'counter')
+broken(U, 'axis=empty 인데 결과가 있음', setp(['counter'], {'name': 'x', 'text': '밥', 'axis': 'empty'}), 'counter')
+broken(U, '정답 보기에 방법이 적힘', setp(['goals', 'unique'], '쉼표로 나눈 개수가 나오면 성공'), 'goals')
+broken(U, '정답 보기 반말', setp(['goals', 'total'], '다 세어봐'), 'goals')
+broken(U, '정답 key 가 빠짐', lambda m: m['goals'].pop('total'), 'goals')
+broken(U, '빈칸 밖에 보기 값 노출', setp(['sentences', 'dedup'], {'before': '하나만 남긴다', 'after': '.'}), 'sentences')
+broken(U, '앞말·뒷말이 비었음', setp(['sentences', 'sep'], {'before': '', 'after': ''}), 'sentences')
+broken(U, '자리표시를 직접 씀', setp(['sentences', 'sep'], {'before': '목록을 {sep}', 'after': '본다.'}), 'sentences')
+broken(U, "빈칸 뒤 조사가 보기마다 안 맞음 ('공백로')", setp(['sentences', 'sep'], {'before': '목록을', 'after': '로 나눈다.'}), 'sentences')
+broken(U, '앞말·뒷말 반말', setp(['sentences', 'sep'], {'before': '목록을', 'after': '기준으로 나눠봐'}), 'sentences')
+broken(U, '빈칸이 빠짐', lambda m: m['sentences'].pop('output'), 'sentences')
+broken(U, '자료 항목에 플레이스홀더', setp(['data', 0, 'items'], ['항목1', '항목2', '항목3']), 'data')
+broken(U, '자료 항목 안에 쉼표', setp(['data', 0, 'items'], ['밥,국', '우유', '김치']), 'data')
+broken(U, '자료가 2개가 아님', lambda m: m['data'].pop(), 'data')
+# 평가 3회차에서 실제로 새어 나간 것들
+broken(U, "명령형 brief ('결정해라')", setp(['brief'], '기준을 스스로 결정해라.'), 'brief')
+broken(U, "평서형 brief ('작성한다')", setp(['brief'], '날의 수를 세는 프로그램을 작성한다.'), 'brief')
+broken(U, '결과가 아닌 성공 조건', setp(['goals', 'unique'], '정리할 기준을 세우라.'), 'goals')
+broken(U, '방법을 적은 성공 조건', setp(['goals', 'total'], '조건에 맞는 항목만 골라 세어 본다.'), 'goals')
+broken(U, '반례가 문장', setp(['counter'], {'name': 'x', 'text': '항목의 개수를 세어라. 같은 값은 여러 번', 'axis': 'count'}), 'counter')
+broken(U, '항목에 목록을 통째로', setp(['data', 0, 'items'], ['7 3 2 4 6 5 7', '밥', '국']), 'data')
+broken(U, '빈칸 뜻이 엉뚱함', setp(['sentences', 'sep'], {'before': '가장 많이 나온 숫자는', 'after': '입니다.'}), 'sentences')
+broken(U, '방법 문장이 평서문이 아님', setp(['sentences', 'sep'], {'before': '목록을', 'after': '기준으로 나눠 주세요'}), 'sentences')
+broken(U, "반례가 이름표 ('data1')", setp(['counter'], {'name': 'x', 'text': 'data1', 'axis': 'count'}), 'counter')
+broken(U, "반례가 이름표 ('과일 개수')", setp(['counter'], {'name': 'x', 'text': '과일 개수', 'axis': 'count'}), 'counter')
+broken(U, "항목 이름이 영어 ('count')", setp(['itemName'], 'count'), 'itemName')
+broken(F, '걸러낼 대상이 자료에 없음', setp(['filterTarget'], ['땅콩', '새우']), 'data')
+broken(F, '걸러내기 유형인데 대상이 없음', lambda m: m.pop('filterTarget'), 'filterTarget')
+
+print('\n[유형마다 다른 자료 조건]')
+num = {'title': '용돈 합계', 'brief': '이번 주 쓴 돈을 알려 주세요.', 'situation': '용돈 기록을 정리해요.', 'itemName': '금액',
+       'data': [{'name': '월요일', 'items': ['1000', '메모', '500']}, {'name': '화요일', 'items': ['300', '700', '100']}],
+       'counter': {'name': '수요일', 'text': '1000,2000,500,300', 'axis': 'count'},
+       'goals': {'sum': '전부 더한 값이 나오면 성공'},
+       'sentences': {'sep': {'before': '기록을', 'after': '기준으로 나눈다.'}}}
+t('합계 유형에 숫자 아닌 항목 → data', 'data' in check('split-num-sum', num))
+grp = copy.deepcopy(num) | {'goals': {'group': '재료마다 횟수가 나오면 성공'},
+                            'data': [{'name': 'a', 'items': ['밥', '국', '빵']}, {'name': 'b', 'items': ['떡', '김치', '우유']}],
+                            'counter': {'name': 'c', 'text': '밥,밥,국,빵', 'axis': 'count'}}
+t('묶어 세기인데 겹치는 항목 없음 → data', 'data' in check('split-group', grp))
+
+print('\n[사유를 한 번에 전부 낸다 — 재요청은 한 번뿐이다]')
+m = copy.deepcopy(GOOD[U])
+m['brief'] = '세어봐'
+m['counter']['text'] = '빵,국,떡,빵'
+m['goals']['unique'] = '쉼표로 나눈 개수가 나오면 성공'
+m['situation'] = '가' * 50
+r = check(U, m)
+t('brief · counter · goals · situation 이 함께 나온다', {'brief', 'counter', 'goals', 'situation'} <= set(r), r)
+
+print('\n[LLM 에 넘기는 스키마]')
+choice = CHOICE.model_json_schema()
+t('유형 고르기 — 14개', len(choice['properties']['pipelineId']['enum']) == 14)
+s = DRAFTS[F].model_json_schema()
+t('초안 — 다른 유형이 섞이지 않는다', 'oneOf' not in json.dumps(s) and 'anyOf' not in json.dumps(s))
+t('초안 — 빈칸마다 앞말·뒷말 칸이 하나씩 (sep · cond · output)',
+  sorted(s['$defs']['Steps_split_filter_count']['required']) == ['cond', 'output', 'sep'])
+t('초안 — 정답 key 마다 칸이 하나씩', s['$defs']['Goals_split_filter_count']['required'] == ['filtered_count'])
+t('초안 — 글자 수 한도가 스키마에 보인다', s['properties']['brief'].get('maxLength') == 40)
+t('초안 — description 이 생성 지시로 들어간다', '반례' in s['properties']['counter']['description'])
+t('14개 유형 모두 초안 스키마가 만들어진다', len(DRAFTS) == 14 == len(SPEC))
+
+print('\n[우리가 손으로 쓴 미션 문장도 같은 규칙 — 모델에게만 시킬 수는 없다]')
+ours = json.loads(subprocess.run(
+    ['node', '-e', 'global.window={};require(process.argv[1]);'
+     'process.stdout.write(JSON.stringify(window.CC.SENTENCE_MISSIONS))',
+     os.path.join(ROOT, 'js/core/missions.js')],
+    capture_output=True, text=True, check=True).stdout)
+for m in ours:
+    said = [('brief', m['brief'], _LIMIT['brief']), ('define.q', m['define']['q'], _LIMIT['brief'])]
+    said += [('goals', o['v'], _LIMIT['goals']) for o in m['define']['options']]
+    said += [('sentences', s['template'], _LIMIT['sentences']) for s in m['method']['sentences']]
+    for field, text, limit in said:
+        why = (f'{len(text)}자 > {limit}자' if len(text) > limit else None) or _text_problem(text) or \
+            _sentence_problem(text) or _plain_problem(text) or (field == 'brief' and _brief_problem(text))
+        t(f"{m['id']} {field}: {text}", not why, why)
+
+print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
+sys.exit(1 if fail else 0)

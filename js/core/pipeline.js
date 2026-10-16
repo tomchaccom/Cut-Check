@@ -58,9 +58,12 @@
       }
       case 'filter': {
         var tgt = params.filterTarget;
-        var cond = slots.cond;
-        /* 포함/있는/빼고 숫자만 남긴다 등 다양한 표현을 정규화 */
-        var keep = (cond === '있는' || cond === '포함' || (cond && cond.indexOf('남긴다') !== -1));
+        var cond = slots.cond || '';
+        /* 포함/있는/빼고 숫자만 남긴다 등 다양한 표현을 정규화.
+         * '빼고 … 남긴다' 는 대상을 빼는 말이다 — '남긴다' 만 보면 거꾸로 돈다. */
+        if (cond.indexOf('그대로') !== -1) return { t: 'list', v: val.slice() };
+        var keep = cond.indexOf('빼고') === -1 &&
+          (cond === '있는' || cond === '포함' || cond.indexOf('남긴다') !== -1);
         var fn;
         if (Array.isArray(tgt)) {
           fn = keep
@@ -74,11 +77,15 @@
         return { t: 'list', v: val.filter(fn) };
       }
       case 'unique': {
+        /* 학생이 고른 대로 돈다. 고르지 않았으면(빈칸 없는 유형) 중복을 뺀다. */
+        if (slots.dedup === '각각 남긴다') return { t: 'list', v: val.slice() };
         var seen = [];
         val.forEach(function (x) { if (seen.indexOf(x) === -1) seen.push(x); });
         return { t: 'list', v: seen };
       }
       case 'count':
+        /* '항상 숫자 3' 은 하드코딩 함정 보기다. 고르면 정말로 3이 나와야 반례에서 깨진다. */
+        if (slots.output === '항상 숫자 3') return { t: 'number', v: 3 };
         return { t: 'number', v: val.length };
       case 'sort': {
         var s = val.slice().sort(function (a, b) { return a.localeCompare(b, 'ko'); });

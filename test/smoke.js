@@ -19,7 +19,8 @@ function launchOpts() {
   return p ? { executablePath: p } : {};
 }
 
-const PAGES = ['index.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html','sentence.html'];
+/* index.html 은 landing.html 로 넘기는 리다이렉트뿐이라 landing 을 본다 */
+const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html','sentence.html'];
 (async () => {
   const b = await chromium.launch(launchOpts());
   let bad = 0;
@@ -27,6 +28,8 @@ const PAGES = ['index.html','teacher.html','abstract.html','review.html','make.h
     for (const f of PAGES) {
       for (const scheme of ['light','dark']) {
         const ctx = await b.newContext({ viewport: { width: w, height: 900 }, colorScheme: scheme });
+        /* 실제 교실 DB 에 붙지 않게 로컬 모드로 돌린다 (robust.js 와 같은 이유) */
+        await ctx.route('**/supabase-js@2/**', r => r.abort());
         const p = await ctx.newPage();
         const errs = [];
         p.on('pageerror', e => errs.push(e.message));
@@ -57,6 +60,8 @@ const PAGES = ['index.html','teacher.html','abstract.html','review.html','make.h
       }
     }
   }
-  console.log(bad ? `\n문제 ${bad}건` : '\n7개 화면 × 3폭 × 2테마 = 42조합 전부 통과 (JS 에러 · 가로 스크롤 · 금지 단어 없음)');
+  console.log(bad ? `\n문제 ${bad}건` : `\n${PAGES.length}개 화면 × 3폭 × 2테마 전부 통과 (JS 에러 · 가로 스크롤 · 금지 단어 없음)`);
   await b.close();
+  /* 문제가 있으면 실패로 끝낸다 — 0 으로 끝나던 동안 리다이렉트 이후 깨진 걸 아무도 몰랐다 */
+  process.exit(bad ? 1 : 0);
 })();

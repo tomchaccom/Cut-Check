@@ -1,0 +1,1638 @@
+[
+ {
+  "no": 1,
+  "lesson": "파이썬 리스트와 반복문. for문으로 하나씩 꺼내서 처리하는 법",
+  "keyPoint": "같은 값이 여러 번 있을 때 전체와 서로 다른 개수가 다르다",
+  "expect": "split-unique-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a140a4b950",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-unique-count",
+   "stage": "데이터 정리 문제",
+   "title": "데이터 정리 문제",
+   "brief": "같은 항목이 여러 번 나오는 목록을 정리하는 방법을 정해 보세요.",
+   "situation": "",
+   "lesson": "파이썬 리스트와 반복문. for문으로 하나씩 꺼내서 처리하는 법",
+   "keyPoint": "같은 값이 여러 번 있을 때 전체와 서로 다른 개수가 다르다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "각 항목의 서로 다른 값을 모두 구하면 성공",
+      "trap": null,
+      "key": "unique"
+     },
+     {
+      "v": "각 항목의 전체 개수를 모두 세면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "4가 나오면 성공",
+      "trap": "hardcode"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "같은 count는 {dedup}.",
+      "slot": "dedup",
+      "options": [
+       "각각 남긴다",
+       "하나만 남긴다"
+      ]
+     },
+     {
+      "template": "{output}만 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "data1",
+     "v": "사과,배,포도,사과,딸기"
+    },
+    {
+     "id": "d02",
+     "name": "data2",
+     "v": "사과,사과,사과,배,배"
+    },
+    {
+     "id": "d03",
+     "name": "data",
+     "v": "data1",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "situation",
+     "sentences"
+    ],
+    "reasons": {
+     "situation": [
+      "'주어진 세 가지 상황에 대해 다음 데이터를 처리하고,가': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+     ],
+     "sentences": [
+      "'중복 제거 방식을 선택하세요. 예: {dedup}': 27자 — 25자 안으로",
+      "'결과 표현 방식을 선택하세요. 예: {output}': 28자 — 25자 안으로",
+      "'항목 구분 기호를 선택하세요. 예: {sep}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'결과 표현 방식을 선택하세요. 예: {output}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'결과 표현 방식을 선택하세요. 예: {output}' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [
+    "situation",
+    "sentences"
+   ],
+   "reasons": {
+    "situation": [
+     "'주어진 세 가지 상황에 대해 다음 데이터를 처리하고,가': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'중복 제거 방식을 선택하세요. 예: {dedup}': 27자 — 25자 안으로",
+     "'결과 표현 방식을 선택하세요. 예: {output}': 28자 — 25자 안으로",
+     "'항목 구분 기호를 선택하세요. 예: {sep}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'결과 표현 방식을 선택하세요. 예: {output}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'결과 표현 방식을 선택하세요. 예: {output}' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 15551,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 418,
+    "status": "ok",
+    "chars": 40
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 4916,
+    "status": "ok",
+    "chars": 823
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 4959,
+    "status": "ok",
+    "chars": 855
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5251,
+    "status": "ok",
+    "chars": 860
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-unique-count\"\n}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"같은 항목이 여러 번 나오는 목록을 정리하여 각 항목의 개수를 세고, 이\",\"situation\": \"다음 세 가지 상황에 대해 주어진 데이터를 처리하고 그\",\"itemName\": \"count\",\n  \"counter\":  {\n    \"name\": \"data\",\n    \"text\": \"data1\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"data1\",\n      \"items\": [\n        \"사과\",\n        \"배\",\n        \"포도\",\n        \"사과\",\n        \"딸기\"\n      ]\n    },\n    {\n      \"name\": \"data2\",\n      \"items\": [\n        \"사과\",\n        \"사과\",\n        \"사과\",\n        \"배\",\n        \"배\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"각 항목이 전체에서 차지하는 비율을 구하여\",\"total\": \"전체 개수를 구한다. 각 항목의 개수를 구한다\"\n  },\n  \"sentences\": {\n    \"sep\":  {\n      \"before\":  \" \",\n      \"after\":   \"  \"\n    }\n  ,\n    \"dedup\":  {\n      \"before\":  \" \",\n      \"after\":   \"  \"\n    }\n  ,\n    \"output\": {\n      \"before\":  \" \",\n      \"after\":   \"  \"\n    }\n  }\n}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"같은 항목이 여러 번 나오는 목록을 정리하는 방법을 정해 보세요.\",\n  \"situation\": \"주어진 세 가지 상황에 대해 다음 데이터를 처리하고,가\",\n  \"itemName\": \"count\",\n  \"counter\": {\n    \"name\": \"data\",\n    \"text\": \"data1\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"data1\",\n      \"items\": [\n        \"사과\",\n        \"배\",\n        \"포도\",\n        \"사과\",\n        \"딸기\"\n      ]\n    },\n    {\n      \"name\": \"data2\",\n      \"items\": [\n        \"사과\",\n        \"사과\",\n        \"사과\",\n        \"배\",\n        \"배\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"각 항목의 서로 다른 값을 모두 구하면 성공\",\n    \"total\": \"각 항목의 전체 개수를 모두 세면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"항목 사이를 구분하기 위한 문자는\",\n      \"after\": \"으로 정합니다.\"\n    },\n    \"dedup\": {\n      \"before\": \"중복된 항목은\",\n      \"after\": \"로 처리합니다.\"\n    },\n    \"output\": {\n      \"before\": \"최종 결과는\",\n      \"after\": \"로 표시합니다.\"\n    }\n  }\n}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"같은 항목이 여러 번 나오는 목록을 정리하는 방법을 정해 보세요.\",\n  \"situation\": \"주어진 세 가지 상황에 대해 다음 데이터를 처리하고,가\",\n  \"itemName\": \"count\",\n  \"counter\": {\n    \"name\": \"data\",\n    \"text\": \"data1\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"data1\",\n      \"items\": [\n        \"사과\",\n        \"배\",\n        \"포도\",\n        \"사과\",\n        \"딸기\"\n      ]\n    },\n    {\n      \"name\": \"data2\",\n      \"items\": [\n        \"사과\",\n        \"사과\",\n        \"사과\",\n        \"배\",\n        \"배\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"각 항목의 서로 다른 값을 모두 구하면 성공\",\n    \"total\": \"각 항목의 전체 개수를 모두 세면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"항목 구분 기호를 선택하세요. 예: \",\n      \"after\": \"\"\n    },\n    \"dedup\": {\n      \"before\": \"중복 제거 방식을 선택하세요. 예: \",\n      \"after\": \"\"\n    },\n    \"output\": {\n      \"before\": \"결과 표현 방식을 선택하세요. 예: \",\n      \"after\": \"\"\n    }\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "brief": [
+     "'같은 항목이 여러 번 나오는 목록을 정리하여 각 항목의 개수를 세고, 이': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "situation": [
+     "'다음 세 가지 상황에 대해 주어진 데이터를 처리하고 그': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "goals": [
+     "'각 항목이 전체에서 차지하는 비율을 구하여' — 결과 문장 '~하면 성공' 으로 끝나야 한다",
+     "'전체 개수를 구한다. 각 항목의 개수를 구한다' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ],
+    "sentences": [
+     "sep 의 앞말·뒷말이 비었음 — 무엇을 고르는 빈칸인지 알 수 없다",
+     "'{sep}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'{sep}' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "dedup 의 앞말·뒷말이 비었음 — 무엇을 고르는 빈칸인지 알 수 없다",
+     "'{dedup}' — 이 빈칸(dedup)이 무엇을 정하는지 드러나지 않음",
+     "output 의 앞말·뒷말이 비었음 — 무엇을 고르는 빈칸인지 알 수 없다",
+     "'{output}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'{output}' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "situation": [
+     "'주어진 세 가지 상황에 대해 다음 데이터를 처리하고,가': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'항목 사이를 구분하기 위한 문자는 {sep}으로 정합니다.': 32자 — 25자 안으로",
+     "'항목 사이를 구분하기 위한 문자는 {sep}으로 정합니다.' 빈칸 뒤 조사 '으로' 가 보기마다 맞지 않음",
+     "'최종 결과는 {output}로 표시합니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음",
+     "'최종 결과는 {output}로 표시합니다.' 빈칸 뒤 조사 '로' 가 보기마다 맞지 않음"
+    ]
+   },
+   {
+    "situation": [
+     "'주어진 세 가지 상황에 대해 다음 데이터를 처리하고,가': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'중복 제거 방식을 선택하세요. 예: {dedup}': 27자 — 25자 안으로",
+     "'결과 표현 방식을 선택하세요. 예: {output}': 28자 — 25자 안으로",
+     "'항목 구분 기호를 선택하세요. 예: {sep}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'결과 표현 방식을 선택하세요. 예: {output}' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'결과 표현 방식을 선택하세요. 예: {output}' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 2,
+  "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
+  "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
+  "expect": "split-filter-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a140a5039f",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-filter-unique-count",
+   "stage": "데이터 정리 문제",
+   "title": "데이터 정리 문제",
+   "brief": "조건을 정해요",
+   "situation": "다음 데이터를 처리하는 기준을 정하고 실험해 보세요.",
+   "lesson": "조건문 if-else. 조건이 참이면 A, 거짓이면 B",
+   "keyPoint": "어떤 기준으로 걸러내는지를 학생이 직접 정하게",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "중복을 없으면 성공",
+      "trap": null,
+      "key": "unique"
+     },
+     {
+      "v": "1이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "수를 세면 성공",
+      "trap": null,
+      "key": "total"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "목록에 {cond} 것만 남긴다.",
+      "slot": "cond",
+      "options": [
+       "있는",
+       "없는"
+      ]
+     },
+     {
+      "template": "같은 항목 이름은 {dedup}.",
+      "slot": "dedup",
+      "options": [
+       "각각 남긴다",
+       "하나만 남긴다"
+      ]
+     },
+     {
+      "template": "{output}만 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "자료 1",
+     "v": "사과 1개,바나나 2개,포도 1송이,사과"
+    },
+    {
+     "id": "d02",
+     "name": "자료 2",
+     "v": "사과 1개,사과 2개,배 1개,바나나"
+    },
+    {
+     "id": "d03",
+     "name": "카운터",
+     "v": "사과 바나나",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "sentences"
+    ],
+    "reasons": {
+     "sentences": [
+      "'자료 1을 확인해요 {sep} 자료 2를 확인해요': 27자 — 25자 안으로",
+      "'자료 1을 확인해요 {sep} 자료 2를 확인해요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'자료 1을 확인해요 {sep} 자료 2를 확인해요' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+      "'자료 3을 확인해요 {cond} 기준을 정해요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'자료 3을 확인해요 {cond} 기준을 정해요' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": [
+     "걸러낼 대상 사과·바나나 를 자료에 넣었어요"
+    ]
+   },
+   "pipelineParams": {
+    "filterTarget": [
+     "사과",
+     "바나나"
+    ]
+   }
+  },
+  "guard": {
+   "fallback": [
+    "sentences"
+   ],
+   "reasons": {
+    "sentences": [
+     "'자료 1을 확인해요 {sep} 자료 2를 확인해요': 27자 — 25자 안으로",
+     "'자료 1을 확인해요 {sep} 자료 2를 확인해요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 1을 확인해요 {sep} 자료 2를 확인해요' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'자료 3을 확인해요 {cond} 기준을 정해요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 3을 확인해요 {cond} 기준을 정해요' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": [
+    "걸러낼 대상 사과·바나나 를 자료에 넣었어요"
+   ]
+  },
+  "ms": 19022,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 420,
+    "status": "ok",
+    "chars": 47
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6678,
+    "status": "ok",
+    "chars": 1027
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5823,
+    "status": "ok",
+    "chars": 906
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6096,
+    "status": "ok",
+    "chars": 908
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-filter-unique-count\"\n}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"중학교 1학년\",\n  \"situation\": \"다음 데이터를 처리하는 기준을 정하고 실험해 보세요. \",\n  \"itemName\": \"항목 이름\",\n  \"counter\": {\n    \"name\": \"카운터\",\n    \"text\": \"기준을 만족하는 항목만 세고, 중복은 한 번만 세시오.\"\n  , \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"사과 1개\",\n        \"바나나 2개\",\n        \"포도 1송이\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"사과 1개\",\n        \"사과 2개\",\n        \"배 1개\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"중복 제거\"\n  , \"total\": \"총 개수 세기\"\n  }\n  ,\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1을 처리해 보시오.\",\n      \"after\": \"자료 2를 처리해 보시오. 기준을 유지하시오.\"\n    }\n    ,\n    \"cond\": {\n      \"before\": \"자료 3을 확인하시오.\",\n      \"after\": \"세 번째 자료는 이전 기준이 깨지는 사례입니다. 기준을 수정하시오.\"\n    }\n  ,\n    \"dedup\": {\n      \"before\": \"중복 항목은 한 번만 세시오.\",\n      \"after\": \"변경된 기준을 적용하시오.\"\n    }\n  ,\n    \"output\": {\n      \"before\": \"변경된 기준을 적용한 결과를 제출하시오.\",\n      \"after\": \"결과는 숫자만 적으시오.\"\n    }\n  }\n  ,\n  \"filterTarget\": [\n    \"사과\",\n    \"바나나\"\n  ],\n  \"filterDesc\": \"과일 중 사과와 바\"}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"조건을 정해요\",\n  \"situation\": \"다음 데이터를 처리하는 기준을 정하고 실험해 보세요.\",\n  \"itemName\": \"항목 이름\",\n  \"counter\": {\n    \"name\": \"카운터\",\n    \"text\": \"사과 바나나\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"사과 1개\",\n        \"바나나 2개\",\n        \"포도 1송이\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"사과 1개\",\n        \"사과 2개\",\n        \"배 1개\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"중복을 없애요\",\n    \"total\": \"수를 세요\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1을 처리해요.\",\n      \"after\": \"자료 2를 처리해요.\"\n    },\n    \"cond\": {\n      \"before\": \"자료 3을 확인해요.\",\n      \"after\": \"기준이 달라져요.\"\n    },\n    \"dedup\": {\n      \"before\": \"중복을 없애요.\",\n      \"after\": \"다시 해요.\"\n    },\n    \"output\": {\n      \"before\": \"결과를 적어요.\",\n      \"after\": \"수를 적어요.\"\n    }\n  },\n  \"filterTarget\": [\n    \"사과\",\n    \"바나나\"\n  ],\n  \"filterDesc\": \"과일 중 사과와 바\"\n}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"조건을 정해요\",\n  \"situation\": \"다음 데이터를 처리하는 기준을 정하고 실험해 보세요.\",\n  \"itemName\": \"항목 이름\",\n  \"counter\": {\n    \"name\": \"카운터\",\n    \"text\": \"사과 바나나\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"사과 1개\",\n        \"바나나 2개\",\n        \"포도 1송이\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"사과 1개\",\n        \"사과 2개\",\n        \"배 1개\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"중복을 없으면 성공\",\n    \"total\": \"수를 세면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1을 확인해요\",\n      \"after\": \"자료 2를 확인해요\"\n    },\n    \"cond\": {\n      \"before\": \"자료 3을 확인해요\",\n      \"after\": \"기준을 정해요\"\n    },\n    \"dedup\": {\n      \"before\": \"중복을 확인해요\",\n      \"after\": \"기준을 바꾼다\"\n    },\n    \"output\": {\n      \"before\": \"결과를 출력해요\",\n      \"after\": \"수를 출력한다\"\n    }\n  },\n  \"filterTarget\": [\n    \"사과\",\n    \"바나나\"\n  ],\n  \"filterDesc\": \"과일 중 사과와 바\"\n}"
+  ],
+  "attempts": [
+   {
+    "brief": [
+     "'중학교 1학년': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'자료 1을 처리해 보시오. {sep} 자료 2를 처리해 보시오. 기준을 유지하시오.': 46자 — 25자 안으로",
+     "'자료 3을 확인하시오. {cond} 세 번째 자료는 이전 기준이 깨지는 사례입니다. 기준을 수정하시오.': 57자 — 25자 안으로",
+     "'중복 항목은 한 번만 세시오. {dedup} 변경된 기준을 적용하시오.': 39자 — 25자 안으로",
+     "'변경된 기준을 적용한 결과를 제출하시오. {output} 결과는 숫자만 적으시오.': 45자 — 25자 안으로",
+     "'자료 1을 처리해 보시오. {sep} 자료 2를 처리해 보시오. 기준을 유지하시오.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 3을 확인하시오. {cond} 세 번째 자료는 이전 기준이 깨지는 사례입니다. 기준을 수정하시오.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 3을 확인하시오. {cond} 세 번째 자료는 이전 기준이 깨지는 사례입니다. 기준을 수정하시오.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음",
+     "'중복 항목은 한 번만 세시오. {dedup} 변경된 기준을 적용하시오.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'변경된 기준을 적용한 결과를 제출하시오. {output} 결과는 숫자만 적으시오.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'변경된 기준을 적용한 결과를 제출하시오. {output} 결과는 숫자만 적으시오.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "counter": [
+     "'기준을 만족하는 항목만 세고, 중복은' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로"
+    ],
+    "goals": [
+     "'중복 제거' — 결과 문장 '~하면 성공' 으로 끝나야 한다",
+     "'총 개수 세기' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "sentences": [
+     "'자료 1을 처리해요. {sep} 자료 2를 처리해요.': 29자 — 25자 안으로",
+     "'자료 3을 확인해요. {cond} 기준이 달라져요.': 28자 — 25자 안으로",
+     "'중복을 없애요. {dedup} 다시 해요.': 두 문장 이상 — 한 칸에 한 문장만 쓴다",
+     "'결과를 적어요. {output} 수를 적어요.': 두 문장 이상 — 한 칸에 한 문장만 쓴다",
+     "'자료 1을 처리해요. {sep} 자료 2를 처리해요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 1을 처리해요. {sep} 자료 2를 처리해요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'자료 3을 확인해요. {cond} 기준이 달라져요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 3을 확인해요. {cond} 기준이 달라져요.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음",
+     "'중복을 없애요. {dedup} 다시 해요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'결과를 적어요. {output} 수를 적어요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'결과를 적어요. {output} 수를 적어요.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "goals": [
+     "'중복을 없애요' — 결과 문장 '~하면 성공' 으로 끝나야 한다",
+     "'수를 세요' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "sentences": [
+     "'자료 1을 확인해요 {sep} 자료 2를 확인해요': 27자 — 25자 안으로",
+     "'자료 1을 확인해요 {sep} 자료 2를 확인해요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 1을 확인해요 {sep} 자료 2를 확인해요' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'자료 3을 확인해요 {cond} 기준을 정해요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료 3을 확인해요 {cond} 기준을 정해요' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 3,
+  "lesson": "딕셔너리. 키와 값 쌍으로 저장",
+  "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
+  "expect": "split-group",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a140a53813",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-count",
+   "stage": "과일 정리",
+   "title": "과일 정리",
+   "brief": "과일 개수를 세어 주세요.",
+   "situation": "",
+   "lesson": "딕셔너리. 키와 값 쌍으로 저장",
+   "keyPoint": "같은 키가 여러 번 나오면 묶어서 센다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "과일 개수가 맞으면 성공",
+      "trap": null,
+      "key": "count"
+     },
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "{output}만 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "과일 목록1",
+     "v": "사과,사과,바나나"
+    },
+    {
+     "id": "d02",
+     "name": "과일 목록2",
+     "v": "사과,바나나,사과,바나나,사과"
+    },
+    {
+     "id": "d03",
+     "name": "개수",
+     "v": "과일 개수",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "situation",
+     "sentences"
+    ],
+    "reasons": {
+     "situation": [
+      "'과일 목록을 정리해야 합니다. 같은 과일은 묶어서 세는': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+     ],
+     "sentences": [
+      "'다음 목록을 보면 {sep} 결과를 완성해 주세요.': 28자 — 25자 안으로",
+      "'다음 목록을 보면 {output} 결과를 완성해 주세요.': 31자 — 25자 안으로",
+      "'다음 목록을 보면 {sep} 결과를 완성해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'다음 목록을 보면 {sep} 결과를 완성해 주세요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+      "'다음 목록을 보면 {output} 결과를 완성해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'다음 목록을 보면 {output} 결과를 완성해 주세요.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [
+    "situation",
+    "sentences"
+   ],
+   "reasons": {
+    "situation": [
+     "'과일 목록을 정리해야 합니다. 같은 과일은 묶어서 세는': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'다음 목록을 보면 {sep} 결과를 완성해 주세요.': 28자 — 25자 안으로",
+     "'다음 목록을 보면 {output} 결과를 완성해 주세요.': 31자 — 25자 안으로",
+     "'다음 목록을 보면 {sep} 결과를 완성해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'다음 목록을 보면 {sep} 결과를 완성해 주세요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'다음 목록을 보면 {output} 결과를 완성해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'다음 목록을 보면 {output} 결과를 완성해 주세요.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 13428,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 432,
+    "status": "ok",
+    "chars": 33
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 3859,
+    "status": "ok",
+    "chars": 599
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 4661,
+    "status": "ok",
+    "chars": 757
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 4472,
+    "status": "ok",
+    "chars": 684
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-count\"\n}",
+   "{\n  \"title\": \"과일 상자 관리\",\n  \"brief\": \"과일 목록에서 각 과일의 개수를 센다.\",\n  \"situation\": \"상자에 담긴 과일 목록이 있다. 같은 이름의 과일은 한\",\"itemName\": \"과일 목록\",\"counter\": {\"name\":\"개수\",\"text\":\"과일 개수\",\"axis\":\"count\"},\n  \"data\": [\n    {\"name\":\"과일 목록1\",\"items\":[\"사과\",\"사과\",\"바나나\"]},\n    {\"name\":\"과일 목록2\",\"items\":[\"사과\",\"바나나\",\"사과\",\"바나나\",\"사과\"]\n  }\n]\n  ,\n  \"goals\": {\n    \"count\": \"개수\"\n  }\n  ,\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"과일 목록의 데이터는 다음과 같다.\",\n      \"after\": \"과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리한다.\"\n    },\n    \"output\": {\n      \"before\": \"과일 목록의 데이터는 다음과 같다.\",\n      \"after\": \"과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리한다.\"\n    }\n  }\n}",
+   "{\n  \"title\": \"과일 상자 관리\",\n  \"brief\": \"과일 목록에서 각 과일의 개수를 세어 주세요.\",\n  \"situation\": \"상자에 담긴 과일 목록이 있습니다. 같은 이름의 과일은\",\n  \"itemName\": \"과일 목록\",\n  \"counter\": {\n    \"name\": \"개수\",\n    \"text\": \"과일 개수\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"과일 목록1\",\n      \"items\": [\n        \"사과\",\n        \"사과\",\n        \"바나나\"\n      ]\n    },\n    {\n      \"name\": \"과일 목록2\",\n      \"items\": [\n        \"사과\",\n        \"바나나\",\n        \"사과\",\n        \"바나나\",\n        \"사과\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"count\": \"개수\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"과일 목록의 데이터는 다음과 같습니다.\",\n      \"after\": \"과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리합니다.\"\n    },\n    \"output\": {\n      \"before\": \"과일 목록의 데이터는 다음과 같습니다.\",\n      \"after\": \"과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리합니다.\"\n    }\n  }\n}",
+   "{\n  \"title\": \"과일 정리\",\n  \"brief\": \"과일 개수를 세어 주세요.\",\n  \"situation\": \"과일 목록을 정리해야 합니다. 같은 과일은 묶어서 세는\",\n  \"itemName\": \"과일 목록\",\n  \"counter\": {\n    \"name\": \"개수\",\n    \"text\": \"과일 개수\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"과일 목록1\",\n      \"items\": [\n        \"사과\",\n        \"사과\",\n        \"바나나\"\n      ]\n    },\n    {\n      \"name\": \"과일 목록2\",\n      \"items\": [\n        \"사과\",\n        \"바나나\",\n        \"사과\",\n        \"바나나\",\n        \"사과\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"count\": \"과일 개수가 맞으면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"다음 목록을 보면\",\n      \"after\": \"결과를 완성해 주세요.\"\n    },\n    \"output\": {\n      \"before\": \"다음 목록을 보면\",\n      \"after\": \"결과를 완성해 주세요.\"\n    }\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "brief": [
+     "'과일 목록에서 각 과일의 개수를 센다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "situation": [
+     "'상자에 담긴 과일 목록이 있다. 같은 이름의 과일은 한': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'과일 목록의 데이터는 다음과 같다. {sep} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리한다.': 60자 — 25자 안으로",
+     "'과일 목록의 데이터는 다음과 같다. {output} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리한다.': 63자 — 25자 안으로",
+     "'과일 목록의 데이터는 다음과 같다. {sep} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리한다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'과일 목록의 데이터는 다음과 같다. {output} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리한다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "goals": [
+     "'개수' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "situation": [
+     "'상자에 담긴 과일 목록이 있습니다. 같은 이름의 과일은': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'과일 목록의 데이터는 다음과 같습니다. {sep} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리합니다.': 63자 — 25자 안으로",
+     "'과일 목록의 데이터는 다음과 같습니다. {output} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리합니다.': 66자 — 25자 안으로",
+     "'과일 목록의 데이터는 다음과 같습니다. {sep} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'과일 목록의 데이터는 다음과 같습니다. {output} 과일의 이름을 키로 하고 개수를 값으로 하여 결과를 정리합니다.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "goals": [
+     "'개수' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "situation": [
+     "'과일 목록을 정리해야 합니다. 같은 과일은 묶어서 세는': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'다음 목록을 보면 {sep} 결과를 완성해 주세요.': 28자 — 25자 안으로",
+     "'다음 목록을 보면 {output} 결과를 완성해 주세요.': 31자 — 25자 안으로",
+     "'다음 목록을 보면 {sep} 결과를 완성해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'다음 목록을 보면 {sep} 결과를 완성해 주세요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'다음 목록을 보면 {output} 결과를 완성해 주세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'다음 목록을 보면 {output} 결과를 완성해 주세요.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 4,
+  "lesson": "함수 정의와 호출. def로 만들고 여러 번 호출",
+  "keyPoint": "같은 작업을 항목마다 반복할 때 함수로 묶는다",
+  "expect": "split-transform-join",
+  "ok": false,
+  "error": "문제를 만들지 못했어요. 다시 생성해 주세요.",
+  "reasons": {
+   "data": [
+    "List should have at least 3 items after validation, not 2",
+    "List should have at least 3 items after validation, not 2"
+   ],
+   "pipelineId": [
+    "split-transform-join"
+   ]
+  },
+  "ms": 16812,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 418,
+    "status": "ok",
+    "chars": 42
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5762,
+    "status": "ok",
+    "chars": 922
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5303,
+    "status": "ok",
+    "chars": 883
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5326,
+    "status": "ok",
+    "chars": 876
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-transform-join\"\n}",
+   "{\n  \"title\": \"정제된 텍스트 출력 함수 제작\",\n  \"brief\": \"텍스트에서 불필요한 앞뒤 공백을 제거하는 함수를 정의하고 호출해 보자.\",\n  \"situation\": \"다음은 수업 자료에 나온 정리 기준입니다. 자료 1과 \",\"itemName\": \"처리 대상\",\n  \"counter\":  {\n    \"name\": \"처리 대상\",\n    \"text\": \"문장에서 띄어쓰기가 이상하거나 앞뒤로 공백이 있는 문장이다.\",\n    \"axis\": \"count\"\n  }\n  ,\n  \"data\": [\n    {\n      \"name\": \"처리 대상\",\n      \"items\": [\n        \"  Hello  \"\n      ,\n        \" World \"\n      ,\n        \"  \"\n      ]\n    }\n  ,\n    {\n      \"name\": \"예상 결과\",\n      \"items\": [\n        \"Hello\"\n      ,\n        \"World\"\n      ,\n        \"\"\n      ]\n    }\n  ]\n  ,\n  \"goals\": {\n    \"transformed\": \"처리 대상과 예상 결과가 일치해야 한다.\"\n  }\n  ,\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1에 들어갈 문장을 작성해라.\",\n      \"after\": \"자료 2에 들어갈 문장을 작성해라.\"\n    }\n  ,\n    \"op\": {\n      \"before\": \"처리 방법을 적어라.\",\n      \"after\": \"함수를 정의하고 호출해 보자.\"\n    }\n  ,\n    \"joinSep\": {\n      \"before\": \"자료 1과 자료 2의 결과가 일치하는지 확인해라.\",\n      \"after\": \"불일치가 발생하면 기준을 수정해라.\"\n    }\n  }\n  }",
+   "{\n  \"title\": \"정제된 텍스트 출력 함수 제작\",\n  \"brief\": \"텍스트에서 불필요한 앞뒤 공백을 제거하는 함수를 정의하고 호출해 보자.\",\n  \"situation\": \"다음은 수업 자료에 나온 정리 기준입니다. 자료 1과 \",\n  \"itemName\": \"처리 대상\",\n  \"counter\": {\n    \"name\": \"처리 대상\",\n    \"text\": \"문장에서 띄어쓰기가 이상하거나 앞뒤로 공백이 있는 문장이다.\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"처리 대상\",\n      \"items\": [\n        \"  Hello  \",\n        \" World \"\n      ,\n        \"  \"\n      ]\n    },\n    {\n      \"name\": \"예상 결과\",\n      \"items\": [\n        \"Hello\",\n        \"World\",\n        \"\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"transformed\": \"처리 대상과 예상 결과가 일치해야 한다.\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1에 들어갈 문장을 작성해라.\",\n      \"after\": \"자료 2에 들어갈 문장을 작성해라.\"\n    },\n    \"op\": {\n      \"before\": \"처리 방법을 적어라.\",\n      \"after\": \"함수를 정의하고 호출해 보자.\"\n    },\n    \"joinSep\": {\n      \"before\": \"자료 1과 자료 2의 결과가 일치하는지 확인해라.\",\n      \"after\": \"불일치가 발생하면 기준을 수정해라.\"\n    }\n  }\n}",
+   "{\n  \"title\": \"정제된 텍스트 출력 함수 제작\",\n  \"brief\": \"텍스트에서 불필요한 앞뒤 공백을 제거하는 함수를 정의하고 호출해 보자.\",\n  \"situation\": \"다음은 수업 자료에 나온 정리 기준입니다. 자료 1과 \",\n  \"itemName\": \"처리 대상\",\n  \"counter\": {\n    \"name\": \"처리 대상\",\n    \"text\": \"문장에서 띄어쓰기가 이상하거나 앞뒤로 공백이 있는 문장이다.\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"처리 대상\",\n      \"items\": [\n        \"  Hello  \",\n        \" World \",\n        \"  \"\n      ]\n    },\n    {\n      \"name\": \"예상 결과\",\n      \"items\": [\n        \"Hello\",\n        \"World\",\n        \"\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"transformed\": \"처리 대상과 예상 결과가 일치해야 한다.\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1에 들어갈 문장을 작성해라.\",\n      \"after\": \"자료 2에 들어갈 문장을 작성해라.\"\n    },\n    \"op\": {\n      \"before\": \"처리 방법을 적어라.\",\n      \"after\": \"함수를 정의하고 호출해 보자.\"\n    },\n    \"joinSep\": {\n      \"before\": \"자료 1과 자료 2의 결과가 일치하는지 확인해라.\",\n      \"after\": \"불일치가 발생하면 기준을 수정해라.\"\n    }\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "data": [
+     "List should have at least 3 items after validation, not 2",
+     "List should have at least 3 items after validation, not 2"
+    ]
+   },
+   {
+    "data": [
+     "List should have at least 3 items after validation, not 2",
+     "List should have at least 3 items after validation, not 2"
+    ]
+   },
+   {
+    "data": [
+     "List should have at least 3 items after validation, not 2",
+     "List should have at least 3 items after validation, not 2"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 5,
+  "lesson": "문자열 다루기. split, strip, replace",
+  "keyPoint": "데이터를 나누고 정리하는 과정에서 공백이 문제를 일으킨다",
+  "expect": "split-transform-join",
+  "ok": false,
+  "error": "문제를 만들지 못했어요. 다시 생성해 주세요.",
+  "reasons": {
+   "data": [
+    "Value error, 'apple banana apple' — 항목은 12자 안의 단어 하나",
+    "Value error, 'cat dog elephant' — 항목은 12자 안의 단어 하나",
+    "Value error, 'Hello world Hello' — 항목은 12자 안의 단어 하나"
+   ],
+   "pipelineId": [
+    "split-transform-unique-count"
+   ]
+  },
+  "ms": 18730,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 412,
+    "status": "ok",
+    "chars": 50
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6136,
+    "status": "ok",
+    "chars": 967
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6010,
+    "status": "ok",
+    "chars": 1028
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6169,
+    "status": "ok",
+    "chars": 1024
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-transform-unique-count\"\n}",
+   "{\n  \"title\": \"중복 단어 제거하기\",\n  \"brief\": \"문자열을 처리하여 중복된 단어를 제거하는 프로그램을 설계하시오. 먼저 두\",\"situation\": \"한 가지의 서로 다른 입력 데이터에 대해 처리 과정을서\", \"itemName\": \"입력값\",\n  \"counter\":   {\"name\": \"실행 순서\",\n  \"text\": \"순서1 : 입력 데이터를 공백 기준으로 나눕니다. 순서2 : 나뉜 단어의\",\"axis\":\n  \"invisible\"\n}\n,\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"apple banana apple\",\n        \"cat dog elephant\",\n        \"banana apple\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"Hello world Hello\",\n        \"world foo\",\n        \"foo\"\n      ]\n    }\n  ]\n,\n  \"goals\":\n  {\n    \"unique\":\n    \"최종적으로 남은 단어들이 중복되지 않도록 정리\"\n  ,\n    \"total\":\n    \"남은 단어의 개수를 세어 기록\"\n  }\n,\n  \"sentences\":\n  {\n    \"sep\":\n     {\"before\":\"먼저 입력 데이터를 공백 기준으로 나눕니다. \",\"after\":\"나뉜 단어를 모두 모읍니다.\"},\n    \"op\":\n    {\"before\":\"나뉜 단어 중 중복되는 것을 제거합니다. \",\"after\":\"남은 단어의 개수를 셉니다.\"},\n    \"dedup\":\n    {\"before\":\"단어를 비교할 때 대소문자를 동일하게 처리합니다. \",\"after\":\"정리된 단어를 출력합니다.\"}\n  ,\n    \"output\":\n    {\"before\":\"결과: \",\"after\":\"\"}\n  }\n}",
+   "{\n  \"title\": \"중복 단어 제거하기\",\n  \"brief\": \"문자열을 처리하여 중복된 단어를 제거하는 프로그램을 설계하시오. 먼저 두\",\n  \"situation\": \"한 가지의 서로 다른 입력 데이터에 대해 처리 과정을서\",\n  \"itemName\": \"입력값\",\n  \"counter\": {\n    \"name\": \"실행 순서\",\n    \"text\": \"순서1 : 입력 데이터를 공백 기준으로 나눕니다. 순서2 : 나뉜 단어의\",\n    \"axis\": \"invisible\"\n  },\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"apple banana apple\",\n        \"cat dog elephant\",\n        \"banana apple\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"Hello world Hello\",\n        \"world foo\",\n        \"foo\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"최종적으로 남은 단어들이 중복되지 않도록 정리\",\n    \"total\": \"남은 단어의 개수를 세어 기록\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"먼저 입력 데이터를 공백 기준으로 나눕니다. \",\n      \"after\": \"나뉜 단어를 모두 모읍니다.\"\n    },\n    \"op\": {\n      \"before\": \"나뉜 단어 중 중복되는 것을 제거합니다. \",\n      \"after\": \"남은 단어의 개수를 셉니다.\"\n    },\n    \"dedup\": {\n      \"before\": \"단어를 비교할 때 대소문자를 동일하게 처리합니다. \",\n      \"after\": \"정리된 단어를 출력합니다.\"\n    },\n    \"output\": {\n      \"before\": \"결과: \",\n      \"after\": \"\"\n    }\n  }\n}",
+   "{\n  \"title\": \"중복 단어 세기\",\n  \"brief\": \"문장 속 단어를 정리한 뒤 고유한 단어의 수를 구하는 방법을 설계하시오\",\n  \"situation\": \"입력된 문장을 처리하여 중복을 제거한 단어의 개수를 구\",\n  \"itemName\": \"입력 문장\",\n  \"counter\": {\n    \"name\": \"처리 단계\",\n    \"text\": \"1. 문장을 단어 단위로 나눕니다 2. 단어를 소문자로 고칩니다 3. 겹\",\"axis\": \"invisible\"\n  },\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"apple banana apple\"\n      ,\n        \"cat dog elephant\"\n      ,\n        \"banana apple\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"Hello world Hello\"\n      ,\n        \"world foo\"\n      ,\n        \"foo\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"동일한 단어는 한 번만 세\",\n    \"total\": \"남은 단어의 총 개수를 기록\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"먼저 입력 문장을 공백 기준으로 나눕니다 \",\n      \"after\": \"나뉜 단어를 모두 모읍니다\"\n    },\n    \"op\": {\n      \"before\": \"단어를 소문자로 변경한 뒤 중복을 제거합니다 \",\n      \"after\": \"남은 단어의 개수를 셉니다\"\n    },\n    \"dedup\": {\n      \"before\": \"비교 시 대소문자를 구분하지 않습니다 \",\n      \"after\": \"결과를 출력합니다\"\n    },\n    \"output\": {\n      \"before\": \"개수: \",\n      \"after\": \"\"\n    }\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "data": [
+     "Value error, 'apple banana apple' — 항목은 12자 안의 단어 하나",
+     "Value error, 'cat dog elephant' — 항목은 12자 안의 단어 하나",
+     "Value error, 'Hello world Hello' — 항목은 12자 안의 단어 하나"
+    ]
+   },
+   {
+    "data": [
+     "Value error, 'apple banana apple' — 항목은 12자 안의 단어 하나",
+     "Value error, 'cat dog elephant' — 항목은 12자 안의 단어 하나",
+     "Value error, 'Hello world Hello' — 항목은 12자 안의 단어 하나"
+    ]
+   },
+   {
+    "data": [
+     "Value error, 'apple banana apple' — 항목은 12자 안의 단어 하나",
+     "Value error, 'cat dog elephant' — 항목은 12자 안의 단어 하나",
+     "Value error, 'Hello world Hello' — 항목은 12자 안의 단어 하나"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 6,
+  "lesson": "정렬. sorted와 sort의 차이",
+  "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
+  "expect": "split-sort-join",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a140a67b2e",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-sort-join",
+   "stage": "번호 정리하기",
+   "title": "번호 정리하기",
+   "brief": "이 목록을 정리해 주세요.",
+   "situation": "",
+   "lesson": "정렬. sorted와 sort의 차이",
+   "keyPoint": "순서가 뒤섞인 목록을 기준에 맞게 늘어놓는다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "순서대로 늘어서면 성공",
+      "trap": null,
+      "key": "sorted"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "1,3,4가 나오면 성공",
+      "trap": "hardcode"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "{dir} 늘어놓는다.",
+      "slot": "dir",
+      "options": [
+       "가나다순으로",
+       "거꾸로"
+      ]
+     },
+     {
+      "template": "{joinSep} 기준으로 다시 잇는다.",
+      "slot": "joinSep",
+      "options": [
+       "쉼표",
+       "공백"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "리스트 1",
+     "v": "3,1,4"
+    },
+    {
+     "id": "d02",
+     "name": "리스트 2",
+     "v": "10,2,9"
+    },
+    {
+     "id": "d03",
+     "name": "다른 날 자료",
+     "v": "3,1,4,3,10",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "brief",
+     "situation",
+     "counter",
+     "goals",
+     "sentences"
+    ],
+    "reasons": {
+     "brief": [
+      "'세 개의 숫자 목록을 정리합니다. 어떤 순서로 정렬할지 정해 실험해 보고': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+     ],
+     "situation": [
+      "'다음 세 가지 숫자 목록 중 두 개는 정렬이 잘 되지만': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+     ],
+     "counter": [
+      "axis=count 인데 항목 수가 첫 자료와 같음"
+     ],
+     "goals": [
+      "'오름차순으로 나열한다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+     ],
+     "sentences": [
+      "'이전에 {sep} 이후에' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'이전에 {sep} 이후에' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+      "'앞에서 {dir} 뒤에서' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'앞에서 {dir} 뒤에서' — 이 빈칸(dir)이 무엇을 정하는지 드러나지 않음",
+      "'이전과 {joinSep} 이후에' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'이전과 {joinSep} 이후에' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [
+    "brief",
+    "situation",
+    "counter",
+    "goals",
+    "sentences"
+   ],
+   "reasons": {
+    "brief": [
+     "'세 개의 숫자 목록을 정리합니다. 어떤 순서로 정렬할지 정해 실험해 보고': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "situation": [
+     "'다음 세 가지 숫자 목록 중 두 개는 정렬이 잘 되지만': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "counter": [
+     "axis=count 인데 항목 수가 첫 자료와 같음"
+    ],
+    "goals": [
+     "'오름차순으로 나열한다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ],
+    "sentences": [
+     "'이전에 {sep} 이후에' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'이전에 {sep} 이후에' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'앞에서 {dir} 뒤에서' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'앞에서 {dir} 뒤에서' — 이 빈칸(dir)이 무엇을 정하는지 드러나지 않음",
+     "'이전과 {joinSep} 이후에' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'이전과 {joinSep} 이후에' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 47172,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 427,
+    "status": "ok",
+    "chars": 38
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 19798,
+    "status": "ok",
+    "chars": 22732
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 19708,
+    "status": "ok",
+    "chars": 5126
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 7231,
+    "status": "ok",
+    "chars": 1015
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\":  \"split-sort-join\"\n}",
+   "{\n  \"title\": \"데이터 정리: 숫자 배열의 정렬 기준\",\n  \"brief\": \"순서가 뒤섞인 숫자 데이터 목록을 정리합니다. 정렬 기준을 스스로 정하고\",\n  \"situation\": \"세 개의 숫자 목록이 주어집니다. 목록 안의 숫자를 오\"\n  ,\n  \"itemName\": \"데이터\",\n  \"counter\":  \t\t\t\t\t\t\t\t \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t",
+   "{\n  \"title\": \"번호 정리하기\",\n  \"brief\": \"숫자 세 개가 담긴 목록을 정리합니다. 어떤 순서로 정렬할지 정해 실험해\",\n  \"situation\": \"다음 세 가지 숫자 목록 중 두 개는 정렬이 잘 되지만\",\n  \"itemName\": \"데이터\",\n  \"counter\":  \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    \t\t\t    ",
+   "{\n  \"title\": \"번호 정리하기\",\n  \"brief\": \"세 개의 숫자 목록을 정리합니다. 어떤 순서로 정렬할지 정해 실험해 보고\",\n  \"situation\": \"다음 세 가지 숫자 목록 중 두 개는 정렬이 잘 되지만\",\n  \"itemName\": \"데이터\",\n  \"counter\":  \t\t\t \t\t\t{\n  \"name\": \"리스트 1\",\n  \"text\": \"3, 1, 4\",\n  \"axis\": \t\t\t \t\t\t\"count\"\n \t\t\t \t\t\t},\n \t\t\t \t\t\t\"data\": \t\t\t \t\t\t[\n \t\t\t \t\t\t{\n  \"name\": \"리스트 1\",\n  \"items\": \t\t\t\t \t\t\t \t\t\t[\n \t\t\t\t \t\t\t \t\t\t\"3\",\n \t\t\t\t \t\t\t \t\t\t\"1\",\n \t\t\t\t \t\t\t \t\t\t\"4\"\n \t\t\t\t \t\t \t\t\t]\n \t\t\t \t\t\t},\n \t\t\t \t\t\t{\n  \"name\": \"리스트 2\",\n  \"items\": \t\t\t\t \t\t\t \t\t\t[\n \t\t\t\t \t\t\t \t\t\t\"10\",\n \t\t\t\t \t\t\t \t\t\t\"2\",\n \t\t\t\t \t\t\t \t\t\t\"9\"\n \t\t\t\t \t\t \t\t\t]\n \t\t\t \t\t\t}\n \t\t\t \t\t \t\t\t]\n \t\t\t \t\t \t,\n \t\t\t \t\t \t\"goals\": \t\t\t \t\t \t\t\t{\n  \"sorted\": \t\t\t\t \t\t \t\t\t\"오름차순으로 나열한다.\"\n \t\t\t \t\t \t}\n \t\t\t \t\t \t,\n \t\t\t \t\t \t\"sentences\": \t\t\t\t \t\t \t\t\t{\n  \"sep\": \t\t\t\t \t\t \t\t{\n  \"before\": \t\t\t\t \t\t \t\t\t\"이전에\",\n  \"after\": \t\t\t\t \t\t \t\t\t\"이후에\"\n \t\t\t\t \t\t \t},\n \t\t\t\t \t\t \t\"dir\": \t\t\t\t \t\t \t\t\t{\n  \"before\": \t\t\t\t \t\t \t\t\"앞에서\",\n  \"after\": \t\t\t\t \t\t \t\t\"뒤에서\"\n \t\t\t\t \t\t \t}\n \t\t\t\t \t \t,\n \t\t\t\t \t \t\"joinSep\": \t\t\t\t \t \t\t\t{\n  \"before\": \t\t\t\t \t \t\t \t\t\"이전과\",\n  \"after\": \t\t\t\t \t \t\t \t\t\"이후에\"\n \t\t\t\t \t \t\t \t}\n \t\t\t\t \t \t}\n \t\t\t \t\t \t\t}"
+  ],
+  "attempts": [
+   {
+    "json": [
+     "JSON 이 아님"
+    ]
+   },
+   {
+    "json": [
+     "JSON 이 아님"
+    ]
+   },
+   {
+    "brief": [
+     "'세 개의 숫자 목록을 정리합니다. 어떤 순서로 정렬할지 정해 실험해 보고': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "situation": [
+     "'다음 세 가지 숫자 목록 중 두 개는 정렬이 잘 되지만': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "counter": [
+     "axis=count 인데 항목 수가 첫 자료와 같음"
+    ],
+    "goals": [
+     "'오름차순으로 나열한다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ],
+    "sentences": [
+     "'이전에 {sep} 이후에' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'이전에 {sep} 이후에' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'앞에서 {dir} 뒤에서' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'앞에서 {dir} 뒤에서' — 이 빈칸(dir)이 무엇을 정하는지 드러나지 않음",
+     "'이전과 {joinSep} 이후에' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'이전과 {joinSep} 이후에' — 이 빈칸(joinSep)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 7,
+  "lesson": "숫자 형변환. int()로 문자열을 숫자로",
+  "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
+  "expect": "split-num-sum",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a140a6b153",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-num-sum",
+   "stage": "문자열 리스트의 합계 계산 프로그램",
+   "title": "문자열 리스트의 합계 계산 프로그램",
+   "brief": "문자열 숫자를 정수로 바꿔서 더해요.",
+   "situation": "서로 다른 두 개의 숫자 데이터 집합이 있어요.",
+   "lesson": "숫자 형변환. int()로 문자열을 숫자로",
+   "keyPoint": "문자로 된 숫자는 더하기 전에 바꿔야 한다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "60이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "두 집합의 합계 차이가 0이 되면 성공입니다.",
+      "trap": null,
+      "key": "sum"
+     },
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "첫 번째 집합",
+     "v": "10,20,30"
+    },
+    {
+     "id": "d02",
+     "name": "두 번째 집합",
+     "v": "100,200,300"
+    },
+    {
+     "id": "d03",
+     "name": "다른 날 자료",
+     "v": "10,20,30,10,100",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "counter",
+     "sentences"
+    ],
+    "reasons": {
+     "sentences": [
+      "'정수로 바꿉니다. {sep} 더해요.': 두 문장 이상 — 한 칸에 한 문장만 쓴다",
+      "'정수로 바꿉니다. {sep} 더해요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'정수로 바꿉니다. {sep} 더해요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+     ],
+     "counter": [
+      "정답(sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
+      "'정수 합계입니다.' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [
+    "counter",
+    "sentences"
+   ],
+   "reasons": {
+    "sentences": [
+     "'정수로 바꿉니다. {sep} 더해요.': 두 문장 이상 — 한 칸에 한 문장만 쓴다",
+     "'정수로 바꿉니다. {sep} 더해요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'정수로 바꿉니다. {sep} 더해요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "counter": [
+     "정답(sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
+     "'정수 합계입니다.' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 13860,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 437,
+    "status": "ok",
+    "chars": 35
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5229,
+    "status": "ok",
+    "chars": 751
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 4171,
+    "status": "ok",
+    "chars": 646
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 4019,
+    "status": "ok",
+    "chars": 599
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-num-sum\"\n}",
+   "{\n  \"title\": \"문자열 리스트의 합계 계산 프로그램\",\n  \"brief\": \"리스트에 담긴 숫자를 문자열로 저장했다가 더하기 전에 정수형으로 변환하여\",\n  \"situation\": \"서로 다른 두 개의 숫자 데이터 집합을 준비하였다. 두\",\n  \"itemName\": \"데이터 집합\",\n  \"counter\":  \t{\n    \"name\": \"합계\",\n    \"text\": \"각 데이터 집합의 모든 원소를 정수형으로 변환한 뒤 더한\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"첫 번째 집합\",\n      \"items\": [\n        \t\"10\",\n        \"20\",\n        \"30\"\n      ]\n    },\n    {\n      \"name\": \"두 번째 집합\",\n      \"items\": [\n        \t\"100\",\n        \"200\"\n      \t\t\t,\n        \"300\"\n      ]\n    }\n  ],\n  \"goals\": \t{\n    \"sum\": \t\"두 집합의 합계 차이를 구하시오.\"\n  }\n  ,\n  \"sentences\": \t{\n    \"sep\": \t{\n      \"before\": \t\"데이터를 정리할 때는 먼저 데이터의 구조를 파악해야 한다. 리스트의 원소가 문자열인지 정수인지 확인한 후\",\n      \"after\": \t\"변환 규칙에 따라 처리해야 한다. 두 집합의 합계 차이가 어떻게 되는지 살펴보자.\"\n    }\n  }\n}",
+   "{\n  \"title\": \"문자열 리스트의 합계 계산 프로그램\",\n  \"brief\": \"문자열 숫자를 정수로 바꾸어 더합니다.\",\n  \"situation\": \"서로 다른 두 개의 숫자 데이터 집합을 준비하였습니다.\",\n  \"itemName\": \"데이터 집합\",\n  \"counter\": {\n    \"name\": \"합계\",\n    \"text\": \"각 데이터 집합의 모든 원소를 정수형으로 변환한 뒤 더한 값입니다.\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"첫 번째 집합\",\n      \"items\": [\n        \"10\",\n        \"20\",\n        \"30\"\n      ]\n    },\n    {\n      \"name\": \"두 번째 집합\",\n      \"items\": [\n        \"100\",\n        \"200\",\n        \"300\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"sum\": \"두 집합의 합계 차이가 0이 되면 성공합니다.\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"원소를 하나씩 확인합니다.\",\n      \"after\": \"정수로 바꾸어 더합니다.\"\n    }\n  }\n}",
+   "{\n  \"title\": \"문자열 리스트의 합계 계산 프로그램\",\n  \"brief\": \"문자열 숫자를 정수로 바꿔서 더해요.\",\n  \"situation\": \"서로 다른 두 개의 숫자 데이터 집합이 있어요.\",\n  \"itemName\": \"데이터 집합\",\n  \"counter\": {\n    \"name\": \"합계\",\n    \"text\": \"정수 합계입니다.\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"첫 번째 집합\",\n      \"items\": [\n        \"10\",\n        \"20\",\n        \"30\"\n      ]\n    },\n    {\n      \"name\": \"두 번째 집합\",\n      \"items\": [\n        \"100\",\n        \"200\",\n        \"300\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"sum\": \"두 집합의 합계 차이가 0이 되면 성공입니다.\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"정수로 바꿉니다.\",\n      \"after\": \"더해요.\"\n    }\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "brief": [
+     "'리스트에 담긴 숫자를 문자열로 저장했다가 더하기 전에 정수형으로 변환하여': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "situation": [
+     "'서로 다른 두 개의 숫자 데이터 집합을 준비하였다. 두': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'데이터를 정리할 때는 먼저 데이터의 구조를 파악해야 한다. 리스트의 원소가 문자열인지 정수인지 확인한 후 {sep} 변환 규칙에 따라 처리해야 한다. 두 집합의 합계 차이가 어떻게 되는지 살펴보자.': 110자 — 25자 안으로",
+     "'데이터를 정리할 때는 먼저 데이터의 구조를 파악해야 한다. 리스트의 원소가 문자열인지 정수인지 확인한 후 {sep} 변환 규칙에 따라 처리해야 한다. 두 집합의 합계 차이가 어떻게 되는지 살펴보자.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'데이터를 정리할 때는 먼저 데이터의 구조를 파악해야 한다. 리스트의 원소가 문자열인지 정수인지 확인한 후 {sep} 변환 규칙에 따라 처리해야 한다. 두 집합의 합계 차이가 어떻게 되는지 살펴보자.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "counter": [
+     "정답(sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요."
+    ],
+    "goals": [
+     "'두 집합의 합계 차이를 구하시오.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "brief": [
+     "'문자열 숫자를 정수로 바꾸어 더합니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "situation": [
+     "'서로 다른 두 개의 숫자 데이터 집합을 준비하였습니다.': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'원소를 하나씩 확인합니다. {sep} 정수로 바꾸어 더합니다.': 34자 — 25자 안으로",
+     "'원소를 하나씩 확인합니다. {sep} 정수로 바꾸어 더합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "counter": [
+     "정답(sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
+     "'각 데이터 집합의 모든 원소를 정수형' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로"
+    ],
+    "goals": [
+     "'두 집합의 합계 차이가 0이 되면 성공합니다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "sentences": [
+     "'정수로 바꿉니다. {sep} 더해요.': 두 문장 이상 — 한 칸에 한 문장만 쓴다",
+     "'정수로 바꿉니다. {sep} 더해요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'정수로 바꿉니다. {sep} 더해요.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "counter": [
+     "정답(sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
+     "'정수 합계입니다.' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 8,
+  "lesson": "예외 처리. try-except",
+  "keyPoint": "숫자가 아닌 값이 섞여 있으면 계산이 멈춘다",
+  "expect": "split-filter-num-sum",
+  "ok": false,
+  "error": "문제를 만들지 못했어요. 다시 생성해 주세요.",
+  "reasons": {
+   "situation": [
+    "'숫자와 글자가 섞인 목록에서 숫자만 골라 더하는 법을': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+   ],
+   "sentences": [
+    "'처리 방법을 정한 후 {cond} 성공 조건과 함께 실행합니다': 34자 — 25자 안으로",
+    "'자료 1 {sep} 자료 2' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+    "'자료 1 {sep} 자료 2' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+    "'처리 방법을 정한 후 {cond} 성공 조건과 함께 실행합니다' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음"
+   ],
+   "counter": [
+    "정답(filtered_sum)으로 돌렸는데 반례에서 에러: 숫자로 바꿀 수 없는 항목이 있어요.",
+    "'이 반례를 보시고 다듬으세요.' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로"
+   ],
+   "fallback": {
+    "counter": [
+     "Input should be a valid dictionary or instance of Counter"
+    ]
+   }
+  },
+  "ms": 15529,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 402,
+    "status": "ok",
+    "chars": 42
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5240,
+    "status": "ok",
+    "chars": 802
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 4861,
+    "status": "ok",
+    "chars": 778
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5022,
+    "status": "ok",
+    "chars": 766
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-filter-num-sum\"\n}",
+   "{\n  \"title\": \"데이터 정리\",\n  \"brief\": \"숫자만 골라 더하기\",\n  \"situation\": \"숫자와 글자가 섞인 목록에서 숫자만 골라 더하는 문제를\",\n  \"itemName\": \"처리 방법과\",\n  \"counter\": {\n    \"name\": \"반례\",\n    \"text\": \"이 반례를 보고 처리 방법을 다듬으시오.\",\n    \"axis\": \"count\"\n  }\n  ,\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"2\",\n        \"3\",\n        \"4\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"2\",\n        \"a\",\n        \"3\",\n        \"b\",\n        \"4\"\n      ]\n    }\n  ]\n  ,\n  \"goals\": {\n    \"filtered_sum\": \"리스트에서 숫자만 골라 더한 값이 9입니다.\"\n  }\n  ,\n  \"sentences\": {\n    \"sep\":  \t{\n    \"before\": \"자료 1\",\n    \"after\": \"자료 2\"\n  }\n    ,\n    \"cond\": {\n      \"before\": \"처리 방법을 스스로 정한다.\",\n      \"after\": \"성공 조건과 함께 세 번 실행해 본다.\"\n    }\n  }\n  ,\n  \"filterTarget\": \t[\n    \"2\",\n    \"3\",\n    \"4\"\n  ]\n  ,\n  \"filterDesc\": \"리스트에서 숫자만를\"\n  }",
+   "{\n  \"title\": \"데이터 정리\",\n  \"brief\": \"숫자만 골라 더해요\",\n  \"situation\": \"숫자와 글자가 섞인 목록에서 숫자만 골라 더하는 방법을\",\n  \"itemName\": \"처리 방법과\",\n  \"counter\": {\n    \"name\": \"반례\",\n    \"text\": \"이 반례를 보고 처리 방법을 다듬어요.\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"2\",\n        \"3\",\n        \"4\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"2\",\n        \"a\",\n        \"3\",\n        \"b\",\n        \"4\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"filtered_sum\": \"리스트에서 숫자만 골라 더한 값이 9이면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1\",\n      \"after\": \"자료 2\"\n    },\n    \"cond\": {\n      \"before\": \"처리 방법을 스스로 정하고\",\n      \"after\": \"성공 조건과 함께 세 번 실행해요\"\n    }\n  },\n  \"filterTarget\": [\n    \"2\",\n    \"3\",\n    \"4\"\n  ],\n  \"filterDesc\": \"리스트에서 숫자만\"\n}",
+   "{\n  \"title\": \"데이터 정리\",\n  \"brief\": \"숫자만 골라 더해요\",\n  \"situation\": \"숫자와 글자가 섞인 목록에서 숫자만 골라 더하는 법을\",\n  \"itemName\": \"처리 방법과\",\n  \"counter\": {\n    \"name\": \"반례\",\n    \"text\": \"이 반례를 보시고 다듬으세요.\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"자료 1\",\n      \"items\": [\n        \"2\",\n        \"3\",\n        \"4\"\n      ]\n    },\n    {\n      \"name\": \"자료 2\",\n      \"items\": [\n        \"2\",\n        \"a\",\n        \"3\",\n        \"b\",\n        \"4\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"filtered_sum\": \"리스트에서 숫자만 골라 더한 값이 9이면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료 1\",\n      \"after\": \"자료 2\"\n    },\n    \"cond\": {\n      \"before\": \"처리 방법을 정한 후\",\n      \"after\": \"성공 조건과 함께 실행합니다\"\n    }\n  },\n  \"filterTarget\": [\n    \"2\",\n    \"3\",\n    \"4\"\n  ],\n  \"filterDesc\": \"리스트에서 숫자만\"\n}"
+  ],
+  "attempts": []
+ },
+ {
+  "no": 9,
+  "lesson": "집합 set. 중복 없는 모음",
+  "keyPoint": "중복을 없애면 개수가 달라진다",
+  "expect": "split-unique-count",
+  "ok": true,
+  "mission": {
+   "id": "ai-1a140a736ff",
+   "no": "AI",
+   "type": "sentence",
+   "pipelineId": "split-unique-count",
+   "stage": "중복 제거 및 개수 세기",
+   "title": "중복 제거 및 개수 세기",
+   "brief": "이 목록을 정리해 주세요.",
+   "situation": "아래 자료는 학생들의 활동 참여 이름을 기록한 목록이요",
+   "lesson": "집합 set. 중복 없는 모음",
+   "keyPoint": "중복을 없애면 개수가 달라진다",
+   "define": {
+    "q": "언제 성공이라고 할 수 있을까요?",
+    "options": [
+     {
+      "v": "에러 안 나면 성공",
+      "trap": "luck"
+     },
+     {
+      "v": "중복을 제거한 이름의 개수를 맞히면 성공",
+      "trap": null,
+      "key": "unique"
+     },
+     {
+      "v": "3이 나오면 성공",
+      "trap": "hardcode"
+     },
+     {
+      "v": "세 번째 자료를 적용해도 결과가 맞으면 성공",
+      "trap": null,
+      "key": "total"
+     }
+    ]
+   },
+   "method": {
+    "sentences": [
+     {
+      "template": "목록을 {sep} 기준으로 나눈다.",
+      "slot": "sep",
+      "options": [
+       "쉼표",
+       "공백",
+       "줄바꿈"
+      ]
+     },
+     {
+      "template": "같은 참가자 이름은 {dedup}.",
+      "slot": "dedup",
+      "options": [
+       "각각 남긴다",
+       "하나만 남긴다"
+      ]
+     },
+     {
+      "template": "{output}만 보여준다.",
+      "slot": "output",
+      "options": [
+       "남은 항목의 개수",
+       "항상 숫자 3"
+      ]
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "id": "d01",
+     "name": "데이터 1",
+     "v": "철수,영희,철수,민수"
+    },
+    {
+     "id": "d02",
+     "name": "데이터 2",
+     "v": "유리,유리,지현,지현,지현"
+    },
+    {
+     "id": "d03",
+     "name": "이름 개수",
+     "v": "중복을 제거한 이름의 수",
+     "counter": true,
+     "axis": "count"
+    }
+   ],
+   "guard": {
+    "fallback": [
+     "brief",
+     "sentences"
+    ],
+    "reasons": {
+     "brief": [
+      "'중복을 없앤 후 이름의 개수를 세자. 성공 조건을 정한다.': 두 문장 이상 — 한 칸에 한 문장만 쓴다"
+     ],
+     "sentences": [
+      "'자료는 세 개이요 {sep} 세 번째는 반례예요': 26자 — 25자 안으로",
+      "'같은 이름은 어떻게 할까요 {dedup} 남은 이름의 개수를 어떻게 찾을까요': 42자 — 25자 안으로",
+      "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요': 37자 — 25자 안으로",
+      "'자료는 세 개이요 {sep} 세 번째는 반례예요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'자료는 세 개이요 {sep} 세 번째는 반례예요' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+      "'같은 이름은 어떻게 할까요 {dedup} 남은 이름의 개수를 어떻게 찾을까요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+      "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+     ]
+    },
+    "retried": 2,
+    "picked": "llm",
+    "repaired": []
+   }
+  },
+  "guard": {
+   "fallback": [
+    "brief",
+    "sentences"
+   ],
+   "reasons": {
+    "brief": [
+     "'중복을 없앤 후 이름의 개수를 세자. 성공 조건을 정한다.': 두 문장 이상 — 한 칸에 한 문장만 쓴다"
+    ],
+    "sentences": [
+     "'자료는 세 개이요 {sep} 세 번째는 반례예요': 26자 — 25자 안으로",
+     "'같은 이름은 어떻게 할까요 {dedup} 남은 이름의 개수를 어떻게 찾을까요': 42자 — 25자 안으로",
+     "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요': 37자 — 25자 안으로",
+     "'자료는 세 개이요 {sep} 세 번째는 반례예요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료는 세 개이요 {sep} 세 번째는 반례예요' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'같은 이름은 어떻게 할까요 {dedup} 남은 이름의 개수를 어떻게 찾을까요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   "retried": 2,
+   "picked": "llm",
+   "repaired": []
+  },
+  "ms": 18691,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 394,
+    "status": "ok",
+    "chars": 40
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6251,
+    "status": "ok",
+    "chars": 946
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6138,
+    "status": "ok",
+    "chars": 943
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5904,
+    "status": "ok",
+    "chars": 898
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-unique-count\"\n}",
+   "{\n  \"title\": \"중복 제거 및 개수 세기\",\n  \"brief\": \"데이터의 중복을 제거하고 고유한 항목의 개수를 세어 보자. 성공 조건을定\"\n  ,\n  \"situation\": \"아래의 자료들은 학생들의 활동 참여 횟수를 기록한 목록\"\n  ,\n  \"itemName\": \"참가자 이름\",\n  \"counter\": {\n    \"name\": \"이름 개수\",\n    \"text\": \"중복을 제거한 이름의 수\"\n  ,\n  \"axis\": \"count\"\n  }\n  ,\n  \"data\": [\n    {\n      \"name\": \"데이터 1\",\n      \"items\": [\n        \"철수\",\n        \"영희\",\n        \"철수\",\n        \"민수\"\n      ]\n    },\n    {\n      \"name\": \"데이터 2\",\n      \"items\": [\n        \"유리\",\n        \"유리\",\n        \"지현\",\n        \"지현\",\n        \"지현\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"고유한 항목의 수를 정확히 세어야 한다.\",\n    \"total\": \"세 번째 자료에 적용했을 때 결과가 이상하지\"\n  }\n  ,\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료는 세 개다. 앞의 두 개는 기준을 세우기 위한 예\"\n      ,\n      \"after\": \"세 번째는 기준이 무너질 수 있는 반례\"\n    }\n    ,\n    \"dedup\": {\n      \"before\": \"같은 이름이 여러 번 나오면 하나만 남\"\n      ,\n      \"after\": \"남은 이름의 총 개수를 찾\"\n    }\n  ,\n  \"output\": {\n    \"before\": \"처리 결과를 표로 만든\"\n    ,\n    \"after\": \"총 개수를 확인\"\n  }\n}\n  }",
+   "{\n  \"title\": \"중복 제거 및 개수 세기\",\n  \"brief\": \"중복을 제거하고 고유한 항목의 개수를 세어 보자. 성공 조건을 정한다.\",\n  \"situation\": \"아래 자료는 학생들의 활동 참여 이름을 기록한 목록이다\",\n  \"itemName\": \"참가자 이름\",\n  \"counter\": {\n    \"name\": \"이름 개수\",\n    \"text\": \"중복을 제거한 이름의 수\"\n  ,\n  \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"데이터 1\",\n      \"items\": [\n        \"철수\",\n        \"영희\",\n        \"철수\",\n        \"민수\"\n      ]\n    },\n    {\n      \"name\": \"데이터 2\",\n      \"items\": [\n        \"유리\",\n        \"유리\",\n        \"지현\",\n        \"지현\",\n        \"지현\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"중복을 제거한 이름의 개수를 세어서 맞히면成功\",\n    \"total\": \"세 번째 자료를 적용해도 결과가 정확하면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료는 세 개다. 앞의 두 개는 기준을 세우기 위한 예\"\n      ,\n      \"after\": \"세 번째는 기준이 무너질 수 있는 반례\"\n    }\n    ,\n    \"dedup\": {\n      \"before\": \"같은 이름은 하나만 남긴다\"\n      ,\n      \"after\": \"남은 이름의 총 개수를 찾는다\"\n    }\n  ,\n  \"output\": {\n    \"before\": \"처리 결과를 표로 정리한다\"\n    ,\n    \"after\": \"결과를 확인하고 개수를 입력한다\"\n  }\n  }\n}",
+   "{\n  \"title\": \"중복 제거 및 개수 세기\",\n  \"brief\": \"중복을 없앤 후 이름의 개수를 세자. 성공 조건을 정한다.\",\n  \"situation\": \"아래 자료는 학생들의 활동 참여 이름을 기록한 목록이요\",\n  \"itemName\": \"참가자 이름\",\n  \"counter\": {\n    \"name\": \"이름 개수\",\n    \"text\": \"중복을 제거한 이름의 수\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"데이터 1\",\n      \"items\": [\n        \"철수\",\n        \"영희\",\n        \"철수\",\n        \"민수\"\n      ]\n    },\n    {\n      \"name\": \"데이터 2\",\n      \"items\": [\n        \"유리\",\n        \"유리\",\n        \"지현\",\n        \"지현\",\n        \"지현\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"unique\": \"중복을 제거한 이름의 개수를 맞히면 성공\",\n    \"total\": \"세 번째 자료를 적용해도 결과가 맞으면 성공\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"자료는 세 개이요\"\n      ,\n      \"after\": \"세 번째는 반례예요\"\n    }\n    ,\n    \"dedup\": {\n      \"before\": \"같은 이름은 어떻게 할까요\"\n      ,\n      \"after\": \"남은 이름의 개수를 어떻게 찾을까요\"\n    }\n  ,\n  \"output\": {\n    \"before\": \"어떤 형태로 결과를 볼까요\"\n    ,\n    \"after\": \"개수를 어떻게 입력할까요\"\n  }\n  }\n}"
+  ],
+  "attempts": [
+   {
+    "brief": [
+     "'데이터의 중복을 제거하고 고유한 항목의 개수를 세어 보자. 성공 조건을定': 한자·일본어 — 한국어만 쓴다"
+    ],
+    "situation": [
+     "'아래의 자료들은 학생들의 활동 참여 횟수를 기록한 목록': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "goals": [
+     "'세 번째 자료에 적용했을 때 결과가 이상하지': 반말 — 학생 화면은 존댓말로 쓴다",
+     "'고유한 항목의 수를 정확히 세어야 한다.' — 결과 문장 '~하면 성공' 으로 끝나야 한다",
+     "'세 번째 자료에 적용했을 때 결과가 이상하지' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ],
+    "sentences": [
+     "'자료는 세 개다. 앞의 두 개는 기준을 세우기 위한 예 {sep} 세 번째는 기준이 무너질 수 있는 반례': 58자 — 25자 안으로",
+     "'같은 이름이 여러 번 나오면 하나만 남 {dedup} 남은 이름의 총 개수를 찾': 44자 — 25자 안으로",
+     "'처리 결과를 표로 만든 {output} 총 개수를 확인': 30자 — 25자 안으로",
+     "'자료는 세 개다. 앞의 두 개는 기준을 세우기 위한 예 {sep} 세 번째는 기준이 무너질 수 있는 반례' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'같은 이름이 여러 번 나오면 하나만 남 {dedup} 남은 이름의 총 개수를 찾' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'처리 결과를 표로 만든 {output} 총 개수를 확인' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'처리 결과를 표로 만든 {output} 총 개수를 확인' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "brief": [
+     "'중복을 제거하고 고유한 항목의 개수를 세어 보자. 성공 조건을 정한다.': 두 문장 이상 — 한 칸에 한 문장만 쓴다"
+    ],
+    "situation": [
+     "'아래 자료는 학생들의 활동 참여 이름을 기록한 목록이다': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "goals": [
+     "'중복을 제거한 이름의 개수를 세어서 맞히면成功': 한자·일본어 — 한국어만 쓴다",
+     "'중복을 제거한 이름의 개수를 세어서 맞히면成功' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ],
+    "sentences": [
+     "'자료는 세 개다. 앞의 두 개는 기준을 세우기 위한 예 {sep} 세 번째는 기준이 무너질 수 있는 반례': 58자 — 25자 안으로",
+     "'같은 이름은 하나만 남긴다 {dedup} 남은 이름의 총 개수를 찾는다': 39자 — 25자 안으로",
+     "'처리 결과를 표로 정리한다 {output} 결과를 확인하고 개수를 입력한다': 41자 — 25자 안으로",
+     "'자료는 세 개다. 앞의 두 개는 기준을 세우기 위한 예 {sep} 세 번째는 기준이 무너질 수 있는 반례' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'같은 이름은 하나만 남긴다 {dedup} 남은 이름의 총 개수를 찾는다' 빈칸 밖에 보기 '하나만 남긴다' — 답이 미리 적혀 있다",
+     "'처리 결과를 표로 정리한다 {output} 결과를 확인하고 개수를 입력한다' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   },
+   {
+    "brief": [
+     "'중복을 없앤 후 이름의 개수를 세자. 성공 조건을 정한다.': 두 문장 이상 — 한 칸에 한 문장만 쓴다"
+    ],
+    "sentences": [
+     "'자료는 세 개이요 {sep} 세 번째는 반례예요': 26자 — 25자 안으로",
+     "'같은 이름은 어떻게 할까요 {dedup} 남은 이름의 개수를 어떻게 찾을까요': 42자 — 25자 안으로",
+     "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요': 37자 — 25자 안으로",
+     "'자료는 세 개이요 {sep} 세 번째는 반례예요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'자료는 세 개이요 {sep} 세 번째는 반례예요' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'같은 이름은 어떻게 할까요 {dedup} 남은 이름의 개수를 어떻게 찾을까요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'어떤 형태로 결과를 볼까요 {output} 개수를 어떻게 입력할까요' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ]
+   }
+  ]
+ },
+ {
+  "no": 10,
+  "lesson": "파일 입출력. open, read",
+  "keyPoint": "파일에서 읽은 줄마다 쓸 것만 골라낸다",
+  "expect": "split-filter-count",
+  "ok": false,
+  "error": "문제를 만들지 못했어요. 다시 생성해 주세요.",
+  "reasons": {
+   "data": [
+    "Value error, '국어 95 수학 40 영어 85' — 항목은 12자 안의 단어 하나",
+    "Value error, '국어 60 수학 90 영어 55' — 항목은 12자 안의 단어 하나",
+    "Value error, '국어 80 수학 70 영어 90' — 항목은 12자 안의 단어 하나",
+    "Value error, '국어 50 수학 60 영어 45' — 항목은 12자 안의 단어 하나",
+    "Value error, '국어 70 수학 80 영어 70' — 항목은 12자 안의 단어 하나",
+    "Value error, '국어 60 수학 70 영어 60' — 항목은 12자 안의 단어 하나",
+    "Value error, '국어 90 수학 90 영어 80' — 항목은 12자 안의 단어 하나",
+    "Value error, '국어 50 수학 50 영어 50' — 항목은 12자 안의 단어 하나"
+   ],
+   "pipelineId": [
+    "split-filter-count"
+   ]
+  },
+  "ms": 19798,
+  "http": [
+   {
+    "step": "유형",
+    "mode": "json_schema",
+    "ms": 380,
+    "status": "ok",
+    "chars": 40
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 7213,
+    "status": "ok",
+    "chars": 1113
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 5654,
+    "status": "ok",
+    "chars": 948
+   },
+   {
+    "step": "초안",
+    "mode": "json_schema",
+    "ms": 6546,
+    "status": "ok",
+    "chars": 1003
+   }
+  ],
+  "raws": [
+   "{\n  \"pipelineId\": \"split-filter-count\"\n}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"파일에서 읽은 내용을 기준에 따라 세어 보자.\",\n  \"situation\": \"이번 단원에서는 파일 입출력과 조건에 따른 데이터 처리\"\n  ,\n  \"itemName\": \"데이터 처리\",\n  \"counter\":  \t{\n    \"name\": \"조건에 맞는 항목\",\n    \"text\": \"조건을 만족하는 데이터의 수를 셉니다.\"\n  \t,\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"학생_성적.txt\",\n      \"items\": [\n        \"국어 95 수학 40 영어 85\",\n        \"국어 60 수학 90 영어 55\",\n        \"국어 80 수학 70 영어 90\",\n        \"국어 50 수학 60 영어 45\"\n      ]\n    },\n    {\n      \"name\": \"학생_성적_2.txt\",\n      \"items\": [\n        \"국어 70 수학 80 영어 70\",\n        \"국어 60 수학 70 영어 60\",\n        \"국어 90 수학 90 영어 80\",\n        \"국어 50 수학 50 영어 50\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"filtered_count\":  \"조건을 만족하는 항목의 수를 구하세요.\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"다음 규칙으로 데이터를 처리합니다.\",\n      \"after\": \"각 항목을 처리한 결과를 바탕으로 답을 구합니다.\"\n    },\n    \"cond\": {\n      \"before\": \"처리할 조건은 다음과 같습니다.\",\n      \"after\": \"위의 조건을 만족하면 해당 항목을 선택합니다.\"\n    }\n  ,\n    \"output\": {\n      \"before\": \"최종적으로 선택된 항목의 총 개수를 답합니다.\",\n      \"after\": \"조건을 만족하는 항목이 몇 개 있는지 확인하세요.\"\n    }\n  },\n  \"filterTarget\": [\n    \"국어\",\n    \"수학\"\n  ]\n,\n  \"filterDesc\": \"국어와 수학 점수만\"\n  \t}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"파일에서 읽은 내용을 기준에 따라 세어 보자.\",\n  \"situation\": \"이번 단원에서는 파일 입출력과 조건에 따른 데이터 처리\",\n  \"itemName\": \"데이터 처리\",\n  \"counter\": {\n    \"name\": \"조건에 맞는 항목\",\n    \"text\": \"조건을 만족하는 데이터의 수를 셉니다.\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"학생_성적.txt\",\n      \"items\": [\n        \"국어\",\n        \"수학\",\n        \"영어\"\n      ]\n    },\n    {\n      \"name\": \"학생_성적_2.txt\",\n      \"items\": [\n        \"국어\",\n        \"수학\",\n        \"영어\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"filtered_count\": \"조건을 만족하는 항목의 수를 구하세요.\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"다음 규칙으로 데이터를 처리합니다.\",\n      \"after\": \"각 항목을 처리한 결과를 바탕으로 답을 구합니다.\"\n    },\n    \"cond\": {\n      \"before\": \"처리할 조건은 다음과 같습니다.\",\n      \"after\": \"위의 조건을 만족하면 해당 항목을 선택합니다.\"\n    },\n    \"output\": {\n      \"before\": \"최종적으로 선택된 항목의 총 개수를 답합니다.\",\n      \"after\": \"조건을 만족하는 항목이 몇 개 있는지 확인하세요.\"\n    }\n  },\n  \"filterTarget\": [\n    \"국어\",\n    \"수학\"\n  ],\n  \"filterDesc\": \"국어와 수학 점수만\"\n}",
+   "{\n  \"title\": \"데이터 정리 문제\",\n  \"brief\": \"파일 내용을 기준으로 세어 봅시다.\",\n  \"situation\": \"이번 단원에서는 파일 입출력과 조건에 따른 데이터 처리\",\n  \"itemName\": \"데이터 처리\",\n  \"counter\": {\n    \"name\": \"조건에 맞는 항목\",\n    \"text\": \"국어, 수학, 영어\",\n    \"axis\": \"count\"\n  },\n  \"data\": [\n    {\n      \"name\": \"학생_성적.txt\",\n      \"items\": [\n        \"국어 95 수학 40 영어 85\",\n        \"국어 60 수학 90 영어 55\",\n        \"국어 80 수학 70 영어 90\",\n        \"국어 50 수학 60 영어 45\"\n      ]\n    },\n    {\n      \"name\": \"학생_성적_2.txt\",\n      \"items\": [\n        \"국어 70 수학 80 영어 70\",\n        \"국어 60 수학 70 영어 60\",\n        \"국어 90 수학 90 영어 80\",\n        \"국어 50 수학 50 영어 50\"\n      ]\n    }\n  ],\n  \"goals\": {\n    \"filtered_count\": \"조건을 만족하는 항목의 수를 구합니다.\"\n  },\n  \"sentences\": {\n    \"sep\": {\n      \"before\": \"처리 방법을 정합니다.\",\n      \"after\": \"결과를 확인합니다.\"\n    },\n    \"cond\": {\n      \"before\": \"선택 조건을 정합니다.\",\n      \"after\": \"선택 방법을 확인합니다.\"\n    },\n    \"output\": {\n      \"before\": \"답을 구합니다.\",\n      \"after\": \"답을 확인합니다.\"\n    }\n  },\n  \"filterTarget\": [\n    \"국어\",\n    \"수학\"\n  ],\n  \"filterDesc\": \"국어와 수학 점수만\"\n}"
+  ],
+  "attempts": [
+   {
+    "data": [
+     "Value error, '국어 95 수학 40 영어 85' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 60 수학 90 영어 55' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 80 수학 70 영어 90' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 50 수학 60 영어 45' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 70 수학 80 영어 70' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 60 수학 70 영어 60' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 90 수학 90 영어 80' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 50 수학 50 영어 50' — 항목은 12자 안의 단어 하나"
+    ]
+   },
+   {
+    "brief": [
+     "'파일에서 읽은 내용을 기준에 따라 세어 보자.': 반말 — 학생 화면은 존댓말로 쓴다"
+    ],
+    "situation": [
+     "'이번 단원에서는 파일 입출력과 조건에 따른 데이터 처리': 존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요"
+    ],
+    "sentences": [
+     "'다음 규칙으로 데이터를 처리합니다. {sep} 각 항목을 처리한 결과를 바탕으로 답을 구합니다.': 53자 — 25자 안으로",
+     "'처리할 조건은 다음과 같습니다. {cond} 위의 조건을 만족하면 해당 항목을 선택합니다.': 50자 — 25자 안으로",
+     "'최종적으로 선택된 항목의 총 개수를 답합니다. {output} 조건을 만족하는 항목이 몇 개 있는지 확인하세요.': 62자 — 25자 안으로",
+     "'다음 규칙으로 데이터를 처리합니다. {sep} 각 항목을 처리한 결과를 바탕으로 답을 구합니다.' — 이 빈칸(sep)이 무엇을 정하는지 드러나지 않음",
+     "'처리할 조건은 다음과 같습니다. {cond} 위의 조건을 만족하면 해당 항목을 선택합니다.' — 이 빈칸(cond)이 무엇을 정하는지 드러나지 않음",
+     "'최종적으로 선택된 항목의 총 개수를 답합니다. {output} 조건을 만족하는 항목이 몇 개 있는지 확인하세요.' 빈칸 밖에 보기 '있는' — 답이 미리 적혀 있다",
+     "'최종적으로 선택된 항목의 총 개수를 답합니다. {output} 조건을 만족하는 항목이 몇 개 있는지 확인하세요.' — 학생이 고른 방법은 '~한다.' 로 끝난다",
+     "'최종적으로 선택된 항목의 총 개수를 답합니다. {output} 조건을 만족하는 항목이 몇 개 있는지 확인하세요.' — 이 빈칸(output)이 무엇을 정하는지 드러나지 않음"
+    ],
+    "counter": [
+     "'조건을 만족하는 데이터의 수를 셉니다' — 반례도 자료다. 문장이 아니라 12자 안의 항목들로"
+    ],
+    "goals": [
+     "'조건을 만족하는 항목의 수를 구하세요.' — 결과 문장 '~하면 성공' 으로 끝나야 한다"
+    ]
+   },
+   {
+    "data": [
+     "Value error, '국어 95 수학 40 영어 85' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 60 수학 90 영어 55' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 80 수학 70 영어 90' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 50 수학 60 영어 45' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 70 수학 80 영어 70' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 60 수학 70 영어 60' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 90 수학 90 영어 80' — 항목은 12자 안의 단어 하나",
+     "Value error, '국어 50 수학 50 영어 50' — 항목은 12자 안의 단어 하나"
+    ]
+   }
+  ]
+ }
+]

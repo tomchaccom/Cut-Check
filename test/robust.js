@@ -19,6 +19,9 @@ function launchOpts() {
 (async () => {
   const b = await chromium.launch(launchOpts());
   const ctx = await b.newContext({ viewport: { width: 1000, height: 1000 } });
+  /* 학생·교사 화면은 Supabase 주소를 품고 있다. 라이브러리를 막아 로컬 모드로 돌린다 —
+   * 테스트가 실제 교실 DB 에 쓰면 안 된다. (js/data/supabase.js 가 없으면 로컬로 도는 설계) */
+  await ctx.route('**/supabase-js@2/**', r => r.abort());
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   let alerted = false;
@@ -28,24 +31,23 @@ function launchOpts() {
   const LONG = '가'.repeat(600);
 
   // 학생이 쓴 내용이 교사 화면으로 흐르는 경로 전부에 넣어본다
-  await p.goto('http://localhost:8123/index.html'); await p.waitForTimeout(300);
+  // 학생 화면 (sentence.html) — 판정 근거와 마무리 문장이 교사 화면에 올라간다
+  await p.goto('http://localhost:8123/sentence.html'); await p.waitForTimeout(300);
   await p.evaluate(() => window.CC.store.clear());
-  await p.locator('#succ-picks .pick').nth(3).click();           // 직접 쓰기
-  await p.locator('#succ-own').fill(EVIL);
-  await p.locator('#s1go').click();
-  await p.locator('#sep-chips .chip').first().click();
-  await p.locator('#why-picks .pick').first().click();
-  await p.locator('#s2go').click();
-  const lib = p.locator('#lib .lb');
-  for (const i of [0,1,3]) await lib.nth(i).click();
-  await p.locator('#run').click(); await p.waitForTimeout(300);
-  await p.locator('#resultbox .btn.ghost').nth(1).click(); await p.waitForTimeout(200);
-  await p.locator('#brk-input').fill(LONG);
-  await p.locator('#brk-guess .chip').first().click();
-  await p.locator('#brk-run').click(); await p.waitForTimeout(200);
-  await p.locator('#wrap-picks .pick').nth(0).click();
-  await p.locator('#wrap-input').fill(EVIL);
-  await p.locator('#wrap-go').click(); await p.waitForTimeout(200);
+  await p.locator('#go-define').click();
+  await p.locator('.define-card').first().click();
+  await p.locator('#reason-define').fill(EVIL);
+  await p.locator('#go-method').click();
+  for (const s of await p.locator('select.slot:visible').all()) await s.selectOption({ index: 1 });
+  await p.locator('#reason-method').fill(EVIL);
+  await p.locator('#go-run').click();
+  await p.locator('#run-code').click(); await p.waitForTimeout(200);
+  await p.locator('.judge-btn').first().click();
+  await p.locator('#code-basis').fill(EVIL);
+  await p.locator('#code-judge-save').click();
+  await p.locator('#go-wrap').click();
+  await p.locator('#wrap-text').fill(EVIL + LONG);
+  await p.locator('#finish').click(); await p.waitForTimeout(200);
 
   await p.goto('http://localhost:8123/make.html'); await p.waitForTimeout(300);
   await p.locator('#brief').fill(EVIL + ' 정리해주세요');
