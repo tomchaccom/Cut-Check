@@ -257,6 +257,8 @@ test('내 기록에는 지금 미션 것만, 코드 실행 결과와 내 판단�
   await page.locator('#code-basis').fill('세 개가 나와서');
   await page.locator('#code-judge-save').click();
   await page.locator('#go-wrap').click();
+  await expect(page.locator('#wrap-review')).toContainText('3');              // 정리 화면도 코드 실행 결과로
+  await expect(page.locator('#wrap-review')).toContainText('세 개가 나와서');
   await page.locator('#wrap-text').fill('앞 미션 정리');
   await page.locator('#finish').click();
 
@@ -331,12 +333,12 @@ test('학생 홈 — 교실은 폴더, 열면 미션 파일과 내 상태', asyn
   await expect(page.locator('.room-tile')).toHaveCount(2);
   await expect(page.locator('.room-tile').first()).toContainText('1학년 3반');
   await page.locator('.room-tile').first().click();
-  await expect(page.locator('.crumb')).toContainText('1학년 3반');
+  await expect(page.locator('#room-view .crumb')).toContainText('1학년 3반');
   const files = page.locator('.mission-file');
   await expect(files).toHaveCount(3);
   await expect(files.nth(0)).toContainText('완료');
   await expect(files.nth(1)).toContainText('진행 중');
-  await page.locator('.crumb a', { hasText: '내 교실' }).click();
+  await page.locator('#room-view .crumb a', { hasText: '내 교실' }).click();
   await expect(page.locator('.room-tile')).toHaveCount(2);
 });
 
@@ -346,4 +348,29 @@ test('교실이 없는 학생 — 교실 코드로 들어가기만 보인다', a
   await expect(page.locator('.room-join')).toBeVisible();
   await expect(page.locator('.room-tile')).toHaveCount(0);
   expect(errs).toEqual([]);
+});
+
+test('미션 머리 — 위치 표시, 큰 미션 이름, 단계 탭', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await expect(page.locator('#mission-title')).toHaveText('시험용 미션');
+  await expect(page.locator('#steps-nav .current')).toContainText('01');
+  await page.locator('#go-define').click();
+  await expect(page.locator('#steps-nav .current')).toContainText('02');
+});
+
+test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  await pickCards(page);
+  const rows = page.locator('.design-item');
+  const y = await Promise.all([0, 1, 2].map(i => rows.nth(i).boundingBox().then(b => b.y)));
+  expect(y[0] < y[1] && y[1] < y[2]).toBe(true);
+  const w = await rows.first().boundingBox();
+  expect(w.width).toBeLessThan(560);                 // 줄은 글자 폭만큼
 });

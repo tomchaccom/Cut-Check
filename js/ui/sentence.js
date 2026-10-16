@@ -69,11 +69,20 @@
       defineVer: 0,
       runs: [],
       judges: [],
+      codes: [],        /* 이번에 낸 s-code 기록 — 정리 화면의 결과 */
+      judge: null,      /* 마지막 s-code-judge */
+      firstDefine: '',
       allDataDone: false,
       codeText: '',
       skeleton: '',
       codeOutput: ''
     };
+
+    /* 미션 머리 — 위치 표시와 큰 이름 */
+    $('#mission-head').hidden = false;
+    $('#mission-title').textContent = M.title;
+    $('#crumb-play-mission').textContent = M.title;
+    $('#crumb-play-room').textContent = currentClassroomName || '내 미션';
 
     /* 화면 1 */
     $('#brief').textContent = M.brief;
@@ -84,8 +93,8 @@
     var samples = $('#samples');
     samples.innerHTML = '';
     M.inputs.slice(0, 2).forEach(function (inp) {   /* 반례는 코드 단계에서 — 처음엔 앞 두 자료만 */
-      samples.appendChild(el('span', 'sample-label', inp.name));
-      samples.appendChild(el('code', 'sample-data', inp.v));
+      samples.appendChild(el('dt', 'sample-label', inp.name));
+      samples.appendChild(el('dd', 'sample-data', inp.v));
     });
     if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';
 
@@ -151,7 +160,10 @@
       target.classList.add('active');
       try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
     }
-    document.querySelectorAll('.steps-nav span').forEach(function (s) {
+    /* 02·03 에서는 받은 요청(화면 1)을 왼쪽 단으로 남긴다 */
+    if (n === 2 || n === 3) $('#step1').dataset.side = n;
+    else $('#step1').removeAttribute('data-side');
+    document.querySelectorAll('#steps-nav span').forEach(function (s) {
       var sn = parseInt(s.dataset.step, 10);
       s.classList.remove('current', 'done');
       if (sn === n) s.classList.add('current');
@@ -224,23 +236,14 @@
     $('#go-run').disabled = !checkMethodComplete();
   }
 
-  function findLatestRun(dataId, methodVer) {
-    for (var i = state.runs.length - 1; i >= 0; i--) {
-      var r = state.runs[i];
-      if (r.dataId === dataId && r.methodVer === methodVer) {
-        r._idx = i;
-        return r;
-      }
-    }
-    return null;
+  /* 자료마다 마지막 실행 결과 — s-code 의 dataId 에는 자료 값이 들어 있다. 정리 화면과 내 기록이 같이 쓴다 */
+  function lastResults(codes) {
+    var last = {};
+    codes.forEach(function (c) { last[c.dataId] = c.error || String(c.output || '').trim() || '출력 없음'; });
+    return last;
   }
 
-  function findJudgeForRun(runIdx) {
-    for (var i = state.judges.length - 1; i >= 0; i--) {
-      if (state.judges[i].runIdx === runIdx) return state.judges[i];
-    }
-    return null;
-  }
+  $('#design-reset').addEventListener('click', function () { state.design = []; renderDesign(); });
 
   /* ── 화면 1 ────────────────────────────────────── */
   $('#go-define').addEventListener('click', function () { showStep(2); });
@@ -257,6 +260,8 @@
 
   $('#go-method').addEventListener('click', function () {
     if (!state.defineChoice) return;
+    if (!state.firstDefine) state.firstDefine = state.defineChoice;
+    $('#side-define').textContent = state.defineChoice;
     if (state.defineVer > 0) {
       rec('s-redefine', { from: state.defineChoice, to: state.defineChoice, reason: state.defineReason });
     } else {
@@ -435,7 +440,7 @@
     var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
     py.run(fullCode, function (output, error) {
       if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
-      rec('s-code', { code: code, dataId: dataVal, output: output, error: error });
+      state.codes.push(rec('s-code', { code: code, dataId: dataVal, output: output, error: error }));
       cb(output, error);
     });
   }
@@ -470,7 +475,7 @@
       btnsDiv.appendChild(b);
     });
     $('#code-judge-save').addEventListener('click', function () {
-      rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
+      state.judge = rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
       this.disabled = true; this.textContent = '저장됨';
       btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
       if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
@@ -532,43 +537,30 @@
   function renderWrapStep() {
     var review = $('#wrap-review');
     review.innerHTML = '';
+    function row(label, value, was, mono) {
+      var r = el('div', 'row');
+      r.appendChild(el('dt', null, label));
+      var dd = el('dd', mono ? 'mono' : null);
+      if (typeof value === 'string') dd.textContent = value; else dd.appendChild(value);
+      if (was) dd.appendChild(el('span', 'was', was));
+      r.appendChild(dd);
+      review.appendChild(r);
+    }
 
-    /* 성공 조건 + 방법 요약 */
-    var summary = el('div', 'review-summary');
-    summary.innerHTML = '<b>성공 조건:</b> ' + esc(state.defineChoice) +
-      '<br><b>방법:</b> ' + esc(summarizeMethod());
-    review.appendChild(summary);
+    row('내가 정한 성공', state.defineChoice,
+      state.firstDefine && state.firstDefine !== state.defineChoice ? '처음 정한 것: "' + state.firstDefine + '"' : '');
+    row('내 설계도', summarizeMethod(), state.methodVer > 1 ? (state.methodVer - 1) + '번 고쳤어요' : '');
 
-    /* 자료별 판정 카드 */
+    var last = lastResults(state.codes), res = document.createDocumentFragment();
     M.inputs.forEach(function (inp) {
-      var latestRun = findLatestRun(inp.id, state.methodVer);
-      if (!latestRun) return;
-      var judge = findJudgeForRun(latestRun._idx);
-      if (!judge) return;
-
-      var vClass = judge.verdict === '지켰다' ? 'kept' : judge.verdict === '지키지 못했다' ? 'missed' : 'unsure';
-      var vBadge = judge.verdict === '지켰다' ? 'v-kept' : judge.verdict === '지키지 못했다' ? 'v-missed' : 'v-unsure';
-
-      var card = el('div', 'review-card ' + vClass);
-
-      var header = el('div', 'rc-header');
-      header.appendChild(el('span', 'rc-name', inp.name));
-      var badge = el('span', 'rc-verdict ' + vBadge, judge.verdict);
-      header.appendChild(badge);
-      card.appendChild(header);
-
-      var detail = el('div', 'rc-detail');
-      detail.textContent = inp.v + ' → ' + (latestRun.result.err ? '실행 중단' : latestRun.result.value);
-      card.appendChild(detail);
-
-      if (judge.basis) {
-        var basis = el('div', 'rc-basis');
-        basis.textContent = '"' + judge.basis + '"';
-        card.appendChild(basis);
-      }
-
-      review.appendChild(card);
+      if (!(inp.v in last)) return;
+      var line = el('div', null, inp.name + ' → ' + last[inp.v]);
+      if (inp.counter) line.appendChild(el('span', 'tag-new', '새로 온 자료'));
+      res.appendChild(line);
     });
+    if (res.childNodes.length) row('실행 결과', res, '', true);
+
+    if (state.judge) row('내 판단', state.judge.verdict, state.judge.basis ? '"' + state.judge.basis + '"' : '');
   }
 
   /* 자유 정리 입력 */
@@ -758,16 +750,14 @@
     }
 
     /* 코드 실행 — 자료마다 마지막 실행 결과. s-code 의 dataId 에는 자료 값이 들어 있다 */
-    var lastByData = {};
-    codes.forEach(function (c) { lastByData[c.dataId] = c; });
+    var lastByData = lastResults(codes);
     var resultsSection = el('div', 'rc-results');
     (M.inputs || []).forEach(function (inp) {
-      var c = lastByData[inp.v];
-      if (!c) return;
+      if (!(inp.v in lastByData)) return;
       var row = el('div', 'rc-result-row');
       row.innerHTML = '<span class="rc-data-name">' + esc(inp.name) + '</span>' +
         '<div class="rc-data-input">' + esc(inp.v) + '</div>' +
-        '<div class="rc-row-result">결과: <b>' + esc(c.error || String(c.output || '').trim() || '출력 없음') + '</b></div>';
+        '<div class="rc-row-result">결과: <b>' + esc(lastByData[inp.v]) + '</b></div>';
       resultsSection.appendChild(row);
     });
     /* 내 판단 — 학생이 스스로 내린 것. 시스템 판정이 아니다 */
@@ -829,6 +819,7 @@
     });
   }
   if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });
+  $('#crumb-play-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); switchTab('panel-missions'); });
 
   /* ── 인증 연동 ──────────────────────────────────── */
   function initAuth() {
@@ -836,6 +827,7 @@
       /* Supabase 미설정 → 로컬 전용 모드: 탭 숨기고 바로 플레이, 미션바 표시 */
       if ($('#login-link')) $('#login-link').hidden = true;
       if ($('#main-tabs')) $('#main-tabs').hidden = true;
+      $('#crumb-play-home').hidden = $('#crumb-play-home').nextElementSibling.hidden = true;  /* 교실 폴더가 없다 */
       bar.hidden = false;
       CC.SENTENCE_MISSIONS.forEach(function (m) {
         if (bar.querySelector('[data-id="' + m.id + '"]')) return;
