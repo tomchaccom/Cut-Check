@@ -83,9 +83,12 @@ t('교사 검수 + 이유', r['status'] == 'teacher' and any('다른 이야기' 
 
 print('[검수 호출 실패 · JSON 아님 → 교사]')
 for name, bad in [('호출 실패', RuntimeError('504')), ('JSON 아님', '검수 못 함'), ('항목 빠짐', {'understand': {'ok': True, 'why': ''}})]:
-    m = quiet(lambda: make_mission('리스트', '중복', fake(bad)))
+    llm = fake(bad, OK)
+    m = quiet(lambda: make_mission('리스트', '중복', llm))
     r = m['guard']['review']
-    t(name + ' — 생성은 실패하지 않고 교사로', r['status'] == 'teacher' and r['reasons'], r)
+    t(name + ' — 생성은 실패하지 않고 교사로, 다시 만들지 않는다',
+      r['status'] == 'teacher' and r['reasons'] == ['검수를 못 했어요'] and llm.calls['review'] == 1 and llm.calls['draft'] == 1,
+      (r, llm.calls))
 
 print('[시간 부족 → 재생성 없음]')
 real = _review.DEADLINE
@@ -96,6 +99,31 @@ try:
     t('다시 만들지 않고 교사로', llm.calls['draft'] == 1 and m['guard']['review']['status'] == 'teacher', llm.calls)
 finally:
     _review.DEADLINE = real
+
+print('[검수할 시간도 없으면 → 검수 없이 교사]')
+_review.DEADLINE = 3
+try:
+    llm = fake(OK)
+    m = quiet(lambda: make_mission('리스트', '중복', llm))
+    r = m['guard']['review']
+    t('검수 호출 없이 교사로', llm.calls['review'] == 0 and r['status'] == 'teacher' and r['reasons'] == ['검수할 시간이 모자랐어요'], (r, llm.calls))
+finally:
+    _review.DEADLINE = real
+
+print('[다시 만들다 LLM 이 터지면 → 앞 초안을 교사로]')
+base = fake(BAD, OK)
+
+
+def flaky(messages, schema, timeout):
+    if '"understand"' not in json.dumps(schema) and '"pipelineId"' not in json.dumps(schema) and base.calls['draft'] == 1:
+        raise RuntimeError('504')
+    return base(messages, schema, timeout)
+
+
+m = quiet(lambda: make_mission('리스트', '중복', flaky))
+r = m['guard']['review']
+t('앞 초안을 남기고 교사로', r['status'] == 'teacher' and m['title'] and r['rounds'] == 1
+  and '다시 만들기에 실패해서 앞 문제를 보여 드려요' in r['reasons'] and any('다른 이야기' in x for x in r['reasons']), r)
 
 print('[review 는 학생이 볼 문장만 넘긴다]')
 seen = {}

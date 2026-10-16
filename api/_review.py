@@ -8,7 +8,7 @@ import json
 import sys
 import time
 
-from _generate import DEADLINE, GenerateError, _json, generate, pickle_llm
+from _generate import DEADLINE, _json, generate, pickle_llm
 
 MAX_REGEN = 2
 REGEN_NEEDS = 25   # 초. 다시 만들고(~8초) 다시 검수(~3초)할 여유
@@ -17,7 +17,7 @@ REVIEW_NEEDS = 5   # 초. 이만큼도 없으면 검수 없이 교사에게
 ITEMS = {
     'understand': '중1이 요청을 읽고 무엇을 구해야 하는지 아는가',
     'sameStory': '세 자료가 같은 이야기인가 (과일 목록과 문구 목록이 섞이면 아니다)',
-    'noAnswer': '요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나',
+    'noAnswer': '요청·상황 문장에 답이나 푸는 방법이 드러나지 않았나 (성공 조건 보기는 보지 않는다)',
     'easy': '쉬운 말로 짧게 썼나',
 }
 SCHEMA = {
@@ -30,6 +30,8 @@ SCHEMA = {
 SYSTEM = '\n'.join([
     '당신은 중학교 1학년 수업에 쓸 문제를 학생에게 내기 직전에 검수한다.',
     '학생이 볼 문장과 자료만 보고 항목마다 ok 와 이유 한 문장을 쓴다.',
+    "'성공 조건 보기'는 코드가 붙인 후보다. 진짜 보기와 함정 보기가 일부러 섞여 있으니 답이 드러났다고 보지 않는다.",
+    'noAnswer 는 요청·상황 문장만 본다.',
     *[f'- {k}: {v}' for k, v in ITEMS.items()],
     'JSON 하나만 응답한다.',
 ])
@@ -49,8 +51,10 @@ def review(mission, call_llm, timeout):
         raise ValueError('검수 응답이 JSON 이 아님')
     out = []
     for k, label in ITEMS.items():
-        v = d.get(k) if isinstance(d.get(k), dict) else {}
-        if v.get('ok') is not True:
+        v = d.get(k)
+        if not isinstance(v, dict) or not isinstance(v.get('ok'), bool):
+            raise ValueError(f'검수 항목 {k} 이 빠졌거나 ok 가 불리언이 아님')
+        if not v['ok']:
             out.append(f"{label.split(' (')[0]} — {v.get('why') or '답이 없어요'}")
     return out
 
@@ -62,9 +66,10 @@ def make_mission(lesson, key_point, call_llm=pickle_llm):
     while True:
         try:
             m = generate(lesson, key_point, call_llm, feedback=feedback, t0=t0)
-        except GenerateError:
+        except Exception as e:  # noqa: BLE001 — 첫 판은 그대로 던지고, 다시 만들다 실패하면 앞 초안을 살린다
             if m is None:
                 raise
+            print('[generate-mission] 다시 만들기 실패', repr(e), file=sys.stderr)
             reasons = reasons + ['다시 만들기에 실패해서 앞 문제를 보여 드려요']
             break
         if left() < REVIEW_NEEDS:
