@@ -25,7 +25,7 @@ from pydantic import ValidationError
 from _pipeline import run
 from _schema import CHOICE, DESC, DRAFTS, SPEC, counter_problems, failed_fields
 
-DEFINE_Q = '언제 성공이라고 할 수 있을까요?'
+DEFINE_Q = '어떤 결과가 나오면 성공일까요?'
 DEADLINE = 55     # 초. Vercel maxDuration 60 안에서 응답까지 끝낸다
 RETRY_NEEDS = 15  # 초. 이만큼 안 남았으면 재요청 대신 바로 기본 틀로 간다
 MAX_RETRY = 2     # 자료는 기본 틀이 없어서, 시간이 남으면 한 번 더 기회를 준다
@@ -283,13 +283,13 @@ def _josa(word, pair):
     return pair[0] if has or c in '013678' else pair[1]  # 영·일·삼·육·칠·팔
 
 
-CORRECT = {  # 정답 보기 기본 문장 — 결과로만 쓴다
-    'count': '{item}{iga} 몇 개인지 나오면 성공', 'total': '전체 {item} 수가 나오면 성공',
-    'unique': '겹치는 건 한 번만 센 수가 나오면 성공', 'filtered_count': '조건에 맞는 {item} 수가 나오면 성공',
-    'filtered': '조건에 맞는 {item}만 남으면 성공', 'sorted': '순서대로 늘어서면 성공',
-    'transformed': '{item}마다 깔끔해지면 성공', 'sum': '전부 더한 값이 나오면 성공',
-    'filtered_sum': '숫자만 더한 값이 나오면 성공', 'max': '가장 큰 값이 나오면 성공',
-    'min': '가장 작은 값이 나오면 성공', 'group': '{item}마다 나온 횟수가 보이면 성공',
+CORRECT = {  # 정답 보기 — 결과로만, 모두 '~가 나오면 성공' 한 틀로 (2026-10-17 사람 결정: 보기 구성이 헷갈렸다)
+    'count': '{item}{iga} 모두 몇 개인지 나오면 성공', 'total': '겹친 것까지 전부 센 {item} 수가 나오면 성공',
+    'unique': '겹치는 {item}{eunneun} 한 번만 센 수가 나오면 성공', 'filtered_count': '조건에 맞는 {item}만 센 수가 나오면 성공',
+    'filtered': '조건에 맞는 {item}만 남은 목록이 나오면 성공', 'sorted': '{item}{iga} 순서대로 놓인 목록이 나오면 성공',
+    'transformed': '{item}마다 깔끔하게 다듬은 목록이 나오면 성공', 'sum': '{item}{eulreul} 모두 더한 값이 나오면 성공',
+    'filtered_sum': '숫자인 {item}만 더한 값이 나오면 성공', 'max': '가장 큰 {item}{iga} 나오면 성공',
+    'min': '가장 작은 {item}{iga} 나오면 성공', 'group': '{item}마다 몇 번 나왔는지가 나오면 성공',
 }
 
 BRIEF_FALLBACK = {  # 요청 기본 틀 — 구할 값만 말하고 방법은 말하지 않는다
@@ -351,30 +351,30 @@ ORDER = ['itemName', 'filterDesc', 'title', 'brief', 'situation', 'counter']
 
 # ── 함정 보기 (코드가 쓴다) ─────────────────────────────────
 
-def _hardcode(value):
-    """첫 자료의 실제 결과를 그대로 성공으로 삼는 문장."""
+def _hardcode(value, name):
+    """첫 자료의 실제 결과를 그대로 성공으로 삼는 문장. 어느 자료의 답인지 밝힌다 —
+    출처가 없으면 숫자가 갑자기 튀어나온 것처럼 보였다 (2026-10-17)."""
     if isinstance(value, dict):
         k, n = next(iter(value.items()), ('', 0))
-        return f'{k}{_josa(k, "이가")} {n}번 나오면 성공'
+        return f'{name}처럼 {k}{_josa(k, "이가")} {n}번 나오면 성공'
     if value in (None, ''):
-        return '빈 결과가 나오면 성공'
-    if isinstance(value, str):
-        if len(value) <= 12:
-            return f'{value}{_josa(value, "이가")} 나오면 성공'
+        return f'{name}처럼 빈 결과가 나오면 성공'
+    if isinstance(value, str) and len(value) > 12:
         first = re.split(r'[,\s→]+', value)[0]
-        return f'{first}{_josa(first, "이가")} 맨 앞이면 성공'
-    return f'{value}{_josa(value, "이가")} 나오면 성공'
+        return f'{name}처럼 {first}{_josa(first, "이가")} 맨 앞이면 성공'
+    return f'{name}의 답과 같은 {value}{_josa(value, "이가")} 나오면 성공'
 
 
 def _options(pid, m):
     ft = m.get('filterTarget')
     first_key, slots = next(iter(SPEC[pid]['keys'].items()))
     value = run(pid, slots, {'filterTarget': ft} if ft else {}, ','.join(m['data'][0]['items']))['value']
-    opts = [{'v': _hardcode(value), 'trap': 'hardcode'}]
+    opts = [{'v': _hardcode(value, m['data'][0]['name']), 'trap': 'hardcode'}]
     item = m.get('itemName') or '항목'
-    opts += [{'v': CORRECT[k].format(item=item, iga=_josa(item, '이가')), 'trap': None, 'key': k}
-             for k in SPEC[pid]['keys']]
-    opts.append({'v': '에러 안 나면 성공', 'trap': 'luck'})
+    # 진짜 보기는 요청이 묻는 것 하나 — 요청이 이제 구할 값을 밝히므로 '다른 해석' 보기는 헷갈리기만 했다
+    opts.append({'v': CORRECT[first_key].format(item=item, iga=_josa(item, '이가'), eunneun=_josa(item, '은는'),
+                                                eulreul=_josa(item, '을를')), 'trap': None, 'key': first_key})
+    opts.append({'v': '에러 없이 끝나기만 하면 성공', 'trap': 'luck'})
     random.shuffle(opts)  # 늘 같은 자리에 있으면 학생은 내용이 아니라 자리를 외운다
     return opts
 

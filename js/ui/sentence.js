@@ -89,7 +89,9 @@
     });
     if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';
 
-    /* 화면 2: 성공 조건 — 카드형 버튼으로 표시 */
+    /* 화면 2: 성공 조건 — 받은 요청을 다시 보여 주고, 카드형 버튼으로 고른다 */
+    if ($('#define-brief')) $('#define-brief').textContent = M.brief;
+    if ($('#define-q')) $('#define-q').textContent = (M.define.q || '어떤 결과가 나오면 성공일까요?') + ' 하나를 골라 주세요.';
     var defineCards = $('#define-cards');
     var defineSelect = $('#slot-define');
     if (defineCards) {
