@@ -284,7 +284,9 @@ class DataSet(BaseModel):
 class Counter(BaseModel):
     name: str = _max('counter', description='반례 자료 이름. 앞 자료와 같은 상황의 다른 날·다른 반 등.')
     text: str = Field(json_schema_extra={'maxLength': _LIMIT['counterText']}, description=(
-        '반례 자료 원문 그대로. 학생이 앞 두 자료로 세운 기준이 여기서 깨져야 한다. axis 에 맞게 만든다: '
+        '반례 자료 원문 그대로 — 설명 문장이 아니라 앞 자료처럼 항목을 늘어놓은 것. '
+        '앞 자료에 나온 항목을 하나 이상 다시 쓴다 (empty 제외). '
+        '학생이 앞 두 자료로 세운 기준이 여기서 깨져야 한다. axis 에 맞게 만든다: '
         'count=항목 수가 다름 / sep=쉼표 대신 띄어쓰기 같은 다른 구분자 / empty=결과가 0이나 비어 있게 / '
         'invisible=항목 앞뒤에 공백.'))
     axis: Literal['count', 'sep', 'empty', 'invisible'] = Field(description=(
@@ -298,7 +300,7 @@ class _Base(BaseModel):
     brief: str = _max('brief', description=(
         '학생에게 오는 업무 요청. 한 문장, 존댓말(~해 주세요). 배경은 situation 에. '
         '어떻게 하는지(나누기, 중복 빼기 등)는 쓰지 않는다 — 일부러 모호하게.'))
-    situation: str = _max('situation', description='왜 이 일을 하는지. 한 문장, 존댓말. 덧붙임 금지.')
+    situation: str = _max('situation', description='왜 이 일을 하는지. 한 문장, 존댓말로 "~요." 로 끝낸다 ("~해야 해요."). 덧붙임 금지.')
     itemName: str = _max('itemName', description='항목을 부르는 말 ("재료", "이름", "금액").')
     counter: Counter = Field(description='세 번째이자 마지막 자료. 반드시 반례.')
 
@@ -413,7 +415,8 @@ def _draft(pid):
     spec = SPEC[pid]
     goals = create_model('Goals_' + pid.replace('-', '_'), **{
         k: (str, _max('goals', description=f'진짜 성공 조건 문장 ({KEY_MEAN[k]}). 결과로만 쓴다 — 방법을 쓰면 정답 공개다. '
-                                           '"~나오면 성공" 처럼 짧게.'))
+                                           '반드시 "성공" 으로 끝낸다 ("~나오면 성공"). '
+                                           '"~할 수 있어야 한다" 로 쓰지 않는다.'))
         for k in spec['keys']})
     def example(slot):
         b, a = STEP_EXAMPLE_NUM_COND if slot == 'cond' and 'toNumber' in spec['ops'] else STEP_EXAMPLE[slot]
@@ -423,7 +426,8 @@ def _draft(pid):
     steps = create_model('Steps_' + pid.replace('-', '_'), **{
         slot: (StepParts, Field(description=(
             f'학생이 빈칸에서 [{" / ".join(opts)}] 중 하나를 고르는 방법 문장. 빈칸 앞말과 뒷말만 쓴다. '
-            f'합쳐서 25자 안. 보기에 있는 말은 쓰지 않는다. 예: {example(slot)}')))
+            f'합쳐서 25자 안. 보기에 있는 말은 쓰지 않는다. 뒷말은 "~한다." 로 끝낸다. '
+            f'빈칸이 무엇을 정하는지 동사로 드러낸다. 예: {example(slot)}')))
         for slot, opts in spec['slots'].items()})
     fields = {
         'data': (list[DataSet], Field(min_length=2, max_length=2, description=_data_desc(spec['ops']))),

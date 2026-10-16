@@ -257,5 +257,25 @@ if key:
     os.environ['PICKLE_API_KEY'] = key
 t('키가 없으면 502 와 사람이 읽는 말', code == 502 and '다시 시도' in body['error'], (code, body))
 
+print('\n[보내는 스키마 — $ref 없이, 모든 객체가 닫혀 있다]')
+from _schema import DRAFTS  # noqa: E402
+
+
+def _objs(o):
+    if isinstance(o, dict):
+        if o.get('type') == 'object':
+            yield o
+        for v in o.values():
+            yield from _objs(v)
+    elif isinstance(o, list):
+        for v in o:
+            yield from _objs(v)
+
+
+for pid, M in DRAFTS.items():
+    f = _generate._flat(M.model_json_schema())
+    t(f'{pid}: $ref·$defs 없음', '$ref' not in json.dumps(f) and '$defs' not in json.dumps(f))
+    t(f'{pid}: 객체마다 additionalProperties false', all(o.get('additionalProperties') is False for o in _objs(f)))
+
 print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
 sys.exit(1 if fail else 0)
