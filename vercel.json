@@ -4,6 +4,7 @@
     { "source": "/", "destination": "/landing.html" }
   ],
   "functions": {
-    "api/generate-mission.py": { "maxDuration": 60 }
+    "api/generate-mission.py": { "maxDuration": 60 },
+    "api/tutor.py": { "maxDuration": 30 }
   }
 }
