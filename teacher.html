@@ -451,7 +451,7 @@ window.CC_SUPABASE = {
       if (rv && rv.status === 'teacher') {
         draft += '<div role="status" style="background:var(--amber-soft,#FFF3DC);border:1px solid var(--amber);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px">' +
           '<b style="color:var(--amber)">검수 필요</b> — 학생에게 내기 전에 확인해 주세요.<ul style="margin:4px 0 0 18px;padding:0">' +
-          rv.reasons.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+          (rv.reasons || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
       }
 
       /* 문제 이름 */

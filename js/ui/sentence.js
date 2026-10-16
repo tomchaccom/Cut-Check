@@ -189,7 +189,7 @@
       if (c.detail) {
         var sel = document.createElement('select');
         sel.setAttribute('aria-label', c.label + ' ' + c.detail.name);
-        sel.appendChild(new Option(c.detail.name + ' 고르기', ''));
+        sel.appendChild(new Option('고르기', ''));
         c.detail.options.forEach(function (o) { sel.appendChild(new Option(o, o)); });
         sel.value = c.choice;
         sel.addEventListener('change', function () { c.choice = sel.value; $('#go-run').disabled = !checkMethodComplete(); });
@@ -378,7 +378,13 @@
       fresh.addEventListener('change', function () {
         if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + this.value + '"';
         var editor = $('#code-editor');
-        if (editor) editor.value = editor.value.replace(/^data = ".*"/m, 'data = "' + this.value + '"');
+        if (editor) {
+          var line = 'data = ' + JSON.stringify(String(this.value));
+          var wasSkeleton = editor.value === state.skeleton;
+          editor.value = editor.value.replace(/^data = ".*"/m, function () { return line; });
+          /* 뼈대 그대로였으면 뼈대도 같이 옮겨, 다음 렌더에서 학생 코드로 오인되지 않게 한다 */
+          if (wasSkeleton) state.skeleton = editor.value;
+        }
       });
     }
 
@@ -388,18 +394,6 @@
       /* JSON 문자열은 보통 문자열에서 그대로 파이썬 문자열이다 — 자료에 " · \\ · 줄바꿈이 있어도 깨지지 않는다 */
       state.skeleton = 'data = ' + JSON.stringify(M ? String(M.inputs[0].v) : '') + '\n# data 에 자료가 들어 있어요.\n' + CC.cards.skeleton(picked());
       editor.value = state.skeleton;
-    }
-
-    /* Tab 키로 들여쓰기 */
-    if (editor) {
-      editor.addEventListener('keydown', function (e) {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          var start = this.selectionStart, end = this.selectionEnd;
-          this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
-          this.selectionStart = this.selectionEnd = start + 4;
-        }
-      });
     }
 
     /* 실행 버튼 */
@@ -412,6 +406,18 @@
   }
 
   /* 자료 변경 시 data 변수 업데이트 — renderCodeStep 내부에서만 등록 */
+
+  /* Tab 키로 들여쓰기 — 한 번만 단다. renderCodeStep 안에서 달면 설계를 고칠 때마다 쌓인다 */
+  if ($('#code-editor')) {
+    $('#code-editor').addEventListener('keydown', function (e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        var start = this.selectionStart, end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+      }
+    });
+  }
 
   /* 실행 버튼 */
   if ($('#run-code')) {

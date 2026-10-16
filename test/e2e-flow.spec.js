@@ -214,6 +214,14 @@ test('설계 카드가 코드 뼈대가 되고, 쓴 코드는 설계를 고쳐�
   await page.locator('.design-item').nth(2).locator('.card-remove').click();
   await page.locator('#go-run').click();
   expect(await page.locator('#code-editor').inputValue()).toContain('print(1)'); // 덮어쓰지 않는다
+
+  /* 설계↔코드를 오가도 Tab 리스너는 하나 — 한 번 눌러 공백 4칸 */
+  await page.locator('#back-method').click();
+  await page.locator('#go-run').click();
+  await page.locator('#code-editor').fill('');
+  await page.locator('#code-editor').focus();
+  await page.keyboard.press('Tab');
+  expect(await page.locator('#code-editor').inputValue()).toBe('    ');
 });
 
 test('다른 미션으로 바꾸면 앞 미션 코드가 남지 않는다', async ({ page }) => {
