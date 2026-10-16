@@ -130,49 +130,54 @@
       <h2 class="step-title">코드로 만들기</h2>
 
       <!-- 설계도 요약 -->
-      <div class="design-summary" id="design-summary" style="background:var(--green-soft);border:1px solid var(--green);border-radius:12px;padding:14px 16px;margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">나의 설계도</div>
-        <div id="design-define" style="font-size:14px;margin-bottom:4px"></div>
-        <div id="design-steps" style="font-size:14px"></div>
+      <div class="design-summary plan-row" id="design-summary">
+        <span class="plan-label">나의 설계도</span>
+        <span id="design-define" class="plan-pill"></span>
+        <span id="design-steps" class="plan-steps"></span>
       </div>
 
       <!-- 자료 선택 -->
-      <div style="margin-bottom:12px">
-        <span style="font-size:13px;font-weight:600;color:var(--ink-2)">자료 선택</span>
-        <select id="code-data-select" style="margin-left:8px;padding:6px 10px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink)"></select>
+      <div class="data-row">
+        <label for="code-data-select" class="field-label">자료 선택</label>
+        <select id="code-data-select" class="data-select"></select>
       </div>
-      <div id="code-data-preview" style="background:var(--surface-2);border-radius:8px;padding:8px 12px;font-family:var(--mono);font-size:14px;margin-bottom:12px"></div>
+      <div id="code-data-preview" class="data-preview"></div>
 
       <!-- 코드 에디터 -->
-      <div style="position:relative">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:13px;font-weight:600;color:var(--ink-2)">파이썬 코드</span>
-          <span id="pyodide-status" style="font-size:11px;color:var(--ink-3)">Python 로딩 중...</span>
-        </div>
-        <textarea id="code-editor" rows="8" style="width:100%;padding:12px;border:1px solid var(--line-strong);border-radius:10px;font-family:var(--mono);font-size:14px;background:var(--surface);color:var(--ink);resize:vertical;tab-size:4;line-height:1.6" placeholder="# data 에 자료가 들어 있어요."></textarea>
+      <div class="editor-head">
+        <label for="code-editor" class="field-label">파이썬 코드</label>
+        <span id="pyodide-status" class="pyodide-status">Python 로딩 중...</span>
+      </div>
+      <textarea id="code-editor" class="code-editor" rows="8" placeholder="# data 에 자료가 들어 있어요."></textarea>
+
+      <div class="run-row">
+        <button class="pill primary" id="run-all" disabled>자료 3개로 실행</button>
+        <button class="pill" id="run-code" disabled>실행</button>
+        <button class="pill" id="back-method">설계 수정</button>
       </div>
 
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn primary" id="run-code" disabled>실행</button>
-        <button class="btn primary" id="run-all" disabled>자료 3개로 실행</button>
-        <button class="btn secondary" id="back-method">설계 수정</button>
+      <!-- 실행 결과: 자료 3개는 표, 한 자료·실행 중은 #code-result -->
+      <div class="tbl-wrap" id="code-table-wrap" hidden>
+        <table class="tbl" id="code-table">
+          <caption>실행 결과</caption>
+          <thead><tr><th scope="col">자료</th><th scope="col">내용</th><th scope="col" style="text-align:right">결과</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-
-      <!-- 실행 결과 -->
       <div id="code-output" hidden style="margin-top:12px">
-        <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:4px">실행 결과</div>
-        <pre id="code-result" style="background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:var(--mono);font-size:14px;white-space:pre-wrap;overflow-x:auto;max-height:200px"></pre>
+        <pre id="code-result" class="code-result"></pre>
       </div>
 
       <!-- 판정 -->
-      <div id="code-judge" hidden style="margin-top:16px">
+      <div id="code-judge" class="judge-box" hidden>
+        <div class="field-label">내가 정한 성공</div>
         <div class="judge-row" style="border:none;padding:0;margin:0">
           <div class="judge-q" id="code-judge-q"></div>
           <div class="judge-btns" id="code-judge-btns"></div>
           <label class="basis-label">왜 그렇게 생각했나요?
             <input type="text" class="basis-input" id="code-basis" placeholder="근거를 적어 주세요">
           </label>
-          <button class="btn secondary" id="code-judge-save" disabled style="margin-top:8px">판정 저장</button>
+          <button class="pill" id="code-judge-save" disabled style="margin-top:8px">판정 저장</button>
         </div>
       </div>
 

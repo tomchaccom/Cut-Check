@@ -373,7 +373,7 @@
     if ($('#design-define')) $('#design-define').textContent = '성공: ' + state.defineChoice;
     if ($('#design-steps')) {
       $('#design-steps').innerHTML = picked().map(function (c, i) {
-        return '<div>' + (i + 1) + '. ' + esc(CC.cards.text(c)) + '</div>';
+        return '<span class="plan-pill">' + (i + 1) + '. ' + esc(CC.cards.text(c)) + '</span>';
       }).join('');
     }
 
@@ -414,6 +414,7 @@
 
     /* 판정/마무리 숨기기 */
     if ($('#code-output')) $('#code-output').hidden = true;
+    if ($('#code-table-wrap')) $('#code-table-wrap').hidden = true;
     if ($('#code-judge')) $('#code-judge').hidden = true;
     if ($('#go-wrap')) $('#go-wrap').style.display = 'none';
   }
@@ -448,6 +449,7 @@
   function showResult(text, isError) {
     var resultEl = $('#code-result'), outputBox = $('#code-output');
     if (!resultEl || !outputBox) return;
+    if ($('#code-table-wrap')) $('#code-table-wrap').hidden = true;
     outputBox.hidden = false;
     resultEl.textContent = text;
     resultEl.style.color = isError ? 'var(--coral)' : 'var(--ink)';
@@ -498,18 +500,27 @@
   if ($('#run-all')) {
     $('#run-all').addEventListener('click', function () {
       if (!pyodideReady || !M) return;
-      var code = $('#code-editor').value, lines = [], anyOk = false, i = 0;
+      var code = $('#code-editor').value, rows = [], anyOk = false, i = 0;
       showResult('실행 중...', false);
       (function next() {
         if (i >= M.inputs.length) {
-          showResult(lines.join('\n'), false);
+          var tb = $('#code-table tbody');
+          tb.innerHTML = '';
+          rows.forEach(function (r) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + esc(r.name) + (r.counter ? '<span class="tag-new">새로 온 자료</span>' : '') + '</td>' +
+              '<td class="data">' + esc(r.v) + '</td><td class="out' + (r.err ? ' err' : '') + '">' + esc(r.text) + '</td>';
+            tb.appendChild(tr);
+          });
+          $('#code-table-wrap').hidden = false;
+          $('#code-output').hidden = true;
           if (anyOk) showJudge();
           return;
         }
         var inp = M.inputs[i++];
         runWith(code, inp.v, function (output, error) {
           if (!error) anyOk = true;
-          lines.push(inp.name + '  →  ' + (error || String(output || '').trim() || '출력된 것이 없어요.'));
+          rows.push({ name: inp.name, v: inp.v, counter: !!inp.counter, err: !!error, text: error || String(output || '').trim() || '출력된 것이 없어요.' });
           next();
         });
       })();

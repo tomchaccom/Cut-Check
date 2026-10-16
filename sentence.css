@@ -821,3 +821,21 @@ dialog::backdrop {
 .wrap-ask { display: flex; flex-direction: column; gap: 10px; }
 .wrap-q { font-size: 22px; font-weight: 600; }
 @media (max-width: 600px) { .wrap-rows .row { grid-template-columns: 1fr; gap: 4px; } }
+
+/* 04 코딩 — 폴더 UI */
+.plan-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px; background:none; border:0; padding:0; }
+.plan-label { font-size:13px; color:var(--ink-2); margin-right:4px; }
+.plan-steps { display:contents; }
+.plan-pill { display:inline-block; padding:6px 14px; border-radius:999px; background:var(--folder); color:var(--on-folder); font-size:14px; }
+.data-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.field-label { font-size:13px; font-weight:600; color:var(--ink-2); }
+.data-select { padding:6px 10px; border:1px solid var(--line-strong); border-radius:8px; font-size:14px; background:var(--surface); color:var(--ink); }
+.data-preview { background:var(--surface-2); border-radius:8px; padding:8px 12px; font-family:var(--mono); font-size:14px; margin-bottom:12px; overflow-x:auto; }
+.editor-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.pyodide-status { font-size:12px; color:var(--ink-2); }
+.code-editor { width:100%; box-sizing:border-box; padding:14px; border:1px solid var(--ink); border-radius:16px; font-family:var(--mono); font-size:14px; background:var(--surface); color:var(--ink); resize:vertical; tab-size:4; line-height:1.6; }
+.run-row { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 20px; }
+.code-result { background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:12px; font-family:var(--mono); font-size:14px; white-space:pre-wrap; overflow-x:auto; max-height:200px; margin:0; }
+.tbl caption { text-align:left; font-size:13px; color:var(--ink-2); padding-bottom:8px; }
+.tbl .out.err { font-family:var(--mono); font-size:14px; color:var(--coral); }
+.judge-box { margin-top:16px; background:var(--surface-2); border-radius:16px; padding:16px; }

@@ -289,16 +289,18 @@ test('자료 3개로 실행 — 같은 코드를 자료마다 돌려 결과를 �
   // sm1 복제: 주문서 01·02 는 3개, 03(반례)은 사과가 겹쳐 서로 다른 건 4개
   await page.locator('#code-editor').fill('data = "x"\nitems = data.split(",")\nprint(len(set(items)))\n');
   await page.locator('#run-all').click();
-  const out = page.locator('#code-result');
-  await expect(out).toContainText('주문서 03  →  4', { timeout: 20000 });
-  await expect(out).toContainText('주문서 01  →  3');
-  await expect(out).toContainText('주문서 02  →  3');
+  const rows = page.locator('#code-table tbody tr');
+  await expect(rows).toHaveCount(3, { timeout: 20000 });
+  await expect(rows.nth(2).locator('.out')).toHaveText('4');
+  await expect(rows.nth(0).locator('.out')).toHaveText('3');
+  await expect(rows.nth(1).locator('.out')).toHaveText('3');
+  await expect(rows.nth(2)).toContainText('새로 온 자료');
   await expect(page.locator('#code-judge')).toBeVisible();          // 판단은 학생이
   await expect(page.locator('#code-judge')).not.toContainText('정답'); // 시스템은 맞다·틀리다를 말하지 않는다
 
   await page.locator('#code-editor').fill('print(item)\n');            // 에러도 자료마다 위치와 사실만
   await page.locator('#run-all').click();
-  await expect(out).toContainText('주문서 03  →  1번째 줄', { timeout: 20000 });
+  await expect(rows.nth(2).locator('.out')).toContainText('1번째 줄', { timeout: 20000 });
 });
 
 test('성공 조건 화면은 받은 요청을 다시 보여 주고 묻는다', async ({ page }) => {
