@@ -120,6 +120,13 @@ broken(U, "항목 이름이 영어 ('count')", setp(['itemName'], 'count'), 'ite
 broken(F, '걸러낼 대상이 자료에 없음', setp(['filterTarget'], ['땅콩', '새우']), 'data')
 broken(F, '걸러내기 유형인데 대상이 없음', lambda m: m.pop('filterTarget'), 'filterTarget')
 
+print('\n[중1이 모르는 개발 용어와 지시문 — 밤샘 스펙 3.3 학생 문장 규칙]')
+for bad in ['데이터 집계 로직을 검토해 주세요.', '처리 결과의 타당성을 확인해 주세요.',
+            '카운터 자료를 만들어 주세요.', '성공 조건을 명시하세요.', '처리 방법을 기술하세요.']:
+    t(f'막는다: {bad}', bool(_text_problem(bad)), _text_problem(bad))
+for ok in ['주문서에 상품이 몇 개인지 알려 주세요.', '출석부에 학생이 몇 명인지 세어 주세요.']:
+    t(f'통과: {ok}', not _text_problem(ok), _text_problem(ok))
+
 print('\n[유형마다 다른 자료 조건]')
 num = {'title': '용돈 합계', 'brief': '이번 주 쓴 돈을 알려 주세요.', 'situation': '용돈 기록을 정리해요.', 'itemName': '금액',
        'data': [{'name': '월요일', 'items': ['1000', '메모', '500']}, {'name': '화요일', 'items': ['300', '700', '100']}],
