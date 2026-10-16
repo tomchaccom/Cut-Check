@@ -54,16 +54,20 @@ body.notes .note { display: flex; gap: 6px; }
 .panel h2 { font-size: 16px; font-weight: 800; }
 .panel .lead { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
 .panel .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.pill {
+.hd .pill {
+  min-height: 0;
+  border: 0;
+  display: inline-block;
+  cursor: default;
   font-size: 12px;
   font-weight: 700;
   border-radius: 999px;
   padding: 3px 11px;
   white-space: nowrap;
 }
-.pill.now { background: var(--coral); color: var(--paper); }
-.pill.soon { background: var(--amber); color: var(--paper); }
-.pill.calm { background: var(--surface-3); color: var(--ink-2); }
+.hd .pill.now { background: var(--coral); color: var(--paper); }
+.hd .pill.soon { background: var(--amber); color: var(--paper); }
+.hd .pill.calm { background: var(--surface-3); color: var(--ink-2); }
 
 /* ── 사고 단계 흐름 ──────────────────────────────── */
 .funnel { margin-top: 14px; display: flex; flex-direction: column; gap: 9px; }
