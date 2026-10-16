@@ -307,3 +307,43 @@ test('성공 조건 화면은 받은 요청을 다시 보여 주고 묻는다', 
   await expect(page.locator('#define-brief')).toHaveText('주문서에 상품이 몇 개인지 알려 주세요.');
   await expect(page.locator('#define-q')).toContainText('하나를 골라 주세요.');
 });
+
+/* 가짜 Supabase — 로그인한 학생, 교실 둘. js/data/supabase.js 를 이 객체로 바꿔 끼운다 */
+const FAKE_SB = `(function(CC){var P=function(v){return Promise.resolve(v)};
+var base={no:'AI',type:'sentence',pipelineId:'split-count',stage:'세기',brief:'재료가 모두 몇 개인지 알려 주세요.',define:{q:'어떤 결과가 나오면 성공일까요?',options:[{v:'재료가 모두 몇 개인지 나오면 성공',key:'count'}]},inputs:[{id:'d01',name:'월',v:'a,b'},{id:'d02',name:'화',v:'c,d'},{id:'d03',name:'수',v:'e',counter:true}]};
+function m(id,t){var x=JSON.parse(JSON.stringify(base));x.id=id;x.title=t;return x}
+CC.sb={active:function(){return true},getProfile:function(){return P({role:'student',name:'태인'})},
+myClassrooms:function(){return P(window.__rooms||[{id:'r1',name:'1학년 3반'},{id:'r2',name:'방과후 코딩반'}])},
+getMissions:function(rid){return P(rid==='r1'?[{id:'db1',data:m('ai-a','푼 미션')},{id:'db2',data:m('ai-b','하던 미션')},{id:'db3',data:m('ai-c','안 한 미션')}]:[])},
+getMyEvents:function(){return P([{type:'s-define',_missionDbId:'db1'},{type:'s-wrap',text:'끝',_missionDbId:'db1'},{type:'s-define',_missionDbId:'db2'}])},
+pushEvent:function(){return P(null)},signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
+})(window.CC=window.CC||{});`;
+
+async function asStudent(page, rooms) {
+  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_SB }));
+  if (rooms) await page.addInitScript(r => { window.__rooms = r; }, rooms);
+  await page.goto(BASE + '/sentence.html');
+}
+
+test('학생 홈 — 교실은 폴더, 열면 미션 파일과 내 상태', async ({ page }) => {
+  await asStudent(page);
+  await expect(page.locator('.room-tile')).toHaveCount(2);
+  await expect(page.locator('.room-tile').first()).toContainText('1학년 3반');
+  await page.locator('.room-tile').first().click();
+  await expect(page.locator('.crumb')).toContainText('1학년 3반');
+  const files = page.locator('.mission-file');
+  await expect(files).toHaveCount(3);
+  await expect(files.nth(0)).toContainText('완료');
+  await expect(files.nth(1)).toContainText('진행 중');
+  await page.locator('.crumb a', { hasText: '내 교실' }).click();
+  await expect(page.locator('.room-tile')).toHaveCount(2);
+});
+
+test('교실이 없는 학생 — 교실 코드로 들어가기만 보인다', async ({ page }) => {
+  const errs = []; page.on('pageerror', e => errs.push(e.message));
+  await asStudent(page, []);
+  await expect(page.locator('.room-join')).toBeVisible();
+  await expect(page.locator('.room-tile')).toHaveCount(0);
+  expect(errs).toEqual([]);
+});

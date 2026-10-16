@@ -29,7 +29,6 @@
       <span data-step="5">정리</span>
     </nav>
     <div class="toptools">
-      <span class="tbtn" id="classroom-name" style="cursor:default;background:var(--green-soft);color:var(--green);border-color:var(--green)" hidden></span>
       <span class="tbtn" id="user-info" style="cursor:default" hidden></span>
       <button class="tbtn" id="logout-btn" aria-label="로그아웃">로그아웃</button>
     </div>
@@ -44,15 +43,27 @@
 
   <!-- [내 미션] 패널 -->
   <section class="tab-panel active" id="panel-missions">
-    <h2 class="step-title">내 미션</h2>
-    <div class="mission-grid" id="mission-grid"></div>
-    <div class="empty-msg" id="missions-empty" hidden>선생님이 미션을 만들면 여기에 보여요.</div>
+    <div id="rooms-view">
+      <h1 class="wordmark">CUT:CHECK</h1>
+      <div class="rule"></div>
+      <p class="home-lead">문제를 쪼개고, 직접 깨뜨려 보고, 지켰는지는 내가 판단해요.<br>교실 폴더를 열어 오늘의 미션을 골라 주세요.</p>
+      <h2 class="sub-label">내 교실</h2>
+      <div class="icon-grid" id="room-grid"></div>
+    </div>
+    <div id="room-view" hidden>
+      <nav class="crumb" aria-label="위치"><a href="#" id="crumb-home">내 교실</a><span class="sep" aria-hidden="true">/</span><span id="crumb-room"></span></nav>
+      <h1 class="big-title xl" id="room-title"></h1>
+      <div class="rule"></div>
+      <p class="home-lead" id="room-lead"></p>
+      <div class="icon-grid" id="mission-grid"></div>
+      <p id="missions-empty" hidden>아직 올라온 미션이 없어요.</p>
+    </div>
   </section>
 
   <!-- [미션 풀기] 패널 -->
   <section class="tab-panel" id="panel-play">
     <button class="btn text" id="back-to-missions" hidden style="margin-bottom:12px" aria-label="미션 목록으로 돌아가기">&larr; 미션 목록으로</button>
-    <nav class="mission-bar" id="mission-bar" hidden></nav>
+    <nav class="mission-bar icon-grid" id="mission-bar" hidden></nav>
     <div class="empty-msg" id="play-empty" hidden>내 미션 탭에서 미션을 골라 주세요.</div>
 
   <main class="content">

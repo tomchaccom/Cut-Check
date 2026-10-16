@@ -863,3 +863,11 @@ dialog::backdrop {
 .tbl td { padding:14px 12px 14px 0; border-bottom:1px solid var(--line); vertical-align:middle; }
 .tbl .data { font-family:var(--mono); color:var(--ink-2); } .tbl .out { font-family:var(--disp); font-size:28px; font-weight:500; text-align:right; padding-right:0; }
 .tag-new { margin-left:6px; font-size:12px; font-weight:600; padding:2px 8px; border-radius:999px; background:var(--folder); color:var(--on-folder); }
+
+/* ── 학생 홈 (교실 폴더 → 미션 파일) ── */
+.home-lead { margin:12px 0 0; max-width:620px; font-size:18px; line-height:1.5; }
+.sub-label { margin:44px 0 18px; font-size:14px; font-weight:600; color:var(--ink-2); }
+.mission-bar.icon-grid { grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); }
+.mission-bar .tile[aria-pressed="true"] { background:var(--green-soft); }
+.tile .name { font-size:15px; font-weight:500; overflow-wrap:anywhere; }
+.tile .state:empty { display:none; }

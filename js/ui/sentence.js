@@ -640,15 +640,13 @@
 
     missions.forEach(function (m) {
       var mData = m.data || m;
-      var card = el('div', 'mission-card');
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.appendChild(el('div', 'mc-stage', (mData.no || '') + ' · ' + (mData.stage || '')));
-      card.appendChild(el('div', 'mc-title', mData.title || ''));
-      card.appendChild(el('div', 'mc-brief', mData.brief || ''));
+      var card = el('button', 'tile mission-file');
+      card.type = 'button';
+      card.innerHTML = '<span class="file" aria-hidden="true"><span class="fold"></span><span class="ext">TXT</span></span>';
+      card.appendChild(el('span', 'name', mData.title || ''));
 
-      /* 상태 — 아래에서 내 기록을 받아 채운다 */
-      var statusEl = el('span', 'mc-status st-none', '미시작');
+      /* 상태 — 아래에서 내 기록을 받아 채운다. 안 연 미션은 비워 둔다 */
+      var statusEl = el('span', 'mc-status state', '');
       statusEl.dataset.dbId = m.id || '';
       statusEl.dataset.mid = mData.id || '';
       card.appendChild(statusEl);
@@ -667,7 +665,7 @@
     });
   }
 
-  var STATUS = { none: ['st-none', '미시작'], doing: ['st-progress', '진행 중'], done: ['st-done', '완료'] };
+  var STATUS = { none: ['', ''], doing: ['doing', '진행 중'], done: ['done', '완료'] };
 
   /* 푼 미션 표시 — 이 학생의 기록만 본다. 반 전체 현황은 학생 화면에 띄우지 않는다 (CLAUDE.md) */
   function showMyStatus(grid) {
@@ -677,8 +675,10 @@
         var db = st.dataset.dbId, mid = st.dataset.mid;
         var mine = evs.filter(function (e) { return db ? e._missionDbId === db : e.mid === mid; });
         var s = STATUS[CC.fold.missionStatus(mine)];
-        st.className = 'mc-status ' + s[0];
+        st.className = 'mc-status state ' + s[0];
         st.textContent = s[1];
+        var f = st.parentNode.querySelector('.file');
+        if (f) f.className = 'file ' + s[0];
       });
     });
   }
@@ -792,6 +792,44 @@
     list.appendChild(card);
   }
 
+  /* 내 교실 = 폴더. 교실을 열면 그 교실 미션이 파일로 나온다 */
+  var currentClassroomName = '';  /* 미션 화면 위치 표시용 */
+  function renderRooms(rooms) {
+    var grid = $('#room-grid');
+    grid.innerHTML = '';
+    rooms.forEach(function (r) {
+      var b = el('button', 'tile room-tile');
+      b.type = 'button';
+      b.innerHTML = '<span class="folder" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>';
+      b.appendChild(el('span', 'name', r.name));
+      b.addEventListener('click', function () { openRoom(r); });
+      grid.appendChild(b);
+    });
+    var join = el('a', 'tile room-join');
+    join.href = 'auth.html';
+    join.innerHTML = '<span class="folder new" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>';
+    join.appendChild(el('span', 'name', '교실 코드로 들어가기'));
+    join.appendChild(el('span', 'meta', '선생님께 받은 코드'));
+    grid.appendChild(join);
+    showRooms();
+  }
+
+  function showRooms() { $('#rooms-view').hidden = false; $('#room-view').hidden = true; }
+
+  function openRoom(r) {
+    currentClassroomId = r.id;
+    currentClassroomName = r.name;
+    $('#crumb-room').textContent = r.name;
+    $('#room-title').textContent = r.name;
+    $('#rooms-view').hidden = true; $('#room-view').hidden = false;
+    CC.sb.getMissions(r.id).then(function (missions) {
+      $('#room-lead').textContent = missions.length ? '파일을 열면 이어서 할 수 있어요.' : '';
+      renderMissionGrid(missions);
+      showMyStatus($('#mission-grid'));
+    });
+  }
+  if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });
+
   /* ── 인증 연동 ──────────────────────────────────── */
   function initAuth() {
     if (!CC.sb || !CC.sb.active()) {
@@ -801,12 +839,12 @@
       bar.hidden = false;
       CC.SENTENCE_MISSIONS.forEach(function (m) {
         if (bar.querySelector('[data-id="' + m.id + '"]')) return;
-        var b = el('button', 'm-btn');
+        var b = el('button', 'tile m-btn');
         b.type = 'button';
         b.dataset.id = m.id;
+        b.innerHTML = '<span class="file" aria-hidden="true"><span class="fold"></span><span class="ext">TXT</span></span>';
         b.setAttribute('aria-pressed', m.id === CC.SENTENCE_MISSIONS[0].id ? 'true' : 'false');
-        b.appendChild(el('span', 'm-no', '미션 ' + m.no + ' · ' + m.stage));
-        b.appendChild(el('span', 'm-title', m.title));
+        b.appendChild(el('span', 'name m-title', m.title));
         b.addEventListener('click', function () { loadMission(m.id); });
         bar.appendChild(b);
       });
@@ -832,24 +870,8 @@
       /* 교실 미션 로드 */
       CC.sb.myClassrooms().then(function (rooms) {
         console.log('[CC] myClassrooms:', rooms);
-        if (!rooms.length) {
-          console.warn('[CC] 교실 없음');
-          switchTab('panel-missions');
-          return;
-        }
-        currentClassroomId = rooms[0].id;
-
-        /* 상단에 교실 이름 표시 */
-        if ($('#classroom-name')) {
-          $('#classroom-name').textContent = rooms[0].name;
-          $('#classroom-name').hidden = false;
-        }
-
-        CC.sb.getMissions(currentClassroomId).then(function (missions) {
-          console.log('[CC] getMissions:', missions.length, '개');
-          renderMissionGrid(missions);
-          switchTab('panel-missions');
-        });
+        renderRooms(rooms);
+        switchTab('panel-missions');
       });
     });
 
