@@ -253,7 +253,7 @@ details.more[open] > summary { margin-bottom: 16px; }
 .d-rows .tm { font-size: 13px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
 .detail .was { display: block; margin-top: 4px; font-size: 13px; color: var(--ink-2); font-family: var(--sans); }
 .detail .code { font-family: var(--mono); font-size: 13px; line-height: 1.7; white-space: pre; background: var(--surface-2); border-radius: 10px; padding: 12px 14px; overflow-x: auto; margin-top: 8px; }
-.mark { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--folder); color: var(--on-folder); font-size: 12px; font-weight: 600; }
+.detail .mark { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--folder); color: var(--on-folder); font-size: 12px; font-weight: 600; }
 .d-qs .q { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
 .d-qs .q .a { color: var(--ink-2); }
 @media (max-width: 600px) {

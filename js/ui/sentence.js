@@ -606,8 +606,11 @@
   });
 
   /* ── 탭 전환 ────────────────────────────────────── */
+  /* 기록이 가는 교실 = 미션 파일을 연 교실. 둘러보는 교실(viewedRoom)과 따로 둔다 —
+   * 다른 교실 폴더를 열어 보기만 해도 기록이 그 교실로 가면 안 된다 */
   var currentClassroomId = null;
   var currentMissionDbId = null;
+  var viewedRoom = null;  /* { id, name } — 지금 열어 본 교실 폴더 */
 
   function switchTab(panelId) {
     document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
@@ -659,6 +662,7 @@
           CC.SENTENCE_MISSIONS.push(mData);
         }
         currentMissionDbId = m.id || null;  /* DB id. 기본 미션은 id 없음 */
+        if (viewedRoom) { currentClassroomId = viewedRoom.id; currentClassroomName = viewedRoom.name; }
         if ($('#play-empty')) $('#play-empty').hidden = true;
         loadMission(mData.id);
         switchTab('panel-play');
@@ -672,8 +676,8 @@
 
   /* 푼 미션 표시 — 이 학생의 기록만 본다. 반 전체 현황은 학생 화면에 띄우지 않는다 (CLAUDE.md) */
   function showMyStatus(grid) {
-    if (!CC.sb || !CC.sb.active() || !currentClassroomId) return;
-    CC.sb.getMyEvents(currentClassroomId).then(function (evs) {
+    if (!CC.sb || !CC.sb.active() || !viewedRoom) return;
+    CC.sb.getMyEvents(viewedRoom.id).then(function (evs) {
       grid.querySelectorAll('.mc-status').forEach(function (st) {
         var db = st.dataset.dbId, mid = st.dataset.mid;
         var mine = evs.filter(function (e) { return db ? e._missionDbId === db : e.mid === mid; });
@@ -818,12 +822,15 @@
   function showRooms() { $('#rooms-view').hidden = false; $('#room-view').hidden = true; }
 
   function openRoom(r) {
-    currentClassroomId = r.id;
-    currentClassroomName = r.name;
+    viewedRoom = { id: r.id, name: r.name };
+    $('#mission-grid').innerHTML = '';
+    $('#room-lead').textContent = '';
     $('#crumb-room').textContent = r.name;
     $('#room-title').textContent = r.name;
     $('#rooms-view').hidden = true; $('#room-view').hidden = false;
+    var asked = viewedRoom;
     CC.sb.getMissions(r.id).then(function (missions) {
+      if (viewedRoom !== asked) return;  /* 그사이 다른 교실을 열었다 — 늦게 온 답은 버린다 */
       $('#room-lead').textContent = missions.length ? '파일을 열면 이어서 할 수 있어요.' : '';
       renderMissionGrid(missions);
       showMyStatus($('#mission-grid'));

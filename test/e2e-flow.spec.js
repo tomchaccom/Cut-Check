@@ -353,7 +353,7 @@ CC.sb={active:function(){return true},getProfile:function(){return P({role:'stud
 myClassrooms:function(){return P(window.__rooms||[{id:'r1',name:'1학년 3반'},{id:'r2',name:'방과후 코딩반'}])},
 getMissions:function(rid){return P(rid==='r1'?[{id:'db1',data:m('ai-a','푼 미션')},{id:'db2',data:m('ai-b','하던 미션')},{id:'db3',data:m('ai-c','안 한 미션')}]:[])},
 getMyEvents:function(){return P([{type:'s-define',_missionDbId:'db1'},{type:'s-wrap',text:'끝',_missionDbId:'db1'},{type:'s-define',_missionDbId:'db2'}])},
-pushEvent:function(){return P(null)},signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
+pushEvent:function(rid,mid){(window.__pushed=window.__pushed||[]).push([rid,mid]);return P(null)},signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
 })(window.CC=window.CC||{});`;
 
 async function asStudent(page, rooms) {
@@ -375,6 +375,43 @@ test('학생 홈 — 교실은 폴더, 열면 미션 파일과 내 상태', asyn
   await expect(files.nth(1)).toContainText('진행 중');
   await page.locator('#room-view .crumb a', { hasText: '내 교실' }).click();
   await expect(page.locator('.room-tile')).toHaveCount(2);
+});
+
+test('다른 교실을 둘러보고 돌아와도 기록은 미션을 연 교실로 간다', async ({ page }) => {
+  await asStudent(page);
+  await page.locator('.room-tile').first().click();                 // r1
+  await page.locator('.mission-file').first().click();              // r1 의 db1
+  await page.locator('#crumb-play-home').click();                    // 미션 머리의 '내 교실'
+  await page.locator('.room-tile').nth(1).click();                  // r2 둘러보기
+  await expect(page.locator('#room-title')).toHaveText('방과후 코딩반');
+  await page.locator('.main-tab[data-panel="panel-play"]').click();
+  await expect(page.locator('#crumb-play-room')).toHaveText('1학년 3반');
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  const pushed = await page.evaluate(() => window.__pushed);
+  expect(pushed).toEqual([['r1', 'db1']]);
+});
+
+test('폰 폭 04 — 튜터 버튼이 결과 표를 덮지 않는다 (어느 스크롤 위치에서도)', async ({ page }) => {
+  await page.setViewportSize({ width: 420, height: 860 });
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await expect(page.locator('#tutor-open')).toBeVisible();
+  // 문서 좌표로 비교한다 — 떠 있는 버튼이면 스크롤에 따라 표 위로 올라오므로 이 비교가 깨진다
+  const [btnTop, stepBottom] = await page.evaluate(() => {
+    const y = window.scrollY;
+    return [document.querySelector('#tutor-open').getBoundingClientRect().top + y,
+      document.querySelector('#step4').getBoundingClientRect().bottom + y];
+  });
+  for (const yy of [0, 400, 100000]) {
+    await page.evaluate(v => window.scrollTo(0, v), yy);
+    const now = await page.evaluate(() => document.querySelector('#tutor-open').getBoundingClientRect().top + window.scrollY);
+    expect(Math.round(now)).toBe(Math.round(btnTop));
+  }
+  expect(btnTop).toBeGreaterThanOrEqual(stepBottom);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(420);
 });
 
 test('교실이 없는 학생 — 교실 코드로 들어가기만 보인다', async ({ page }) => {
