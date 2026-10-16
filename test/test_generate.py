@@ -127,7 +127,9 @@ bad['goals']['unique'] = '쉼표로 나눈 개수가 나오면 성공'
 bad['sentences']['sep'] = {'before': '쉼표', 'after': '나눈다.'}
 m, _ = quiet(generate, '리스트', '중복', fake(U, bad, bad, bad))
 t('goals · sentences 만 바뀐다', sorted(m['guard']['fallback']) == ['goals', 'sentences'], m['guard'])
-t('맞았던 칸은 LLM 것 그대로', m['brief'] == GOOD['brief'] and m['inputs'][2]['v'] == GOOD['counter']['text'])
+t('맞았던 칸은 LLM 것 그대로', m['brief'] == GOOD['brief'])
+t('반례 이름은 LLM 것, 자료는 코드가 만든다', m['inputs'][2]['name'] == GOOD['counter']['name']
+  and 'counter' not in m['guard']['fallback'], m['inputs'][2])
 
 print('\n[빠진 칸을 채운 뒤에야 드러나는 칸도 갈아 끼운다]')
 hidden = {**DATA[U], 'brief': '재료 좀 세어봐'}  # 빠진 칸 때문에 1차엔 brief 가 안 보인다
@@ -138,11 +140,11 @@ try:
 except GenerateError as e:
     t('counter · goals · sentences 다음에 brief 까지', False, e.reasons)
 
-print('\n[자료만 맞으면 나머지 기본 틀이 14개 유형 모두 검사를 통과한다]')
+print('\n[자료만 맞으면 나머지 기본 틀이 14개 유형 모두 검사를 통과하고, 코드가 만든 반례가 실제로 깨진다]')
 for pid, d in DATA.items():
     try:
         m, _ = quiet(generate, '수업', '핵심', fake(pid, d, d, d))
-        ok = {'counter', 'goals', 'sentences'} <= set(m['guard']['fallback'])
+        ok = {'goals', 'sentences'} <= set(m['guard']['fallback'])  # 반례는 기본 틀이 아니라 처음부터 코드가 만든다
         # 학생 화면에서 정말로 깨지는가 — 정답 빈칸으로 돌리면 반례 결과가 첫 자료와 달라야 한다
         slots = next(iter(SPEC[pid]['keys'].values()))
         params = m.get('pipelineParams', {})
@@ -265,6 +267,14 @@ _d = {'filterTarget': ['1', '2', '3', '4', '5', '6'], 'data': [{'name': 'a', 'it
                                                               {'name': 'b', 'items': ['4', '5', '메모', '6']}]}
 _generate._repair('split-filter-num-sum', _d)
 t('숫자 거르기 유형은 걸러낼 대상에서 숫자를 뺀다', _d['filterTarget'] == ['간식', '메모'], _d['filterTarget'])
+_d = {'filterTarget': ['숫자', '문자', '우유'], 'data': [{'name': 'a', 'items': ['3', '우유', '5', '빵']},
+                                                  {'name': 'b', 'items': ['1', '빵', '2']}]}
+_generate._repair('split-filter-num-sum', _d)
+t("'숫자'·'문자' 같은 분류 이름은 걸러낼 대상이 아니다", _d['filterTarget'] == ['우유', '빵'], _d['filterTarget'])
+_d = {'counter': {'name': '반례 목록'}, 'data': [{'name': 'a', 'items': ['사과', '배', '사과']},
+                                              {'name': 'b', 'items': ['배', '사과', '배', '귤']}]}
+_generate._make_counter('split-unique-count', _d)
+t("반례 이름에 '반례'가 있으면 바꾼다", '반례' not in _d['counter']['name'] and _d['counter']['text'], _d['counter'])
 
 print('\n[게이트웨이 504 는 한 번 다시 보낸다]')
 import urllib.error  # noqa: E402
@@ -300,6 +310,12 @@ try:
         t('남은 시간이 5초 안이면 다시 보내지 않는다', len(_calls) == 1, _calls)
 finally:
     _generate.urllib.request.urlopen = _orig
+
+print('\n[방법 문장 길이는 빈칸 이름을 빼고 센다]')
+_g = copy.deepcopy(GOOD)
+_g['sentences']['output'] = {'before': '남은 항목을 세어서', 'after': '만 화면에 보여준다.'}  # 빈칸 빼면 22자, {output} 넣으면 30자
+_, _bad = _generate._parse(U, copy.deepcopy(_g))
+t('앞말+뒷말이 25자 안이면 통과', not any('자 안으로' in r for r in _bad.get('sentences', [])), _bad)
 
 print('\n[보내는 스키마 — $ref 없이, 모든 객체가 닫혀 있다]')
 from _schema import DRAFTS  # noqa: E402

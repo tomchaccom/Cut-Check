@@ -338,8 +338,11 @@ class _Base(BaseModel):
         bad = []
         for field, (texts, speaks) in said.items():
             for t in texts:
-                if len(t) > _LIMIT[field]:
-                    bad.append((field, f"'{t}': {len(t)}자 — {_LIMIT[field]}자 안으로"))
+                # 방법 문장은 빈칸 이름('{joinSep}' 9자)을 빼고 센다 — 이름 길이로 한도가 빈칸마다 달라졌고,
+                # 모델에게는 '앞말과 뒷말 합쳐서' 라고 말한다
+                n = len(re.sub(r'\{\w+\}\s?', '', t)) if field == 'sentences' else len(t)
+                if n > _LIMIT[field]:
+                    bad.append((field, f"'{t}': {n}자 — {_LIMIT[field]}자 안으로"))
                     continue
                 why = _text_problem(t) or (speaks and (_sentence_problem(t) or _plain_problem(t))) or (
                     field in ('brief', 'situation') and _polite_problem(t)) or (field == 'brief' and _brief_problem(t))
