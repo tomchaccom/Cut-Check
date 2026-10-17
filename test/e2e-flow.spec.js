@@ -446,3 +446,39 @@ test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ p
   const w = await rows.first().boundingBox();
   expect(w.width).toBeLessThan(560);                 // 줄은 글자 폭만큼
 });
+
+/* 강사 — 교실은 폴더, 명단의 학생은 기록이 없어도 폴더, 교실에서 빼기 (2026-10-17 사람 요청) */
+const FAKE_TEACHER = `(function(CC){var P=function(v){return Promise.resolve(v)};
+var roster=[{id:'s1',name:'태인'},{id:'s2',name:'가은'},{id:'s3',name:'한결'}];
+window.__removed=[];
+CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},
+onAuthChange:function(){},signOut:function(){return P()},createClassroom:function(){return P({})},
+myClassrooms:function(){return P([{id:'r1',name:'태인한결',code:'M9676U'},{id:'r2',name:'방과후',code:'AB12CD'}])},
+getMissions:function(){return P([])},saveMission:function(){return P({})},updateMission:function(){return P({})},deleteMission:function(){return P({})},
+getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
+getClassroomEvents:function(){return P([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}}])},
+removeStudent:function(rid,sid){window.__removed.push(sid);return P({})}}
+})(window.CC=window.CC||{});`;
+
+test('강사 — 교실 폴더, 기록 없는 학생도 폴더, 교실에서 빼기', async ({ page }) => {
+  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
+  await page.goto(BASE + '/teacher.html');
+  await expect(page.locator('#classroom-cards .room-tile')).toHaveCount(2);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  const tiles = page.locator('.student-tile');
+  await expect(tiles).toHaveCount(3);
+  await expect(tiles.filter({ hasText: '가은' })).toContainText('아직 기록이 없어요');
+  await expect(tiles.filter({ hasText: '가은' }).locator('.folder')).toHaveClass(/gray/);
+
+  page.once('dialog', d => d.accept());
+  await tiles.filter({ hasText: '한결' }).click();
+  await page.locator('#detail .roster-remove').click();
+  await expect(tiles).toHaveCount(2);
+  expect(await page.evaluate(() => window.__removed)).toEqual(['s3']);
+
+  page.once('dialog', d => d.dismiss());                    // 취소하면 아무것도 안 바뀐다
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  await page.locator('.roster-row', { hasText: '가은' }).locator('.roster-remove').click();
+  expect(await page.evaluate(() => window.__removed)).toEqual(['s3']);
+});

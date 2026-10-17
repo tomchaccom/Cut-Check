@@ -221,7 +221,13 @@
     d.appendChild(close);
 
     d.appendChild(el('h3', 'big-title', s.name));
-    d.appendChild(el('p', 'dsub', C.STAGES[s.stage] + ' 단계 · 마지막 조작 ' + mmss(s.idleSec)));
+    d.appendChild(el('p', 'dsub', s.noRecord ? '아직 기록이 없어요' : C.STAGES[s.stage] + ' 단계 · 마지막 조작 ' + mmss(s.idleSec)));
+    if (CC.sb && CC.sb.active() && CC._removeStudent) {   /* 교실이 서버에만 있다 — 로컬 모드에는 뺄 교실이 없다 */
+      var rm = el('button', 'pill roster-remove', '교실에서 빼기');
+      rm.type = 'button';
+      rm.addEventListener('click', function () { CC._removeStudent(s); });
+      d.appendChild(rm);
+    }
     delete fresh[s.id];
 
     /* 미션 고르기 — 기록이 미션 하나뿐이면 고를 게 없다 */
@@ -500,14 +506,14 @@
       var t = el('button', 'tile student-tile');
       t.type = 'button';
       var lastAt = Date.now() - (s.idleSec || 0) * 1000;
-      var f = el('span', 'folder' + (lastAt < today.getTime() ? ' gray' : ''));
+      var f = el('span', 'folder' + (s.noRecord || lastAt < today.getTime() ? ' gray' : ''));
       f.setAttribute('aria-hidden', 'true');
       f.appendChild(el('span', 'tab'));
       f.appendChild(el('span', 'body'));
       if (fresh[s.id]) f.appendChild(el('span', 'dot'));
       t.appendChild(f);
       t.appendChild(el('span', 'name', s.name));
-      t.appendChild(el('span', 'meta', whereNow(s)));
+      t.appendChild(el('span', 'meta', s.noRecord ? '아직 기록이 없어요' : whereNow(s)));
       t.addEventListener('click', function () { openDetail(s); });
       box.appendChild(t);
     });
@@ -576,6 +582,7 @@
 
   /* 외부에서 호출할 수 있게 노출 */
   CC._renderDashboard = renderDashboard;
+  CC._closeDetail = closeDetail;
 
   /* 초기 렌더 */
   renderDashboard();

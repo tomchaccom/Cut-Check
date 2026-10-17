@@ -160,6 +160,18 @@
         });
     },
 
+    /* 교실에서 학생 빼기 — 수강 한 줄만 지운다. 기록은 남는다.
+     * RLS 에 막히면 에러 없이 0줄이 지워지므로, 지워진 줄이 없으면 실패로 본다 */
+    removeStudent: function (classroomId, studentId) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return sb.from('enrollments').delete().eq('classroom_id', classroomId).eq('student_id', studentId).select()
+        .then(function (r) {
+          if (r.error) throw r.error;
+          if (!r.data || !r.data.length) throw new Error('학생을 뺄 수 없었어요. 권한을 확인해 주세요.');
+          return r.data[0];
+        });
+    },
+
     /* ── 이벤트 (학생 기록) ──────────────────── */
     pushEvent: function (classroomId, missionId, event) {
       if (!sb) return Promise.resolve(null);

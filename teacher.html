@@ -29,7 +29,7 @@
   <!-- 교실 선택 -->
   <section id="classroom-selector">
     <h2 style="font-size:20px;font-weight:800;margin-bottom:14px">내 교실</h2>
-    <div class="mission-grid" id="classroom-cards"></div>
+    <div class="icon-grid" id="classroom-cards"></div>
     <div id="classroom-empty" class="empty-msg" hidden>아직 교실이 없어요. 아래에서 새 교실을 만드세요.</div>
     <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
       <input type="text" id="new-room-name" placeholder="새 교실 이름 (예: 2학년 3반)" style="flex:1;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);min-height:44px">
@@ -232,13 +232,12 @@ window.CC_SUPABASE = {
       }
       $('#classroom-empty').hidden = true;
       rooms.forEach(function (room) {
-        var card = el('div', 'mission-card');
-        card.tabIndex = 0;
-        card.setAttribute('role', 'button');
-        card.appendChild(el('div', 'mc-stage', '참여 코드: ' + room.code));
-        card.appendChild(el('div', 'mc-title', room.name));
+        var card = el('button', 'tile room-tile');
+        card.type = 'button';
+        card.innerHTML = '<span class="folder" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>';
+        card.appendChild(el('span', 'name', room.name));
+        card.appendChild(el('span', 'meta', '교실 코드 ' + room.code));
         card.addEventListener('click', function () { selectRoom(room); });
-        card.addEventListener('keydown', function (e) { if (e.key === 'Enter') selectRoom(room); });
         cards.appendChild(card);
       });
       /* 교실이 하나면 자동 선택 */
@@ -269,26 +268,28 @@ window.CC_SUPABASE = {
     $('#dash-divider').hidden = false;
     $('#dashboard').hidden = false;
     loadMissions();
-    loadStudents();
     if (CC._resetAlerts) CC._resetAlerts();
-    loadStudentEvents();
+    loadStudents().then(loadStudentEvents);   /* 명단이 있어야 기록 없는 학생도 폴더가 된다 */
     clearInterval(eventTimer);
     eventTimer = setInterval(loadStudentEvents, 5000);
   }
 
   /* 학생 명단 로드 */
   function loadStudents() {
-    if (!selectedRoom || !CC.sb.active()) return;
-    CC.sb.getClassroomStudents(selectedRoom.id).then(function (students) {
+    if (!selectedRoom || !CC.sb.active()) return Promise.resolve();
+    return CC.sb.getClassroomStudents(selectedRoom.id).then(function (students) {
+      CC.classroom.roster = students;
       var list = $('#student-list');
       list.innerHTML = '';
       if (!students.length) { $('#student-empty').hidden = false; return; }
       $('#student-empty').hidden = true;
-      students.forEach(function (s) {
-        var row = el('div', 'mission-card');
-        row.style.cursor = 'default';
-        row.style.padding = '12px 16px';
-        row.appendChild(el('div', 'mc-title', s.name));
+      students.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ko'); }).forEach(function (s) {
+        var row = el('div', 'roster-row');
+        row.appendChild(el('span', 'name', s.name));
+        var rm = el('button', 'pill roster-remove', '교실에서 빼기');
+        rm.type = 'button';
+        rm.addEventListener('click', function () { CC._removeStudent(s); });
+        row.appendChild(rm);
         list.appendChild(row);
       });
       /* 교실 카드에 학생 수 반영 */
@@ -303,7 +304,7 @@ window.CC_SUPABASE = {
     if (!selectedRoom || !CC.sb.active()) return;
     CC.sb.getClassroomEvents(selectedRoom.id).then(function (rows) {
       if (!rows) return; /* 조회 실패 — 이전 상태 유지, 기준선을 새로 잡지 않는다 */
-      if (!rows.length) { if (CC._alertsLoaded) CC._alertsLoaded(); return; }
+      if (!rows.length && !(CC.classroom.roster || []).length) { if (CC._alertsLoaded) CC._alertsLoaded(); return; }
 
       /* sid 별로 이벤트를 묶어서 fold */
       var evs = rows.map(function (r) {
@@ -321,6 +322,20 @@ window.CC_SUPABASE = {
 
       var students = CC.fold.foldMany(evs, { names: names, now: Date.now() });
 
+      /* 명단과 맞춘다 — 들어왔지만 기록이 없는 학생도 폴더로, 교실에서 뺀 학생의 기록은 보이지 않는다 */
+      var roster = CC.classroom.roster;
+      if (roster) {
+        var inRoom = {};
+        roster.forEach(function (r) { inRoom[r.id] = true; });
+        students = students.filter(function (s) { return inRoom[s.id]; });
+        roster.forEach(function (r) {
+          if (students.some(function (s) { return s.id === r.id; })) return;
+          var e = CC.fold.empty(r.id, r.name);
+          e.noRecord = true;
+          students.push(e);
+        });
+      }
+
       /* classroom 객체에 실제 학생 주입 */
       CC.classroom.students = students;
       CC.classroom.events = evs;   /* 학생 서랍이 미션별로 다시 접고 시각을 읽는다 */
@@ -330,6 +345,16 @@ window.CC_SUPABASE = {
       if (typeof CC._renderDashboard === 'function') CC._renderDashboard();
     });
   }
+
+  /* 교실에서 학생 빼기 — 되돌릴 수 있게 수강 한 줄만 지운다 (기록은 남는다) */
+  CC._removeStudent = function (s) {
+    if (!selectedRoom || !CC.sb.active()) return;
+    if (!window.confirm(s.name + ' 학생을 ' + selectedRoom.name + ' 교실에서 뺄까요?\n학생의 기록은 지워지지 않아요. 교실 코드로 다시 들어올 수 있어요.')) return;
+    CC.sb.removeStudent(selectedRoom.id, s.id).then(function () {
+      if (CC._closeDetail) CC._closeDetail();
+      return loadStudents().then(loadStudentEvents);
+    }).catch(function (e) { window.alert(e.message || '학생을 빼지 못했어요.'); });
+  };
 
   /* 코드 복사 */
   $('#copy-code-btn').addEventListener('click', function () {
