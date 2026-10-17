@@ -93,9 +93,14 @@ llm = fake({'kind': 'answer', 'answer': '문자열은 따옴표로 감싼 글자
 r = ask('문자열이 뭐고', CTX, llm)
 t('판정 실패 → ask_back', r['kind'] == 'ask_back' and 'judge_failed' in r['reasons'] and r['answer'] == REFUSE['ask_back'], r)
 
-llm = fake({'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'})
+llm = fake({'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'}, OK)
 r = ask('모르겠어요', CTX, llm)
-t('되묻기는 판정 없이', r['kind'] == 'ask_back' and r['answer'].endswith('?') and not r['judged'] and len(llm.calls) == 1, r)
+t('되묻기도 판정한다', r['kind'] == 'ask_back' and r['answer'].endswith('?') and r['judged'] and not r['refused'] and len(llm.calls) == 2, r)
+
+llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를 세는 변수를 둘 건가요?'}, LEAK,
+           {'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'})
+r = ask('모르겠어요', CTX, llm)
+t('유출된 되묻기 → 재요청 → 재답', len(llm.calls) == 3 and r['retried'] and r['kind'] == 'ask_back' and r['answer'].startswith('지금 print'), r)
 
 clock = iter([0, 17])
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK)

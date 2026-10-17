@@ -71,8 +71,6 @@ def ask(question, ctx, call_llm, now=time.monotonic):
     if kind not in ('answer', 'ask_back'):
         return _refuse(['kind 가 없음'])
     reasons = problems(a, kind)
-    if kind == 'ask_back':  # 되묻기는 답이 아니라 질문이다 — 판정 없이 형식만
-        return _out('ask_back', a, False, [], False, False) if not reasons else _refuse(reasons)
     judged = False
     if not reasons:
         try:
@@ -80,7 +78,7 @@ def ask(question, ctx, call_llm, now=time.monotonic):
         except Exception:  # noqa: BLE001 — 타임아웃·JSON 아님. 새는 쪽보다 막는 쪽이 안전하다
             return _refuse(['judge_failed'])
         if not reasons:
-            return _out('answer', a, False, [], False, True)
+            return _out(kind, a, False, [], False, True)
     left = BUDGET - (now() - t0)
     if left < RETRY_NEEDS:
         return _refuse(reasons, judged=judged)
