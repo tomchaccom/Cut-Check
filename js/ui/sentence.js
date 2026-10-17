@@ -19,6 +19,7 @@
 
   var M = null;   // 현재 미션
   var state = {};
+  var lastRun = { output: '', error: '' };   /* 튜터에게 넘기는 마지막 코드 실행 결과 */
 
   var rec = function (type, payload) {
     /* 어느 미션의 기록인지 담는다 — 로컬 저장소는 브라우저 하나에 모든 미션·계정이 섞인다 */
@@ -39,8 +40,17 @@
       var items = [];
       (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
       return {
-        mission: { title: M ? M.title : '', itemName: M ? (M.itemName || '') : '', items: items.map(function (x) { return x.trim(); }).filter(Boolean) },
-        code: ($('#code-editor') || {}).value || ''
+        mission: {
+          title: M ? M.title : '', itemName: M ? (M.itemName || '') : '',
+          items: items.map(function (x) { return x.trim(); }).filter(Boolean),
+          situation: M ? (M.situation || '') : '', brief: M ? M.brief : '',
+          inputs: (M ? M.inputs : []).map(function (inp) { return { name: inp.name, v: inp.v }; })
+        },
+        code: ($('#code-editor') || {}).value || '',
+        define: state.defineChoice || '',
+        design: picked().map(function (c) { return c.label + (c.detail ? ' ' + c.detail : ''); }),
+        lastOutput: lastRun.output, lastError: lastRun.error,
+        step: 4
       };
     }
   });
@@ -58,6 +68,8 @@
   function loadMission(id) {
     M = CC.sentenceMission(id);
     if (!M) return;
+    lastRun = { output: '', error: '' };
+    if (CC.tutor) CC.tutor.reset();
 
     /* 상태 초기화 */
     state = {
@@ -441,6 +453,7 @@
     var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
     py.run(fullCode, function (output, error) {
       if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
+      lastRun = { output: String(output || ''), error: String(error || '') };
       state.codes.push(rec('s-code', { code: code, dataId: dataVal, output: output, error: error }));
       cb(output, error);
     });

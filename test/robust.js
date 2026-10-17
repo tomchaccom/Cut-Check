@@ -46,6 +46,8 @@ function launchOpts() {
   await p.locator('#tutor-q').fill(EVIL);
   await p.locator('#tutor-send').click(); await p.waitForTimeout(300);
   await p.locator('#tutor-close').click();
+  // 서버 없이는 reasons 가 비므로, 막힌 이유에 스크립트가 든 기록을 직접 넣는다
+  await p.evaluate((E) => window.CC.store.push(window.CC.events.make(window.CC.events.T.S_TUTOR, { question: 'q', answer: 'a', kind: 'ask_back', refused: true, step: 4, reasons: [E] })), EVIL);
   await p.waitForFunction(() => document.querySelector('#pyodide-status').textContent === 'Python 준비 완료', null, { timeout: 60000 });
   await p.locator('#run-code').click();
   await p.locator('#code-output').waitFor({ state: 'visible', timeout: 10000 });

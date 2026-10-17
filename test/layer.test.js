@@ -118,6 +118,10 @@ t('튜터 이벤트 생성', tv.type === 's-tutor');
 const tf = CC.fold.fold([tv], { now: Date.now() });
 t('튜터 질문을 접는다', tf.sTutor.length === 1 && tf.sTutor[0].question === 'split 이 뭐예요?' && tf.sTutor[0].kind === 'syntax' && tf.sTutor[0].refused === false);
 
+const tn = CC.fold.fold([CC.events.make(T.S_TUTOR, { question: 'q', answer: 'a', kind: 'ask_back', refused: true, step: 4, code: 'x', history_len: 2, reasons: ['leak: 정답 공개'], retried: true, judged: true })], { now: Date.now() });
+t('튜터 새 칸을 접는다', tn.sTutor[0].reasons[0] === 'leak: 정답 공개' && tn.sTutor[0].step === 4);
+t('예전 튜터 기록은 reasons [] · step null', tf.sTutor[0].reasons.length === 0 && tf.sTutor[0].step === null);
+
 // ── 교사 알림: 새로 생긴 설계도 제출과 코드 판정만
 console.log('\n[알림] 비교');
 const st = (id, name, d, j) => ({ id, name, sDesignCount: d, sCodeJudges: new Array(j).fill({}) });

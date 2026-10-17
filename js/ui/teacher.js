@@ -374,7 +374,8 @@
       var q = el('div', 'q');
       q.appendChild(el('div', null, 'Q. ' + x.question));
       q.appendChild(el('div', 'a', 'A. ' + x.answer));
-      q.appendChild(el('span', 'was', hm(x.t) + (x.refused ? ' · 튜터가 답하지 않았어요' : '')));
+      q.appendChild(el('span', 'was', hm(x.t) + (x.kind === 'ask_back' ? ' · 튜터가 되물었어요' : x.refused ? ' · 튜터가 답하지 않았어요' : '')));
+      if (x.reasons && x.reasons.length) q.appendChild(el('div', 'why', x.reasons.join(' / ')));
       qs.appendChild(q);
     });
     if (!v.sTutor.length) qs.appendChild(el('p', 'emptyrow', '아직 없어요.'));
