@@ -63,13 +63,13 @@ def review(mission, call_llm, timeout):
     return out
 
 
-def make_mission(lesson, key_point, call_llm=pickle_llm):
+def make_mission(lesson, key_point, call_llm=pickle_llm, level=None):
     t0 = time.monotonic()
     left = lambda: DEADLINE - (time.monotonic() - t0)  # noqa: E731
     m, feedback, rounds, status, reasons = None, None, 0, 'teacher', []
     while True:
         try:
-            m = generate(lesson, key_point, call_llm, feedback=feedback, t0=t0)
+            m = generate(lesson, key_point, call_llm, feedback=feedback, t0=t0, level=level)
         except Exception as e:  # noqa: BLE001 — 첫 판은 그대로 던지고, 다시 만들다 실패하면 앞 초안을 살린다
             if m is None:
                 raise

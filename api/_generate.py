@@ -408,13 +408,35 @@ class GenerateError(Exception):
         self.reasons = reasons
 
 
-def generate(lesson, key_point, call_llm=pickle_llm, feedback=None, t0=None):
+DIFFICULTY = {'easy': '쉽게', 'medium': '보통으로', 'hard': '어렵게'}
+
+
+def level_note(level):
+    """교사가 본 반의 진단 분포를 ask 에 붙이는 문장. 없으면 ''."""
+    if not level:
+        return ''
+    st = level.get('stages') or {}
+    n = {k: st.get(k, 0) for k in ('base', 'combine', 'ready')}
+    out = []
+    if level.get('difficulty') in DIFFICULTY:
+        out.append(f"난이도는 {DIFFICULTY[level['difficulty']]} 맞추세요.")
+    top = max(n, key=n.get)  # 같으면 앞쪽(기초 쪽)을 따른다
+    if n[top]:
+        out.append({'base': '이 반은 기초가 가장 많으니 한 가지 개념만 쓰는 문제로 만드세요.',
+                    'combine': '이 반은 조합 전 학생이 가장 많으니 두 개념을 엮는 문제까지 가도 됩니다.',
+                    'ready': '이 반은 조합이 가능한 학생이 가장 많으니 여러 개념을 엮어도 됩니다.'}[top])
+    if sum(n.values()) and st.get('hardcode', 0) * 2 >= sum(n.values()):
+        out.append('이 반은 결과만 맞추는 풀이가 많으니 반례는 항목 개수를 바꾸는 것으로 만드세요.')
+    return ('\n\n' + ' '.join(out)) if out else ''
+
+
+def generate(lesson, key_point, call_llm=pickle_llm, feedback=None, t0=None, level=None):
     t0 = t0 or time.monotonic()  # make_mission 이 주면 요청 전체 시간을 같이 쓴다
     left = lambda: DEADLINE - (time.monotonic() - t0)  # noqa: E731
 
     pid, picked = choose(lesson, key_point, call_llm, min(15, left()))
     schema = _ask_schema(pid)
-    ask = f'오늘 수업: {lesson}\n핵심: {key_point}\n유형: {DESC[pid]}\n\n이 수업과 이어지는 문제 하나를 만드세요.'
+    ask = f'오늘 수업: {lesson}\n핵심: {key_point}\n유형: {DESC[pid]}\n\n이 수업과 이어지는 문제 하나를 만드세요.' + level_note(level)
     if feedback:  # 검수에서 걸린 이유 — 처음부터 다시 만들 때만 온다
         ask += '\n\n지난번 문제는 검수에서 이렇게 걸렸습니다. 이번엔 피하세요:\n' + '\n'.join('- ' + f for f in feedback)
     messages = [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': ask}]

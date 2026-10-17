@@ -193,6 +193,13 @@ t('건너뛰면 stage 는 null', os.onboard.stage === null && os.onboard.skipped
 t('진단 전에는 onboard 가 null', CC.fold.empty().onboard === null);
 t('진단 이벤트에 맞음·점수 칸이 없다', (() => { const e = CC.events.make(T.S_ONBOARD, { answers: ans(), skipped: false }); return Object.keys(e).sort().join() === 'answers,skipped,t,type,v'; })());
 
+const ob = (o) => ({ onboard: o });
+const sp = OB.spread([ob({ stage: 'base', hardcode: true, skipped: false }), ob({ stage: 'base', hardcode: false, skipped: false }),
+  ob({ stage: 'combine', hardcode: true, skipped: false }), ob({ stage: 'ready', hardcode: false, skipped: false }),
+  ob({ stage: null, hardcode: false, skipped: true }), ob(null), {}]);
+t('spread 는 단계·hardcode·none 을 센다', JSON.stringify(sp) === JSON.stringify({ base: 2, combine: 1, ready: 1, hardcode: 2, none: 3 }));
+t('spread 에 이름·학생 칸이 없다', Object.keys(sp).sort().join() === 'base,combine,hardcode,none,ready');
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
 ['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js']

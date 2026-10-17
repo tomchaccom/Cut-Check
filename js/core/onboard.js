@@ -39,5 +39,17 @@
     };
   }
 
-  CC.onboard = { QUESTIONS: QUESTIONS, stage: stage };
+  /* 반의 분포. 이름·순서 없이 숫자만 — 진단을 안 했거나 건너뛴 학생은 none */
+  function spread(students) {
+    var n = { base: 0, combine: 0, ready: 0, hardcode: 0, none: 0 };
+    (students || []).forEach(function (s) {
+      var o = s && s.onboard;
+      if (!o || o.skipped || !o.stage) { n.none++; return; }
+      n[o.stage]++;
+      if (o.hardcode) n.hardcode++;
+    });
+    return n;
+  }
+
+  CC.onboard = { QUESTIONS: QUESTIONS, stage: stage, spread: spread };
 })(window.CC = window.CC || {});

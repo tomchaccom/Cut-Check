@@ -250,6 +250,36 @@ if key:
     os.environ['PICKLE_API_KEY'] = key
 t('키가 없으면 502 와 사람이 읽는 말', code == 502 and '다시 시도' in body['error'], (code, body))
 
+print('\n[진단 분포 → 문제 생성]')
+from _generate import level_note  # noqa: E402
+_L = lambda **s: {'difficulty': 'easy', 'stages': {'base': 0, 'combine': 0, 'ready': 0, 'hardcode': 0, 'none': 0, **s}}  # noqa: E731
+t('None 이면 빈 문장', level_note(None) == '')
+t('기초가 가장 많으면 한 가지 개념만', '한 가지 개념만' in level_note(_L(base=5, combine=1)))
+t('조합 전이 가장 많으면 두 개념을 엮는', '두 개념을 엮는' in level_note(_L(base=1, combine=4)))
+t('hardcode 가 응답자 절반 이상이면 개수 반례', '반례는 항목 개수를 바꾸는 것으로' in level_note(_L(base=2, combine=2, hardcode=2)))
+t('절반 미만이면 개수 반례 없음', '항목 개수' not in level_note(_L(base=2, combine=2, hardcode=1, none=9)))
+_lv = {'difficulty': 'easy', 'stages': {'base': 5, 'combine': 1, 'ready': 0, 'hardcode': 4, 'none': 2}}
+def _try(*a, **k):
+    try:
+        generate(*a, **k)
+    except GenerateError:  # 초안이 일부러 엉터리 — ask 만 보면 된다
+        pass
+
+
+_f = fake('split-unique-count', 'x')
+quiet(lambda: _try('리스트', '중복', _f, level=_lv))
+t('가짜 LLM 이 받은 ask 에 level_note 가 든다', level_note(_lv) in _f.calls[1]['messages'][1]['content'] and '한 가지 개념만' in _f.calls[1]['messages'][1]['content'])
+_f0, _f1 = fake('split-unique-count', 'x'), fake('split-unique-count', 'x')
+quiet(lambda: _try('리스트', '중복', _f0)); quiet(lambda: _try('리스트', '중복', _f1, level=None))
+t('level 이 None 이면 ask 는 예전과 같다', _f0.calls[1]['messages'][1]['content'] == _f1.calls[1]['messages'][1]['content'] and 'level' not in _f0.calls[1]['messages'][1]['content'] and '난이도' not in _f0.calls[1]['messages'][1]['content'])
+_got = {}
+_orig = gm.make_mission
+gm.make_mission = lambda l, k, **kw: _got.update(kw) or {'ok': 1}
+t('이상한 difficulty·stages 는 400 이 아니라 무시', post({'lesson': 'a', 'keyPoint': 'b', 'difficulty': 'x', 'stages': [1]})[0] == 200 and _got['level'] is None, _got)
+post({'lesson': 'a', 'keyPoint': 'b', 'difficulty': 'hard', 'stages': {'base': 3, 'ready': 'x', 'none': True}})
+t('정수 값만 걸러 level 이 된다', _got['level'] == {'difficulty': 'hard', 'stages': {'base': 3}}, _got)
+gm.make_mission = _orig
+
 print('\n[eval 에서 실패한 두 경우]')
 _m = {'itemName': '과일', 'data': [{'name': 'a', 'items': ['사과', '배', '사과', '귤']},
                                  {'name': 'b', 'items': ['배', '사과', '배', '귤']}]}

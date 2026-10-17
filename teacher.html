@@ -109,6 +109,7 @@
             <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:4px">핵심은?</label>
             <textarea id="gen-key" rows="2" placeholder="예: 중복 데이터를 구분하는 법" style="width:100%;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);resize:vertical;font-family:inherit"></textarea>
           </div>
+          <div id="gen-spread" style="font-size:13px;color:var(--ink-3)"></div>
           <div style="display:flex;gap:8px;align-items:center">
             <select id="gen-diff" style="padding:8px 12px;border:1px solid var(--line-strong);border-radius:10px;font-size:14px;background:var(--surface);color:var(--ink)">
               <option value="easy">쉬움</option><option value="medium" selected>보통</option><option value="hard">어려움</option>
@@ -299,6 +300,15 @@ window.CC_SUPABASE = {
     });
   }
 
+  /* 이 반 진단 분포 — 숫자 한 줄. 이름·순서는 띄우지 않는다. 기본 난이도는 처음 한 번만 맞춘다 */
+  var diffSeeded = false;
+  function showSpread(students) {
+    var n = CC.onboard.spread(students);
+    $('#gen-spread').textContent = '이 반 진단: 기초 ' + n.base + ' · 조합 전 ' + n.combine +
+      ' · 조합 가능 ' + n.ready + ' · 안 함 ' + n.none;
+    if (!diffSeeded && n.base > n.combine && n.base > n.ready) { $('#gen-diff').value = 'easy'; diffSeeded = true; }
+  }
+
   var eventTimer = null;
   /* 학생 이벤트 로드 → 대시보드에 반영 */
   function loadStudentEvents() {
@@ -340,6 +350,7 @@ window.CC_SUPABASE = {
       /* classroom 객체에 실제 학생 주입 */
       CC.classroom.students = students;
       CC.classroom.events = evs;   /* 학생 서랍이 미션별로 다시 접고 시각을 읽는다 */
+      showSpread(students);
       if (CC._alertsLoaded) CC._alertsLoaded(students);
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
@@ -475,7 +486,7 @@ window.CC_SUPABASE = {
     fetch('/api/generate-mission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lesson: lesson, keyPoint: keyPoint, difficulty: $('#gen-diff').value })
+      body: JSON.stringify({ lesson: lesson, keyPoint: keyPoint, difficulty: $('#gen-diff').value, stages: CC.onboard.spread(CC.classroom.students) })
     })
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
     .then(function (r) {

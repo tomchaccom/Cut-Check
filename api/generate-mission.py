@@ -13,6 +13,14 @@ from _generate import GenerateError  # noqa: E402
 from _review import make_mission  # noqa: E402
 
 
+def _level(body):
+    """난이도·분포는 힌트일 뿐 — 모양이 틀리면 400 이 아니라 버리고 진행한다."""
+    d, st = body.get('difficulty'), body.get('stages')
+    d = d if d in ('easy', 'medium', 'hard') else None
+    st = {k: v for k, v in st.items() if type(v) is int and v >= 0} if isinstance(st, dict) else {}
+    return {'difficulty': d, 'stages': st} if d or st else None
+
+
 class handler(BaseHTTPRequestHandler):
     def _send(self, code, body):
         data = json.dumps(body, ensure_ascii=False).encode()
@@ -39,7 +47,7 @@ class handler(BaseHTTPRequestHandler):
         if not key_point:
             return self._send(400, {'error': '핵심을 입력해주세요.'})
         try:
-            self._send(200, make_mission(lesson, key_point))
+            self._send(200, make_mission(lesson, key_point, level=_level(body)))
         except GenerateError as e:
             # 사유는 로그에 남긴다 — 어떤 규칙이 얼마나 자주 걸리는지가 프롬프트 개선의 근거다 (docs/llm.md)
             print('[generate-mission] 실패', json.dumps(e.reasons, ensure_ascii=False), file=sys.stderr)
