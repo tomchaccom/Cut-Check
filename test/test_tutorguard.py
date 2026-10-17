@@ -1,4 +1,4 @@
-"""AI 튜터 답변 검사기(api/_tutorguard.py) · 튜터 흐름(api/_tutor.py) 검증.
+"""AI 튜터 답변 검사기(api/_tutorguard.py 형식) · 튜터 흐름(api/_tutor.py · _tutorjudge.py) 검증.
 
 막아야 하는 것을 통과시킬 것보다 많이 넣는다. 이 검사기의 일은 막는 것이다.
 
@@ -25,49 +25,33 @@ def t(name, cond, extra=''):
             print('       → ' + str(extra)[:300])
 
 
-M = {'title': '창고 주문서 정리', 'itemName': '상품', 'items': ['사과', '바나나', '우유']}
-CODE = 'data = "사과,바나나,사과"\nparts = data.split(",")\nprint(len(set(parts)))\n'
-
 print('[막는다]')
-for name, ans in [
-    ('미션 자료 값', '`"사과,배".split(",")` 처럼 쓰면 쉼표로 나눠져요.'),
-    ('미션 제목', '창고 주문서 정리에서는 `split`을 써요.'),
-    ('여러 줄 코드', '```\nparts = s.split(",")\nprint(len(parts))\n```'),
-    ('코드 조각 둘', '`a.split()` 다음에 `len(a)` 를 쓰면 돼요.'),
-    ('학생 코드 그대로', '`print(len(set(parts)))` 는 서로 다른 개수를 세요.'),
-    ('방법 판단', '이 문제에서는 중복을 빼야 해요.'),
-    ('정답 언급', '정답은 set 을 쓰는 거예요.'),
-    ('고치는 법', '`set`으로 고치면 맞아요.'),
-    ('칭찬', '훌륭한 질문이에요. `split`은 문자열을 나누는 함수예요.'),
-    ('반말', '`split`은 문자열을 나누는 함수야.'),
-    ('너', '너 코드에서는 `split`을 쓰고 있어요.'),
-    ('너무 김', '`split`은 문자열을 나눠요. ' + '가' * 200),
-    ('한 줄이지만 학생 코드와 같은 줄', '이렇게 써요. `parts = data.split(",")`'),
-    ('한 줄 완성 프로그램', '`print(len(set(data.split(","))))` 처럼 쓰면 서로 다른 개수가 나와요.'),
-    ('공백 변형 1', '`parts=data.split(",")` 처럼 써요.'),
-    ('공백 변형 2', '`parts = data.split( "," )` 처럼 써요.'),
-    ('미션 자료 변수 data 로 예시', '`items = set(data.split(","))` 처럼 쓰면 돼요.'),
-    ('세미콜론', '`x = s.split(","); print(len(set(x)))` 처럼 써요.'),
-    ('빈 답', ''),
+for name, ans, kind in [
+    ('여러 줄 코드', '```\nparts = s.split(",")\nprint(len(parts))\n```', 'answer'),
+    ('코드 예시 셋', '`a.split()` 다음에 `len(a)` 그리고 `set(a)` 를 써요.', 'answer'),
+    ('세미콜론', '`x = s.split(","); print(x)` 처럼 써요.', 'answer'),
+    ('칭찬', '훌륭한 질문이에요. `split`은 문자열을 나누는 함수예요.', 'answer'),
+    ('너', '너 코드에서는 `split`을 쓰고 있어요.', 'answer'),
+    ('반말', '`split`은 문자열을 나누는 함수야.', 'answer'),
+    ('한자', '文字列을 나누는 함수예요.', 'answer'),
+    ('너무 김', '`split`은 문자열을 나눠요. ' + '가' * 300, 'answer'),
+    ('빈 답', '', 'answer'),
+    ('되묻기가 ? 로 안 끝남', '지금 print 결과를 확인해 보세요.', 'ask_back'),
+    ('되묻기가 80자 초과', '지금 print 결과는 ' + '아주 ' * 40 + '긴 한 줄인가요?', 'ask_back'),
 ]:
-    r = problems(ans, M, CODE)
+    r = problems(ans, kind)
     t(name, bool(r), r)
 
 print('[통과]')
-for name, ans in [
-    ('문법 설명 + 한 줄 예시', '`"a b c".split()` 처럼 쓰면 공백을 기준으로 나눈 목록이 나와요.'),
-    ('에러 설명', 'IndentationError 는 들여쓰기가 맞지 않을 때 나오는 에러예요.'),
-    ('이름만 감싼 백틱은 예시가 아님', '`append()`는 목록 끝에 값을 붙여요. `for`문과 함께 써요. 예: `nums.append(7)`'),
-    ('print 데모', '`print("안녕")` 처럼 쓰면 화면에 글자가 나와요.'),
-    ('for 문', '`for x in 목록:` 다음 줄을 들여 쓰면 목록의 값을 하나씩 꺼내요.'),
-    # 사람 결정으로 풀었다 — 문법 설명이다
-    ('학생 변수 이름이 든 예시', '`len(parts)` 는 목록의 길이예요.'),
-    ('print 안 호출 한 겹', '`print(len(x))` 는 길이를 화면에 보여줘요.'),
-    ('값·문법 꼴은 예시 줄이 아니다', '`range(시작, 끝)`처럼 써요. `끝`은 빠져요. 예: `for i in range(1, 4):`'),
-    ('나눌 값과 기준 글자', '`a,b,c`를 `,`로 나누면 세 조각이 돼요.'),
-    ('set 이 하는 일', 'set 은 중복을 없애고 한 번씩만 남겨요. 예: `set(["a", "a"])`'),
+for name, ans, kind in [
+    ('문법 설명 + 한 줄 예시', '`"a b c".split()` 처럼 쓰면 공백을 기준으로 나눈 목록이 나와요.', 'answer'),
+    ('이름만 감싼 백틱은 예시가 아님', '`append()`는 목록 끝에 값을 붙여요. `for`문과 함께 써요. 예: `nums.append(7)`', 'answer'),
+    ('미션 단어가 든 설명은 판정 몫', '메뉴마다 세려면 딕셔너리가 쓰여요.', 'answer'),
+    ('학생 코드 줄 인용', '3번째 줄 `print(data)` 는 글자 한 줄을 보여줘요.', 'answer'),
+    ('300자 이내', '가' * 299 + '요', 'answer'),
+    ('되묻기', '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?', 'ask_back'),
 ]:
-    r = problems(ans, M, CODE)
+    r = problems(ans, kind)
     t(name, not r, r)
 
 
@@ -81,29 +65,45 @@ def fake(*replies):
     return call
 
 
+CTX = {'mission': {'title': '메뉴 묶기', 'itemName': '메뉴', 'items': ['떡볶이', '우동', '김밥'],
+                   'situation': '매점 주문을 정리해야 해요.', 'brief': '메뉴마다 몇 번 나왔는지 알려 주세요.',
+                   'inputs': [{'name': '자료 1', 'v': '떡볶이,우동,김밥,우동'}]},
+       'code': 'data = "떡볶이,우동,김밥,우동"\nprint(data)', 'define': '', 'design': ['나누기', '세기'],
+       'last_output': '떡볶이,우동,김밥,우동', 'last_error': '', 'history': [{'q': 'split은 뭐고', 'a': '`"a,b".split(",")` 처럼 나눠요.'}]}
+OK = {'leak': False, 'why': ''}
+LEAK = {'leak': True, 'why': '이 자료로 바로 세는 코드'}
+
 print('[흐름]')
-llm = fake({'kind': 'solution_request', 'answer': ''})
-r = ask('정답 코드 알려줘', M, CODE, llm)
-t('정답 요청은 고정 문장으로 거절', r == {'kind': 'solution_request', 'answer': REFUSE['solution_request'], 'refused': True}, r)
+llm = fake({'kind': 'answer', 'answer': '딕셔너리에 없던 키를 넣으면 새로 생겨요. 예: `d["a"] = 1`'}, OK)
+r = ask('어떻게 써먹어요?', CTX, llm)
+user = llm.calls[0][-1]['content']
+t('미션 brief·history·마지막 출력이 프롬프트에', all(s in user for s in ['메뉴마다 몇 번', 'split은 뭐고', '떡볶이,우동,김밥,우동']), user)
+t('통과하면 답한다', r['kind'] == 'answer' and not r['refused'] and r['judged'] and r['reasons'] == [], r)
 
-r = ask('점심 뭐 먹어?', M, CODE, fake({'kind': 'off_topic', 'answer': ''}))
-t('범위 밖은 고정 문장', r['answer'] == REFUSE['off_topic'] and r['refused'], r)
+llm = fake({'kind': 'answer', 'answer': '`for m in data.split(","): d[m] = d.get(m, 0) + 1` 이렇게요.'}, LEAK,
+           {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요. 같은 키에 값을 다시 넣으면 바뀌어요.'})
+r = ask('메뉴 세는 코드 알려줘', CTX, llm)
+t('유출 → 재요청 → 재답', len(llm.calls) == 3 and '이 자료로 바로 세는 코드' in llm.calls[2][-1]['content'] and r['retried'] and r['kind'] == 'answer', r)
 
-good = {'kind': 'syntax', 'answer': '`"a b".split()` 처럼 쓰면 공백으로 나눈 목록이 나와요.'}
-r = ask('split 이 뭐예요?', M, CODE, fake(good))
-t('문법 질문은 답한다', r['kind'] == 'syntax' and not r['refused'] and r['answer'] == good['answer'], r)
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '`d[m] += 1` 쓰세요.'})
+r = ask('코드 줘', CTX, llm)
+t('재답에 코드 → ask_back', r['kind'] == 'ask_back' and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
 
-llm = fake({'kind': 'syntax', 'answer': '`"사과,배".split(",")` 처럼 써요.'}, good)
-r = ask('split 이 뭐예요?', M, CODE, llm)
-t('검사에 걸리면 사유를 붙여 한 번 더 묻는다', len(llm.calls) == 2 and '사과' in llm.calls[1][-1]['content'] and r == {**good, 'refused': False}, r)
+llm = fake({'kind': 'answer', 'answer': '문자열은 따옴표로 감싼 글자예요.'}, '판정 아님')
+r = ask('문자열이 뭐고', CTX, llm)
+t('판정 실패 → ask_back', r['kind'] == 'ask_back' and 'judge_failed' in r['reasons'] and r['answer'] == REFUSE['ask_back'], r)
 
-bad = {'kind': 'syntax', 'answer': '이 문제에서는 중복을 빼야 해요.'}
-llm = fake(bad, bad)
-r = ask('어떻게 해요?', M, CODE, llm)
-t('두 번 다 걸리면 고정 문장', len(llm.calls) == 2 and r['kind'] == 'guarded' and r['refused'] and r['answer'] == REFUSE['guarded'], r)
+llm = fake({'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'})
+r = ask('모르겠어요', CTX, llm)
+t('되묻기는 판정 없이', r['kind'] == 'ask_back' and r['answer'].endswith('?') and not r['judged'] and len(llm.calls) == 1, r)
 
-r = ask('split?', M, CODE, fake('이건 JSON 이 아님'))
-t('JSON 이 아니면 고정 문장', r['kind'] == 'guarded' and r['refused'], r)
+clock = iter([0, 17])
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK)
+r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
+t('남은 시간 < 10초면 재요청 없음', len(llm.calls) == 2 and r['kind'] == 'ask_back' and not r['retried'], r)
+
+r = ask('점심 뭐 먹어?', CTX, fake({'kind': 'off_topic', 'answer': ''}))
+t('범위 밖', r['answer'] == REFUSE['off_topic'] and r['refused'], r)
 
 print('[HTTP]')
 import io  # noqa: E402
@@ -137,6 +137,19 @@ for name, raw, ln in [
         c = repr(e)
     # items 가 숫자여도 400 이 아니라 질문 처리까지 간다(LLM 키 없음 → 502)
     t('HTTP ' + name, c in (400, 502), c)
+
+ctx_body = {'question': '질문', 'mission': {'title': 't', 'itemName': 'i', 'items': ['a'], 'situation': 's', 'brief': 'b',
+                                         'inputs': [{'name': 'n', 'v': 'v'}, 'x', None]},
+            'code': 'c', 'define': 'd', 'design': ['x'] * 20, 'lastOutput': 'o', 'lastError': 'e',
+            'history': [{'q': 'q', 'a': 'a'}] * 6}
+for name, body in [
+    ('ctx 모양 본문', ctx_body),
+    ('history 가 리스트가 아님', {**ctx_body, 'history': 'x'}),
+    ('history 6개 이상·항목이 객체가 아님', {**ctx_body, 'history': [1, None, {'q': 'q'}] * 3}),
+    ('질문 없음', {**ctx_body, 'question': ''}),
+]:
+    c = post(json.dumps(body).encode())
+    t('HTTP ' + name, c == (400 if name == '질문 없음' else 502), c)
 
 print('\n전부 통과' if not fail else f'\n실패 {fail}건')
 sys.exit(1 if fail else 0)
