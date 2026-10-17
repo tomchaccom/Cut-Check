@@ -1,0 +1,714 @@
+[
+ {
+  "student": "S1",
+  "question": "data = \"2,3,5\" 처럼 입력되어 있는데. 이걸 하나씩 꺼내는 방법이 뭔지 모르겠어",
+  "old_kind": "guarded",
+  "old_answer": "이 질문에는 답하기 어려워요. 궁금한 문법 이름으로 다시 물어봐 주세요.",
+  "mission": {
+   "title": "",
+   "itemName": "",
+   "situation": "",
+   "brief": "",
+   "inputs": []
+  },
+  "code": "data = \"2,3,5\"\n# data 에 자료가 들어 있어요.\n# 1. 모두 더하기\n\nli = map(int, data.split(\",\"))\nprint(sum(li))\n",
+  "last_output": "10\n",
+  "last_error": ""
+ },
+ {
+  "student": "S1",
+  "question": "항목마다 메뉴의 카운트를 하려면 어떻게 해야하는지 모르겠어",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "모르겟어요",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "아니 모르개서요",
+  "old_kind": "guarded",
+  "old_answer": "이 질문에는 답하기 어려워요. 궁금한 문법 이름으로 다시 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "메뉴마다 몇번나오는지 구하는 코드 알려주세욤",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "모르겟어욤",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "딕셔너리에서 값을 추가하는 문법을 알려줘",
+  "old_kind": "syntax",
+  "old_answer": "딕셔너리에는 키로 값을 넣어요. `딕셔너리[새키] = 값`처럼 쓰면 추가돼요. 예시: `menu[\"a\"] = 1`",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "그러면 딕셔너리를 이용해서 메뉴 리스트에서 메뉴가 각각 몇번 나왔는지를 세고 싶은데 , 어떻게 하면 돼? 예시를 보여줘",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "코드를 직접 못쓰겟어요",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "ㅇㄴ 답이 아니라 ㅠ저 코드를 쓰는 문법과 방법을 알려주세욤",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "ㅇㄴ 그게 아니라ㅠ ㅠㅠㅠㅠㅠㅠㅠㅠ",
+  "old_kind": "off_topic",
+  "old_answer": "파이썬 문법 질문만 받을 수 있어요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "이것도 문법 질문인데욤 ㅠㅠㅠㅠㅠㅠ",
+  "old_kind": "syntax",
+  "old_answer": "문자열을 바로 변수에 넣는 건 맞아요. 다만 문법 질문만으로는 어디가 막혔는지 알 수 없어요. 쉼표로 나눈 뒤 묶는 단계가 필요해요. 예시는 `x,y,z`예요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "문자열이 뭐고",
+  "old_kind": "syntax",
+  "old_answer": "문자열은 문자들이 이어진 값이에요. 파이썬에서는 따옴표로 감싼 내용을 문자열이라고 해요. 예: `\"a,b,c\"`",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "문자열을 바로 변수에 넣는 건 맞아요. 그래서 뭐 우짜라는 거예요 ㅠㅠㅠ",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "\"문자열을 바로 변수에 넣는 건 맞아요.\" 그래서 뭐 우짜라는 거예요 ㅠㅠㅠ",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "",
+  "last_output": "",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "코드는 직접 써보는거예요. 궁금한 문법이 있으면 물어봐주세요",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "우짜라는거야",
+  "old_kind": "off_topic",
+  "old_answer": "파이썬 문법 질문만 받을 수 있어요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "아니 우째야되냐고요",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "ㅇㄴ 제발",
+  "old_kind": "off_topic",
+  "old_answer": "파이썬 문법 질문만 받을 수 있어요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "ㅇㄴ 그니까 그거를 어떻게 풀어야하냐고",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "ㄱㄴㄲ 그 문법이 뭐냐고",
+  "old_kind": "syntax",
+  "old_answer": "콤마로 값을 나눠서 여러 변수에 넣는 문법이요. 예: `x,y,z = \"a,b,c\".split(\",\")`",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "어떻게 써먹어야하는데",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "그 문법을 사용하는 방법",
+  "old_kind": "solution_request",
+  "old_answer": "코드는 직접 써 보는 거예요. 궁금한 문법이 있으면 물어봐 주세요.",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "그 문법이 뭔데",
+  "old_kind": "syntax",
+  "old_answer": "문자열의 `split`은 쉼표 같은 구분자로 나눠 리스트로 바꾸는 문법입니다. 예: `\"a,b,c\".split(\",\")`",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ },
+ {
+  "student": "S2",
+  "question": "split은 뭐고",
+  "old_kind": "syntax",
+  "old_answer": "`split`은 문자열을 나눠서 목록으로 바꾸는 함수예요. 보통 기준 글자를 넣으면 그 글자로 쪼개져요. 예: `\"a,b,c\".split(\",\")`",
+  "mission": {
+   "title": "메뉴 묶기",
+   "itemName": "",
+   "situation": "같은 메뉴를 묶어야 해요.",
+   "brief": "메뉴가 몇 번 나왔는지 알아내 주세요.",
+   "inputs": [
+    {
+     "name": "월요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동"
+    },
+    {
+     "name": "수요일 메뉴",
+     "v": "떡볶이,우동,김밥,우동"
+    },
+    {
+     "name": "화요일 메뉴",
+     "v": "김밥,떡볶이,김밥,우동,김밥,떡볶이"
+    }
+   ]
+  },
+  "code": "data = \"떡볶이,우동,김밥,우동\"\nprint(data)",
+  "last_output": "떡볶이,우동,김밥,우동\n",
+  "last_error": ""
+ }
+]
