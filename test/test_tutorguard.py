@@ -102,6 +102,11 @@ llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를
 r = ask('모르겠어요', CTX, llm)
 t('유출된 되묻기 → 재요청 → 재답', len(llm.calls) == 3 and r['retried'] and r['kind'] == 'ask_back' and r['answer'].startswith('지금 print'), r)
 
+llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를 세는 변수를 둘 건가요?'}, LEAK,
+           {'kind': 'ask_back', 'answer': "`name = '김밥,떡볶이'` 처럼 넣었나요?"})
+r = ask('모르겠어요', CTX, llm)
+t('재답 되묻기에 백틱 → ask_back 고정 문장', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+
 clock = iter([0, 17])
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK)
 r = ask('코드 줘', CTX, llm, now=lambda: next(clock))

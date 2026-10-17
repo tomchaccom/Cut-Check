@@ -27,7 +27,8 @@ for r in rows:
         res = ask(r['question'], ctx, pickle_llm)
     except Exception as e:  # noqa: BLE001
         res = {'kind': 'error', 'answer': f'{type(e).__name__}: {e}', 'reasons': ['call_failed']}
-    hist[r['student']].append({'q': r['question'], 'a': res['answer']})
+    if res['kind'] != 'error':
+        hist[r['student']].append({'q': r['question'], 'a': res['answer']})
     out.append((r, res))
 
 

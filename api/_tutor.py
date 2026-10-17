@@ -86,6 +86,6 @@ def ask(question, ctx, call_llm, now=time.monotonic):
              {'role': 'user', 'content': '아래 문제를 고쳐 다시 답한다: ' + ' / '.join(reasons)}]
     d2 = _json(call_llm(msgs, SCHEMA, min(ANSWER_T, left))) or {}
     k2, a2 = d2.get('kind'), str(d2.get('answer') or '').strip()
-    if k2 in ('answer', 'ask_back') and not problems(a2, k2) and (k2 == 'ask_back' or '`' not in a2):
+    if k2 in ('answer', 'ask_back') and not problems(a2, k2) and '`' not in a2:
         return _out(k2, a2, False, reasons, True, judged)
     return _refuse(reasons, retried=True, judged=judged)
