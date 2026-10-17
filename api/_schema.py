@@ -131,9 +131,9 @@ def _sentence_problem(v):
         return "'너' — 화면이 학생을 너라고 부르지 않는다"
 
 
-def _plain_problem(v):
-    if len(re.findall(r'[.?!]+(\s|$)', v.strip())) > 1:
-        return '두 문장 이상 — 한 칸에 한 문장만 쓴다'
+def _plain_problem(v, sentences=1):
+    if len(re.findall(r'[.?!]+(\s|$)', v.strip())) > sentences:
+        return f'{sentences + 1}문장 이상 — 한 칸에 {sentences}문장까지만 쓴다'
     m = ASIDE.search(v)
     if m:
         return f"덧붙임 '{m.group(0)}' — 부연 설명 없이 한 번에 읽히게 쓴다"
@@ -146,7 +146,7 @@ def _polite_problem(v):
 
 
 def _brief_problem(v):
-    m = re.search(r'서로\s*다른|전체\s*개수|중복', v)
+    m = re.search(r'서로\s*다른|전체\s*개수|중복|딕셔너리|키를|값을|리스트', v)
     if m:
         return f"답 암시 '{m.group(0)}' — 업무 요청은 모호해야 분해가 학생 몫으로 남는다"
 
@@ -170,7 +170,7 @@ Item = Annotated[str, AfterValidator(_item)]
 
 # 칸 → 글자 수 한도. 스키마에는 maxLength 로 보이고, 검사는 model_validator 에서 한꺼번에 한다
 # (필드 검사가 하나라도 실패하면 pydantic 이 model_validator 를 건너뛰어 다른 사유가 묻힌다)
-_LIMIT = {'title': 20, 'brief': 40, 'situation': 30, 'itemName': 6, 'data': 15, 'counter': 15,
+_LIMIT = {'title': 20, 'brief': 60, 'situation': 90, 'itemName': 6, 'data': 15, 'counter': 15,
           'goals': 25, 'sentences': 25, 'filterDesc': 10, 'counterText': 40}
 
 
@@ -246,10 +246,11 @@ class _Base(BaseModel):
 
     title: str = _max('title', description='중학생이 바로 알아듣는 상황 이름. 명사형 ("급식 알레르기 찾기"). 컴퓨터 용어 금지.')
     brief: str = _max('brief', description=(
-        '학생에게 오는 업무 요청. 한 문장, 존댓말(~해 주세요). 배경은 situation 에. '
-        '어떻게 하는지(나누기, 중복 빼기 등)는 쓰지 않는다 — 일부러 모호하게. '
-        '무엇을 알아내야 하는지("몇 가지", "모두 얼마", "가장 큰")와 항목 이름(itemName 그대로)은 꼭 쓴다.'))
-    situation: str = _max('situation', description='왜 이 일을 하는지. 한 문장, 존댓말로 "~요." 로 끝낸다 ("~해야 해요."). 덧붙임 금지.')
+        '그 장면에서 무엇을 알아내야 하는지 한 문장(~해 주세요). '
+        '함수·자료구조·단계 이름(딕셔너리·키·값·나누기·세기·리스트) 금지. itemName 은 그대로 쓴다. '
+        '"몇 가지", "모두 얼마", "가장 큰" 처럼 구할 값은 꼭 쓴다.'))
+    situation: str = _max('situation', description=(
+        "중학생이 겪는 생활 장면(가족·친구·학교·매점·단톡방). 인물 이름 하나 이상. 두 문장까지, 존댓말 '~요.'. 덧붙임 금지."))
     itemName: str = _max('itemName', description='항목을 부르는 말 ("재료", "이름", "금액").')
     counter: Counter = Field(description='세 번째이자 마지막 자료. 반드시 반례.')
 
@@ -295,7 +296,7 @@ class _Base(BaseModel):
                 if n > _LIMIT[field]:
                     bad.append((field, f"'{t}': {n}자 — {_LIMIT[field]}자 안으로"))
                     continue
-                why = _text_problem(t) or (speaks and (_sentence_problem(t) or _plain_problem(t))) or (
+                why = _text_problem(t) or (speaks and (_sentence_problem(t) or _plain_problem(t, 2 if field == 'situation' else 1))) or (
                     field in ('brief', 'situation') and _polite_problem(t)) or (field == 'brief' and _brief_problem(t))
                 if why:
                     bad.append((field, f"'{t}': {why}"))

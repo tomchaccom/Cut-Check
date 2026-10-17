@@ -125,6 +125,12 @@ r = m['guard']['review']
 t('앞 초안을 남기고 교사로', r['status'] == 'teacher' and m['title'] and r['rounds'] == 1
   and '다시 만들기에 실패해서 앞 문제를 보여 드려요' in r['reasons'] and any('다른 이야기' in x for x in r['reasons']), r)
 
+print('[생성 SYSTEM 과 검수 항목은 이야기 속 방법 노출을 본다]')
+from _generate import SYSTEM as GEN_SYSTEM
+from _review import ITEMS
+t('생성 SYSTEM 에 이야기 속 방법 금지 문구', '이야기 속에 푸는 방법' in GEN_SYSTEM)
+t('noAnswer 가 이야기를 본다', '이야기' in ITEMS['noAnswer'])
+
 print('[review 는 학생이 볼 문장만 넘긴다]')
 seen = {}
 
