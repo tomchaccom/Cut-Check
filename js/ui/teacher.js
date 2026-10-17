@@ -581,6 +581,18 @@
     renderDashboard();
   });
 
+  /* 튜터 기록 CSV — 수업 개선용. 파일 만들기는 화면 일이라 여기에 둔다 */
+  $('#tutor-csv').addEventListener('click', function () {
+    var rows = CC.csv.tutorRows(C.students, function (mid) { var m = missionOf(mid); return m && m.title; });
+    var d = new Date(), p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    var room = ($('#dash-title').textContent || '교실').replace(/[\\/:*?"<>|\s]+/g, '-');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([CC.csv.toCsv(rows)], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'tutor-' + room + '-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '.csv';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+
   /* 외부에서 호출할 수 있게 노출 */
   CC._renderDashboard = renderDashboard;
   CC._closeDetail = closeDetail;

@@ -6,6 +6,7 @@ require('../js/core/fold.js');
 require('../js/core/onboard.js');
 require('../js/core/hangul.js'); require('../js/core/alerts.js');
 require('../js/core/pyerr.js');
+require('../js/core/csv.js');
 const CC = global.window.CC;
 const T = CC.events.T;
 
@@ -200,9 +201,24 @@ const sp = OB.spread([ob({ stage: 'base', hardcode: true, skipped: false }), ob(
 t('spread 는 단계·hardcode·none 을 센다', JSON.stringify(sp) === JSON.stringify({ base: 2, combine: 1, ready: 1, hardcode: 2, none: 3 }));
 t('spread 에 이름·학생 칸이 없다', Object.keys(sp).sort().join() === 'base,combine,hardcode,none,ready');
 
+console.log('\n[튜터 CSV]');
+const tut = (name, items) => ({ name, sTutor: items });
+const csvRows = CC.csv.tutorRows([
+  tut('민지', [{ question: '왜 "빈 줄", 나와요?\n두 줄', answer: '답', kind: 'syntax', refused: true, reasons: ['a', 'b'], step: 2, retried: true, mid: 'm1', t: 3000 }]),
+  tut('준호', [{ question: '예전', answer: '', kind: 'guarded', refused: false, t: 1000 }])
+], (m) => m === 'm1' ? '떡볶이' : null);
+t('헤더 10칸', csvRows[0].join('|') === '시각|학생|미션|단계|분류|거절|질문|답|막힌 이유|다시 요청');
+t('학생 2명 기록이 시각순', csvRows.length === 3 && csvRows[1][1] === '준호' && csvRows[2][1] === '민지');
+t('예전 기록은 빈 칸으로 한 줄', csvRows[1][2] === '' && csvRows[1][3] === '' && csvRows[1][8] === '' && csvRows[1][9] === '' && csvRows[1].length === 10);
+t('미션 이름·이유·다시 요청', csvRows[2][2] === '떡볶이' && csvRows[2][3] === '2' && csvRows[2][5] === '거절' && csvRows[2][8] === 'a b' && csvRows[2][9] === '예');
+const csv = CC.csv.toCsv(csvRows);
+t('BOM 으로 시작하고 줄 끝은 CRLF', csv.charAt(0) === '\uFEFF' && csv.split('\r\n').length === 4);
+t('쉼표·따옴표·줄바꿈이 든 셀은 감싸고 따옴표는 두 번', csv.indexOf('"왜 ""빈 줄"", 나와요?\n두 줄"') >= 0);
+t('평범한 셀은 감싸지 않는다', csv.indexOf(',준호,') >= 0);
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js', 'csv.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');

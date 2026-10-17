@@ -136,7 +136,7 @@
       case 's-code-judge':
         s.sCodeJudges.push({ verdict: e.verdict, basis: e.basis, t: e.t }); break;
       case 's-tutor':
-        s.sTutor.push({ question: e.question, answer: e.answer, kind: e.kind, refused: !!e.refused, reasons: e.reasons || [], step: e.step == null ? null : e.step, t: e.t }); break;
+        s.sTutor.push({ question: e.question, answer: e.answer, kind: e.kind, refused: !!e.refused, reasons: e.reasons || [], retried: !!e.retried, mid: e.mid || '', step: e.step == null ? null : e.step, t: e.t }); break;
       case 's-onboard':
         /* 해석은 core/onboard.js 한 곳에만 — 이 파일을 쓰는 화면은 onboard.js 도 싣는다 */
         var ob = e.skipped ? { stage: null, hardcode: false } : CC.onboard.stage(e.answers);
