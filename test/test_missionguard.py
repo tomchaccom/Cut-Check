@@ -88,8 +88,21 @@ m['situation'] = '가' * 90 + '요.'  # 92자
 t('situation 91자 이상은 걸린다', 'situation' in check(U, m))
 m['situation'] = '엄마가 물어봤어요. 폰에 없어요. 내 폰에는 있어요.'
 t('situation 세 문장은 걸린다', 'situation' in check(U, m))
-for bad in ['딕셔너리에서 명성 키를 찾아 주세요', '리스트에서 골라 주세요', '값을 알려 주세요']:
-    t(f'brief 방법 단어 막는다: {bad}', bool(_brief_problem(bad)), _brief_problem(bad))
+for bad in ['딕셔너리에서 명성 키를 찾아 주세요', '리스트에서 골라 주세요']:
+    m = copy.deepcopy(GOOD[U]); m['brief'] = bad
+    t(f'brief 방법 단어 막는다: {bad}', 'brief' in check(U, m), check(U, m))
+for ok in ['재료가 몇 가지인지 값을 알려 주세요.', '플레이리스트에 재료가 몇 개인지 알려 주세요.']:
+    m = copy.deepcopy(GOOD[U]); m['brief'] = ok
+    t(f'brief 통과: {ok}', 'brief' not in check(U, m), check(U, m))
+m = copy.deepcopy(GOOD[U]); m['situation'] = '민지의 플레이리스트가 길어졌어요.'
+t('situation 플레이리스트는 통과', 'situation' not in check(U, m), check(U, m))
+m['situation'] = '선생님이 딕셔너리를 쓰라고 하셨어요.'
+t('situation 에 딕셔너리는 막는다', 'situation' in check(U, m))
+m['situation'] = '가' * 89 + '요.'
+m['situation'] = '가' * 88 + '요.'
+t('situation 정확히 90자는 통과', len(m['situation']) == 90 and 'situation' not in check(U, m), check(U, m))
+m['situation'] = '가' * 89 + '요.'
+t('situation 91자는 걸린다', len(m['situation']) == 91 and 'situation' in check(U, m))
 broken(U, '한자 섞임', setp(['title'], '給食 재료'), 'title')
 broken(U, '코드 조각', setp(['situation'], 'items.split(",") 해요.'), 'situation')
 broken(U, '반례가 첫 자료와 결과가 같음', setp(['counter', 'text'], '빵,국,떡,빵'), 'counter')

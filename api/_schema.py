@@ -145,8 +145,18 @@ def _polite_problem(v):
         return '존댓말(~요)로 끝나지 않음 — 화면이 학생에게 말할 때는 ~해요'
 
 
+# 방법 단어 — 이야기가 길어져도 새면 안 된다. 플레이리스트·체크리스트는 통과해야 해서 리스트는 앞이 한글이 아닐 때만
+METHOD = re.compile(r'딕셔너리|키를|(?<![가-힣])리스트')
+
+
+def _method_problem(v):
+    m = METHOD.search(v)
+    if m:
+        return f"방법 단어 '{m.group(0)}' — 이야기 속에 푸는 방법을 쓰지 않는다"
+
+
 def _brief_problem(v):
-    m = re.search(r'서로\s*다른|전체\s*개수|중복|딕셔너리|키를|값을|리스트', v)
+    m = re.search(r'서로\s*다른|전체\s*개수|중복', v)
     if m:
         return f"답 암시 '{m.group(0)}' — 업무 요청은 모호해야 분해가 학생 몫으로 남는다"
 
@@ -297,7 +307,7 @@ class _Base(BaseModel):
                     bad.append((field, f"'{t}': {n}자 — {_LIMIT[field]}자 안으로"))
                     continue
                 why = _text_problem(t) or (speaks and (_sentence_problem(t) or _plain_problem(t, 2 if field == 'situation' else 1))) or (
-                    field in ('brief', 'situation') and _polite_problem(t)) or (field == 'brief' and _brief_problem(t))
+                    field in ('brief', 'situation') and _polite_problem(t)) or (field in ('brief', 'situation') and _method_problem(t)) or (field == 'brief' and _brief_problem(t))
                 if why:
                     bad.append((field, f"'{t}': {why}"))
         return bad
