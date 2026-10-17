@@ -175,13 +175,19 @@
     /* 02·03 에서는 받은 요청(화면 1)을 왼쪽 단으로 남긴다 */
     if (n === 2 || n === 3) $('#step1').dataset.side = n;
     else $('#step1').removeAttribute('data-side');
-    document.querySelectorAll('#steps-nav span').forEach(function (s) {
+    document.querySelectorAll('#steps-nav button').forEach(function (s) {
       var sn = parseInt(s.dataset.step, 10);
       s.classList.remove('current', 'done');
       if (sn === n) s.classList.add('current');
       else if (sn < n) s.classList.add('done');
+      s.disabled = sn >= n;
     });
   }
+
+  /* 지난 단계 탭 — 뒤로가기 버튼과 같은 길이라 고친 기록은 제출 핸들러가 남긴다 */
+  document.querySelectorAll('#steps-nav button').forEach(function (b) {
+    b.addEventListener('click', function () { if (!b.disabled) showStep(parseInt(b.dataset.step, 10)); });
+  });
 
   /* ── 화면 3: 설계 카드 ────────────────────────── */
   function picked() {   /* 기록·뼈대에 쓰는 모양 { op, label, detail:'기준: 쉼표' } */
@@ -383,11 +389,12 @@
   function renderCodeStep() {
     /* 설계도 표시 */
     if ($('#design-define')) $('#design-define').textContent = '성공: ' + state.defineChoice;
-    if ($('#design-steps')) {
-      $('#design-steps').innerHTML = picked().map(function (c, i) {
-        return '<span class="plan-pill">' + (i + 1) + '. ' + esc(CC.cards.text(c)) + '</span>';
-      }).join('');
-    }
+    $('#design-side').innerHTML = picked().map(function (c) {
+      return '<li class="design-item">' + esc(CC.cards.text(c)) + '</li>';
+    }).join('');
+    $('#step4-req').textContent = M ? M.brief : '';
+    $('#step4-situation').textContent = (M && M.situation) || '';
+    $('#step4-situation').hidden = !(M && M.situation);
 
     /* 자료 드롭다운 — clone으로 이전 리스너 제거 */
     var dataSel = $('#code-data-select');

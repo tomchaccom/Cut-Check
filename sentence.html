@@ -62,11 +62,11 @@
     <nav class="crumb" aria-label="위치" id="play-crumb"><a href="#" id="crumb-play-home">내 교실</a><span class="sep" aria-hidden="true">/</span><span id="crumb-play-room"></span><span class="sep" aria-hidden="true">/</span><span id="crumb-play-mission"></span></nav>
     <h1 class="big-title" id="mission-title"></h1>
     <nav class="step-tabs" id="steps-nav" aria-label="단계">
-      <span data-step="1">01 문제</span>
-      <span data-step="2">02 성공</span>
-      <span data-step="3">03 설계</span>
-      <span data-step="4">04 코딩</span>
-      <span data-step="5">05 정리</span>
+      <button type="button" data-step="1" disabled>01 문제</button>
+      <button type="button" data-step="2" disabled>02 성공</button>
+      <button type="button" data-step="3" disabled>03 설계</button>
+      <button type="button" data-step="4" disabled>04 코딩</button>
+      <button type="button" data-step="5" disabled>05 정리</button>
     </nav>
     </header>
 
@@ -129,13 +129,24 @@
     <section class="step" id="step4" tabindex="-1">
       <h2 class="step-title">코드로 만들기</h2>
 
-      <!-- 설계도 요약 -->
-      <div class="design-summary plan-row" id="design-summary">
-        <span class="plan-label">나의 설계도</span>
-        <span id="design-define" class="plan-pill"></span>
-        <span id="design-steps" class="plan-steps"></span>
-      </div>
+      <details id="step4-brief" class="step4-brief" open>
+        <summary>받은 요청</summary>
+        <p class="req-situation" id="step4-situation" hidden></p>
+        <p class="req-text" id="step4-req"></p>
+      </details>
 
+      <div class="code-split" id="code-split">
+        <div class="split-side">
+          <!-- 설계도 요약 -->
+          <div class="design-summary plan-row" id="design-summary">
+            <span class="plan-label">나의 설계도</span>
+            <span id="design-define" class="plan-pill"></span>
+            <span id="design-steps" class="plan-steps"></span>
+          </div>
+          <ol class="design-side" id="design-side" aria-label="내 설계도 순서"></ol>
+        </div>
+        <div class="split-main">
+          <div class="split-main-head"><button id="tutor-open" class="tutor-open" type="button" hidden>파이썬 문법 물어보기</button></div>
       <!-- 자료 선택 -->
       <div class="data-row">
         <label for="code-data-select" class="field-label">자료 선택</label>
@@ -183,6 +194,8 @@
 
       <div style="margin-top:12px">
         <button class="btn primary" id="go-wrap" disabled style="display:none">마무리로</button>
+      </div>
+        </div>
       </div>
     </section>
 
@@ -246,7 +259,6 @@
   </form>
 </dialog>
 
-<button id="tutor-open" class="tutor-open" type="button" hidden>파이썬 문법 물어보기</button>
 <dialog id="tutor" class="tutor" aria-labelledby="tutor-title">
   <div class="tutor-head">
     <h2 id="tutor-title">파이썬 문법 물어보기</h2>

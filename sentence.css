@@ -738,7 +738,7 @@ dialog::backdrop {
 .wordmark { margin:0; font-family:var(--disp); font-weight:500; font-size:clamp(56px,15.5vw,212px); line-height:.86; letter-spacing:-0.045em; white-space:nowrap; }
 .rule { height:1px; background:var(--line-strong); margin-top:18px; }
 .step-tabs { display:flex; flex-wrap:wrap; gap:28px; border-bottom:1px solid var(--line-strong); margin-top:18px; }
-.step-tabs span, .step-tabs a { font-size:14px; padding:10px 0; color:var(--ink-2); text-decoration:none; border-bottom:2px solid transparent; }
+.step-tabs span, .step-tabs a, .step-tabs button { font-size:14px; padding:10px 0; color:var(--ink-2); text-decoration:none; border-bottom:2px solid transparent; }
 .step-tabs .current { color:var(--ink); font-weight:600; border-bottom-color:var(--ink); }
 .icon-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:28px 22px; }
 .tile { display:flex; flex-direction:column; align-items:center; gap:10px; padding:8px; border:0; background:transparent; font:inherit; color:var(--ink); cursor:pointer; border-radius:14px; text-decoration:none; text-align:center; }
@@ -817,3 +817,17 @@ dialog::backdrop {
 .tbl caption { text-align:left; font-size:13px; color:var(--ink-2); padding-bottom:8px; }
 .tbl .out.err { font-family:var(--mono); font-size:14px; color:var(--coral); }
 .judge-box { margin-top:16px; background:var(--surface-2); border-radius:16px; padding:16px; }
+
+/* 단계 탭은 버튼 — 지난 단계만 눌린다 */
+.step-tabs button { background:none; border-top:0; border-left:0; border-right:0; font-family:inherit; cursor:pointer; }
+.step-tabs button:disabled { cursor:default; }
+.step4-brief { margin-bottom:16px; }
+.step4-brief summary { font-size:13px; color:var(--ink-2); cursor:pointer; }
+.code-split { display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+.code-split > * { min-width:0; }
+.split-main-head { display:flex; justify-content:flex-end; margin-bottom:8px; }
+.split-main-head .tutor-open { position:static; padding:8px 14px; box-shadow:none; margin:0; }
+.split-main-head .tutor-open[hidden] { display:none; }
+.design-side { list-style:decimal inside; padding:0; margin:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.design-side .design-item { display:list-item; padding:8px 12px; font-size:14px; font-weight:600; }
+@media (max-width: 720px) { .code-split { grid-template-columns:1fr; } }

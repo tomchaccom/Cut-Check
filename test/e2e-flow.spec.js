@@ -410,7 +410,9 @@ test('폰 폭 04 — 튜터 버튼이 결과 표를 덮지 않는다 (어느 스
     const now = await page.evaluate(() => document.querySelector('#tutor-open').getBoundingClientRect().top + window.scrollY);
     expect(Math.round(now)).toBe(Math.round(btnTop));
   }
-  expect(btnTop).toBeGreaterThanOrEqual(stepBottom);
+  // 버튼은 오른쪽 열 머리에 흐름대로 놓인다 — 결과 표보다 위, 떠 있지 않다
+  expect(btnTop).toBeLessThan(stepBottom);
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('#tutor-open')).position)).toBe('static');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(420);
 });
 
@@ -481,4 +483,26 @@ test('강사 — 교실 폴더, 기록 없는 학생도 폴더, 교실에서 빼
   await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
   await page.locator('.roster-row', { hasText: '가은' }).locator('.roster-remove').click();
   expect(await page.evaluate(() => window.__removed)).toEqual(['s3']);
+});
+
+test('04 는 설계|코드 반반이고, 지난 단계 탭으로 돌아갈 수 있다', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  await studentToCode(page);
+  const brief = await page.evaluate(() => window.CC.SENTENCE_MISSIONS[0].brief);
+  await expect(page.locator('#step4-brief')).toContainText(brief);
+  await expect(page.locator('#design-side li')).toHaveText([/나누기/, /겹친 것은 하나만/, /개수 세기/]);
+  await page.locator('#steps-nav button[data-step="2"]').click();
+  await expect(page.locator('#step2')).toHaveClass(/active/);
+  await expect(page.locator('#steps-nav button[data-step="5"]')).toBeDisabled();
+});
+
+test('폰 폭에서는 04 설계가 코드 위에 쌓인다', async ({ context, page }) => {
+  await local(context);
+  await page.setViewportSize({ width: 420, height: 900 });
+  await seedMission(page);
+  await studentToCode(page);
+  const side = await page.locator('#design-side').boundingBox();
+  const code = await page.locator('#code-editor').boundingBox();
+  expect(side.y).toBeLessThan(code.y);
 });
