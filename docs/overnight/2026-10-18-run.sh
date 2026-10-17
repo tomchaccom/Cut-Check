@@ -84,4 +84,4 @@ fi
 say "시작: teamclaude run (계정 확인)"
 run teamclaude switch || true
 # --auto-fallback: 프록시가 죽어 있으면 claude 를 직접 띄운다 — 계정 전환은 안 되지만 밤이 통째로 날아가진 않는다
-run caffeinate -dimsu teamclaude run --auto-fallback ----dangerously-skip-permissions --autocompact 600k "$FIRST"
+run caffeinate -dimsu teamclaude run --auto-fallback -- --dangerously-skip-permissions --autocompact 600k "$FIRST"
