@@ -284,3 +284,9 @@ details.more[open] > summary { margin-bottom: 16px; }
 .draft-actions { display: flex; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--line-strong); padding-top: 18px; }
 .pill.quiet { border-color: transparent; background: none; color: var(--ink-2); text-decoration: underline; }
 @media (max-width: 600px) { .drow { grid-template-columns: minmax(0, 1fr); } }
+
+/* 학생 추가 탭 명단 — 이름과 '교실에서 빼기' */
+.roster-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+.roster-row .name { font-size:15px; font-weight:600; }
+.pill.roster-remove { min-height:36px; padding:0 14px; font-size:14px; border-color:var(--line-strong); }
+.detail .pill.roster-remove { margin:4px 0 12px; }
