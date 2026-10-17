@@ -51,6 +51,21 @@
       <div class="icon-grid" id="mission-grid"></div>
       <p id="missions-empty" hidden>아직 올라온 미션이 없어요.</p>
     </div>
+    <!-- 교실 입장 진단 — 교실마다 처음 한 번. 맞았는지는 보이지 않는다 (js/ui/onboard.js) -->
+    <div id="onboard-view" hidden>
+      <h1 class="big-title">코드 읽어 보기</h1>
+      <div class="rule"></div>
+      <p class="home-lead">미션을 열기 전에 코드 몇 줄을 읽어 봐요. 몰라도 괜찮아요.</p>
+      <p class="sub-label" id="ob-count"></p>
+      <pre class="code-result" id="ob-code" style="max-height:none"></pre>
+      <p class="home-lead" id="ob-ask"></p>
+      <div id="ob-options" style="display:grid;gap:8px"></div>
+      <button class="btn primary" id="ob-done" type="button" hidden>고마워요. 이제 미션을 볼 수 있어요.</button>
+      <div class="step-actions">
+        <button class="btn text" id="ob-prev" type="button">이전</button>
+        <button class="btn text" id="ob-skip" type="button">건너뛰기</button>
+      </div>
+    </div>
   </section>
 
   <!-- [미션 풀기] 패널 -->
@@ -283,6 +298,7 @@ window.CC_SUPABASE = {
 <script src="js/data/supabase.js"></script>
 <script src="js/core/events.js"></script>
 <script src="js/core/fold.js"></script>
+<script src="js/core/onboard.js"></script>
 <script src="js/core/hangul.js"></script>
 <script src="js/data/api.js"></script>
 <script src="js/data/store.js"></script>
@@ -293,6 +309,7 @@ window.CC_SUPABASE = {
 <script src="js/core/pyerr.js"></script>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
 <script src="js/ui/tutor.js"></script>
+<script src="js/ui/onboard.js"></script>
 <script src="js/ui/sentence.js"></script>
 </body>
 </html>

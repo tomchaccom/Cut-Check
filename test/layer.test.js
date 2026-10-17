@@ -3,6 +3,7 @@
 global.window = {};
 require('../js/core/events.js');
 require('../js/core/fold.js');
+require('../js/core/onboard.js');
 require('../js/core/hangul.js'); require('../js/core/alerts.js');
 require('../js/core/pyerr.js');
 const CC = global.window.CC;
@@ -159,9 +160,42 @@ t('input() 은 쓸 수 없다고 알려준다', /input\(\)을 쓸 수 없어요/
 t('줄 번호가 없으면 마지막 줄만', CC.pyerr.short('SyntaxError: invalid syntax') === 'SyntaxError: invalid syntax');
 t('원인을 해석하지 않는다', !/때문|하세요|넣으|고치/.test(CC.pyerr.short(tb)));
 
+console.log('\n[진단] 8문항 · 결과는 교사만');
+const OB = CC.onboard;
+t('문항은 8개', OB.QUESTIONS.length === 8);
+t('모든 문항 마지막 보기는 모르겠어요', OB.QUESTIONS.every(q => q.options[q.options.length - 1] === '모르겠어요'));
+t('모든 질문은 ? 로 끝나고 80자 이하', OB.QUESTIONS.every(q => /\?$/.test(q.ask) && q.ask.length <= 80));
+t('정답표는 밖에 없다', !('KEY' in OB) && OB.QUESTIONS.every(q => Object.keys(q).sort().join() === 'ask,code,id,options'));
+/* 정답은 문항을 보고 사람이 적은 것 — core 의 정답표를 베끼지 않는다 */
+const RIGHT = { q1: '34', q2: "['a', 'b', 'c']", q3: '나', q4: '3번', q5: '크다', q6: '010-1234', q7: '2', q8: 'A는 10, B는 2' };
+const ans = (over) => OB.QUESTIONS.map(q => ({ q: q.id, pick: q.id in (over || {}) ? over[q.id] : q.options.indexOf(RIGHT[q.id]) }));
+const DUNNO = q => OB.QUESTIONS.find(x => x.id === q).options.length - 1;
+t('보기에 사람이 적은 정답이 다 있다', OB.QUESTIONS.every(q => q.options.indexOf(RIGHT[q.id]) >= 0 && q.options.indexOf(RIGHT[q.id]) < q.options.length - 1));
+t('다 맞으면 ready, hardcode 아님', JSON.stringify(OB.stage(ans())) === JSON.stringify({ stage: 'ready', hardcode: false }));
+t('1~3 중 하나라도 모르겠어요 → base', OB.stage(ans({ q2: DUNNO('q2') })).stage === 'base');
+t('1~3 오답이면 7 이 틀려도 base', OB.stage(ans({ q1: 1, q7: 0 })).stage === 'base');
+t('1~6 맞고 7 오답 → combine', OB.stage(ans({ q7: 0 })).stage === 'combine');
+t('4~6 에서 막혀도 combine', OB.stage(ans({ q5: DUNNO('q5') })).stage === 'combine');
+t('8 모르겠어요 → hardcode', OB.stage(ans({ q8: DUNNO('q8') })).hardcode === true);
+t('8 오답 → hardcode, 단계는 그대로', JSON.stringify(OB.stage(ans({ q8: 1 }))) === JSON.stringify({ stage: 'ready', hardcode: true }));
+t('답하지 않은 문항은 틀린 것으로', OB.stage([]).stage === 'base' && OB.stage([]).hardcode === true);
+
+const of = CC.fold.fold([
+  CC.events.make(T.S_ONBOARD, { answers: ans({ q1: 3 }), skipped: false }),
+  CC.events.make(T.S_ONBOARD, { answers: ans(), skipped: false })
+], { now: Date.now() });
+t('진단을 두 번 내면 마지막 것', of.onboard.stage === 'ready' && of.onboard.hardcode === false && of.onboard.skipped === false && of.onboard.t > 0);
+const os = CC.fold.fold([
+  CC.events.make(T.S_ONBOARD, { answers: ans(), skipped: false }),
+  CC.events.make(T.S_ONBOARD, { answers: [], skipped: true })
+], { now: Date.now() });
+t('건너뛰면 stage 는 null', os.onboard.stage === null && os.onboard.skipped === true);
+t('진단 전에는 onboard 가 null', CC.fold.empty().onboard === null);
+t('진단 이벤트에 맞음·점수 칸이 없다', (() => { const e = CC.events.make(T.S_ONBOARD, { answers: ans(), skipped: false }); return Object.keys(e).sort().join() === 'answers,skipped,t,type,v'; })());
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');

@@ -839,7 +839,7 @@
     showRooms();
   }
 
-  function showRooms() { $('#rooms-view').hidden = false; $('#room-view').hidden = true; }
+  function showRooms() { $('#rooms-view').hidden = false; $('#room-view').hidden = true; $('#onboard-view').hidden = true; }
 
   function openRoom(r) {
     viewedRoom = { id: r.id, name: r.name };
@@ -847,14 +847,25 @@
     $('#room-lead').textContent = '';
     $('#crumb-room').textContent = r.name;
     $('#room-title').textContent = r.name;
-    $('#rooms-view').hidden = true; $('#room-view').hidden = false;
+    $('#rooms-view').hidden = true;
     var asked = viewedRoom;
-    CC.sb.getMissions(r.id).then(function (missions) {
+    function showMissions() {
       if (viewedRoom !== asked) return;  /* 그사이 다른 교실을 열었다 — 늦게 온 답은 버린다 */
-      $('#room-lead').textContent = missions.length ? '파일을 열면 이어서 할 수 있어요.' : '';
-      renderMissionGrid(missions);
-      showMyStatus($('#mission-grid'));
-    });
+      $('#room-view').hidden = false;
+      CC.sb.getMissions(r.id).then(function (missions) {
+        if (viewedRoom !== asked) return;
+        $('#room-lead').textContent = missions.length ? '파일을 열면 이어서 할 수 있어요.' : '';
+        renderMissionGrid(missions);
+        showMyStatus($('#mission-grid'));
+      });
+    }
+    /* 교실마다 처음 한 번 진단. 교실은 서버에만 있으니 로컬 모드는 검사하지 않는다 */
+    if (!CC.sb.active()) return showMissions();
+    CC.sb.getMyEvents(r.id).then(function (evs) {
+      if (viewedRoom !== asked) return;
+      var done = evs.some(function (e) { return e.type === CC.events.T.S_ONBOARD; });
+      if (done) showMissions(); else CC.onboardView.open(r.id, showMissions);
+    }, showMissions);  /* 확인이 안 되면 막지 않는다 — 진단 때문에 수업이 멈추면 안 된다 */
   }
   if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });
   $('#crumb-play-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); switchTab('panel-missions'); });

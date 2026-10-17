@@ -352,8 +352,8 @@ function m(id,t){var x=JSON.parse(JSON.stringify(base));x.id=id;x.title=t;return
 CC.sb={active:function(){return true},getProfile:function(){return P({role:'student',name:'태인'})},
 myClassrooms:function(){return P(window.__rooms||[{id:'r1',name:'1학년 3반'},{id:'r2',name:'방과후 코딩반'}])},
 getMissions:function(rid){return P(rid==='r1'?[{id:'db1',data:m('ai-a','푼 미션')},{id:'db2',data:m('ai-b','하던 미션')},{id:'db3',data:m('ai-c','안 한 미션')}]:[])},
-getMyEvents:function(){return P([{type:'s-define',_missionDbId:'db1'},{type:'s-wrap',text:'끝',_missionDbId:'db1'},{type:'s-define',_missionDbId:'db2'}])},
-pushEvent:function(rid,mid){(window.__pushed=window.__pushed||[]).push([rid,mid]);return P(null)},signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
+getMyEvents:function(){return P(window.__evs||[{type:'s-onboard',answers:[],skipped:true,_missionDbId:null},{type:'s-define',_missionDbId:'db1'},{type:'s-wrap',text:'끝',_missionDbId:'db1'},{type:'s-define',_missionDbId:'db2'}])},
+pushEvent:function(rid,mid,ev){(window.__pushed=window.__pushed||[]).push([rid,mid]);(window.__evs=window.__evs||[]).push(ev);return P(null)},signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
 })(window.CC=window.CC||{});`;
 
 async function asStudent(page, rooms) {
@@ -505,4 +505,59 @@ test('폰 폭에서는 04 설계가 코드 위에 쌓인다', async ({ context, 
   const side = await page.locator('#design-side').boundingBox();
   const code = await page.locator('#code-editor').boundingBox();
   expect(side.y).toBeLessThan(code.y);
+});
+
+test('교실 첫 입장 — 진단 8문항, 맞고 틀림은 보이지 않고 끝나면 미션이 열린다', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = []; });            // 이 교실에 진단 기록이 없다
+  await asStudent(page);
+  await page.locator('.room-tile').first().click();
+  const ob = page.locator('#onboard-view');
+  await expect(ob).toBeVisible();
+  await expect(page.locator('#room-view')).toBeHidden();             // 미션 목록은 진단이 끝난 뒤에
+  await expect(page.locator('#ob-skip')).toBeVisible();
+  for (let i = 0; i < 8; i++) {
+    await expect(page.locator('#ob-count')).toHaveText((i + 1) + ' / 8');
+    await expect(page.locator('#ob-options button').last()).toHaveText('모르겠어요');
+    if (i === 1) {                                                   // 이전으로 돌아가도 된다
+      await page.locator('#ob-prev').click();
+      await expect(page.locator('#ob-count')).toHaveText('1 / 8');
+      await expect(page.locator('#ob-options .btn.primary')).toHaveCount(1);   // 내가 고른 것이 남아 있다
+      await page.locator('#ob-options button').first().click();
+    }
+    await page.locator('#ob-options button').first().click();
+  }
+  await expect(page.locator('#ob-done')).toHaveText('고마워요. 이제 미션을 볼 수 있어요.');
+  await expect(ob).not.toContainText(/맞았|틀렸|정답|오답|기초|조합|점/);
+  await page.locator('#ob-done').click();
+  await expect(ob).toBeHidden();
+  await expect(page.locator('.mission-file')).toHaveCount(3);
+  const evs = await page.evaluate(() => window.__evs);
+  expect(evs.length).toBe(1);
+  expect(evs[0].type).toBe('s-onboard');
+  expect(evs[0].skipped).toBe(false);
+  expect(evs[0].answers.map(a => a.q)).toEqual(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8']);
+  expect(await page.evaluate(() => window.__pushed)).toEqual([['r1', null]]);
+  // 다시 열면 진단은 없다. 큰 교실 이름이 '내 교실' 링크를 덮어 마우스 클릭이 h1 에 떨어진다 (기존 배치 문제) — 이벤트로 누른다
+  await page.locator('#crumb-home').dispatchEvent('click');
+  await page.locator('.room-tile').first().click();
+  await expect(page.locator('.mission-file')).toHaveCount(3);
+  await expect(ob).toBeHidden();
+});
+
+test('진단은 건너뛸 수 있다', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = []; });
+  await asStudent(page);
+  await page.locator('.room-tile').first().click();
+  await page.locator('#ob-skip').click();
+  await expect(page.locator('#onboard-view')).toBeHidden();
+  await expect(page.locator('.mission-file')).toHaveCount(3);
+  const evs = await page.evaluate(() => window.__evs);
+  expect(evs.map(e => [e.type, e.skipped, e.answers.length])).toEqual([['s-onboard', true, 0]]);
+});
+
+test('로컬 모드 — 진단은 뜨지 않고 미션이 바로 열린다', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await expect(page.locator('#onboard-view')).toBeHidden();
+  await expect(page.locator('.m-btn[data-id="ai-e2e"]')).toBeVisible();
 });
