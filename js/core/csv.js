@@ -29,6 +29,7 @@
 
   function cell(v) {
     v = v == null ? '' : String(v);
+    if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;   /* Excel 은 =+-@ 로 시작하는 셀을 수식으로 실행한다 */
     return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   }
   function toCsv(rows) {

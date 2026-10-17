@@ -139,7 +139,7 @@
         s.sTutor.push({ question: e.question, answer: e.answer, kind: e.kind, refused: !!e.refused, reasons: e.reasons || [], retried: !!e.retried, mid: e.mid || '', step: e.step == null ? null : e.step, t: e.t }); break;
       case 's-onboard':
         /* 해석은 core/onboard.js 한 곳에만 — 이 파일을 쓰는 화면은 onboard.js 도 싣는다 */
-        var ob = e.skipped ? { stage: null, hardcode: false } : CC.onboard.stage(e.answers);
+        var ob = e.skipped || !CC.onboard ? { stage: null, hardcode: false } : CC.onboard.stage(e.answers);
         s.onboard = { stage: ob.stage, hardcode: ob.hardcode, skipped: !!e.skipped, t: e.t }; break;
 
       default: /* 모르는 type 은 무시한다 — 구버전 화면이 새 서버를 만나도 안 죽는다 */ break;

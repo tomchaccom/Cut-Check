@@ -213,6 +213,7 @@ t('예전 기록은 빈 칸으로 한 줄', csvRows[1][2] === '' && csvRows[1][3
 t('미션 이름·이유·다시 요청', csvRows[2][2] === '떡볶이' && csvRows[2][3] === '2' && csvRows[2][5] === '거절' && csvRows[2][8] === 'a b' && csvRows[2][9] === '예');
 const csv = CC.csv.toCsv(csvRows);
 t('BOM 으로 시작하고 줄 끝은 CRLF', csv.charAt(0) === '\uFEFF' && csv.split('\r\n').length === 4);
+t('수식으로 시작하는 질문은 앞에 \' 를 붙인다', CC.csv.toCsv([['=HYPERLINK("x")', '@a', '왜요?']]).indexOf('"\'=HYPERLINK(""x"")",\'@a,왜요?') >= 0);
 t('쉼표·따옴표·줄바꿈이 든 셀은 감싸고 따옴표는 두 번', csv.indexOf('"왜 ""빈 줄"", 나와요?\n두 줄"') >= 0);
 t('평범한 셀은 감싸지 않는다', csv.indexOf(',준호,') >= 0);
 
