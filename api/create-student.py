@@ -11,7 +11,7 @@ import sys
 from http.server import BaseHTTPRequestHandler
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _accounts import handle  # noqa: E402
+from _accounts import bearer, handle  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -28,11 +28,5 @@ class handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(int(self.headers.get('Content-Length') or 0)) or b'{}')
         except (ValueError, TypeError, UnicodeDecodeError):
             return self._send(400, {'error': '요청 형식이 잘못됐어요.'})
-        auth = self.headers.get('Authorization') or ''
-        token = auth[7:].strip() if auth.lower().startswith('bearer ') else ''
-        try:
-            code, out = handle(body, token, os.environ)
-        except Exception as e:  # 네트워크 끊김 등 — 원문은 로그에만
-            print('[create-student] 오류', type(e).__name__, file=sys.stderr)
-            code, out = 502, {'error': 'Supabase 에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.'}
+        code, out = handle(body, bearer(self.headers.get('Authorization')), os.environ)   # 예외는 handle 이 502 로 바꾼다
         self._send(code, out)

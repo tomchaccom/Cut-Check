@@ -214,8 +214,8 @@ SSE 로 충분하다. 교사→학생 방향 통신이 없어서 WebSocket 이 �
 POST /api/create-student        Authorization: Bearer <선생님 access token>
   { action: 'create', classroomId, name, loginId, password? } → { loginId, password }
   { action: 'reset',  classroomId, loginId, password? }       → { loginId, password }
-  401 토큰 없음·무효 / 403 이 교실 선생님이 아님(reset: 이 교실 학생이 아님) / 409 이미 있는 아이디
-  400 입력 형식 / 502 Supabase 실패 — 모두 { error: '<선생님에게 보일 한국어 문장>' }
+  401 토큰 없음·무효 / 403 강사 아님·이 교실 선생님이 아님(reset: 이 교실 학생이 아님) / 409 이미 있는 아이디
+  400 입력 형식(classroomId 는 UUID) / 502 Supabase 실패·시간 초과(수강 넣기가 실패하면 만든 계정을 지운다) — 모두 { error: '<선생님에게 보일 한국어 문장>' }
 ```
 
 환경변수(Vercel): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. 값은 저장소에 두지 않는다.
