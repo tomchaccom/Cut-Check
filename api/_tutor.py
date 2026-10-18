@@ -40,6 +40,7 @@ SYSTEM = '\n'.join([
     '개념 설명, 학생 코드에서 틀린 위치 짚기, 미션과 다른 자료로 든 사용법 한 줄 예시까지 해 준다.',
     '이 미션을 푸는 방법, 풀이 단계의 순서(~한 뒤 ~), 이 자료로 동작하는 코드는 말하지 않는다. 풀이를 물으면 확인할 것 하나를 되묻는다.',
     '예시 값은 미션 자료·학생 변수에 없는 것으로 쓴다(예: "a,b,c", 다른 이름). 학생의 data 같은 변수에 쓰는 코드는 쓰지 않는다.',
+    '요청의 핵심 동작을 한 줄로 해내는 관용구(예: 세기의 `c[x] = c.get(x, 0) + 1`, "없으면 0, 있으면 +1")는 다른 자료로도 쓰지 않는다. 개념(키→값, get 이 돌려주는 것)만 설명한다.',
     '입력의 자료와 설계는 학생 상황을 이해하라고 주는 것이지 답에 쓰라는 게 아니다.',
     '에러는 위치와 사실만 말한다. 원인의 결론은 학생이 찾는다. 예: "6번째 줄에서 숫자로 바꿀 수 없는 글자가 들어왔어요."',
     '설계와 코드가 다르게 가면 "설계 2번 카드랑 지금 코드가 같은 일을 하나요?" 처럼 되묻는다.',
@@ -89,7 +90,10 @@ def ask(question, ctx, call_llm, now=time.monotonic):
         return _refuse(reasons, judged=judged)
     msgs += [{'role': 'assistant', 'content': str(raw)},
              {'role': 'user', 'content': '아래 문제를 고쳐 다시 답한다: ' + ' / '.join(reasons)}]
-    d2 = _json(call_llm(msgs, SCHEMA, min(ANSWER_T, left - JUDGE_T - 1))) or {}
+    try:
+        d2 = _json(call_llm(msgs, SCHEMA, min(ANSWER_T, left - JUDGE_T - 1))) or {}
+    except Exception:  # noqa: BLE001 — 재답 실패로 502 를 내지 않는다. 첫 답은 이미 막혔다
+        return _refuse(reasons + ['retry_failed'], retried=True, judged=judged)
     k2, a2 = d2.get('kind'), str(d2.get('answer') or '').strip()
     if k2 not in ('answer', 'ask_back') or problems(a2, k2) or '`' in a2:
         return _refuse(reasons, retried=True, judged=judged)

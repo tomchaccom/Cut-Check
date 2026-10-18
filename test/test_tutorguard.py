@@ -56,12 +56,16 @@ for name, ans, kind in [
 
 
 def fake(*replies):
-    calls = []
+    calls, timeouts = [], []
 
     def call(messages, schema, timeout):
         calls.append(messages)
-        return json.dumps(replies[min(len(calls) - 1, len(replies) - 1)], ensure_ascii=False)
-    call.calls = calls
+        timeouts.append(timeout)
+        r = replies[min(len(calls) - 1, len(replies) - 1)]
+        if isinstance(r, Exception):
+            raise r
+        return json.dumps(r, ensure_ascii=False)
+    call.calls, call.timeouts = calls, timeouts
     return call
 
 
@@ -100,6 +104,7 @@ t('재답 판정 실패 → ask_back', r['answer'] == REFUSE['ask_back'] and 'ju
 clock = iter([0, 10, 22])
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, OK)
 r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
+t('재답 시간 = min(10, 남은-6)', llm.timeouts[:3] == [10, 5, 10], llm.timeouts)
 t('재답 판정할 시간 없음 → ask_back', len(llm.calls) == 3 and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
 
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '`d[m] += 1` 쓰세요.'})
@@ -123,6 +128,15 @@ llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를
            {'kind': 'ask_back', 'answer': "`name = '김밥,떡볶이'` 처럼 넣었나요?"})
 r = ask('모르겠어요', CTX, llm)
 t('재답 되묻기에 백틱 → ask_back 고정 문장', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+
+clock = iter([0, 14, 18])
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, OK)
+r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
+t('남은 12초 → 재답 6초 · 재판정 5초 → 통과', llm.timeouts == [10, 5, 6, 5] and not r['refused'] and r['retried'], (llm.timeouts, r))
+
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, TimeoutError('재답 시간 초과'))
+r = ask('코드 줘', CTX, llm)
+t('재답 호출 예외 → ask_back (502 아님)', r['answer'] == REFUSE['ask_back'] and 'retry_failed' in r['reasons'] and r['retried'], r)
 
 clock = iter([0, 17])
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK)
