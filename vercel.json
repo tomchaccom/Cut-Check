@@ -5,6 +5,7 @@
   ],
   "functions": {
     "api/generate-mission.py": { "maxDuration": 60 },
-    "api/tutor.py": { "maxDuration": 30 }
+    "api/tutor.py": { "maxDuration": 30 },
+    "api/create-student.py": { "maxDuration": 30 }
   }
 }

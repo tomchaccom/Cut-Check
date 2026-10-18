@@ -142,6 +142,10 @@ js/ui/     화면. DOM 만 만진다
 **서버를 필수로 만들지 않는다** — 학교 와이파이는 끊기고, 끊긴 순간 학생이 누른 게
 사라지면 그 수업은 거기서 끝난다. 서버는 기록의 조건이 아니라 기록의 사본이다.
 
+- 학생 계정은 선생님이 만든다 — `api/create-student.py` + Vercel 환경변수 셋
+  (`SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY`)이 있어야 한다.
+  서버가 없어도 로컬 모드의 수업 흐름은 그대로 돈다. 자세한 건 `docs/server.md` 8절.
+
 빌드도 의존성도 없다. 정적 파일만 쓴다. **번들러를 도입하지 않는다** —
 교사가 파일을 열어보고 고칠 수 있어야 한다.
 **ES 모듈(import/export)도 쓰지 않는다** — `file://` 에서 CORS 로 막힌다.
@@ -164,7 +168,10 @@ node test/robust.js          # 학생 자유 입력이 선생님 화면까지 �
 uv run --with-requirements requirements.txt python test/test_missionguard.py     # 생성 미션 검사 + 우리 미션 문장
 uv run --with-requirements requirements.txt python test/test_pipeline_parity.py  # JS·Python 엔진이 같은 답을 내는지
 uv run --with-requirements requirements.txt python test/test_generate.py         # LLM 을 가짜로 끼워 재요청·칸별 폴백 흐름
+uv run --with-requirements requirements.txt python test/test_accounts.py         # 학생 계정 만들기 — 남의 교실·중복 아이디·키 노출
 ```
+
+8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.
 
 아홉 다 통과해야 커밋한다. `js/core/pipeline.js` 를 고치면 `api/_pipeline.py` 도 같이 고친다.
 브라우저 경로가 다르면 `CC_CHROME=/path/to/chrome node test/smoke.js`.

@@ -11,9 +11,28 @@
   var key = given.anonKey || '';
 
   /* Supabase CDN 클라이언트가 로드되어 있고 설정이 있을 때만 활성화 */
+  var STUDENT_DOMAIN = 'students.invalid';
   var sb = null;
   if (url && key && typeof window !== 'undefined' && window.supabase) {
     sb = window.supabase.createClient(url, key);
+  }
+
+  function accounts(body) {
+    if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+    return sb.auth.getSession().then(function (res) {
+      var token = res.data && res.data.session && res.data.session.access_token;
+      if (!token) throw new Error('다시 로그인해 주세요.');
+      return fetch('/api/create-student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(body)
+      });
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) throw new Error(j.error || '서버에 연결하지 못했어요.');
+        return j;
+      });
+    });
   }
 
   CC.sb = {
@@ -22,22 +41,29 @@
 
     /* ── 인증 ────────────────────────────────── */
     /* 프로필은 DB 트리거(handle_new_user)가 자동 생성한다.
-     * 클라이언트는 메타데이터로 name/role만 넘긴다. */
-    signUp: function (email, password, name, role) {
+     * 스스로 가입하는 사람은 모두 강사다 — 역할은 트리거가 정하고, 여기서 넘기지 않는다.
+     * 학생 계정은 선생님이 createStudent 로 만든다. */
+    signUp: function (email, password, name) {
       if (!sb) return Promise.reject(new Error('Supabase 미설정'));
       return sb.auth.signUp({
         email: email,
         password: password,
-        options: { data: { name: name, role: role || 'student' } }
+        options: { data: { name: name } }
       }).then(function (res) {
         if (res.error) throw res.error;
         return res.data;
       });
     },
 
-    signIn: function (email, password) {
+    /* 이메일이 아니면 학생 아이디다 — 내부 이메일은 <아이디>@students.invalid */
+    loginEmail: function (idOrEmail) {
+      var s = String(idOrEmail || '').trim();
+      return s.indexOf('@') >= 0 ? s : s.toLowerCase() + '@' + STUDENT_DOMAIN;
+    },
+
+    signIn: function (idOrEmail, password) {
       if (!sb) return Promise.reject(new Error('Supabase 미설정'));
-      return sb.auth.signInWithPassword({ email: email, password: password })
+      return sb.auth.signInWithPassword({ email: CC.sb.loginEmail(idOrEmail), password: password })
         .then(function (res) {
           if (res.error) throw res.error;
           return res.data;
@@ -82,21 +108,6 @@
           return r.data;
         });
       });
-    },
-
-    joinClassroom: function (code) {
-      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
-      return sb.rpc('find_classroom_by_code', { join_code: code.toUpperCase() })
-        .then(function (res) {
-          if (res.error) throw res.error;
-          if (!res.data || !res.data.length) throw new Error('교실을 찾을 수 없어요.');
-          var classroom = res.data[0];
-          return sb.auth.getUser().then(function (uRes) {
-            return sb.from('enrollments').upsert({
-              student_id: uRes.data.user.id, classroom_id: classroom.id
-            }).then(function () { return classroom; });
-          });
-        });
     },
 
     myClassrooms: function () {
@@ -153,11 +164,21 @@
     getClassroomStudents: function (classroomId) {
       if (!sb) return Promise.resolve([]);
       return sb.from('enrollments')
-        .select('student_id, profiles(id, name)')
+        .select('student_id, profiles(id, name, login_id)')
         .eq('classroom_id', classroomId)
         .then(function (r) {
           return (r.data || []).map(function (e) { return e.profiles; }).filter(Boolean);
         });
+    },
+
+    /* 학생 계정 만들기 · 비밀번호 다시 만들기 — 서버(api/create-student.py)가 service 키로 한다.
+     * 브라우저는 선생님 토큰만 넘긴다. password 를 비우면 서버가 만든다. → { loginId, password } */
+    createStudent: function (classroomId, s) {
+      return accounts({ action: 'create', classroomId: classroomId, name: s.name, loginId: s.loginId, password: s.password || '' });
+    },
+
+    resetStudentPassword: function (classroomId, loginId, password) {
+      return accounts({ action: 'reset', classroomId: classroomId, loginId: loginId, password: password || '' });
     },
 
     /* 교실에서 학생 빼기 — 수강 한 줄만 지운다. 기록은 남는다.

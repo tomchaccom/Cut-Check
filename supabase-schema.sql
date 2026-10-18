@@ -1,3 +1,5 @@
+-- ⚠ 낡은 사본이다 (2026-10-18). 정책·트리거가 그 뒤 여러 번 바뀌었다 — 기준은 supabase/migrations/ 이다.
+--   새 프로젝트도 이 파일이 아니라 migrations 를 순서대로 적용한다.
 -- Cut & Check — Supabase DB 스키마
 -- Supabase SQL Editor에서 실행
 

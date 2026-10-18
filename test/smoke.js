@@ -11,6 +11,7 @@
  *   node test/smoke.js
  */
 const { chromium } = require('playwright');
+const BASE = process.env.CC_BASE || 'http://localhost:8123';   // 다른 작업 폴더가 8123 을 쓰고 있으면 CC_BASE 로 바꾼다
 
 /* 브라우저 실행 파일 찾기 — 환경마다 경로가 달라서 한 군데서 처리한다.
  * CC_CHROME 환경변수가 있으면 그걸 쓰고, 없으면 playwright 기본값을 쓴다. */
@@ -33,7 +34,7 @@ const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make
         const p = await ctx.newPage();
         const errs = [];
         p.on('pageerror', e => errs.push(e.message));
-        await p.goto('http://localhost:8123/' + f);
+        await p.goto(BASE + '/' + f);
         await p.waitForTimeout(250);
         const o = await p.evaluate(() => {
           const clone = document.body.cloneNode(true);

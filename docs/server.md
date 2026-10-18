@@ -194,3 +194,29 @@ SSE 로 충분하다. 교사→학생 방향 통신이 없어서 WebSocket 이 �
 - **"서버가 있어야 수업이 된다"** → 그렇게 만들지 않는다. 학교 와이파이는 끊기고,
   끊긴 순간 학생이 누른 게 사라지면 그 수업은 거기서 끝난다.
   **서버는 기록의 조건이 아니라 기록의 사본이다.**
+
+---
+
+## 8. 지금 쓰는 계정 — Supabase (2026-10-18)
+
+위 1~7 은 처음 설계다. 지금 배포본은 Supabase 인증 + `api/create-student.py` 로 돈다.
+
+- **강사**: `auth.html` 에서 이메일로 스스로 가입한다. 스스로 가입한 사람은 모두 강사다.
+- **학생**: 스스로 가입하지 않는다. 선생님 화면 `학생 추가` 탭에서 선생님이 이름·아이디·비밀번호로 만든다.
+  학생은 `auth.html` 에 **아이디 + 비밀번호** 로 들어온다. 내부 이메일은 `<아이디>@students.invalid`.
+  아이디: 영어 소문자·숫자·`-`, 3~30자. 비밀번호를 비우면 서버가 8자를 만든다(헷갈리는 0/o·1/l/i 제외).
+- **교실 코드로 스스로 들어가기는 없앴다.** 수강(enrollments) 줄은 서버만 만든다.
+- **역할은 서버가 정한다.** 트리거 `handle_new_user` 는 `app_metadata.role = 'student'` 일 때만 학생,
+  그 밖에는 강사로 만든다. `app_metadata` 는 service role 키로만 쓸 수 있다. `user_metadata.role` 은 보지 않는다.
+  `profiles` 는 본인도 `name` 열만 고칠 수 있다(열 단위 권한) — 학생이 스스로 강사가 되는 길을 막았다.
+
+```
+POST /api/create-student        Authorization: Bearer <선생님 access token>
+  { action: 'create', classroomId, name, loginId, password? } → { loginId, password }
+  { action: 'reset',  classroomId, loginId, password? }       → { loginId, password }
+  401 토큰 없음·무효 / 403 강사 아님·이 교실 선생님이 아님(reset: 이 교실 학생이 아님) / 409 이미 있는 아이디
+  400 입력 형식(classroomId 는 UUID) / 502 Supabase 실패·시간 초과(수강 넣기가 실패하면 만든 계정을 지운다) — 모두 { error: '<선생님에게 보일 한국어 문장>' }
+```
+
+환경변수(Vercel): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. 값은 저장소에 두지 않는다.
+서버가 없으면(로컬 모드) 계정은 못 만들지만 수업 흐름은 그대로 돈다.

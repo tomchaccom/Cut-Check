@@ -126,11 +126,17 @@
 
     <!-- [학생 추가] -->
     <div class="dtab" id="dtab-invite">
-      <section class="panel" style="text-align:center;padding:32px">
-        <p style="color:var(--ink-2);font-size:14px;margin-bottom:12px">학생에게 이 참여 코드를 알려주세요</p>
-        <div id="invite-code" style="font-size:36px;font-weight:800;letter-spacing:6px;color:var(--green);margin-bottom:16px">------</div>
-        <button class="btn primary" id="copy-code-btn">코드 복사</button>
-        <p id="copy-msg" style="margin-top:8px;font-size:13px;color:var(--green)"></p>
+      <section class="panel">
+        <div class="hd"><div><h2>학생 계정 만들기</h2><p class="lead">학생은 로그인 화면에서 아이디와 비밀번호로 들어와요.</p></div></div>
+        <p class="lead" id="ns-local" hidden>학생 계정은 서버가 있어야 만들 수 있어요. 지금은 이 브라우저의 기록만 보여요.</p>
+        <form id="ns-form" class="ns-form">
+          <label>이름<input id="ns-name" maxlength="40" required autocomplete="off"></label>
+          <label>아이디<input id="ns-login" required minlength="3" maxlength="30" pattern="[a-z0-9\-]{3,30}" title="영어 소문자·숫자·- 로 3~30자" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+          <label>비밀번호<input id="ns-pw" minlength="6" maxlength="72" placeholder="빈칸이면 자동으로 만들어요" autocomplete="new-password"></label>
+          <button class="btn primary" type="submit" id="ns-go">계정 만들기</button>
+        </form>
+        <p class="ns-msg" id="ns-msg" role="status"></p>
+        <div id="ns-result"></div>
       </section>
       <h3 style="font-size:16px;font-weight:700;margin:20px 0 10px">등록된 학생</h3>
       <div id="student-list"></div>
@@ -211,6 +217,7 @@ window.CC_SUPABASE = {
   if (CC.sb && CC.sb.active()) {
     CC.sb.getProfile().then(function (p) {
       if (!p) { window.location.href = 'auth.html'; return; }
+      if (p.role !== 'teacher') { window.location.replace('sentence.html'); return; }   /* 학생은 선생님 화면을 열 수 없다 */
       if ($('#t-username')) { $('#t-username').textContent = p.name + ' 선생님'; $('#t-username').hidden = false; }
       if ($('#t-logout')) $('#t-logout').hidden = false;
       loadClassrooms();
@@ -223,6 +230,8 @@ window.CC_SUPABASE = {
      * 대시보드는 열려야 한다 (CLAUDE.md: 서버를 필수로 만들지 않는다). */
     $('#classroom-selector').hidden = true;
     $('#dashboard').hidden = false;
+    $('#ns-form').hidden = true;
+    $('#ns-local').hidden = false;
   }
 
   /* 교실 목록 로드 */
@@ -268,7 +277,8 @@ window.CC_SUPABASE = {
     $('#dash-title').textContent = room.name;
     $('#room-code').textContent = room.code;
     $('#room-code-wrap').hidden = false;
-    $('#invite-code').textContent = room.code;
+    $('#ns-result').innerHTML = '';
+    $('#ns-msg').textContent = '';
     $('#dash-divider').hidden = false;
     $('#dashboard').hidden = false;
     loadMissions();
@@ -285,17 +295,28 @@ window.CC_SUPABASE = {
       CC.classroom.roster = students;
       var list = $('#student-list');
       list.innerHTML = '';
-      if (!students.length) { $('#student-empty').hidden = false; return; }
+      if (!students.length) { $('#student-empty').hidden = false; suggestLogin(); return; }
       $('#student-empty').hidden = true;
       students.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ko'); }).forEach(function (s) {
         var row = el('div', 'roster-row');
-        row.appendChild(el('span', 'name', s.name));
+        var who = el('span', 'name', s.name);
+        if (s.login_id) who.appendChild(el('span', 'meta', s.login_id));
+        row.appendChild(who);
+        var acts = el('div', 'acts');
+        if (s.login_id) {
+          var rp = el('button', 'pill roster-reset', '비밀번호 다시 만들기');
+          rp.type = 'button';
+          rp.addEventListener('click', function () { CC._resetPassword(s, row); });
+          acts.appendChild(rp);
+        }
         var rm = el('button', 'pill roster-remove', '교실에서 빼기');
         rm.type = 'button';
         rm.addEventListener('click', function () { CC._removeStudent(s); });
-        row.appendChild(rm);
+        acts.appendChild(rm);
+        row.appendChild(acts);
         list.appendChild(row);
       });
+      suggestLogin();
       /* 교실 카드에 학생 수 반영 */
       var label = $('#class-label');
       if (label) label.textContent = '학생 ' + students.length + '명';
@@ -363,21 +384,78 @@ window.CC_SUPABASE = {
   /* 교실에서 학생 빼기 — 되돌릴 수 있게 수강 한 줄만 지운다 (기록은 남는다) */
   CC._removeStudent = function (s) {
     if (!selectedRoom || !CC.sb.active()) return;
-    if (!window.confirm(s.name + ' 학생을 ' + selectedRoom.name + ' 교실에서 뺄까요?\n학생의 기록은 지워지지 않아요. 교실 코드로 다시 들어올 수 있어요.')) return;
+    if (!window.confirm(s.name + ' 학생을 ' + selectedRoom.name + ' 교실에서 뺄까요?\n학생의 기록과 계정은 지워지지 않아요.')) return;
     CC.sb.removeStudent(selectedRoom.id, s.id).then(function () {
       if (CC._closeDetail) CC._closeDetail();
       return loadStudents().then(loadStudentEvents);
     }).catch(function (e) { window.alert(e.message || '학생을 빼지 못했어요.'); });
   };
 
-  /* 코드 복사 */
-  $('#copy-code-btn').addEventListener('click', function () {
-    if (!selectedRoom) return;
-    navigator.clipboard.writeText(selectedRoom.code).then(function () {
-      $('#copy-msg').textContent = '복사됨!';
-      setTimeout(function () { $('#copy-msg').textContent = ''; }, 2000);
+  /* ── 학생 계정 — 만들기 · 비밀번호 다시 만들기 ──────────
+   * 계정은 서버(api/create-student.py)만 만든다. 비밀번호는 여기서 한 번만 보여 주고 저장하지 않는다. */
+
+  /* 아이디 제안: <교실 코드 소문자>-<다음 번호>. 선생님이 고쳐 써도 된다 */
+  function suggestLogin() {
+    if (!selectedRoom || !selectedRoom.code) return;
+    var pre = String(selectedRoom.code).toLowerCase() + '-';
+    var n = 0;
+    (CC.classroom.roster || []).forEach(function (r) {
+      var id = r.login_id || '';
+      if (id.indexOf(pre) === 0 && /^\d+$/.test(id.slice(pre.length))) n = Math.max(n, +id.slice(pre.length));
     });
+    $('#ns-login').value = pre + (n + 1);
+  }
+
+  function credBox(loginId, password, note) {
+    var box = el('div', 'cred');
+    var dl = document.createElement('dl');
+    [['아이디', loginId], ['비밀번호', password]].forEach(function (kv) {
+      var w = el('div'); w.appendChild(el('dt', null, kv[0])); w.appendChild(el('dd', null, kv[1])); dl.appendChild(w);
+    });
+    box.appendChild(dl);
+    var cp = el('button', 'pill cred-copy', '복사');
+    cp.type = 'button';
+    cp.addEventListener('click', function () {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText('아이디 ' + loginId + '\n비밀번호 ' + password).then(function () { cp.textContent = '복사했어요'; });
+    });
+    box.appendChild(cp);
+    box.appendChild(el('p', 'cred-note', note));
+    return box;
+  }
+
+  $('#ns-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!selectedRoom || !CC.sb.active()) return;
+    var msg = $('#ns-msg'), go = $('#ns-go');
+    var name = clean($('#ns-name').value), loginId = $('#ns-login').value.trim().toLowerCase();
+    if (!name) { msg.className = 'ns-msg error'; msg.textContent = '학생 이름을 적어 주세요.'; return; }
+    if (!/^[a-z0-9-]{3,30}$/.test(loginId)) { msg.className = 'ns-msg error'; msg.textContent = '아이디는 영어 소문자·숫자·- 로 3~30자예요.'; return; }
+    msg.className = 'ns-msg'; msg.textContent = '만드는 중이에요...';
+    go.disabled = true;
+    CC.sb.createStudent(selectedRoom.id, { name: name, loginId: loginId, password: $('#ns-pw').value })
+      .then(function (r) {
+        msg.textContent = name + ' 학생 계정을 만들었어요.';
+        $('#ns-result').innerHTML = '';
+        $('#ns-result').appendChild(credBox(r.loginId, r.password, '이 비밀번호는 다시 보여 주지 않아요. 지금 학생에게 건네주세요.'));
+        $('#ns-name').value = ''; $('#ns-pw').value = '';
+        return loadStudents().then(loadStudentEvents);
+      })
+      .catch(function (err) { msg.className = 'ns-msg error'; msg.textContent = err.message || '계정을 만들지 못했어요.'; })
+      .then(function () { go.disabled = false; });
   });
+
+  /* 비밀번호 다시 만들기 — where 아래에 새 비밀번호를 한 번 보여 준다 */
+  CC._resetPassword = function (s, where) {
+    var loginId = s.login_id;
+    if (!loginId) { var r = (CC.classroom.roster || []).filter(function (x) { return x.id === s.id; })[0]; loginId = r && r.login_id; }
+    if (!selectedRoom || !CC.sb.active() || !loginId) return;
+    if (!window.confirm(s.name + ' 학생의 비밀번호를 새로 만들까요?\n지금 비밀번호로는 더 이상 들어올 수 없어요.')) return;
+    CC.sb.resetStudentPassword(selectedRoom.id, loginId).then(function (res) {
+      var old = where.querySelector('.cred'); if (old) old.remove();
+      where.appendChild(credBox(res.loginId, res.password, '이 비밀번호는 다시 보여 주지 않아요. 지금 학생에게 건네주세요.'));
+    }).catch(function (e) { window.alert(e.message || '비밀번호를 바꾸지 못했어요.'); });
+  };
 
   /* 미션 목록 */
   var editingMissionId = null;

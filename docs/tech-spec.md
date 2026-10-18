@@ -284,6 +284,17 @@ CC.engine.runSentence(slots, text)
 | `POST /class` | POST | 수업 생성 → 참여 코드 발급 |
 | `POST /join` | POST | 학생 참여 (좌석 id 할당) |
 
+### 7-3. 계정 (2026-10-18 현재, Supabase)
+
+| 누가 | 어떻게 |
+|------|--------|
+| 강사 | `auth.html` 에서 이메일로 스스로 가입. 스스로 가입하면 모두 강사 |
+| 학생 | 선생님이 `teacher.html` 의 `학생 추가` 탭에서 만든다 → `POST /api/create-student`. 아이디 + 비밀번호로 로그인 (내부 이메일 `<아이디>@students.invalid`) |
+| 교실 코드로 들어가기 | 없앴다. 수강 줄은 서버(service role)만 만든다 |
+
+역할은 트리거가 `app_metadata.role` 로만 정하고, `profiles` 는 본인도 `name` 만 고칠 수 있다.
+자세한 건 `docs/server.md` 8절.
+
 ---
 
 ## 8. 테스트 전략

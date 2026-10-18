@@ -830,12 +830,8 @@
       b.addEventListener('click', function () { openRoom(r); });
       grid.appendChild(b);
     });
-    var join = el('a', 'tile room-join');
-    join.href = 'auth.html';
-    join.innerHTML = '<span class="folder new" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>';
-    join.appendChild(el('span', 'name', '교실 코드로 들어가기'));
-    join.appendChild(el('span', 'meta', '선생님께 받은 코드'));
-    grid.appendChild(join);
+    /* 교실은 선생님이 넣어 준다 — 스스로 들어가는 문은 없다 (2026-10-18) */
+    if (!rooms.length) grid.appendChild(el('p', 'home-lead room-empty', '아직 들어간 교실이 없어요. 선생님께 교실에 넣어 달라고 말해 주세요.'));
     showRooms();
   }
 
