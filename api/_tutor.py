@@ -2,7 +2,8 @@
 
 LLM 호출은 call_llm(messages, schema, timeout) 로 주입받는다. 테스트는 가짜를 넣는다.
 시간: 전체 26초(vercel 한도 30초). 답 10초, 판정 5초, 재요청은 남은 시간 10초 이상일 때 한 번.
-재답은 판정하지 않는다 — 형식 검사를 통과하고 백틱 코드가 없을 때만 내보낸다.
+재답도 판정한다 — 형식 검사·백틱 없음을 통과한 뒤 남은 시간이 판정 5초 이상일 때만. 못 하면 고정 되묻기.
+now() 는 시작·재요청 전·재판정 전 세 번 부른다.
 """
 import json
 import time
@@ -16,7 +17,10 @@ REFUSE = {
     'off_topic': '파이썬 질문만 받을 수 있어요. 코드에서 막힌 곳을 물어봐 주세요.',
 }
 
-BUDGET, ANSWER_T, JUDGE_T, RETRY_NEEDS = 26, 10, 5, 10
+# 재답 시간 = min(10, 남은 - 판정 5 - 여유 1), 4초 미만이면 안 한다 → RETRY_NEEDS = 4+5+1 = 10.
+# 최악: 경과 e + 재답 (26-e-6) + 판정 5 = 25초 ≤ 26.
+BUDGET, ANSWER_T, JUDGE_T, RETRY_MIN = 26, 10, 5, 4
+RETRY_NEEDS = RETRY_MIN + JUDGE_T + 1
 
 SCHEMA = {
     'type': 'object',
@@ -84,8 +88,17 @@ def ask(question, ctx, call_llm, now=time.monotonic):
         return _refuse(reasons, judged=judged)
     msgs += [{'role': 'assistant', 'content': str(raw)},
              {'role': 'user', 'content': '아래 문제를 고쳐 다시 답한다: ' + ' / '.join(reasons)}]
-    d2 = _json(call_llm(msgs, SCHEMA, min(ANSWER_T, left))) or {}
+    d2 = _json(call_llm(msgs, SCHEMA, min(ANSWER_T, left - JUDGE_T - 1))) or {}
     k2, a2 = d2.get('kind'), str(d2.get('answer') or '').strip()
-    if k2 in ('answer', 'ask_back') and not problems(a2, k2) and '`' not in a2:
-        return _out(k2, a2, False, reasons, True, judged)
-    return _refuse(reasons, retried=True, judged=judged)
+    if k2 not in ('answer', 'ask_back') or problems(a2, k2) or '`' in a2:
+        return _refuse(reasons, retried=True, judged=judged)
+    left = BUDGET - (now() - t0)
+    if left < JUDGE_T:
+        return _refuse(reasons + ['no_time_to_judge_retry'], retried=True, judged=judged)
+    try:
+        again = judge(a2, ctx, call_llm, min(JUDGE_T, left))
+    except Exception:  # noqa: BLE001
+        return _refuse(reasons + ['judge_failed'], retried=True, judged=judged)
+    if again:
+        return _refuse(reasons + again, retried=True, judged=True)
+    return _out(k2, a2, False, reasons, True, True)

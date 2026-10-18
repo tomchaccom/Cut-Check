@@ -81,9 +81,26 @@ t('미션 brief·history·마지막 출력이 프롬프트에', all(s in user fo
 t('통과하면 답한다', r['kind'] == 'answer' and not r['refused'] and r['judged'] and r['reasons'] == [], r)
 
 llm = fake({'kind': 'answer', 'answer': '`for m in data.split(","): d[m] = d.get(m, 0) + 1` 이렇게요.'}, LEAK,
-           {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요. 같은 키에 값을 다시 넣으면 바뀌어요.'})
+           {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요. 같은 키에 값을 다시 넣으면 바뀌어요.'}, OK)
 r = ask('메뉴 세는 코드 알려줘', CTX, llm)
-t('유출 → 재요청 → 재답', len(llm.calls) == 3 and '이 자료로 바로 세는 코드' in llm.calls[2][-1]['content'] and r['retried'] and r['kind'] == 'answer', r)
+t('유출 → 재요청 → 재답도 판정 → 통과', len(llm.calls) == 4 and '이 자료로 바로 세는 코드' in llm.calls[2][-1]['content']
+  and '같은 키에 값을' in llm.calls[3][-1]['content'] and r['retried'] and r['judged'] and not r['refused'] and r['kind'] == 'answer', r)
+
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK,
+           {'kind': 'ask_back', 'answer': '메뉴를 항목별로 나눈 다음, 같은 값이 나올 때마다 숫자를 올리는 생각까지는 정했나요?'},
+           {'leak': True, 'why': '풀이 순서'})
+r = ask('코드 줘', CTX, llm)
+t('재답을 두 번째 판정이 막음 → ask_back 고정 문장', len(llm.calls) == 4 and r['answer'] == REFUSE['ask_back'] and r['refused']
+  and r['retried'] and 'leak: 풀이 순서' in r['reasons'], r)
+
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, '판정 아님')
+r = ask('코드 줘', CTX, llm)
+t('재답 판정 실패 → ask_back', r['answer'] == REFUSE['ask_back'] and 'judge_failed' in r['reasons'] and r['retried'], r)
+
+clock = iter([0, 10, 22])
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, OK)
+r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
+t('재답 판정할 시간 없음 → ask_back', len(llm.calls) == 3 and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
 
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '`d[m] += 1` 쓰세요.'})
 r = ask('코드 줘', CTX, llm)
@@ -98,9 +115,9 @@ r = ask('모르겠어요', CTX, llm)
 t('되묻기도 판정한다', r['kind'] == 'ask_back' and r['answer'].endswith('?') and r['judged'] and not r['refused'] and len(llm.calls) == 2, r)
 
 llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를 세는 변수를 둘 건가요?'}, LEAK,
-           {'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'})
+           {'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'}, OK)
 r = ask('모르겠어요', CTX, llm)
-t('유출된 되묻기 → 재요청 → 재답', len(llm.calls) == 3 and r['retried'] and r['kind'] == 'ask_back' and r['answer'].startswith('지금 print'), r)
+t('유출된 되묻기 → 재요청 → 재답', len(llm.calls) == 4 and r['retried'] and r['kind'] == 'ask_back' and r['answer'].startswith('지금 print'), r)
 
 llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를 세는 변수를 둘 건가요?'}, LEAK,
            {'kind': 'ask_back', 'answer': "`name = '김밥,떡볶이'` 처럼 넣었나요?"})
