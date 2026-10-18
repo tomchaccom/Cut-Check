@@ -231,10 +231,8 @@
       if (inRoster && inRoster.login_id && CC._resetPassword) {   /* 선생님이 만든 계정만 — 이메일로 가입한 예전 학생은 아이디가 없다 */
         var rp = el('button', 'pill roster-reset', '비밀번호 다시 만들기');
         rp.type = 'button';
-        var credSlot = el('div');
-        rp.addEventListener('click', function () { CC._resetPassword(inRoster, credSlot); });
+        rp.addEventListener('click', function () { CC._resetPassword(inRoster); });
         d.appendChild(rp);
-        d.appendChild(credSlot);
       }
     }
     delete fresh[s.id];

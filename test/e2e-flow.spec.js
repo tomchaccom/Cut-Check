@@ -515,8 +515,28 @@ test('강사 — 학생 계정을 만들면 아이디·비밀번호를 한 번 �
   page.once('dialog', d => d.accept());
   const row = page.locator('.roster-row', { hasText: '태인' });
   await row.locator('.roster-reset').click();
-  await expect(row.locator('.cred')).toContainText('zz88aa44');
+  await expect(page.locator('#ns-result .cred')).toContainText('zz88aa44');
   await expect(page.locator('.roster-row', { hasText: '가은' }).locator('.roster-reset')).toHaveCount(0);   // 아이디 없는 예전 계정
+});
+
+test('강사 — 명단을 다시 그려도 입력한 아이디와 새 비밀번호는 남는다', async ({ page }) => {
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  await page.locator('#ns-login').fill('m9676u-qa94113');
+  page.once('dialog', d => d.accept());
+  await page.locator('.roster-row', { hasText: '가은' }).locator('.roster-remove').click();   // 명단 다시 그리기
+  await expect(page.locator('.roster-row')).toHaveCount(2);
+  await expect(page.locator('#ns-login')).toHaveValue('m9676u-qa94113');
+
+  page.once('dialog', d => d.accept());
+  await page.locator('.roster-row', { hasText: '태인' }).locator('.roster-reset').click();
+  await expect(page.locator('#ns-result .cred')).toContainText('zz88aa44');
+  page.once('dialog', d => d.accept());
+  await page.locator('.roster-row', { hasText: '한결' }).locator('.roster-remove').click();   // 다시 그리기
+  await expect(page.locator('.roster-row')).toHaveCount(1);
+  await expect(page.locator('#ns-result .cred')).toContainText('zz88aa44');
+  await expect(page.locator('#ns-result .cred-note')).toContainText('태인');
 });
 
 test('학생 프로필로 선생님 화면을 열면 학생 화면으로 간다', async ({ page }) => {
