@@ -206,8 +206,11 @@ SSE 로 충분하다. 교사→학생 방향 통신이 없어서 WebSocket 이 �
   학생은 `auth.html` 에 **아이디 + 비밀번호** 로 들어온다. 내부 이메일은 `<아이디>@students.invalid`.
   아이디: 영어 소문자·숫자·`-`, 3~30자. 비밀번호를 비우면 서버가 8자를 만든다(헷갈리는 0/o·1/l/i 제외).
 - **교실 코드로 스스로 들어가기는 없앴다.** 수강(enrollments) 줄은 서버만 만든다.
-- **역할은 서버가 정한다.** 트리거 `handle_new_user` 는 `app_metadata.role = 'student'` 일 때만 학생,
-  그 밖에는 강사로 만든다. `app_metadata` 는 service role 키로만 쓸 수 있다. `user_metadata.role` 은 보지 않는다.
+- **역할은 서버가 정한다.** `app_metadata.role = 'student'` 이고 이메일이 `@students.invalid` 일 때만 학생,
+  그 밖에는 강사다. GoTrue 는 `app_metadata` 를 INSERT 가 아니라 뒤따르는 UPDATE 에서 넣으므로,
+  `handle_new_user`(INSERT)는 우선 강사 행을 만들고 `handle_student_role`(UPDATE OF raw_app_meta_data)이 학생 + `login_id` 로 바꾼다.
+  `app_metadata` 는 service role 키로만 쓸 수 있다. `user_metadata.role` 은 보지 않는다.
+  공개 가입으로 학생 이메일을 먼저 차지한 계정은 만들기 때 서버가 지우고 한 번만 다시 만든다.
   `profiles` 는 본인도 `name` 열만 고칠 수 있다(열 단위 권한) — 학생이 스스로 강사가 되는 길을 막았다.
 
 ```

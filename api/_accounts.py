@@ -16,9 +16,9 @@ LOGIN_RE = re.compile(r'^[a-z0-9-]{3,30}$')
 # 헷갈리는 글자(0/o, 1/l/i)를 뺐다 — 선생님이 칠판에 쓰고 학생이 받아 적는다
 ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'
 UUID_RE = re.compile(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
-# 한 요청의 Supabase 호출은 최대 6번(사용자·역할·교실·생성·수강·되돌리기 / reset 도 6번).
-# 6 × 4초 = 24초 < vercel.json maxDuration 30초 — 호출을 늘리면 이 숫자도 다시 계산한다.
-TIMEOUT = 4
+# 한 요청의 Supabase 호출은 최대 9번 — 사용자·역할·교실·생성·[차지한 계정 찾기·지우기·다시 생성]·수강·되돌리기
+# (reset 은 6번). 9 × 3초 = 27초 < vercel.json maxDuration 30초 — 호출을 늘리면 이 숫자도 다시 계산한다.
+TIMEOUT = 3
 
 
 class Fail(Exception):
@@ -139,16 +139,17 @@ def _run(body, token, url, anon, service, http):
         return {'loginId': login, 'password': pw}
 
     # 4) 계정 만들기 — role 은 app_metadata 로만 (트리거가 이것만 본다)
-    st, user = http('POST', url + '/auth/v1/admin/users', adm, {
-        'email': email_of(login), 'password': pw, 'email_confirm': True,
-        'app_metadata': {'role': 'student'}, 'user_metadata': {'name': name}})
-    err = user if isinstance(user, dict) else {}
-    if st == 409 or err.get('error_code') == 'email_exists' or 'already' in str(err.get('msg') or err.get('message') or ''):
-        raise Fail(409, '이미 있는 아이디예요.')
-    if st == 422:   # 약한 비밀번호 등 — 원문은 넘기지 않는다
-        raise Fail(400, '이 아이디나 비밀번호로는 만들 수 없어요. 다른 걸로 해 주세요.')
-    if st not in (200, 201) or not isinstance(user, dict) or not user.get('id'):
-        raise Fail(502, '계정을 만들지 못했어요. 잠시 뒤 다시 해 주세요.')
+    user = _create(http, url, adm, login, pw, name)
+    if user is None:
+        # 이 도메인을 정당하게 만드는 건 우리 서버뿐이다. 학생 표시가 없는 계정은 공개 가입으로 아이디를
+        # 먼저 차지한 것 → 지우고 한 번만 다시 만든다. 진짜 학생이면 409.
+        squatter = _find_squatter(http, url, adm, login)
+        st, _ = http('DELETE', url + '/auth/v1/admin/users/' + q(squatter), adm)
+        if st not in (200, 204):
+            raise Fail(502, '계정을 만들지 못했어요. 잠시 뒤 다시 해 주세요.')
+        user = _create(http, url, adm, login, pw, name)
+        if user is None:
+            raise Fail(409, '이미 있는 아이디예요.')
 
     # 5) 교실에 넣기 — 어떤 이유로든 실패하면 방금 만든 계정을 지운다.
     #    교실 없는 계정이 남으면 아이디가 묶여서(다시 만들기 409, reset 403) 선생님이 풀 길이 없다.
@@ -162,6 +163,37 @@ def _run(body, token, url, anon, service, http):
         _rollback(http, url + '/auth/v1/admin/users/' + q(user['id']), adm, user['id'])
         raise Fail(502, '교실에 넣지 못했어요. 잠시 뒤 다시 해 주세요.')
     return {'loginId': login, 'password': pw, 'id': user['id'], 'name': name}
+
+
+def _create(http, url, adm, login, pw, name):
+    """만든 사용자 dict, 이메일이 이미 있으면 None."""
+    st, user = http('POST', url + '/auth/v1/admin/users', adm, {
+        'email': email_of(login), 'password': pw, 'email_confirm': True,
+        'app_metadata': {'role': 'student'}, 'user_metadata': {'name': name}})
+    err = user if isinstance(user, dict) else {}
+    if st == 409 or err.get('error_code') == 'email_exists' or 'already' in str(err.get('msg') or err.get('message') or ''):
+        return None
+    if st == 422:   # 약한 비밀번호 등 — 원문은 넘기지 않는다
+        raise Fail(400, '이 아이디나 비밀번호로는 만들 수 없어요. 다른 걸로 해 주세요.')
+    if st not in (200, 201) or not isinstance(user, dict) or not user.get('id'):
+        raise Fail(502, '계정을 만들지 못했어요. 잠시 뒤 다시 해 주세요.')
+    return user
+
+
+def _find_squatter(http, url, adm, login):
+    """이메일이 같은 사용자의 id. 진짜 학생이면 409, 못 찾으면 502 — 확신이 없으면 아무것도 지우지 않는다.
+    GoTrue 의 filter 는 이메일 부분 일치(LIKE)라 정확히 같은 이메일만 고른다."""
+    email = email_of(login)
+    st, out = http('GET', url + '/auth/v1/admin/users?per_page=50&filter=' + urllib.parse.quote(email), adm)
+    users = out.get('users') if isinstance(out, dict) else None
+    if st != 200 or not isinstance(users, list):
+        raise Fail(502, '계정을 만들지 못했어요. 잠시 뒤 다시 해 주세요.')
+    same = [u for u in users if isinstance(u, dict) and str(u.get('email') or '').lower() == email and u.get('id')]
+    if len(same) != 1:
+        raise Fail(502, '계정을 만들지 못했어요. 잠시 뒤 다시 해 주세요.')
+    if (same[0].get('app_metadata') or {}).get('role') == 'student':
+        raise Fail(409, '이미 있는 아이디예요.')
+    return same[0]['id']
 
 
 def _rollback(http, user_url, adm, uid):
