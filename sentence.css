@@ -831,3 +831,6 @@ dialog::backdrop {
 .design-side { list-style:decimal inside; padding:0; margin:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
 .design-side .design-item { display:list-item; padding:8px 12px; font-size:14px; font-weight:600; }
 @media (max-width: 720px) { .code-split { grid-template-columns:1fr; } }
+
+/* 교실이 없는 학생 — 폴더 자리에 안내 한 줄 */
+.room-empty { grid-column: 1 / -1; }

@@ -9,7 +9,7 @@
  */
 const { test, expect } = require('@playwright/test');
 
-const BASE = 'http://localhost:8123';
+const BASE = process.env.CC_BASE || 'http://localhost:8123';   // 다른 작업 폴더가 8123 을 쓰고 있으면 CC_BASE 로 바꾼다
 
 async function local(ctx) {
   await ctx.route('**/supabase-js@2/**', r => r.abort());
@@ -416,10 +416,11 @@ test('폰 폭 04 — 튜터 버튼이 결과 표를 덮지 않는다 (어느 스
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(420);
 });
 
-test('교실이 없는 학생 — 교실 코드로 들어가기만 보인다', async ({ page }) => {
+test('교실이 없는 학생 — 선생님께 말하라는 안내만, 스스로 들어가는 문은 없다', async ({ page }) => {
   const errs = []; page.on('pageerror', e => errs.push(e.message));
   await asStudent(page, []);
-  await expect(page.locator('.room-join')).toBeVisible();
+  await expect(page.locator('.room-empty')).toContainText('선생님께');
+  await expect(page.locator('.room-join')).toHaveCount(0);
   await expect(page.locator('.room-tile')).toHaveCount(0);
   expect(errs).toEqual([]);
 });
@@ -451,9 +452,11 @@ test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ p
 
 /* 강사 — 교실은 폴더, 명단의 학생은 기록이 없어도 폴더, 교실에서 빼기 (2026-10-17 사람 요청) */
 const FAKE_TEACHER = `(function(CC){var P=function(v){return Promise.resolve(v)};
-var roster=[{id:'s1',name:'태인'},{id:'s2',name:'가은'},{id:'s3',name:'한결'}];
-window.__removed=[];
-CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},
+var roster=[{id:'s1',name:'태인',login_id:'m9676u-1'},{id:'s2',name:'가은'},{id:'s3',name:'한결',login_id:'m9676u-2'}];
+window.__removed=[];window.__created=[];window.__reset=[];
+CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:window.__role||'teacher',name:'김선생'})},
+createStudent:function(rid,s){if(s.loginId==='taken')return Promise.reject(new Error('이미 있는 아이디예요.'));window.__created.push([rid,s]);roster.push({id:'n'+roster.length,name:s.name,login_id:s.loginId});return P({loginId:s.loginId,password:s.password||'k7mpq2xa'})},
+resetStudentPassword:function(rid,lid){window.__reset.push([rid,lid]);return P({loginId:lid,password:'zz88aa44'})},
 onAuthChange:function(){},signOut:function(){return P()},createClassroom:function(){return P({})},
 myClassrooms:function(){return P([{id:'r1',name:'태인한결',code:'M9676U'},{id:'r2',name:'방과후',code:'AB12CD'}])},
 getMissions:function(){return P([])},saveMission:function(){return P({})},updateMission:function(){return P({})},deleteMission:function(){return P({})},
@@ -483,6 +486,54 @@ test('강사 — 교실 폴더, 기록 없는 학생도 폴더, 교실에서 빼
   await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
   await page.locator('.roster-row', { hasText: '가은' }).locator('.roster-remove').click();
   expect(await page.evaluate(() => window.__removed)).toEqual(['s3']);
+});
+
+async function asTeacher(page, role) {
+  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
+  if (role) await page.addInitScript(r => { window.__role = r; }, role);
+  await page.goto(BASE + '/teacher.html');
+}
+
+test('강사 — 학생 계정을 만들면 아이디·비밀번호를 한 번 보여 주고 명단에 더한다', async ({ page }) => {
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  await expect(page.locator('#ns-login')).toHaveValue('m9676u-3');        // 교실 코드 + 다음 번호
+  await page.locator('#ns-name').fill('나래');
+  await page.locator('#ns-login').fill('taken');
+  await page.locator('#ns-go').click();
+  await expect(page.locator('#ns-msg')).toHaveText('이미 있는 아이디예요.');
+  await page.locator('#ns-login').fill('m9676u-3');
+  await page.locator('#ns-go').click();
+  await expect(page.locator('#ns-result .cred')).toContainText('m9676u-3');
+  await expect(page.locator('#ns-result .cred')).toContainText('k7mpq2xa');
+  await expect(page.locator('.roster-row', { hasText: '나래' })).toBeVisible();
+  await expect(page.locator('#ns-login')).toHaveValue('m9676u-4');
+  expect(await page.evaluate(() => window.__created)).toEqual([['r1', { name: '나래', loginId: 'm9676u-3', password: '' }]]);
+
+  page.once('dialog', d => d.accept());
+  const row = page.locator('.roster-row', { hasText: '태인' });
+  await row.locator('.roster-reset').click();
+  await expect(row.locator('.cred')).toContainText('zz88aa44');
+  await expect(page.locator('.roster-row', { hasText: '가은' }).locator('.roster-reset')).toHaveCount(0);   // 아이디 없는 예전 계정
+});
+
+test('학생 프로필로 선생님 화면을 열면 학생 화면으로 간다', async ({ page }) => {
+  await asTeacher(page, 'student');
+  await expect(page).toHaveURL(/sentence\.html/);
+});
+
+test('로그인 화면 — 역할 고르기도 교실 코드 입력도 없다, 아이디로도 들어온다', async ({ page }) => {
+  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.goto(BASE + '/auth.html');
+  await expect(page.locator('#signup-role')).toHaveCount(0);
+  await expect(page.locator('#join-section')).toHaveCount(0);
+  await expect(page.locator('#join-code')).toHaveCount(0);
+  await expect(page.locator('#tab-signup')).toHaveText('강사 가입');
+  await expect(page.locator('label[for="login-email"]')).toHaveText('이메일 또는 아이디');
+  expect(await page.evaluate(() => [CC.sb.loginEmail('Kim-1'), CC.sb.loginEmail('t@school.kr')]))
+    .toEqual(['kim-1@students.invalid', 't@school.kr']);
 });
 
 test('04 는 설계|코드 반반이고, 지난 단계 탭으로 돌아갈 수 있다', async ({ context, page }) => {

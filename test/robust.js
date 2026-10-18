@@ -8,6 +8,7 @@
  *   node test/robust.js
  */
 const { chromium } = require('playwright');
+const BASE = process.env.CC_BASE || 'http://localhost:8123';   // 다른 작업 폴더가 8123 을 쓰고 있으면 CC_BASE 로 바꾼다
 
 /* 브라우저 실행 파일 찾기 — 환경마다 경로가 달라서 한 군데서 처리한다.
  * CC_CHROME 환경변수가 있으면 그걸 쓰고, 없으면 playwright 기본값을 쓴다. */
@@ -32,7 +33,7 @@ function launchOpts() {
 
   // 학생이 쓴 내용이 교사 화면으로 흐르는 경로 전부에 넣어본다
   // 학생 화면 (sentence.html) — 판정 근거와 마무리 문장이 교사 화면에 올라간다
-  await p.goto('http://localhost:8123/sentence.html'); await p.waitForTimeout(300);
+  await p.goto(BASE + '/sentence.html'); await p.waitForTimeout(300);
   await p.evaluate(() => window.CC.store.clear());
   await p.locator('#go-define').click();
   await p.locator('.define-card').first().click();
@@ -58,7 +59,7 @@ function launchOpts() {
   await p.locator('#wrap-text').fill(EVIL + LONG);
   await p.locator('#finish').click(); await p.waitForTimeout(200);
 
-  await p.goto('http://localhost:8123/make.html'); await p.waitForTimeout(300);
+  await p.goto(BASE + '/make.html'); await p.waitForTimeout(300);
   await p.locator('#brief').fill(EVIL + ' 정리해주세요');
   await p.locator('#s1go').click();
   await p.locator('#sep').fill(',');
@@ -73,7 +74,7 @@ function launchOpts() {
 
   const t = await ctx.newPage();
   t.on('pageerror', e => errs.push('T: ' + e.message));
-  await t.goto('http://localhost:8123/teacher.html'); await t.waitForTimeout(400);
+  await t.goto(BASE + '/teacher.html'); await t.waitForTimeout(400);
   await t.locator('#livebar .tbtn').first().click(); await t.waitForTimeout(300);
   const pwned = await t.evaluate(() => !!window.__pwned);
   const imgs = await t.locator('.detail img').count();
@@ -86,9 +87,33 @@ function launchOpts() {
   console.log('긴 입력 후 가로 스크롤:', w.d > w.w + 1 ? '✗ ' + w.d + '/' + w.w : '✓ 없음');
   console.log('튜터 질문이 교사 화면에 보임:', tutorShown ? '✓' : '✗ 없음');
   console.log('alert 발생:', alerted ? '✗' : '✓ 없음');
+
+  // 선생님이 쓴 학생 이름 — 계정 만들기 칸에서 명단·학생 폴더로 흐른다 (서버는 가짜로 끼운다)
+  const tc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
+  await tc.route('**/supabase-js@2/**', r => r.abort());
+  await tc.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: `(function(CC){var P=function(v){return Promise.resolve(v)};var roster=[];
+CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},
+myClassrooms:function(){return P([{id:'r1',name:'반',code:'AB12CD'}])},getMissions:function(){return P([])},getClassroomEvents:function(){return P([])},
+getClassroomStudents:function(){return P(roster.slice())},
+createStudent:function(rid,s){roster.push({id:'n'+roster.length,name:s.name,login_id:s.loginId});return P({loginId:s.loginId,password:'k7mpq2xa'})}}
+})(window.CC=window.CC||{});` }));
+  const n = await tc.newPage();
+  n.on('pageerror', e => errs.push('N: ' + e.message));
+  await n.goto(BASE + '/teacher.html'); await n.waitForTimeout(300);
+  await n.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  await n.locator('#ns-name').fill(EVIL + LONG);
+  await n.locator('#ns-go').click(); await n.waitForTimeout(300);
+  await n.locator('.main-tab[data-dtab="dtab-students"]').click(); await n.waitForTimeout(200);
+  const nPwned = await n.evaluate(() => !!window.__pwned);
+  const nImgs = await n.locator('#student-list img, #student-folders img').count();
+  const nShown = ((await n.locator('#student-list').textContent()) || '').includes('<img');
+  const nw = await n.evaluate(() => ({ d: document.documentElement.scrollWidth, w: window.innerWidth }));
+  const nameBad = nPwned || nImgs > 0 || !nShown || nw.d > nw.w + 1;
+  console.log('학생 이름(선생님 입력)이 글자로만 보임:', nameBad ? '✗ ' + JSON.stringify({ nPwned, nImgs, nShown, nw }) : '✓');
+
   console.log(errs.length ? '✗ JS 에러: ' + errs.join(' | ') : '✓ JS 에러 없음');
   await b.close();
-  const failed = !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1);
+  const failed = !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad;
   console.log(failed ? '\n안전성 검사 실패' : '\n안전성 검사 전부 통과');
   process.exit(failed ? 1 : 0);
 })();

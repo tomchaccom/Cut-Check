@@ -290,4 +290,21 @@ details.more[open] > summary { margin-bottom: 16px; }
 .roster-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
 .roster-row .name { font-size:15px; font-weight:600; }
 .pill.roster-remove { min-height:36px; padding:0 14px; font-size:14px; border-color:var(--line-strong); }
-.detail .pill.roster-remove { margin:4px 0 12px; }
+.detail .pill.roster-remove, .detail .pill.roster-reset { margin:4px 8px 12px 0; }
+
+/* 학생 계정 만들기 — 이름 · 아이디 · 비밀번호, 만든 뒤 한 번만 보여 준다 */
+.ns-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; margin-top: 14px; }
+.ns-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.ns-form input { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 10px; font-size: 15px; background: var(--surface); color: var(--ink); min-width: 0; }
+.ns-form[hidden] { display: none; }
+.ns-msg { margin-top: 8px; font-size: 13px; min-height: 18px; }
+.ns-msg.error { color: var(--coral); }
+.cred { margin-top: 10px; padding: 14px; border: 1px solid var(--green); border-radius: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.cred dl { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; }
+.cred dt { font-size: 12px; color: var(--ink-2); }
+.cred dd { margin: 0; font-family: ui-monospace, monospace; font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.cred .cred-note { flex-basis: 100%; font-size: 12.5px; color: var(--ink-2); margin: 0; }
+.roster-row .meta { font-size: 13px; color: var(--ink-3); margin-left: 8px; }
+.roster-row .acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.roster-row { flex-wrap: wrap; }
+.roster-row .cred { flex-basis: 100%; }
