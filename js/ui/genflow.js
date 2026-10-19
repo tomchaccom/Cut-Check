@@ -186,10 +186,16 @@
     CC.sb.api('/api/mission-steps', { action: 'solve', situation: val('#sg-situation', d.situation), brief: val('#sg-brief', d.brief),
       inputs: d.inputs.map(function (x) { return { name: x.name, v: x.v }; }) }).then(function (r) {
       if (my !== sgen || typeof (r && r.code) !== 'string') return;
-      return Promise.all(d.inputs.map(function (x) {
-        return py(CM.dataLine(d, x.v) + '\n' + r.code);
-      })).then(function (rs) {
-        if (my !== sgen || rs.some(function (q) { return q.error; })) return;
+      /* 자료마다 차례로, 첫 에러에서 멈춘다 — AI 풀이가 무한 반복이면 한꺼번에 넣은 실행이 대기열에서
+         5초씩 줄줄이 기다려 만들기·다시 돌리기를 막는다. 에러(시간 초과 포함)는 많아야 한 번 */
+      var rs = [];
+      return d.inputs.reduce(function (p, x) {
+        return p.then(function (stop) {
+          if (stop || my !== sgen) return true;
+          return py(CM.dataLine(d, x.v) + '\n' + r.code).then(function (q) { rs.push(q); return !!q.error; });
+        });
+      }, Promise.resolve(false)).then(function (stop) {
+        if (stop || my !== sgen) return;
         /* 따로 푼 풀이가 고른 개념 없이 답을 냈다면 그 문제는 개념 없이도 풀린다(스펙 '하면 안 되는 것').
            판정이 아니라 사실 한 줄 — 강사가 자료나 요청을 고칠지 정한다 */
         return py(CM.usesCode(r.code)).then(function (u) {
@@ -214,6 +220,8 @@
     input.value = v;
     if (v === d.inputs[i].v) return;
     d.inputs[i].v = v;
+    sgen++;                               /* 옛 자료로 따로 푼 결과가 다시 계산하는 사이에 들어오지 않게 */
+    $('#sg-solve').textContent = '';
     var my = ++bgen;
     $('#sg-save').disabled = true;
     say('돌려 보는 중이에요.');
@@ -340,7 +348,10 @@
 
   function concept() {
     var lesson = $('#gen-lesson').value.trim(), key = $('#gen-key').value.trim();
-    if (!lesson) { say('수업 내용을 입력해주세요.'); return; }
+    /* #sg 는 아직 숨어 있다 — 빠른 생성과 같은 자리(#gen-result)에 말한다. 빠른 생성 초안은 지우지 않는다 */
+    var res = $('#gen-result'), NO_LESSON = '수업 내용을 입력해주세요.';
+    if (!lesson) { res.textContent = NO_LESSON; return; }
+    if (res.textContent === NO_LESSON) res.textContent = '';
     boot();
     $('#sg').hidden = false;
     say('개념을 확인하는 중이에요.');

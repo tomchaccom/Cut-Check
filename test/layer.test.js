@@ -263,7 +263,7 @@ console.log('\n[코드 사실]');
 const FM = { concept: 'for', inputs: [{ name: '영수증', v: '[1, 2]' }, { name: '주문서', v: '[5]' }, { name: '빈 상자', v: '[]', counter: true }] };
 const O = (id, output, error) => ({ dataId: id, output, error: error || '' });
 const kinds = (st, m) => CC.facts.of(st, m || FM).map(f => f.kind).join();
-const stu = (codes, probe) => ({ sCodes: codes.map(d => ({ dataId: d })), sProbe: probe || null });
+const stu = (codes, probe) => ({ sCodes: codes.map(d => ({ dataId: d, code: 'c' })), sProbe: probe ? Object.assign({ sig: CM.sig('c') }, probe) : null });
 t('facts nocounter: 반례로 실행 안 함', CC.facts.of(stu(['[1, 2]']), FM)[0].text === '새로 온 자료로는 실행하지 않았어요');
 t('facts nocounter: 반례로 실행했으면 없음', kinds(stu(['[]'])) === '');
 t('facts probe 없으면 nocounter 만', kinds(stu([])) === 'nocounter');
@@ -273,6 +273,12 @@ t('facts error 문장, 에러가 있으면 hardcode 없음', (() => { const f = 
 t('facts concept 문장', CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', '3'), O('[]', '0')], uses: ['For'] }), { concept: 'while', inputs: FM.inputs })[0].text === '오늘 개념(반복문 while)이 코드에 없어요');
 t('facts concept: uses null 이면 없음', kinds(stu(['[]'], { outs: [], uses: null })) === '');
 t('facts 예전 미션(concept 없음)은 concept 없음', kinds(stu(['[]'], { outs: [], uses: ['x'] }), { inputs: FM.inputs }) === '');
+t('facts probe 가 옛 코드(sig 다름)면 probe 사실은 없고 nocounter 만', (() => {
+  const st = { sCodes: [{ dataId: '[1, 2]', code: 'print(3)' }], sProbe: { sig: CM.sig('old'), outs: [O('[1, 2]', '3'), O('[]', '3')], uses: [] } };
+  return kinds(st) === 'nocounter';
+})());
+t('facts probe 가 마지막 코드와 같으면 사실을 띄운다', kinds({ sCodes: [{ dataId: '[]', code: 'old' }, { dataId: '[]', code: 'new' }], sProbe: { sig: CM.sig('new'), outs: [O('[1, 2]', '3'), O('[]', '3')], uses: ['For'] } }) === 'hardcode');
+t('facts hardcode: 반례 값이 자료 1과 같으면 없음', kinds(stu(['[1, 2]'], { outs: [O('[1, 2]', '3')], uses: ['For'] }), { concept: 'for', inputs: [{ name: '영수증', v: '[1, 2]' }, { name: '같은 것', v: '[1, 2]', counter: true }] }) === '');
 const fc = CC.cards.forMission({ kind: 'code', cards: [{ label: '더하기' }, { label: '나누기', decoy: true }] });
 t('cards.forMission: m.cards 가나다순·decoy 유지', fc.length === 2 && fc[0].label === '나누기' && fc[0].decoy === true && fc[1].label === '더하기' && fc[1].decoy === false);
 t('fixedList 새 꼴은 null', CC.cards.fixedList({ kind: 'code' }) === null);

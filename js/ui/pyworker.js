@@ -9,6 +9,12 @@ importScripts('https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js');
 var ready = loadPyodide().then(function (py) {
   /* input() 은 브라우저 prompt 창을 띄운다. 자료는 data 변수로 주므로 막는다. */
   py.runPython('import builtins\ndef _no_input(*a):\n    raise RuntimeError("__NO_INPUT__")\nbuiltins.input = _no_input');
+  /* 여기서 도는 코드는 학생 코드와 AI 가 쓴 코드다. js·pyodide_js 는 worker 의 자바스크립트 전체
+     (fetch·postMessage — 지어낸 'done' 을 보내는 길)로 가는 문이라 닫는다. 등록을 지워 다시 import 해도
+     못 찾게 하고, sys.modules 자리는 None 으로 막는다. pyodide 패키지(run_js·pyfetch)도 결국 js 를 거친다.
+     밖의 네트워크는 vercel.json 의 이 파일 CSP(connect-src jsdelivr 만)가 한 번 더 막는다 */
+  ['js', 'pyodide_js'].forEach(function (m) { try { py.unregisterJsModule(m); } catch (e) { /* 이미 없다 */ } });
+  py.runPython('import sys\nfor _m in ("js", "pyodide_js", "pyodide", "pyodide.code", "pyodide.ffi", "pyodide.http"):\n    sys.modules[_m] = None\ndel _m');
   return py;
 });
 

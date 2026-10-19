@@ -347,7 +347,10 @@ window.CC_SUPABASE = {
   /* 레벨 테스트 대상 지정 — 학생은 다음 로그인 때 건너뛸 수 없는 테스트를 본다 (2026-10-19) */
   function assignTest(s, btn) {
     if (!selectedRoom || !CC.sb.active()) return;
-    var on = !(s.onboard_due && s.levelWait);   /* 끝난 지정은 '다시 지정' — 시각을 새로 찍는다 */
+    /* 끝난 지정은 '다시 지정' — 시각을 새로 찍는다. 기록을 아직 못 읽었으면(levelWait 없음) 버튼 글자와 같은
+       기준(onboard_due 만)으로 본다: '지정 풀기' 를 눌렀는데 다시 지정되면 안 된다 */
+    var wait = s.levelWait == null ? CC.onboard.pending(s.onboard_due, []) : s.levelWait;
+    var on = !(s.onboard_due && wait);
     btn.disabled = true;
     CC.sb.assignOnboard(selectedRoom.id, s.id, on).then(function () {
       return loadStudents().then(loadStudentEvents);
@@ -790,7 +793,11 @@ window.CC_SUPABASE = {
       btn.disabled = false; btn.textContent = '빠른 생성';
     });
   });
-  CC.genflow.init({ room: function () { return selectedRoom; }, students: function () { return CC.classroom.students; }, saved: loadMissions });
+  /* 단계별 생성은 늘 새 미션이다 — '수정' 으로 걸어 둔 editingMissionId 가 남으면 나중의 빠른 생성이 그 미션을 덮어쓴다 */
+  function notEditing() { editingMissionId = null; $('#gen-btn').textContent = '빠른 생성'; }
+  $('#sg-concept').addEventListener('click', notEditing);
+  CC.genflow.init({ room: function () { return selectedRoom; }, students: function () { return CC.classroom.students; },
+    saved: function () { notEditing(); loadMissions(); } });
 })();
 </script>
 </body>

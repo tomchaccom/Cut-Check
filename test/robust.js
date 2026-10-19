@@ -94,7 +94,7 @@ function launchOpts() {
     localStorage.setItem('cutcheck.generated', JSON.stringify([{ id: 'mx', kind: 'code', concept: 'while', title: 'x', inputs: [{ name: '자료 1', v: '[1]' }, { name: '빈 상자', v: '[]', counter: true }] }]));
     var T = CC.events.T;
     CC.store.push({ type: T.S_CODE, mid: 'mx', code: 'print(1)', dataId: '[1]', output: '1', error: '' });
-    CC.store.push({ type: T.S_PROBE, mid: 'mx', sig: 'ab', outs: [{ dataId: '[1]', output: EVIL, error: '' }, { dataId: '[]', output: EVIL, error: '' }], uses: ['For'] });
+    CC.store.push({ type: T.S_PROBE, mid: 'mx', sig: CC.codemission.sig('print(1)'), outs: [{ dataId: '[1]', output: EVIL, error: '' }, { dataId: '[]', output: EVIL, error: '' }], uses: ['For'] });
   }, EVIL);
   await t.goto(BASE + '/teacher.html'); await t.waitForTimeout(400);
   await t.locator('#livebar .tbtn').first().click(); await t.waitForTimeout(300);

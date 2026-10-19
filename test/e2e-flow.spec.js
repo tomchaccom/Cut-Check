@@ -453,6 +453,7 @@ test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ p
 /* 강사 — 교실은 폴더, 명단의 학생은 기록이 없어도 폴더, 교실에서 빼기 (2026-10-17 사람 요청) */
 const FAKE_TEACHER = `(function(CC){var P=function(v){return Promise.resolve(v)};
 var roster=[{id:'s1',name:'태인',login_id:'m9676u-1'},{id:'s2',name:'가은'},{id:'s3',name:'한결',login_id:'m9676u-2'}];
+roster.forEach(function(r){if(window.__due===r.id)r.onboard_due='2026-10-19T00:00:00Z'});
 window.__removed=[];window.__created=[];window.__reset=[];
 CC.sb={active:function(){return true},
 api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer fake'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(j){if(!r.ok){var e=new Error(j.error||'x');e.reasons=j.reasons;throw e}return j})})},
@@ -461,9 +462,9 @@ createStudent:function(rid,s){if(s.loginId==='taken')return Promise.reject(new E
 resetStudentPassword:function(rid,lid){window.__reset.push([rid,lid]);return P({loginId:lid,password:'zz88aa44'})},
 onAuthChange:function(){},signOut:function(){return P()},createClassroom:function(){return P({})},
 myClassrooms:function(){return P([{id:'r1',name:'태인한결',code:'M9676U'},{id:'r2',name:'방과후',code:'AB12CD'}])},
-getMissions:function(){return P([])},saveMission:function(r,m){(window.__saved=window.__saved||[]).push([r,JSON.parse(JSON.stringify(m))]);return P({})},updateMission:function(){return P({})},deleteMission:function(){return P({})},
+getMissions:function(){return P(window.__missions||[])},saveMission:function(r,m){(window.__saved=window.__saved||[]).push([r,JSON.parse(JSON.stringify(m))]);return P({})},updateMission:function(id){(window.__updated=window.__updated||[]).push(id);return P({})},deleteMission:function(){return P({})},
 getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
-getClassroomEvents:function(){var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:'ab',outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
+getClassroomEvents:function(){if(window.__evHang)return new Promise(function(){});var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:CC.codemission.sig('print(3)'),outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
 {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}]))},
 assignOnboard:function(rid,sid,on){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);roster.forEach(function(r){if(r.id===sid)r.onboard_due=on?new Date(Date.now()+60000).toISOString():null});return P(null)},
 removeStudent:function(rid,sid){window.__removed.push(sid);return P({})}}
@@ -927,7 +928,7 @@ const SG_DRAFT = (solution) => ({ draft: {
 /* for 미션의 모범 답안은 for 를 써야 검사를 통과한다 — print(sum(data)) 는 '개념이 안 쓰였다'로 걸린다 */
 const SG_FOR = 't = 0\nfor x in data:\n    t += x\nprint(t)';
 
-async function sgBuild(page, solutions, solveCode) {
+async function sgBuild(page, solutions, solveCode, before) {
   const builds = [], solves = [];
   await page.route('**/api/mission-steps', async r => {
     const b = r.request().postDataJSON();
@@ -946,6 +947,7 @@ async function sgBuild(page, solutions, solveCode) {
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
   await page.locator('#gen-lesson').fill('리스트와 반복문');
   await page.locator('#gen-key').fill('하나씩 꺼내 보기');
+  if (before) await before();
   await page.locator('#sg-concept').click();
   await page.locator('.sg-ex').first().click();
   await page.locator('#sg-wish').fill('운동회 이야기였으면');
@@ -1142,4 +1144,142 @@ test('서랍에 코드 사실과 설계·코드 나란히', async ({ page }) => 
   const b2 = await d.locator('.d-pair-code').boundingBox();
   expect(b2.y).toBeGreaterThan(a2.y);                                           // 좁으면 위아래
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBeTruthy();
+});
+
+/* ── 최종 리뷰 수정 (2026-10-20) ── */
+
+/* pyrun 의 run 을 감싸 genflow 가 돌린 코드를 센다 — create 는 처음 만들 때 불린다 */
+function spyRuns(page) {
+  return page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const c = window.CC.pyrun.create;
+      window.__runs = [];
+      window.CC.pyrun.create = (s) => {
+        const p = c(s), r = p.run;
+        p.run = (code, cb) => { const k = { code }; window.__runs.push(k); r(code, (o, e) => { k.error = e; cb(o, e); }); };
+        return p;
+      };
+    });
+  });
+}
+
+test('따로 풀기는 자료마다 차례로 돌고 첫 에러(시간 초과)에서 멈춘다', async ({ page }) => {
+  test.setTimeout(120000);
+  await spyRuns(page);
+  const builds = await sgBuild(page, [SG_FOR], 'while True:\n    pass\nprint(1)');
+  await expect(page.locator('.sg-answer')).toHaveText(['2300', '300', '0'], { timeout: 60000 });
+  const solveRuns = () => page.evaluate(() => window.__runs.filter(k => k.code.indexOf('while True') >= 0));
+  await expect.poll(async () => (await solveRuns()).filter(k => k.error).length, { timeout: 20000 }).toBe(1);
+  await page.waitForTimeout(1500);
+  const rs = await solveRuns();
+  expect(rs).toHaveLength(1);                                   // 나머지 두 자료는 넣지 않았다
+  expect(rs[0].error).toBe(await page.evaluate(() => CC.pyerr.TIMEOUT));
+  await expect(page.locator('#sg-solve')).toBeEmpty();
+  expect(builds.solves).toHaveLength(1);
+});
+
+test('자료를 고치는 순간 옛 따로 풀기 결과는 지워진다', async ({ page }) => {
+  test.setTimeout(120000);
+  await sgBuild(page, [SG_FOR], SG_FOR);
+  await expect(page.locator('#sg-solve')).toHaveText('따로 푼 답과 같아요', { timeout: 60000 });
+  const v0 = page.locator('.sg-data-val[data-idx="0"]');
+  await v0.fill('[1, 2]');
+  await v0.blur();                                              // change → rerun 이 동기로 돈다
+  expect(await page.locator('#sg-solve').textContent()).toBe('');
+  await expect(page.locator('#sg-solve')).toHaveText('따로 푼 답과 같아요', { timeout: 60000 });   // 새 자료로 다시 푼다
+});
+
+test('수업 내용 없이 개념 확인을 누르면 보이는 자리에 말한다', async ({ page }) => {
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#sg-concept').click();
+  await expect(page.locator('#gen-result')).toHaveText('수업 내용을 입력해주세요.');
+  await expect(page.locator('#gen-result')).toBeVisible();
+  await expect(page.locator('#sg')).toBeHidden();
+});
+
+test('기록을 읽기 전에 지정 풀기를 눌러도 다시 지정되지 않는다', async ({ page }) => {
+  await page.addInitScript(() => { window.__evHang = 1; window.__due = 's2'; });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  const 가은 = page.locator('.roster-row', { hasText: '가은' });
+  await expect(가은.locator('.roster-test')).toHaveText('레벨 테스트 지정 풀기');
+  await 가은.locator('.roster-test').click();
+  await expect.poll(() => page.evaluate(() => window.__assigned)).toEqual([['r1', 's2', false]]);
+});
+
+test('수정을 눌렀다가 단계별로 확정하면, 다음 빠른 생성은 그 미션을 덮어쓰지 않는다', async ({ page }) => {
+  test.setTimeout(120000);
+  await page.addInitScript(() => { window.__missions = [{ id: 'm-old', data: { title: '옛 미션', brief: '옛 요청', lesson: '옛 수업', keyPoint: '옛 핵심' } }]; });
+  const fixture = require('./fixtures/mission.json');
+  await page.route('**/api/generate-mission', r => r.fulfill({ contentType: 'application/json',
+    body: JSON.stringify({ ...fixture, guard: { fallback: [], reasons: {} } }) }));
+  await sgBuild(page, [SG_FOR], null, async () => {
+    await page.locator('#mission-list button', { hasText: '수정' }).click();
+    await expect(page.locator('#gen-btn')).toHaveText('초안 다시 생성');
+    await page.locator('#gen-lesson').fill('리스트와 반복문');
+  });
+  await expect(page.locator('#gen-btn')).toHaveText('빠른 생성');
+  await expect(page.locator('.sg-answer')).toHaveText(['2300', '300', '0'], { timeout: 60000 });
+  await page.locator('#sg-save').click();
+  await expect.poll(() => page.evaluate(() => (window.__saved || []).length)).toBe(1);
+  await page.locator('#gen-key').fill('하나씩 꺼내 보기');
+  await page.locator('#gen-btn').click();
+  await page.locator('#confirm-mission').click();
+  await expect.poll(() => page.evaluate(() => (window.__saved || []).length)).toBe(2);
+  expect(await page.evaluate(() => window.__updated || [])).toEqual([]);
+});
+
+/* worker 안의 코드가 js 모듈로 바깥(fetch·postMessage)에 닿지 못한다 */
+test('실행기 — worker 안에서 js·pyodide 모듈은 막혀 있고 보통 코드는 돈다', async ({ context, page }) => {
+  test.setTimeout(90000);
+  await local(context);
+  await page.goto(BASE + '/sentence.html');
+  const r = await page.evaluate(() => new Promise(resolve => {
+    const py = window.CC.pyrun.create((t, ok) => {
+      if (!ok) return;
+      const got = [];
+      const codes = ['import js', 'import sys\ndel sys.modules["js"]\nimport js', 'import pyodide_js', 'from pyodide.code import run_js', 'print(sorted({3, 1, 2}))'];
+      codes.forEach(c => py.run(c, (o, e) => { got.push([o, e]); if (got.length === codes.length) resolve(got); }));
+    });
+  }));
+  r.slice(0, 4).forEach(([o, e]) => expect(e).toMatch(/ModuleNotFoundError/));
+  expect(r[4]).toEqual(['[1, 2, 3]\n', '']);
+});
+
+/* worker 가 준비된 뒤 죽으면 그 실행만 실패 — 메인 스레드(시간 제한·격리 없음)로 옮겨 다시 돌리지 않는다.
+ * 실행 번호가 다른 'done' 은 무시한다 */
+const FAKE_WORKER = `postMessage({ type: 'ready' });
+onmessage = function (e) {
+  var d = e.data;
+  if (d.code === 'crash') { setTimeout(function () { throw new Error('boom'); }); return; }
+  postMessage({ type: 'done', id: 1, output: 'FAKE1', error: '' });
+  postMessage({ type: 'done', id: String(d.id) + 'x', output: 'FAKE2', error: '' });
+  postMessage({ type: 'done', id: d.id, output: 'ok:' + d.code + ':' + typeof d.id + ':' + String(d.id).length, error: '' });
+};`;
+
+test('실행기 — 준비된 worker 가 죽으면 그 실행만 실패하고 메인 스레드로 가지 않는다', async ({ context, page }) => {
+  await local(context);
+  await page.route('**/pyodide/**', r => r.abort());
+  await page.route('**/js/ui/pyworker.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_WORKER }));
+  await page.goto(BASE + '/sentence.html');
+  const r = await page.evaluate(() => new Promise(resolve => {
+    window.loadPyodide = () => { window.__mainBoot = 1; return new Promise(() => {}); };
+    let started = false;
+    const got = [];
+    const py = window.CC.pyrun.create((t, ok) => {
+      if (!ok || started) return;
+      started = true;
+      py.run('a', (o, e) => got.push([o, e]));
+      py.run('crash', (o, e) => got.push([o, e]));
+      py.run('b', (o, e) => { got.push([o, e]); resolve({ got, main: !!window.__mainBoot }); });
+    });
+  }));
+  expect(r.main).toBe(false);
+  expect(r.got[1]).toEqual(['', 'Python 실행기가 멈췄어요.']);
+  expect(r.got[0][0]).toMatch(/^ok:a:string:/);                // 지어낸 id 1·id+'x' 의 done 은 버렸다
+  expect(Number(r.got[0][0].split(':')[3])).toBeGreaterThan(6); // 맞히기 어려운 실행 번호
+  expect(r.got[2][0]).toMatch(/^ok:b:/);                         // 새 worker 로 이어서 돈다
 });
