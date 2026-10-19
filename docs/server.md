@@ -223,3 +223,30 @@ POST /api/create-student        Authorization: Bearer <선생님 access token>
 
 환경변수(Vercel): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. 값은 저장소에 두지 않는다.
 서버가 없으면(로컬 모드) 계정은 못 만들지만 수업 흐름은 그대로 돈다.
+
+### 미션 만들기 API — `api/mission-steps.py` · `api/generate-mission.py`
+
+강사 화면의 단계별 생성(개념 확인 → 예시 → 만들기)은 `POST /api/mission-steps` 하나가 `action` 으로 나뉘어 받는다. 빠른 생성은 `/api/generate-mission` 그대로다.
+
+```
+POST /api/mission-steps         Authorization: Bearer <선생님 access token>
+  { action: 'concept',  lesson, keyPoint }                                   → { concept, label, by }
+  { action: 'examples', concept, seen, difficulty, stages }                  → { examples: [{ title, situation, why }] }
+  { action: 'build',    concept, example, wish, problems, difficulty, stages } → { draft }
+  { action: 'solve',    situation, brief, inputs }                           → { code }
+  401 토큰 없음·무효 / 403 강사 아님 / 400 입력 형식 / 422 규칙 검사 탈락(reasons 포함) / 502 LLM·Supabase 실패·시간 초과
+```
+
+- **두 함수 모두 Bearer 토큰이 필요하다.** `mission-steps` 와 `generate-mission` 은 같은 확인(`api/_auth.py` 의 `refuse`)을 거친다. 토큰이 없거나 강사가 아니면 LLM 을 부르지 않는다. 로컬 모드(서버 없이 열기)에서는 호출이 로그인 안내로 돌아온다.
+- **서버는 AI 가 쓴 코드를 실행하지 않는다.** `build` 가 돌려주는 모범 답안은 강사 브라우저(Pyodide)가 자료마다 돌려 정답을 얻는다. 로그인은 비용 남용을 막을 뿐 보안 경계가 아니다(이메일로 가입하면 누구나 강사) — 그래서 코드 실행을 서버에 두지 않았다.
+- `solve` 는 모범 답안 없이 문제와 자료만 받아 따로 푼 코드를 돌려준다. 강사 화면이 같은 자료로 돌려 정답과 견준다.
+- `build` 는 응답 시간 예산 55초(`maxDuration` 60초 안)를 강사 확인부터 센다. 규칙에 걸리면 이유를 붙여 재요청하며, 시간이 모자라면 재요청하지 않는다.
+
+환경변수(Vercel), 둘 다 비워 두면 기본값이다.
+
+| 이름 | 기본값 | 쓰는 곳 |
+|---|---|---|
+| `LLM_MODEL` | `openai/gpt-5.4` | 만들기(모범 답안 포함)와 빠른 생성 |
+| `LLM_MODEL_LIGHT` | `openai/gpt-5.4-mini` | 개념 확인 · 예시 · 따로 풀기 — 비용을 줄이려고 단계별로 나눴다 |
+
+그 밖에 위 `SUPABASE_*` 셋이 있어야 강사 확인이 된다. 없으면 502 "서버에 계정 설정이 없어요".
