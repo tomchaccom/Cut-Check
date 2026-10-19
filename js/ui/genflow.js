@@ -7,6 +7,7 @@
 (function (CC) {
   function $(s) { return document.querySelector(s); }
   var gen = 0;   /* 가장 최근 요청만 화면에 반영한다 — 늦게 온 옛 응답은 버린다 */
+  var sgen = 0;  /* 따로 풀기 — 자료를 고치거나 새로 만들거나 확정하면 이전 풀이 결과는 버린다 */
   var bgen = 0;  /* 만들기·다시 돌리기도 같은 방식. 예시 요청과 따로 센다 — 예시를 더 본다고 만들던 초안이 버려지면 안 된다 */
   var st = { concept: null, examples: [], seen: [], pick: -1, py: null, pyFail: false, wait: [], d: null, res: null };
   var CM = CC.codemission;
@@ -174,6 +175,29 @@
     probs.forEach(function (p) { box.appendChild(el('span', null, '· ' + p)); });
     box.hidden = !probs.length;
     $('#sg-save').disabled = false;
+    solve(d);
+  }
+
+  /* 모범 답안을 보이지 않고 문제·자료만 주어 따로 풀게 한 뒤, 같은 자료로 돌려 정답과 견준다. 기다리지 않는다.
+     실패하면 아무것도 안 띄운다 — 판정이 아니라 사실 한 줄이다 */
+  function solve(d) {
+    var my = ++sgen, out = $('#sg-solve');
+    if (out) out.textContent = '';
+    CC.sb.api('/api/mission-steps', { action: 'solve', situation: val('#sg-situation', d.situation), brief: val('#sg-brief', d.brief),
+      inputs: d.inputs.map(function (x) { return { name: x.name, v: x.v }; }) }).then(function (r) {
+      if (my !== sgen || typeof (r && r.code) !== 'string') return;
+      return Promise.all(d.inputs.map(function (x) {
+        return py(CM.dataLine(d, x.v) + '\n' + r.code);
+      })).then(function (rs) {
+        if (my !== sgen || rs.some(function (q) { return q.error; })) return;
+        var diff = [];
+        rs.forEach(function (q, i) {
+          var o = String(q.output).trim();
+          if (o !== d.expected[i]) diff.push(d.inputs[i].name + ' — ' + d.expected[i] + ' / ' + o);
+        });
+        out.textContent = diff.length ? '따로 푼 답과 달라요: ' + diff.join(' · ') : '따로 푼 답과 같아요';
+      });
+    }).catch(function () {});
   }
 
   function rerun(i, input) {
@@ -226,6 +250,8 @@
       row.appendChild(nm); row.appendChild(v); row.appendChild(a);
       s2.appendChild(row);
     });
+    var so = el('p', 'h-sub'); so.id = 'sg-solve'; so.setAttribute('role', 'status');
+    s2.appendChild(so);
     root.appendChild(s2);
 
     var s3 = sec('성공 조건 보기', '학생에게는 무엇이 진짜인지 안 보여요');
@@ -294,6 +320,7 @@
       expected: d.expected.slice()
     };
     $('#sg-save').disabled = true;
+    sgen++;
     CC.sb.saveMission(room.id, m).then(function () {
       st.d = null;
       $('#sg-draft').textContent = '';

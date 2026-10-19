@@ -927,12 +927,17 @@ const SG_DRAFT = (solution) => ({ draft: {
 /* for 미션의 모범 답안은 for 를 써야 검사를 통과한다 — print(sum(data)) 는 '개념이 안 쓰였다'로 걸린다 */
 const SG_FOR = 't = 0\nfor x in data:\n    t += x\nprint(t)';
 
-async function sgBuild(page, solutions) {
-  const builds = [];
+async function sgBuild(page, solutions, solveCode) {
+  const builds = [], solves = [];
   await page.route('**/api/mission-steps', async r => {
     const b = r.request().postDataJSON();
     if (b.action === 'concept') return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ concept: 'for', label: '반복문 for', by: 'keyword' }) });
     if (b.action === 'examples') return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ examples: [{ title: '영수증', situation: '영수증을 모아요.', why: '하나씩 더해요' }] }) });
+    if (b.action === 'solve') {
+      solves.push(b);
+      return solveCode ? r.fulfill({ contentType: 'application/json', body: JSON.stringify({ code: solveCode }) })
+        : r.fulfill({ status: 502, contentType: 'application/json', body: '{"error":"x"}' });
+    }
     builds.push(b);
     return r.fulfill({ contentType: 'application/json', body: JSON.stringify(SG_DRAFT(solutions[Math.min(builds.length, solutions.length) - 1])) });
   });
@@ -945,6 +950,7 @@ async function sgBuild(page, solutions) {
   await page.locator('.sg-ex').first().click();
   await page.locator('#sg-wish').fill('운동회 이야기였으면');
   await page.locator('#sg-build').click();
+  builds.solves = solves;
   return builds;
 }
 
@@ -1022,4 +1028,28 @@ test('강사 화면에서 Python 을 못 불러오면 멈추지 않고 그렇다
   await page.route('**/pyodide/**', r => r.abort());
   await sgBuild(page, [SG_FOR]);
   await expect(page.locator('#sg-status')).toContainText('Python을 불러오지 못했어요', { timeout: 20000 });
+});
+
+test('따로 푼 답이 다르면 사실 한 줄로 보인다', async ({ page }) => {
+  test.setTimeout(120000);
+  const builds = await sgBuild(page, [SG_FOR], 'print(sum(data)+1)');
+  await expect(page.locator('#sg-solve')).toHaveText('따로 푼 답과 달라요: 영수증 1 — 2300 / 2301 · 영수증 2 — 300 / 301 · 새 영수증 — 0 / 1', { timeout: 60000 });
+  expect(builds.solves).toHaveLength(1);
+  expect(JSON.stringify(builds.solves[0])).not.toContain('solution');
+  expect(builds.solves[0].inputs[0]).toEqual({ name: '영수증 1', v: '[1500, 800]' });
+});
+
+test('따로 푼 답이 같으면 같다고만, 못 풀면 아무것도 안 띄운다', async ({ page }) => {
+  test.setTimeout(120000);
+  await sgBuild(page, [SG_FOR], 'print(sum(data))');
+  await expect(page.locator('#sg-solve')).toHaveText('따로 푼 답과 같아요', { timeout: 60000 });
+});
+
+test('따로 풀기가 실패하면 줄은 비어 있다', async ({ page }) => {
+  test.setTimeout(120000);
+  const builds = await sgBuild(page, [SG_FOR]);
+  await expect(page.locator('.sg-answer')).toHaveText(['2300', '300', '0'], { timeout: 60000 });
+  await expect.poll(() => builds.solves.length).toBe(1);
+  await page.waitForTimeout(500);
+  await expect(page.locator('#sg-solve')).toBeEmpty();
 });
