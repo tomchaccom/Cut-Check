@@ -156,6 +156,7 @@ DEFINE_Q = '어떤 결과가 나오면 성공일까요?'
 LUCK = '에러 없이 끝나기만 하면 성공'
 AXES = ('count', 'empty')  # 새 꼴에 맞는 반례 축 — 구분자·공백은 숫자 목록·while 소재에 안 맞는다 (스펙 반례 규칙)
 # 학생 문장에 개념 이름이 나오면 분해가 끝나 버린다 — 개념은 강사에게만 보인다
+BROKEN_POLITE = re.compile(r'[아어여려워]해 주세요')  # 보여해·알려해·찾아해 — 구해·더해·말해는 통과
 CONCEPT_WORD = re.compile(r'\b(for|while|if|def|split|print)\b|반복문|조건문|함수|인덱스|집합|변수')
 
 BUILD_SYSTEM = '\n'.join([
@@ -175,6 +176,7 @@ BUILD_SYSTEM = '\n'.join([
     '- 앞 두 자료로는 대충 세운 기준도 통한다. 세 번째 자료는 반례다 — 그 기준이 깨지게 쓴다.',
     '- axis: 반례가 건드리는 것 하나. count = 항목 수가 달라짐 / empty = 빈 자료이거나 결과가 0·없음.',
     '- 반례의 답은 자료 1의 답과 달라야 한다. 이름에 "반례" 같은 말을 쓰지 않는다.',
+    '- 답을 정하는 규칙(요금표·기준 점수·목표 금액)은 상황·요청이나 자료 안에 보여야 한다. 모범 답안에만 있으면 학생이 풀 수 없다.',
     '',
     '카드와 성공 조건',
     '- cards: 학생이 고를 풀이 단계 3~5장 (짧은 명사형, 14자 안, decoy false) + 헷갈리지만 필요 없는 카드 정확히 1장 (decoy true).',
@@ -183,7 +185,21 @@ BUILD_SYSTEM = '\n'.join([
     '모범 답안',
     '- solution: 파이썬 코드. 이미 있는 data 를 읽어 답을 구하고 마지막에 print 를 딱 한 번 한다. 출력은 한 줄짜리 짧은 값.',
     '- data 를 다시 정하지 않는다. import, input(), open(), 밑줄 두 개(__) 금지. 고른 개념을 꼭 쓴다.',
+    '- 집합을 그대로 print 하지 않는다 — 순서가 실행마다 바뀌어 정답이 흔들린다. 개수나 sorted 한 결과를 출력한다.',
 ])
+
+# 완성 확인(2026-10-20)에서 자료를 딕셔너리로 주자 모범 답안이 꺼내 읽기만 해 dict 개념 검사(Dict 노드)를 3번 다 못 넘었다.
+# 검사 이유("개념이 쓰이지 않았어요")만으로는 모델이 무엇을 바꿀지 몰랐다 — 개념마다 모범 답안에 있어야 할 것을 말로 준다.
+# 판정 규칙(ast 노드)은 여전히 js/core/codemission.js 한 곳에 있다. 여기는 모델에게 주는 설명뿐이다.
+NEED = {'split': '모범 답안이 .split( 으로 문자열을 나눈다. 자료는 따옴표 문자열 하나다.',
+        'index': '모범 답안이 data[번호] 처럼 자리 번호로 값을 꺼낸다.',
+        'if': '모범 답안에 if 가 있다. 답이 둘 중 하나(예: 통과/재도전)면 반례의 답은 자료 1의 답과 반대가 되게 자료를 고른다.',
+        'for': '모범 답안에 for 가 있다.',
+        'while': '모범 답안에 while 이 있다.',
+        'dict': '모범 답안이 딕셔너리를 직접 만든다({} 또는 dict()). 자료를 딕셔너리로 주면 꺼내 읽기만 해서 안 된다 — '
+                '자료는 리스트(예: 투표한 이름 목록, 주문한 메뉴 목록)로 주고 모범 답안이 딕셔너리를 만들어 세거나 찾는다.',
+        'set': '모범 답안이 집합을 직접 만든다(set() 또는 {…}).',
+        'func': '모범 답안이 def 로 함수를 만들어 부른다.'}
 BUILD_SCHEMA = _obj({
     'title': S, 'situation': S, 'brief': S,
     'inputs': {'type': 'array', 'items': _obj({'name': S, 'v': S})},
@@ -203,8 +219,10 @@ def _assemble(concept_id, m):
         if i == 2:
             d.update(counter=True, axis=m.get('axis'))
         inputs.append(d)
-    return {'kind': 'code', 'concept': concept_id, 'title': m.get('title'), 'situation': m.get('situation'),
-            'brief': m.get('brief'), 'inputs': inputs, 'cards': m.get('cards'),
+    # 줄바꿈은 공백 하나로 — 강사 화면의 한 줄 입력칸이 줄바꿈을 지워 '곤란해요.누가' 처럼 붙은 채 저장됐다 (eval 2026-10-20)
+    one = lambda v: ' '.join(v.split()) if isinstance(v, str) else v  # noqa: E731
+    return {'kind': 'code', 'concept': concept_id, 'title': one(m.get('title')), 'situation': one(m.get('situation')),
+            'brief': one(m.get('brief')), 'inputs': inputs, 'cards': m.get('cards'),
             'define': {'q': DEFINE_Q, 'options': [{'v': m.get('success'), 'trap': None}, {'v': LUCK, 'trap': 'luck'}]},
             'solution': m.get('solution')}
 
@@ -220,6 +238,8 @@ def _text_checks(field, v, limit, sentences=1, polite=False, brief=False):
         checks += [_polite_problem(v), _sentence_problem(v)]
     if brief:
         checks.append(_brief_problem(v))
+    if BROKEN_POLITE.search(v):
+        checks.append("'~해 주세요' 앞이 어색해요 — 예: 보여 주세요, 알려 주세요")
     m = CONCEPT_WORD.search(v)
     if m and field != 'cards':
         checks.append(f"개념 이름 '{m.group(0)}' — 개념은 강사에게만 보인다")
@@ -312,7 +332,7 @@ def build(concept_id, example, wish, level, problems, call_llm=pickle_llm, t0=No
     t0 = t0 or time.monotonic()
     left = lambda: DEADLINE - (time.monotonic() - t0)  # noqa: E731
     ex = example if isinstance(example, dict) else {}
-    user = (f'개념: {CONCEPTS[concept_id]} ({concept_id})\n'
+    user = (f'개념: {CONCEPTS[concept_id]} ({concept_id}) — {NEED[concept_id]}\n'
             f"고른 예시: {_clip(ex.get('title'), 30)} — {_clip(ex.get('situation'), 80)} (→ {_clip(ex.get('why'), 60)})\n\n"
             '이 예시로 문제 하나를 만드세요.' + level_note(level))
     probs = [_clip(p, 200) for p in (problems or []) if str(p or '').strip()][:6]
@@ -346,8 +366,11 @@ def solve(situation, brief, inputs, call_llm=mini_llm):
     ins = [{'name': _clip(x.get('name'), 40), 'v': _clip(x.get('v'), 200)} for x in (inputs or [])[:5] if isinstance(x, dict)]
     _, raw = _ask(call_llm,
                   '중학교 1학년 파이썬 문제를 푼다. JSON 하나만 응답한다. code 에 파이썬 코드만 쓴다. '
-                  'data 변수는 이미 있다 — 다시 정하지 않고 읽어서 답을 구해 마지막에 print 를 한 번 한다. import·input() 금지.',
-                  f'상황: {_clip(situation, 200)}\n요청: {_clip(brief, 200)}\n자료(학생 코드가 data = <값> 으로 받는다):\n' +
+                  'data 변수는 이미 있다 — 다시 정하지 않고 읽어서 답을 구해 마지막에 print 를 한 번 한다. import·input() 금지. '
+                  # 완성 확인(2026-10-20): 자료 목록을 data 하나로 읽어 16개 중 대부분이 자료 전부를 한꺼번에 돌다 에러가 났다
+                  'data 에는 아래 자료 가운데 하나의 값만 들어 있다. 같은 코드를 자료마다 따로 돌린다.',
+                  f'상황: {_clip(situation, 200)}\n요청: {_clip(brief, 200)}\n'
+                  '자료(한 번에 하나씩 data = <값> 으로 받는다. 예: data = ' + (ins[0]['v'] if ins else '[1, 2]') + '):\n' +
                   '\n'.join(f"- {x['name']}: {x['v']}" for x in ins),
                   _obj({'code': S}), 40)
     code = (_json(raw) or {}).get('code')

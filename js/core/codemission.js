@@ -68,7 +68,7 @@
       var nm = (inputs[i] && inputs[i].name) || ('자료 ' + (i + 1));
       if (r.error) {
         var to = CC.pyerr && r.error === CC.pyerr.TIMEOUT;
-        add(to ? 'timeout' : 'error', nm + '로 돌리면 ' + (to ? '시간 안에 끝나지 않아요.' : '에러가 나요.'));
+        add(to ? 'timeout' : 'error', nm + CC.particle(nm, '으로/로') + ' 돌리면 ' + (to ? '시간 안에 끝나지 않아요.' : '에러가 나요.'));
         return;
       }
       var o = String(r.output == null ? '' : r.output).trim();

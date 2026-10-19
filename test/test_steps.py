@@ -119,6 +119,7 @@ t('자료 id·반례 표시는 코드가 붙인다', [i['id'] for i in d['inputs
   and d['inputs'][2].get('counter') is True and d['inputs'][2]['axis'] == 'count' and 'counter' not in d['inputs'][0])
 t('성공 보기 = 진짜 + 요행 함정', d['define'] == {'q': '어떤 결과가 나오면 성공일까요?', 'options': [
     {'v': GOOD['success'], 'trap': None}, {'v': '에러 없이 끝나기만 하면 성공', 'trap': 'luck'}]}, d['define'])
+t('상황의 줄바꿈은 공백 하나로', quiet(_steps.build, 'for', EXAMPLE, '', None, [], fake(bad(situation='민지가 간식을 샀어요.\n얼마인지 알고 싶어요.')))['draft']['situation'] == '민지가 간식을 샀어요. 얼마인지 알고 싶어요.')
 t('validate_draft 가 정상 초안에 아무것도 안 낸다', _steps.validate_draft(d) == [], _steps.validate_draft(d))
 
 f = fake(bad(inputs=[{'name': '민지 영수증', 'v': '1500원, 800원'}] + GOOD['inputs'][1:]), GOOD)
@@ -154,6 +155,7 @@ t('상황에 리스트가 있으면 걸린다', V(with_(situation='민지가 리
 t('solution 이 data 를 다시 정하면 걸린다', V(with_(solution='data = [1]\nprint(sum(data))')))
 t('solution 에 print 가 두 번이면 걸린다', V(with_(solution='print(1)\nprint(data)')))
 t('solution 에 __ 이 있으면 걸린다', V(with_(solution='print(data.__class__)')))
+t('요청이 보여해 주세요처럼 깨지면 걸린다', V(with_(brief='준비물 이름을 보여해 주세요.')) and not V(with_(brief='모두 얼마인지 구해 주세요.')))
 t('solution 에 input( 이 있으면 걸린다', V(with_(solution='x = input()\nprint(data)')))
 
 f = fake(GOOD)
@@ -162,6 +164,9 @@ u = f.calls[0]['messages'][-1]['content']
 t('problems 가 "지난 초안에서 걸린 점" 으로 들어간다', '지난 초안에서 걸린 점' in u and '자료 1과 반례의 답이 같아요' in u, u[-300:])
 t('wish 는 200자에서 자르고 지시 아님을 붙인다', '가' * 200 in u and '가' * 201 not in u and '끝' not in u and '지시 아님' in u)
 t('고른 예시가 프롬프트에', '매점 영수증' in u)
+f = fake(GOOD)
+quiet(_steps.build, 'dict', EXAMPLE, '', None, [], f)
+t('개념마다 모범 답안에 있어야 할 것을 말로 준다 (dict: 자료는 리스트)', '딕셔너리를 직접 만든다' in f.calls[0]['messages'][-1]['content'])
 f = fake(GOOD)
 quiet(_steps.build, 'for', EXAMPLE, '', None, ['x' * 300] * 10, f)
 u = f.calls[0]['messages'][-1]['content']
@@ -172,6 +177,7 @@ f = fake({'code': 'print(sum(data))'})
 out = quiet(_steps.solve, base['situation'], base['brief'], base['inputs'], f)
 t('code 를 돌려준다', out == {'code': 'print(sum(data))'}, out)
 t('프롬프트에 모범 답안이 없다', 'total += x' not in text(f) and '[1500, 800, 2000]' in text(f))
+t('data 에는 자료 하나만 든다고 말한다', '하나의 값만' in text(f) and 'data = [1500, 800, 2000]' in text(f))
 
 print('\n[핸들러 — 강사만]')
 ENV = {'SUPABASE_URL': 'https://x.supabase.co', 'SUPABASE_ANON_KEY': 'ANON', 'SUPABASE_SERVICE_ROLE_KEY': 'SERVICE'}

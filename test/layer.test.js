@@ -244,6 +244,7 @@ const dr = { concept: 'for', brief: '합계는?', inputs: [{ name: 'a' }, { name
 const codes = (d, r, u) => CM.solcheck(d, r, u).map(x => x.code).join();
 t('solcheck 통과: 반례가 빈 배열', codes(dr, ok2, ['For']) === '');
 t('solcheck error', codes(dr, [{ output: '', error: '1번째 줄 에러' }, ok2[1]], ['For']) === 'error');
+t('solcheck error 조사: 받침 있으면 으로, ㄹ·없으면 로', ['영수증', '교실', '버스'].map(n => CM.solcheck({ concept: 'for', inputs: [{ name: n }, {}] }, [{ output: '', error: 'x' }, ok2[1]], ['For'])[0].msg).join('|') === '영수증으로 돌리면 에러가 나요.|교실로 돌리면 에러가 나요.|버스로 돌리면 에러가 나요.');
 t('solcheck timeout', codes(dr, [{ output: '', error: CC.pyerr.TIMEOUT }, ok2[1]], ['For']) === 'timeout');
 t('solcheck concept', codes(dr, ok2, ['While']) === 'concept');
 t('solcheck counter-same', codes(dr, [ok2[0], { output: ' 3\n', error: '' }], ['For']) === 'counter-same');

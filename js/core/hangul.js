@@ -19,17 +19,24 @@
     return (code - 0xAC00) % 28 !== 0;
   }
 
-  /* josa('개수', '이/가') → '개수가' */
-  function josa(word, pair) {
-    var p = pair.split('/');
-    return word + (hasBatchim(word) ? p[0] : p[1]);
+  /* '으로/로' 는 ㄹ 받침에도 '로' 다 — 서울로, 1(일)로 */
+  function rieul(word) {
+    var ch = String(word).trim().slice(-1), code = ch.charCodeAt(0);
+    if (code < 0xAC00 || code > 0xD7A3) return '178l'.indexOf(ch.toLowerCase()) !== -1;
+    return (code - 0xAC00) % 28 === 8;
   }
 
-  /* particle('개수', '이/가') → '가'  — 단어를 <b> 로 감싸야 할 때 쓴다 */
-  function particle(word, pair) {
+  function pick(word, pair) {
     var p = pair.split('/');
+    if (pair === '으로/로' && word && rieul(word)) return p[1];
     return hasBatchim(word) ? p[0] : p[1];
   }
+
+  /* josa('개수', '이/가') → '개수가' */
+  function josa(word, pair) { return word + pick(word, pair); }
+
+  /* particle('개수', '이/가') → '가'  — 단어를 <b> 로 감싸야 할 때 쓴다 */
+  function particle(word, pair) { return pick(word, pair); }
 
   CC.josa = josa;
   CC.particle = particle;
