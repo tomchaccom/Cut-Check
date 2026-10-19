@@ -46,12 +46,20 @@
     '            elif isinstance(_f, ast.Attribute):',
     '                _s.add("call:" + _f.attr)',
     '    print(json.dumps(sorted(_s)))',
-    'except SyntaxError:',
+    'except (SyntaxError, ValueError):',
     '    print("null")',
     ''
   ].join('\n');
 
-  function usesCode(src) { return '_src = ' + JSON.stringify(src) + '\n' + USES_PY; }
+  /* 공유 worker 의 전역(json·ast·임시 변수)을 더럽히지 않게 새 dict 안에서 돌린다 — 다음 학생 실행에 import 없이 json 이 되면 안 된다 */
+  function usesCode(src) { return 'exec(' + JSON.stringify('_src = ' + JSON.stringify(src) + '\n' + USES_PY) + ', {})'; }
+
+  /* 같은 코드인지만 알면 된다 — djb2 16진 */
+  function sig(code) {
+    var h = 5381, s = String(code == null ? '' : code);
+    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(16);
+  }
 
   var DATA_RE = /^data = .*$/m;
 
@@ -92,7 +100,7 @@
   }
 
   CC.codemission = {
-    CONCEPTS: CONCEPTS, concept: concept, uses: uses, USES_PY: USES_PY, usesCode: usesCode,
+    CONCEPTS: CONCEPTS, concept: concept, uses: uses, USES_PY: USES_PY, usesCode: usesCode, sig: sig,
     DATA_RE: DATA_RE, dataLine: dataLine, solcheck: solcheck, hardcodeOption: hardcodeOption
   };
 })(window.CC = window.CC || {});

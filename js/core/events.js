@@ -63,6 +63,7 @@
     S_CODE: 's-code',              /* 코드 실행 { code, dataId, output, error } */
     S_CODE_JUDGE: 's-code-judge',  /* 코드 결과 판정 { verdict, basis } */
     S_TUTOR: 's-tutor',            /* 튜터 질문 { question, answer, kind, refused, step, code, history_len, reasons, retried, judged } */
+    S_PROBE: 's-probe',            /* 판정 뒤 조용한 실행 { sig, outs:[{dataId, output, error}], uses } — 교사 화면 전용 */
     S_ONBOARD: 's-onboard'         /* 교실 입장 진단 { answers: [{q, pick}], skipped } — 고른 것만. 맞음은 core/onboard.js 가 교사 화면에서만 푼다 */
   };
 

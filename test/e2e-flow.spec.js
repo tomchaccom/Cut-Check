@@ -1060,3 +1060,43 @@ test('따로 풀기가 실패하면 줄은 비어 있다', async ({ page }) => {
   await page.waitForTimeout(500);
   await expect(page.locator('#sg-solve')).toBeEmpty();
 });
+
+test('판정을 저장하면 모든 자료로 조용히 돌린 기록이 남고 학생 화면은 그대로다', async ({ page }) => {
+  test.setTimeout(120000);
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await waitPython(page);
+  const probes = () => page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.log.v1') || '[]').filter(e => e.type === 's-probe'));
+  await page.locator('#code-editor').fill('data = "x"\nprint(len(set(data.split(","))))\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toBeVisible({ timeout: 10000 });
+  await page.locator('#code-judge .judge-btn').first().click();
+  await page.locator('#code-judge-save').click();
+  await expect.poll(async () => (await probes()).length, { timeout: 20000 }).toBe(1);
+  const p = (await probes())[0];
+  expect(p.outs.length).toBe(3);
+  expect(p.outs[2].output.trim()).toBe('4');
+  expect(Array.isArray(p.uses)).toBe(true);
+  // usesCode 가 공유 worker 에 json·ast 를 남기지 않는다 — 다음 학생 실행에서 import 없이 되면 안 된다
+  await page.locator('#code-editor').fill('print(("json" in globals(), "ast" in globals(), "_t" in globals()))\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toHaveText('(False, False, False)', { timeout: 10000 });
+  await page.locator('#go-wrap').click();
+  await expect(page.locator('#wrap-review')).toContainText('False');   // 보이는 실행만 — probe 의 4 는 정리 화면에 없다
+  await expect(page.locator('#wrap-review')).not.toContainText('4');
+});
+
+test('마지막 실행이 에러면 조용한 실행 기록은 없다', async ({ page }) => {
+  test.setTimeout(120000);
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await waitPython(page);
+  await page.locator('#code-editor').fill('print(item)\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toContainText('1번째 줄', { timeout: 10000 });
+  await page.waitForTimeout(1500);
+  const n = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.log.v1') || '[]').filter(e => e.type === 's-probe').length);
+  expect(n).toBe(0);
+});

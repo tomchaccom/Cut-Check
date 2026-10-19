@@ -238,7 +238,14 @@ t('dataLine 새 꼴은 리터럴 그대로', CM.dataLine({ kind: 'code' }, '[1, 
 t('dataLine 옛 꼴은 따옴표 문자열', CM.dataLine({}, 'a,b') === 'data = "a,b"');
 t('dataLine 따옴표·역슬래시는 JSON 이스케이프', CM.dataLine({}, 'a\\b"c') === 'data = ' + JSON.stringify('a\\b"c'));
 t('DATA_RE 는 줄 처음의 data 줄을 찾는다', CM.DATA_RE.test('x=1\ndata = [1]\n'));
-t('usesCode 는 _src 한 줄을 앞에 붙인다', CM.usesCode('x=1').indexOf('_src = "x=1"\n') === 0);
+t('usesCode 는 새 dict 안에서 돌려 전역을 더럽히지 않는다', CM.usesCode('x=1').indexOf('exec(') === 0 && /, \{\}\)$/.test(CM.usesCode('x=1')) && CM.usesCode('x=1').indexOf('_src = \\"x=1\\"') > 0);
+t('USES_PY 는 NUL 같은 ValueError 도 null 로 받는다', CM.USES_PY.indexOf('except (SyntaxError, ValueError):') >= 0);
+t('sig: 같은 입력 같은 값, 다른 입력 다른 값', CM.sig('a') === CM.sig('a') && CM.sig('a') !== CM.sig('b') && /^[0-9a-f]+$/.test(CM.sig('print(1)')));
+const pe = CC.events.make(CC.events.T.S_PROBE, { sig: 'ab', outs: [{ dataId: 'x', output: '3', error: '' }], uses: ['For'] });
+t('s-probe 이벤트는 만들어진다', pe.type === 's-probe');
+t('s-probe 에 NEVER 필드를 넣으면 예외', (() => { try { CC.events.make(CC.events.T.S_PROBE, { sig: 'a', score: 1 }); return false; } catch (e) { return true; } })());
+const pf = CC.fold.fold([pe, CC.events.make(CC.events.T.S_PROBE, { sig: 'cd', outs: [], uses: null })]);
+t('fold: 마지막 probe 만 남긴다', pf.sProbe && pf.sProbe.sig === 'cd' && pf.sProbe.uses === null);
 const ok2 = [{ output: '3', error: '' }, { output: '0', error: '' }];
 const dr = { concept: 'for', brief: '합계는?', inputs: [{ name: 'a' }, { name: 'b', counter: true }] };
 const codes = (d, r, u) => CM.solcheck(d, r, u).map(x => x.code).join();

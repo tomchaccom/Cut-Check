@@ -420,6 +420,33 @@
     });
   }
 
+  /* 판정 뒤 모든 자료로 조용히 돌려 기록만 남긴다. 화면·state.codes 에는 아무것도 더하지 않는다.
+   * 같은 py 대기열을 쓰므로 학생이 그 사이에 실행해도 차례로 돈다 */
+  var lastProbeSig = null;
+  function quietProbe() {
+    var cm = CC.codemission, lastC = state.codes[state.codes.length - 1];
+    if (!lastC || lastC.error || !py.ready()) return;
+    var code = lastC.code, sg = cm.sig(code);
+    if (M.id + sg === lastProbeSig) return;
+    lastProbeSig = M.id + sg;
+    var hasData = cm.DATA_RE.test(code), outs = [], i = 0;
+    (function next() {
+      if (i >= M.inputs.length) {
+        py.run(cm.usesCode(code), function (o, e) {
+          var u = null;
+          try { u = e ? null : JSON.parse(String(o).trim()); } catch (x) { u = null; }
+          rec('s-probe', { sig: sg, outs: outs, uses: u });
+        });
+        return;
+      }
+      var v = M.inputs[i++].v, dl = cm.dataLine(M, v);
+      py.run(hasData ? code.replace(cm.DATA_RE, function () { return dl; }) : dl + '\n' + code, function (output, error) {
+        outs.push({ dataId: v, output: String(output || '').slice(0, 200), error: String(error || '') });
+        next();
+      });
+    })();
+  }
+
   function showResult(text, isError) {
     var resultEl = $('#code-result'), outputBox = $('#code-output');
     if (!resultEl || !outputBox) return;
@@ -452,6 +479,7 @@
     });
     $('#code-judge-save').addEventListener('click', function () {
       state.judge = rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
+      quietProbe();
       this.disabled = true; this.textContent = '저장됨';
       btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
       if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
