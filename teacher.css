@@ -353,3 +353,9 @@ details.more[open] > summary { margin-bottom: 16px; }
 .sg-answer { font-family: var(--mono); font-size: 15px; overflow-wrap: anywhere; }
 #sg-draft .opt .in { flex: 1 1 220px; }
 @media (max-width: 600px) { .sg-drow { grid-template-columns: minmax(0, 1fr); } }
+
+/* 설계 카드와 마지막 코드를 나란히 — 좁으면 위아래 */
+.d-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 900px) { .d-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; } }
+.d-pair-cards, .d-pair-code { min-width: 0; }
+.d-pair .sub { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }

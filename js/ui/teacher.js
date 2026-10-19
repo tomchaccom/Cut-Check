@@ -294,13 +294,25 @@
         if (v.sDefine.reason) was(dd, '이유 “' + v.sDefine.reason + '”');
       });
     }
+    var paired = !!(v.sMethod && v.sCodes.length);   /* 설계 카드와 마지막 코드를 나란히 — 판단은 강사가 한다 */
     if (v.sMethod) {
       var sl = v.sMethod.slots || {};
-      var plan = v.sMethod.cards
-        ? v.sMethod.cards.map(function (c) { return CC.cards.text(c); }).join(' → ')
-        : Object.keys(sl).map(function (k) { return sl[k]; }).filter(Boolean).join(' → ');  /* 예전 기록 */
+      var cardTexts = v.sMethod.cards
+        ? v.sMethod.cards.map(function (c) { return CC.cards.text(c); })
+        : Object.keys(sl).map(function (k) { return sl[k]; }).filter(Boolean);  /* 예전 기록 */
       row(dl, '설계도', lastT(evs, ['s-method', 's-remethod', 's-design']), function (dd) {
-        dd.appendChild(document.createTextNode(plan));
+        if (paired) {
+          var pair = el('div', 'd-pair');
+          var pc = el('div', 'd-pair-cards');
+          pc.appendChild(el('span', 'sub', '고른 설계 카드'));
+          pc.appendChild(document.createTextNode(cardTexts.join(' → ')));
+          pair.appendChild(pc);
+          var pk = el('div', 'd-pair-code');
+          pk.appendChild(el('span', 'sub', '마지막으로 실행한 코드'));
+          pk.appendChild(codeBlock(v.sCodes[v.sCodes.length - 1].code));
+          pair.appendChild(pk);
+          dd.appendChild(pair);
+        } else dd.appendChild(document.createTextNode(cardTexts.join(' → ')));
         if (v.sMethodVer > 1) was(dd, '고친 횟수 ' + (v.sMethodVer - 1) + '번');
         if (v.sMethod.reason) was(dd, '이유 “' + v.sMethod.reason + '”');
       });
@@ -308,8 +320,8 @@
     if (v.sCodes.length) {
       var lastCode = v.sCodes[v.sCodes.length - 1];
       row(dl, '코드 실행', lastCode.t, function (dd) {
-        dd.appendChild(el('span', 'sub', '마지막으로 실행한 코드 · 실행 ' + v.sCodes.length + '번'));
-        dd.appendChild(codeBlock(lastCode.code));
+        dd.appendChild(el('span', 'sub', paired ? '실행 ' + v.sCodes.length + '번' : '마지막으로 실행한 코드 · 실행 ' + v.sCodes.length + '번'));
+        if (!paired) dd.appendChild(codeBlock(lastCode.code));
       });
       /* 자료마다 마지막 결과 — dataId 에는 자료 값이 들어 있다 (sentence.js lastResults 와 같은 규칙) */
       var byData = {}, order = [];
@@ -334,6 +346,16 @@
         });
         dd.appendChild(tb);
       });
+    }
+    /* 코드 사실 — 실행·구조로 확실한 것만, 한 줄에 하나. 판정이나 점수가 아니다 (미션 하나가 정해졌을 때만) */
+    var fm = v.sCodes.length && missionOf(mid || (ms.length === 1 ? ms[0] : null));
+    if (fm && CC.facts) {
+      var facts = CC.facts.of(v, fm);
+      if (facts.length) {
+        facts.forEach(function (f) {
+          row(dl, '코드 사실', v.sProbe ? v.sProbe.t : (v.sCodes.length ? v.sCodes[v.sCodes.length - 1].t : null), function (dd) { dd.textContent = f.text; });
+        });
+      }
     }
     var judges = v.sJudges.concat(v.sCodeJudges).sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
     if (judges.length) {

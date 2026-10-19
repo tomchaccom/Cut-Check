@@ -463,8 +463,8 @@ onAuthChange:function(){},signOut:function(){return P()},createClassroom:functio
 myClassrooms:function(){return P([{id:'r1',name:'태인한결',code:'M9676U'},{id:'r2',name:'방과후',code:'AB12CD'}])},
 getMissions:function(){return P([])},saveMission:function(r,m){(window.__saved=window.__saved||[]).push([r,JSON.parse(JSON.stringify(m))]);return P({})},updateMission:function(){return P({})},deleteMission:function(){return P({})},
 getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
-getClassroomEvents:function(){return P([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
-{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}])},
+getClassroomEvents:function(){var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:'ab',outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
+{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}]))},
 assignOnboard:function(rid,sid,on){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);roster.forEach(function(r){if(r.id===sid)r.onboard_due=on?new Date(Date.now()+60000).toISOString():null});return P(null)},
 removeStudent:function(rid,sid){window.__removed.push(sid);return P({})}}
 })(window.CC=window.CC||{});`;
@@ -1119,4 +1119,27 @@ test('조용한 실행이 도는 사이 다른 미션을 열어도 기록은 처
   expect(p.mid).toBe('ai-e2e');
   const want = await page.evaluate(() => window.CC.SENTENCE_MISSIONS[0].inputs.map(i => i.v));
   expect(p.outs.map(o => o.dataId)).toEqual(want);
+});
+
+test('서랍에 코드 사실과 설계·코드 나란히', async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await page.addInitScript(() => {
+    window.__facts = 1;
+    localStorage.setItem('cutcheck.generated', JSON.stringify([{ id: 'mx', kind: 'code', concept: 'while', title: '합계', inputs: [{ name: '영수증', v: '[1, 2]' }, { name: '빈 상자', v: '[]', counter: true }] }]));
+  });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const d = page.locator('#detail');
+  await expect(d.getByText('코드 사실', { exact: true })).toHaveCount(2);
+  await expect(d).toContainText('새로 온 자료에서도 영수증과 같은 결과 3이 나와요');
+  await expect(d).toContainText('오늘 개념 반복문 while가 코드에 없어요');
+  const a = await d.locator('.d-pair-cards').boundingBox();
+  const b = await d.locator('.d-pair-code').boundingBox();
+  expect(a && b && Math.abs(a.y - b.y) < 4 && b.x > a.x).toBeTruthy();       // 나란히
+  await page.setViewportSize({ width: 400, height: 900 });
+  const a2 = await d.locator('.d-pair-cards').boundingBox();
+  const b2 = await d.locator('.d-pair-code').boundingBox();
+  expect(b2.y).toBeGreaterThan(a2.y);                                           // 좁으면 위아래
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBeTruthy();
 });

@@ -88,6 +88,20 @@ function launchOpts() {
   console.log('튜터 질문이 교사 화면에 보임:', tutorShown ? '✓' : '✗ 없음');
   console.log('alert 발생:', alerted ? '✗' : '✓ 없음');
 
+  // 학생 코드의 출력(s-probe)은 서랍의 '코드 사실'로 올라간다 — 글자로만 보여야 한다
+  await t.evaluate((EVIL) => {
+    CC.store.clear();
+    localStorage.setItem('cutcheck.generated', JSON.stringify([{ id: 'mx', kind: 'code', concept: 'while', title: 'x', inputs: [{ name: '자료 1', v: '[1]' }, { name: '빈 상자', v: '[]', counter: true }] }]));
+    var T = CC.events.T;
+    CC.store.push({ type: T.S_CODE, mid: 'mx', code: 'print(1)', dataId: '[1]', output: '1', error: '' });
+    CC.store.push({ type: T.S_PROBE, mid: 'mx', sig: 'ab', outs: [{ dataId: '[1]', output: EVIL, error: '' }, { dataId: '[]', output: EVIL, error: '' }], uses: ['For'] });
+  }, EVIL);
+  await t.goto(BASE + '/teacher.html'); await t.waitForTimeout(400);
+  await t.locator('#livebar .tbtn').first().click(); await t.waitForTimeout(300);
+  const factTxt = (await t.locator('.detail').textContent()) || '';
+  const factBad = !!(await t.evaluate(() => window.__pwned)) || (await t.locator('.detail img').count()) > 0 || alerted || factTxt.indexOf('코드 사실') < 0 || factTxt.indexOf('<img') < 0;
+  console.log('코드 사실(probe 출력)이 글자로만 보임:', factBad ? '✗' : '✓');
+
   // 선생님이 쓴 학생 이름 — 계정 만들기 칸에서 명단·학생 폴더로 흐른다 (서버는 가짜로 끼운다)
   const tc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
   await tc.route('**/supabase-js@2/**', r => r.abort());
@@ -150,7 +164,7 @@ api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'applica
 
   console.log(errs.length ? '✗ JS 에러: ' + errs.join(' | ') : '✓ JS 에러 없음');
   await b.close();
-  const failed = !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad || wishBad;
+  const failed = !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad || wishBad || factBad;
   console.log(failed ? '\n안전성 검사 실패' : '\n안전성 검사 전부 통과');
   process.exit(failed ? 1 : 0);
 })();
