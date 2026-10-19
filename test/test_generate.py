@@ -458,6 +458,9 @@ t('키워드 폴백: 교집합 → split-filter-join', by_keyword('교집합', '
 t('요청 설명이 한 문장 꼴을 강요하지 않는다', '알아내서 ~를 정해' not in json.dumps(_generate._ask_schema(U), ensure_ascii=False)
   and '꼴은 자유' in json.dumps(_generate._ask_schema(U), ensure_ascii=False))
 
+_, b = _generate._parse(J, {**copy.deepcopy(snack), 'brief': '둘 다 먹을 간식이 몇 가지인지 알아 메뉴를 정해 주세요.'})
+t("목록을 남기는 문제에 '몇 가지' 를 물으면 걸린다", any('목록' in r for r in b.get('brief', [])), b)
+
 print('\n[반례에만 나오는 사람을 이야기가 먼저 부르면 걸린다]')
 early = {**copy.deepcopy(snack), 'situation': '지훈이와 서연이, 도윤이가 간식을 같이 사려고 해요. 둘 다 먹을 수 있는 걸로 정해야 해요.'}
 _, b = _generate._parse(J, early)

@@ -391,6 +391,9 @@ def _ask_mismatch(key, brief, lists):
     dup = any(len({x.strip() for x in li}) < len([x for x in li if x.strip()]) for li in lists)
     if key in ('count', 'total') and '가지' in brief and dup:
         return "'몇 가지' 는 겹친 것을 한 번만 세는 말인데, 이 문제는 전부 센 개수를 묻는다 — '모두 몇 개' 로"
+    # 골라 남기기 문제에 '둘 다 먹을 몇 가지인지' 를 물었고 검수도 통과시켰다 (2026-10-18 eval 2회차)
+    if key in ('filtered', 'sorted', 'transformed') and '몇' in brief:
+        return "이 문제의 답은 목록인데 '몇' 은 수를 묻는다 — 무엇이 남는지를 묻는다"
     if key == 'unique' and re.search(r'몇\s*개', brief) and not re.search(r'가지|종류', brief):
         return "'몇 개' 는 겹친 것까지 센 수로 읽힌다 — 이 문제는 '몇 가지' 를 묻는다"
 
