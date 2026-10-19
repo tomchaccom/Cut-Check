@@ -461,7 +461,9 @@ onAuthChange:function(){},signOut:function(){return P()},createClassroom:functio
 myClassrooms:function(){return P([{id:'r1',name:'태인한결',code:'M9676U'},{id:'r2',name:'방과후',code:'AB12CD'}])},
 getMissions:function(){return P([])},saveMission:function(){return P({})},updateMission:function(){return P({})},deleteMission:function(){return P({})},
 getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
-getClassroomEvents:function(){return P([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}}])},
+getClassroomEvents:function(){return P([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
+{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}])},
+assignOnboard:function(rid,sid,on){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);roster.forEach(function(r){if(r.id===sid)r.onboard_due=on?new Date(Date.now()+60000).toISOString():null});return P(null)},
 removeStudent:function(rid,sid){window.__removed.push(sid);return P({})}}
 })(window.CC=window.CC||{});`;
 
@@ -541,6 +543,26 @@ test('강사 — 학생 계정을 만들면 아이디·비밀번호를 한 번 �
   await expect(page.locator('.roster-row', { hasText: '가은' }).locator('.roster-reset')).toHaveCount(0);   // 아이디 없는 예전 계정
 });
 
+/* 레벨 테스트 대상 지정 — 명단 줄에 상/중/하 또는 대기 (2026-10-19 사람 요청) */
+test('강사 — 명단에 레벨이 보이고, 대상자로 지정·풀기', async ({ page }) => {
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  const 태인 = page.locator('.roster-row', { hasText: '태인' });
+  const 가은 = page.locator('.roster-row', { hasText: '가은' });
+  await expect(태인.locator('.roster-level')).toHaveText('레벨 하');          // 다 비운 답 → 하
+  await expect(가은.locator('.roster-level')).toHaveText('레벨 테스트 안 함');
+  await 가은.locator('.roster-test').click();
+  await expect(가은.locator('.roster-level')).toHaveText('레벨 테스트 대기');
+  await expect(가은.locator('.roster-test')).toHaveText('레벨 테스트 지정 풀기');
+  await 가은.locator('.roster-test').click();
+  await expect(가은.locator('.roster-level')).toHaveText('레벨 테스트 안 함');
+  expect(await page.evaluate(() => window.__assigned)).toEqual([['r1', 's2', true], ['r1', 's2', false]]);
+  await page.locator('.main-tab[data-dtab="dtab-students"]').click();
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  await expect(page.locator('#detail .dsub')).toContainText('레벨 하');
+});
+
 test('강사 — 명단을 다시 그려도 입력한 아이디와 새 비밀번호는 남는다', async ({ page }) => {
   await asTeacher(page);
   await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
@@ -600,7 +622,7 @@ test('폰 폭에서는 04 설계가 코드 위에 쌓인다', async ({ context, 
   expect(side.y).toBeLessThan(code.y);
 });
 
-test('교실 첫 입장 — 진단 8문항, 맞고 틀림은 보이지 않고 끝나면 미션이 열린다', async ({ page }) => {
+test('교실 첫 입장 — 레벨 테스트 10문항, 맞고 틀림은 보이지 않고 끝나면 미션이 열린다', async ({ page }) => {
   await page.addInitScript(() => { window.__evs = []; });            // 이 교실에 진단 기록이 없다
   await asStudent(page);
   await page.locator('.room-tile').first().click();
@@ -608,19 +630,23 @@ test('교실 첫 입장 — 진단 8문항, 맞고 틀림은 보이지 않고 �
   await expect(ob).toBeVisible();
   await expect(page.locator('#room-view')).toBeHidden();             // 미션 목록은 진단이 끝난 뒤에
   await expect(page.locator('#ob-skip')).toBeVisible();
-  for (let i = 0; i < 8; i++) {
-    await expect(page.locator('#ob-count')).toHaveText((i + 1) + ' / 8');
+  for (let i = 0; i < 10; i++) {
+    await expect(page.locator('#ob-count')).toHaveText((i + 1) + ' / 10');
     await expect(page.locator('#ob-options button').last()).toHaveText('모르겠어요');
     if (i === 1) {                                                   // 이전으로 돌아가도 된다
       await page.locator('#ob-prev').click();
-      await expect(page.locator('#ob-count')).toHaveText('1 / 8');
+      await expect(page.locator('#ob-count')).toHaveText('1 / 10');
       await expect(page.locator('#ob-options .btn.primary')).toHaveCount(1);   // 내가 고른 것이 남아 있다
       await page.locator('#ob-options button').first().click();
     }
-    await page.locator('#ob-options button').first().click();
+    if (await page.locator('#ob-input').count()) {                   // 단답형 — 비우면 다음으로 못 간다
+      await expect(page.locator('#ob-options button', { hasText: '다음' })).toBeDisabled();
+      await page.locator('#ob-input').fill('나');
+      await page.locator('#ob-input').press('Enter');
+    } else await page.locator('#ob-options button').first().click();
   }
   await expect(page.locator('#ob-done')).toHaveText('고마워요. 이제 미션을 볼 수 있어요.');
-  await expect(ob).not.toContainText(/맞았|틀렸|정답|오답|기초|조합|점/);
+  await expect(ob).not.toContainText(/맞았|틀렸|정답|오답|레벨|상위|하위/);
   await page.locator('#ob-done').click();
   await expect(ob).toBeHidden();
   await expect(page.locator('.mission-file')).toHaveCount(3);
@@ -628,13 +654,32 @@ test('교실 첫 입장 — 진단 8문항, 맞고 틀림은 보이지 않고 �
   expect(evs.length).toBe(1);
   expect(evs[0].type).toBe('s-onboard');
   expect(evs[0].skipped).toBe(false);
-  expect(evs[0].answers.map(a => a.q)).toEqual(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8']);
+  expect(evs[0].answers.map(a => a.q)).toEqual(['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10']);
+  expect(evs[0].answers[1].pick).toBe('나');                        // 단답형은 쓴 글자 그대로
   expect(await page.evaluate(() => window.__pushed)).toEqual([['r1', null]]);
   // 다시 열면 진단은 없다. 큰 교실 이름이 '내 교실' 링크를 덮어 마우스 클릭이 h1 에 떨어진다 (기존 배치 문제) — 이벤트로 누른다
   await page.locator('#crumb-home').dispatchEvent('click');
   await page.locator('.room-tile').first().click();
   await expect(page.locator('.mission-file')).toHaveCount(3);
   await expect(ob).toBeHidden();
+});
+
+test('선생님이 대상자로 정하면 로그인하자마자 테스트가 뜨고 건너뛸 수 없다', async ({ page }) => {
+  // 예전에 건너뛴 기록(_at)은 지정 시각보다 앞선다
+  await page.addInitScript(() => { window.__evs = [{ type: 's-onboard', answers: [], skipped: true, _at: '2026-10-01T00:00:00Z' }]; });
+  await asStudent(page, [{ id: 'r1', name: '1학년 3반' }, { id: 'r2', name: '방과후 코딩반', onboard_due: '2026-10-19T00:00:00Z' }]);
+  await expect(page.locator('#onboard-view')).toBeVisible();          // 교실을 누르지 않아도
+  await expect(page.locator('#room-title')).toHaveText('방과후 코딩반');
+  await expect(page.locator('#ob-skip')).toBeHidden();
+});
+
+test('지정 뒤 이미 테스트를 봤으면 다시 뜨지 않는다', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = [{ type: 's-onboard', answers: [], skipped: false, _at: '2026-10-19T01:00:00Z' }]; });
+  await asStudent(page, [{ id: 'r1', name: '1학년 3반', onboard_due: '2026-10-19T00:00:00Z' }]);
+  await expect(page.locator('.room-tile')).toHaveCount(1);
+  await page.waitForTimeout(300);
+  await expect(page.locator('#onboard-view')).toBeHidden();
+  await expect(page.locator('#rooms-view')).toBeVisible();
 });
 
 test('진단은 건너뛸 수 있다', async ({ page }) => {

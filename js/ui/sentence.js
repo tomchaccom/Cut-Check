@@ -842,6 +842,21 @@
     /* 교실은 선생님이 넣어 준다 — 스스로 들어가는 문은 없다 (2026-10-18) */
     if (!rooms.length) grid.appendChild(el('p', 'home-lead room-empty', '아직 들어간 교실이 없어요. 선생님께 교실에 넣어 달라고 말해 주세요.'));
     showRooms();
+    openDue(rooms.filter(function (r) { return r.onboard_due; }));
+  }
+
+  /* 선생님이 레벨 테스트 대상으로 정한 교실이 있으면 로그인하자마자 그 교실을 연다 — openRoom 이 테스트를 띄운다 */
+  function openDue(list) {
+    if (!list.length) return;
+    var r = list[0];
+    CC.sb.getMyEvents(r.id).then(function (evs) {
+      if (viewedRoom) return;   /* 그사이 학생이 직접 교실을 열었다 */
+      if (CC.onboard.pending(r.onboard_due, onboardAts(evs))) openRoom(r); else openDue(list.slice(1));
+    }, function () {});
+  }
+
+  function onboardAts(evs) {
+    return evs.filter(function (e) { return e.type === CC.events.T.S_ONBOARD; }).map(function (e) { return e._at; });
   }
 
   function showRooms() { $('#rooms-view').hidden = false; $('#room-view').hidden = true; $('#onboard-view').hidden = true; }
@@ -864,12 +879,13 @@
         showMyStatus($('#mission-grid'));
       });
     }
-    /* 교실마다 처음 한 번 진단. 교실은 서버에만 있으니 로컬 모드는 검사하지 않는다 */
+    /* 교실마다 처음 한 번 진단 + 선생님이 대상으로 정하면 다시. 교실은 서버에만 있으니 로컬 모드는 검사하지 않는다 */
     if (!CC.sb.active()) return showMissions();
     CC.sb.getMyEvents(r.id).then(function (evs) {
       if (viewedRoom !== asked) return;
-      var done = evs.some(function (e) { return e.type === CC.events.T.S_ONBOARD; });
-      if (done) showMissions(); else CC.onboardView.open(r.id, showMissions);
+      var ats = onboardAts(evs);
+      var forced = CC.onboard.pending(r.onboard_due, ats);   /* 선생님이 정했으면 건너뛸 수 없다 */
+      if (ats.length && !forced) showMissions(); else CC.onboardView.open(r.id, showMissions, forced);
     }, showMissions);  /* 확인이 안 되면 막지 않는다 — 진단 때문에 수업이 멈추면 안 된다 */
   }
   if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });

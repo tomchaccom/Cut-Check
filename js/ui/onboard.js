@@ -1,8 +1,9 @@
-/* Cut & Check — 교실 입장 진단 화면 (#onboard-view)
+/* Cut & Check — 레벨 테스트 화면 (#onboard-view)
  *
- * 한 화면에 한 문항. 고르면 다음으로 간다. 맞았는지·결과는 보여 주지 않는다 —
- * 해석은 교사 화면이 core/onboard.js 로 한다.
- * 건너뛰기를 막지 않는다. 건너뛴 학생은 분포에서 빠진다.
+ * 한 화면에 한 문항. 객관식은 고르면, 단답형은 쓰고 '다음'을 누르면 다음으로 간다.
+ * 맞았는지·결과는 보여 주지 않는다 — 해석은 교사 화면이 core/onboard.js 로 한다.
+ * 첫 입장 때는 건너뛸 수 있다(건너뛴 학생은 분포에서 빠진다).
+ * 선생님이 대상자로 정한 학생(forced)은 건너뛸 수 없다.
  */
 (function (CC) {
   'use strict';
@@ -11,7 +12,7 @@
   var Q = CC.onboard.QUESTIONS;
 
   /* classroomId 교실에 진단 기록을 남기고 done() 을 부른다 */
-  function open(classroomId, done) {
+  function open(classroomId, done, forced) {
     var picks = {};
     var i = 0;
 
@@ -27,7 +28,7 @@
       $('#ob-count').textContent = end ? '' : (i + 1) + ' / ' + Q.length;
       $('#ob-code').hidden = $('#ob-ask').hidden = end;
       $('#ob-done').hidden = !end;
-      $('#ob-skip').hidden = i > 0;
+      $('#ob-skip').hidden = forced || i > 0;
       $('#ob-prev').hidden = i === 0;
       var box = $('#ob-options');
       box.innerHTML = '';
@@ -35,6 +36,7 @@
       var q = Q[i];
       $('#ob-code').textContent = q.code;
       $('#ob-ask').textContent = q.ask;
+      if (!q.options) return short(box, q);
       q.options.forEach(function (text, k) {
         var b = document.createElement('button');
         b.type = 'button';
@@ -43,6 +45,35 @@
         b.addEventListener('click', function () { picks[q.id] = k; i++; render(); });
         box.appendChild(b);
       });
+    }
+
+    /* 단답형 — 쓴 글자 그대로 남긴다. '모르겠어요' 는 객관식과 같은 자리에 */
+    function short(box, q) {
+      var f = document.createElement('input');
+      f.type = 'text';
+      f.id = 'ob-input';
+      f.maxLength = 40;
+      f.autocomplete = 'off';
+      f.setAttribute('aria-label', '내 답');
+      f.value = typeof picks[q.id] === 'string' ? picks[q.id] : '';
+      var next = document.createElement('button');
+      next.type = 'button';
+      next.className = 'btn primary';
+      next.textContent = '다음';
+      next.disabled = !f.value.trim();
+      f.addEventListener('input', function () { next.disabled = !f.value.trim(); });
+      function go() { if (!f.value.trim()) return; picks[q.id] = f.value.trim(); i++; render(); }
+      next.addEventListener('click', go);
+      f.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) go(); });
+      var dunno = document.createElement('button');
+      dunno.type = 'button';
+      dunno.className = 'btn ' + (picks[q.id] === null ? 'primary' : 'secondary');
+      dunno.textContent = '모르겠어요';
+      dunno.addEventListener('click', function () { picks[q.id] = null; i++; render(); });
+      box.appendChild(f);
+      box.appendChild(next);
+      box.appendChild(dunno);
+      f.focus();
     }
 
     $('#ob-prev').onclick = function () { i--; render(); };

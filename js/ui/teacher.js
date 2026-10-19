@@ -232,7 +232,8 @@
     var head = el('header', 'd-head');
     var who = el('div', 'd-who');
     who.appendChild(el('h3', 'big-title', s.name));
-    who.appendChild(el('p', 'dsub', s.noRecord ? '아직 기록이 없어요' : '지금 ' + whereNow(s) + ' · 마지막 조작 ' + mmss(s.idleSec)));
+    who.appendChild(el('p', 'dsub', (s.noRecord ? '아직 기록이 없어요' : '지금 ' + whereNow(s) + ' · 마지막 조작 ' + mmss(s.idleSec)) +
+      (s.onboard && s.onboard.stage && CC.onboard ? ' · 레벨 ' + CC.onboard.LABEL[s.onboard.stage] : '')));
     head.appendChild(who);
     if (CC.sb && CC.sb.active() && CC._removeStudent) {   /* 교실이 서버에만 있다 — 로컬 모드에는 뺄 교실이 없다 */
       var acts = el('div', 'd-acts');

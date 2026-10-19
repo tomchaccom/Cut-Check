@@ -303,7 +303,13 @@ window.CC_SUPABASE = {
         var who = el('span', 'name', s.name);
         if (s.login_id) who.appendChild(el('span', 'meta', s.login_id));
         row.appendChild(who);
+        who.appendChild(el('span', 'meta roster-level'));   /* 레벨 — 기록을 읽은 뒤 showLevels 가 채운다 */
+        row.dataset.sid = s.id;
         var acts = el('div', 'acts');
+        var lt = el('button', 'pill roster-test', s.onboard_due ? '레벨 테스트 지정 풀기' : '레벨 테스트 지정');
+        lt.type = 'button';
+        lt.addEventListener('click', function () { assignTest(s, lt); });
+        acts.appendChild(lt);
         if (s.login_id) {
           var rp = el('button', 'pill roster-reset', '비밀번호 다시 만들기');
           rp.type = 'button';
@@ -324,12 +330,42 @@ window.CC_SUPABASE = {
     });
   }
 
-  /* 이 반 진단 분포 — 숫자 한 줄. 이름·순서는 띄우지 않는다. 기본 난이도는 처음 한 번만 맞춘다 */
+  /* 레벨 테스트 대상 지정 — 학생은 다음 로그인 때 건너뛸 수 없는 테스트를 본다 (2026-10-19) */
+  function assignTest(s, btn) {
+    if (!selectedRoom || !CC.sb.active()) return;
+    var on = !(s.onboard_due && s.levelWait);   /* 끝난 지정은 '다시 지정' — 시각을 새로 찍는다 */
+    btn.disabled = true;
+    CC.sb.assignOnboard(selectedRoom.id, s.id, on).then(function () {
+      return loadStudents().then(loadStudentEvents);
+    }).catch(function (e) { btn.disabled = false; window.alert(e.message || '지정하지 못했어요.'); });
+  }
+
+  /* 명단 줄마다 레벨 한 칸 — 학생 화면에는 절대 나가지 않는다.
+   * 지정 뒤 아직 안 본 학생은 '테스트 대기'. 지정 뒤 테스트를 마쳤으면 지정 버튼을 되돌린다 */
+  function showLevels(students, rows) {
+    var ats = {};
+    rows.forEach(function (r) {
+      if (r.event && r.event.type === CC.events.T.S_ONBOARD) (ats[r.student_id] = ats[r.student_id] || []).push(r.created_at);
+    });
+    (CC.classroom.roster || []).forEach(function (r) {
+      var row = document.querySelector('#student-list .roster-row[data-sid="' + r.id + '"]');
+      if (!row) return;
+      var st = students.filter(function (x) { return x.id === r.id; })[0];
+      var o = st && st.onboard;
+      var wait = CC.onboard.pending(r.onboard_due, ats[r.id]);
+      row.querySelector('.roster-level').textContent = wait ? '레벨 테스트 대기'
+        : o && o.stage ? '레벨 ' + CC.onboard.LABEL[o.stage] : o && o.skipped ? '레벨 테스트 건너뜀' : '레벨 테스트 안 함';
+      r.levelWait = wait;
+      if (r.onboard_due && !wait) row.querySelector('.roster-test').textContent = '레벨 테스트 다시 지정';
+    });
+  }
+
+  /* 이 반 진단 분포 — 숫자 한 줄. 기본 난이도는 처음 한 번만 맞춘다 */
   var diffSeeded = false;
   function showSpread(students) {
     var n = CC.onboard.spread(students);
-    $('#gen-spread').textContent = '이 반 진단: 기초 ' + n.base + ' · 조합 전 ' + n.combine +
-      ' · 조합 가능 ' + n.ready + ' · 안 함 ' + n.none;
+    $('#gen-spread').textContent = '이 반 레벨: 하 ' + n.base + ' · 중 ' + n.combine +
+      ' · 상 ' + n.ready + ' · 안 함 ' + n.none;
     if (!diffSeeded && n.base > n.combine && n.base > n.ready) { $('#gen-diff').value = 'easy'; diffSeeded = true; }
   }
 
@@ -375,6 +411,7 @@ window.CC_SUPABASE = {
       CC.classroom.students = students;
       CC.classroom.events = evs;   /* 학생 서랍이 미션별로 다시 접고 시각을 읽는다 */
       showSpread(students);
+      showLevels(students, rows);
       if (CC._alertsLoaded) CC._alertsLoaded(students);
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
