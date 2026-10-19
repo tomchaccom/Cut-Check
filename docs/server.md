@@ -250,3 +250,16 @@ POST /api/mission-steps         Authorization: Bearer <선생님 access token>
 | `LLM_MODEL_LIGHT` | `openai/gpt-5.4-mini` | 개념 확인 · 예시 · 따로 풀기 — 비용을 줄이려고 단계별로 나눴다 |
 
 그 밖에 위 `SUPABASE_*` 셋이 있어야 강사 확인이 된다. 없으면 502 "서버에 계정 설정이 없어요".
+`generate-mission` 도 이번 브랜치부터 같은 셋 + 강사 로그인이 필요하다 — 예전처럼 토큰 없이 부르던 도구(`debug.html` 의 AI 테스트 포함)는 `CC.sb.api` 로 토큰을 붙여야 한다. 로그인 안 한 창에서는 401 이다.
+
+### 배포 순서 — 마이그레이션이 코드보다 먼저
+
+`js/data/supabase.js` 가 `enrollments.onboard_due` 를 select 한다. 열이 없으면 Supabase 가 에러를 돌려주고,
+강사 화면의 명단·학생 화면의 교실 목록이 **비어 보인다**(에러 화면이 아니라 빈 목록이라 수업 중에야 발견된다).
+
+1. `supabase/migrations/20261019000000_assign_level_test.sql` 을 운영 DB 에 먼저 적용한다 (`supabase db push` 또는 SQL 편집기).
+2. 적용됐는지 본다: `select onboard_due from enrollments limit 1;` 이 에러 없이 돈다.
+3. 그다음 코드를 배포한다 (Vercel). 거꾸로 하면 1~3 사이 모든 교실이 빈 명단이다.
+4. Vercel 환경변수 `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` 가 있어야
+   `mission-steps` 와 `generate-mission` 이 돈다(없으면 502).
+
