@@ -52,6 +52,8 @@
       var f = document.createElement('input');
       f.type = 'text';
       f.id = 'ob-input';
+      f.className = 'basis-input';
+      f.placeholder = '내 답을 짧게 적어 주세요';
       f.maxLength = 40;
       f.autocomplete = 'off';
       f.setAttribute('aria-label', '내 답');
