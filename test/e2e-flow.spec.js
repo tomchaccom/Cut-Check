@@ -1100,3 +1100,23 @@ test('마지막 실행이 에러면 조용한 실행 기록은 없다', async ({
   const n = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.log.v1') || '[]').filter(e => e.type === 's-probe').length);
   expect(n).toBe(0);
 });
+
+test('조용한 실행이 도는 사이 다른 미션을 열어도 기록은 처음 미션 것이다', async ({ page }) => {
+  test.setTimeout(120000);
+  await local(page.context());
+  await seedMission(page);
+  await studentToCode(page);
+  await waitPython(page);
+  await page.locator('#code-editor').fill('import time\ntime.sleep(0.6)\ndata = "x"\nprint(len(data.split(",")))\n');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toBeVisible({ timeout: 10000 });
+  await page.locator('#code-judge .judge-btn').first().click();
+  await page.locator('#code-judge-save').click();
+  await page.locator('.m-btn[data-id="sm2"]').click();   // 자료 3개를 도는 2초 남짓 사이에 다른 미션으로
+  const probes = () => page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.log.v1') || '[]').filter(e => e.type === 's-probe'));
+  await expect.poll(async () => (await probes()).length, { timeout: 30000 }).toBe(1);
+  const p = (await probes())[0];
+  expect(p.mid).toBe('ai-e2e');
+  const want = await page.evaluate(() => window.CC.SENTENCE_MISSIONS[0].inputs.map(i => i.v));
+  expect(p.outs.map(o => o.dataId)).toEqual(want);
+});

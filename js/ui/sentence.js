@@ -21,7 +21,7 @@
   var state = {};
   var lastRun = { output: '', error: '' };   /* 튜터에게 넘기는 마지막 코드 실행 결과 */
 
-  var rec = function (type, payload) {
+  var rec = function (type, payload, dbId) {
     /* 어느 미션의 기록인지 담는다 — 로컬 저장소는 브라우저 하나에 모든 미션·계정이 섞인다 */
     payload = payload || {};
     if (M && payload.mid == null) payload.mid = M.id;
@@ -29,7 +29,7 @@
     if (CC.store) CC.store.push(ev);
     /* Supabase에도 저장 */
     if (CC.sb && CC.sb.active() && currentClassroomId) {
-      CC.sb.pushEvent(currentClassroomId, currentMissionDbId, ev);
+      CC.sb.pushEvent(currentClassroomId, dbId === undefined ? currentMissionDbId : dbId, ev);
     }
     return ev;
   };
@@ -424,24 +424,28 @@
    * 같은 py 대기열을 쓰므로 학생이 그 사이에 실행해도 차례로 돈다 */
   var lastProbeSig = null;
   function quietProbe() {
-    var cm = CC.codemission, lastC = state.codes[state.codes.length - 1];
-    if (!lastC || lastC.error || !py.ready()) return;
+    var cm = CC.codemission, m = M, dbId = currentMissionDbId;   /* 도는 사이 미션이 바뀌어도 이 기록은 처음 미션 것이다 */
+    var lastC = state.codes[state.codes.length - 1];
+    if (!m || !lastC || lastC.error || !py.ready()) return;
     var code = lastC.code, sg = cm.sig(code);
-    if (M.id + sg === lastProbeSig) return;
-    lastProbeSig = M.id + sg;
-    var hasData = cm.DATA_RE.test(code), outs = [], i = 0;
+    if (m.id + sg === lastProbeSig) return;
+    lastProbeSig = m.id + sg;
+    var hasData = cm.DATA_RE.test(code), outs = [], i = 0, dead = false;
+    function done(u) { rec('s-probe', { sig: sg, outs: outs, uses: u, mid: m.id }, dbId); }
     (function next() {
-      if (i >= M.inputs.length) {
+      if (i >= m.inputs.length || dead) {
+        if (dead) return done(null);   /* 시간 초과면 worker 가 한 번 다시 뜬 것으로 끝 — 남은 자료로 또 죽이지 않는다 */
         py.run(cm.usesCode(code), function (o, e) {
           var u = null;
           try { u = e ? null : JSON.parse(String(o).trim()); } catch (x) { u = null; }
-          rec('s-probe', { sig: sg, outs: outs, uses: u });
+          done(u);
         });
         return;
       }
-      var v = M.inputs[i++].v, dl = cm.dataLine(M, v);
+      var v = m.inputs[i++].v, dl = cm.dataLine(m, v);
       py.run(hasData ? code.replace(cm.DATA_RE, function () { return dl; }) : dl + '\n' + code, function (output, error) {
         outs.push({ dataId: v, output: String(output || '').slice(0, 200), error: String(error || '') });
+        if (error === CC.pyerr.TIMEOUT) dead = true;
         next();
       });
     })();
