@@ -164,7 +164,7 @@ window.CC_SUPABASE = {
   $('#form-login').addEventListener('submit', function (e) {
     e.preventDefault();
     /* 버튼 클릭·Enter 만 로그인이다. 자동완성·스크립트가 낸 submit(submitter 없음)은 무시한다 */
-    if (!e.submitter) return;
+    if (e.submitter === null) return;   /* undefined = submitter 미지원 브라우저(iPad Safari < 15.4) → 허용 */
     showMsg('로그인 중...', '');
     CC.sb.signIn($('#login-email').value, $('#login-pw').value)
       .then(function () { return CC.sb.getProfile(); })

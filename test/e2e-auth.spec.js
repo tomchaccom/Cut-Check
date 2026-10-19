@@ -44,6 +44,16 @@ test('Enter 로는 로그인한다', async ({ context, page }) => {
   await expect.poll(() => calls(page)).toBe(1);
 });
 
+test('submitter 를 지원하지 않는 브라우저(undefined)에서도 로그인한다', async ({ context, page }) => {
+  await fakeSb(context);
+  await page.addInitScript(() => Object.defineProperty(SubmitEvent.prototype, 'submitter', { get() { return undefined; } }));
+  await page.goto(BASE + '/auth.html');
+  await page.fill('#login-email', 'student01');
+  await page.fill('#login-pw', 'abcdef12');
+  await page.press('#login-pw', 'Enter');
+  await expect.poll(() => calls(page)).toBe(1);
+});
+
 test('로그인 버튼 hover 는 초록이 아니다', async ({ context, page }) => {
   await fakeSb(context);
   for (const scheme of ['light', 'dark']) {
