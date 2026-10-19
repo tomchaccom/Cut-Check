@@ -335,3 +335,16 @@ details.more[open] > summary { margin-bottom: 16px; }
 .roster-row .acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .roster-row { flex-wrap: wrap; }
 .roster-row .cred { flex-basis: 100%; }
+
+/* 단계별 생성 (js/ui/genflow.js) */
+#sg { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.sg-lb { font-size: 13px; font-weight: 600; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
+.sg-in { padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 10px; font: inherit; font-size: 14px; background: var(--surface); color: var(--ink); max-width: 100%; }
+#sg-examples { display: grid; gap: 8px; }
+.sg-ex { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.sg-ex span:first-child { font-weight: 600; }
+.sg-ex span:last-child { color: var(--ink-3); font-size: 13px; }
+.sg-ex[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.sg-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+#sg-more { align-self: flex-start; }
+#sg-status { font-size: 13px; color: var(--ink-3); }

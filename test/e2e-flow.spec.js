@@ -455,7 +455,7 @@ const FAKE_TEACHER = `(function(CC){var P=function(v){return Promise.resolve(v)}
 var roster=[{id:'s1',name:'태인',login_id:'m9676u-1'},{id:'s2',name:'가은'},{id:'s3',name:'한결',login_id:'m9676u-2'}];
 window.__removed=[];window.__created=[];window.__reset=[];
 CC.sb={active:function(){return true},
-api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(j){if(!r.ok){var e=new Error(j.error||'x');e.reasons=j.reasons;throw e}return j})})},
+api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer fake'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(j){if(!r.ok){var e=new Error(j.error||'x');e.reasons=j.reasons;throw e}return j})})},
 getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:window.__role||'teacher',name:'김선생'})},
 createStudent:function(rid,s){if(s.loginId==='taken')return Promise.reject(new Error('이미 있는 아이디예요.'));window.__created.push([rid,s]);roster.push({id:'n'+roster.length,name:s.name,login_id:s.loginId});return P({loginId:s.loginId,password:s.password||'k7mpq2xa'})},
 resetStudentPassword:function(rid,lid){window.__reset.push([rid,lid]);return P({loginId:lid,password:'zz88aa44'})},
@@ -850,4 +850,41 @@ test('강사 모드 — 빠른 생성은 CC.sb.api 로 부른다', async ({ page
   await page.locator('#gen-btn').click();
   await expect(page.locator('#confirm-mission')).toBeVisible();
   expect(await page.evaluate(() => window.__api)).toEqual(['/api/generate-mission']);
+});
+
+/* 단계별 생성 1·2단계 — 개념을 확인하고 예시를 고른다 (서버는 가짜 응답) */
+test('강사 단계별 생성 — 개념을 확인하고 예시를 고른다', async ({ page }) => {
+  const reqs = [], auth = [];
+  let n = 0;
+  await page.route('**/api/mission-steps', async r => {
+    const b = r.request().postDataJSON();
+    reqs.push(b);
+    auth.push(r.request().headers()['authorization']);
+    if (b.action === 'concept') return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ concept: 'for', label: '반복문 for', by: 'keyword' }) });
+    const k = n++ ? 'b' : 'a';
+    return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ examples: [1, 2, 3, 4].map(i => ({ title: `${k}제목${i}`, situation: `${k}상황${i}이에요.`, why: `${k}이유${i}` })) }) });
+  });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gen-lesson').fill('리스트와 반복문');
+  await page.locator('#gen-key').fill('하나씩 꺼내 보기');
+  await page.locator('#sg-concept').click();
+  await expect(page.locator('#sg-concept-pick')).toHaveValue('for');
+  await expect(page.locator('#sg-concept-pick option')).toHaveCount(8);
+  await expect(page.locator('.sg-ex')).toHaveCount(4);
+  await expect(page.locator('.sg-ex').first().locator('span')).toHaveText(['a제목1', 'a상황1이에요.', '→ a이유1']);
+  await expect(page.locator('#sg-build')).toBeDisabled();
+  await page.locator('#sg-more').click();
+  await expect(page.locator('.sg-ex').first()).toContainText('b제목1');
+  const more = reqs.filter(b => b.action === 'examples').pop();
+  expect(more.seen).toEqual(['a제목1', 'a제목2', 'a제목3', 'a제목4']);
+  expect(more.concept).toBe('for');
+  expect(auth.every(Boolean)).toBe(true);
+  await page.locator('.sg-ex').nth(1).click();
+  await expect(page.locator('.sg-ex').nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#sg-build')).toBeEnabled();
+  await page.locator('#sg-concept-pick').selectOption('while');
+  await expect(page.locator('#sg-build')).toBeDisabled();            // 개념을 바꾸면 예시를 새로 받고 고름은 비운다
+  expect(reqs.filter(b => b.action === 'examples').pop().concept).toBe('while');
 });

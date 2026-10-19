@@ -9,13 +9,13 @@
   'use strict';
 
   var CONCEPTS = [
-    { id: 'split', label: '나누기(split)', needs: ['call:split'] },
-    { id: 'index', label: '번호로 꺼내기(인덱스)', needs: ['Subscript'] },
-    { id: 'if', label: '조건(if)', needs: ['If', 'IfExp'] },
-    { id: 'for', label: '반복(for)', needs: ['For', 'ListComp', 'SetComp', 'DictComp', 'GeneratorExp'] },
-    { id: 'while', label: '반복(while)', needs: ['While'] },
+    { id: 'split', label: '문자열 나누기', needs: ['call:split'] },
+    { id: 'index', label: '리스트·인덱스', needs: ['Subscript'] },
+    { id: 'if', label: '조건문 if', needs: ['If', 'IfExp'] },
+    { id: 'for', label: '반복문 for', needs: ['For', 'ListComp', 'SetComp', 'DictComp', 'GeneratorExp'] },
+    { id: 'while', label: '반복문 while', needs: ['While'] },
     { id: 'dict', label: '딕셔너리', needs: ['Dict', 'DictComp', 'call:dict'] },
-    { id: 'set', label: '집합(set)', needs: ['Set', 'SetComp', 'call:set'] },
+    { id: 'set', label: '집합', needs: ['Set', 'SetComp', 'call:set'] },
     { id: 'func', label: '함수', needs: ['FunctionDef', 'Lambda'] }
   ];
 

@@ -115,8 +115,17 @@
             <select id="gen-diff" style="padding:8px 12px;border:1px solid var(--line-strong);border-radius:10px;font-size:14px;background:var(--surface);color:var(--ink)">
               <option value="easy">쉬움</option><option value="medium" selected>보통</option><option value="hard">어려움</option>
             </select>
-            <button id="gen-btn" class="btn primary">미션 초안 생성</button>
+            <button id="gen-btn" class="btn">빠른 생성</button>
+            <button id="sg-concept" class="btn primary">개념 확인</button>
           </div>
+        </div>
+        <div id="sg" hidden>
+          <label class="sg-lb">개념 <select id="sg-concept-pick" class="sg-in"></select></label>
+          <div id="sg-examples"></div>
+          <button id="sg-more" class="btn" type="button">다른 예시 더 보기</button>
+          <label class="sg-lb">이렇게 바꿔 줬으면 (선택) <textarea id="sg-wish" class="sg-in" rows="2" maxlength="200"></textarea></label>
+          <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>만들기</button><span id="sg-status" role="status"></span></div>
+          <div id="sg-draft"></div>
         </div>
         <div id="gen-result" style="margin-top:14px"></div>
       </section>
@@ -178,6 +187,7 @@ window.CC_SUPABASE = {
 <script src="js/core/pyerr.js"></script>
 <script src="js/ui/pyrun.js"></script>
 <script src="js/ui/classroom.js"></script>
+<script src="js/ui/genflow.js"></script>
 <script src="js/ui/teacher.js"></script>
 <script>
 /* ── 교실 선택 + 탭 + 미션 초안 생성 ────────────────── */
@@ -630,7 +640,7 @@ window.CC_SUPABASE = {
       });
     }))
     .then(function (m) {
-      btn.disabled = false; btn.textContent = '미션 초안 생성';
+      btn.disabled = false; btn.textContent = '빠른 생성';
 
       /* ── 초안 편집 폼 ── */
       /* PIPE_LABEL은 미션 카드 렌더링(위)에서 이미 정의됨 — 재사용 */
@@ -776,9 +786,10 @@ window.CC_SUPABASE = {
     })
     .catch(function (err) {
       result.innerHTML = '<span style="color:var(--coral)">' + esc(err.message) + '</span>';
-      btn.disabled = false; btn.textContent = '미션 초안 생성';
+      btn.disabled = false; btn.textContent = '빠른 생성';
     });
   });
+  CC.genflow.init({ room: function () { return selectedRoom; }, students: function () { return CC.classroom.students; }, saved: loadMissions });
 })();
 </script>
 </body>
