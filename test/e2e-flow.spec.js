@@ -888,3 +888,28 @@ test('강사 단계별 생성 — 개념을 확인하고 예시를 고른다', a
   await expect(page.locator('#sg-build')).toBeDisabled();            // 개념을 바꾸면 예시를 새로 받고 고름은 비운다
   expect(reqs.filter(b => b.action === 'examples').pop().concept).toBe('while');
 });
+
+test('강사 단계별 생성 — 개념을 빨리 바꾸면 늦게 온 옛 응답은 버린다', async ({ page }) => {
+  await page.route('**/api/mission-steps', async r => {
+    const b = r.request().postDataJSON();
+    if (b.action === 'concept') return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ concept: 'for', label: '반복문 for', by: 'keyword' }) });
+    if (b.concept === 'while') await new Promise(f => setTimeout(f, 600));   // 먼저 보낸 요청이 늦게 도착한다
+    return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ examples: [{ title: b.concept + '-예시', situation: '상황이에요.', why: '이유' }] }) });
+  });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gen-lesson').fill('반복문');
+  await page.locator('#sg-concept').click();
+  await expect(page.locator('.sg-ex')).toContainText('for-예시');
+  await page.locator('.sg-ex').click();
+  await expect(page.locator('#sg-build')).toBeEnabled();
+  await page.locator('#sg-concept-pick').selectOption('while');   // 느린 응답
+  await expect(page.locator('#sg-build')).toBeDisabled();          // 요청 중에 옛 고름이 남지 않는다
+  await page.locator('#sg-concept-pick').selectOption('if');
+  await expect(page.locator('.sg-ex')).toContainText('if-예시');
+  await page.waitForTimeout(900);
+  await expect(page.locator('.sg-ex')).toHaveCount(1);
+  await expect(page.locator('.sg-ex')).toContainText('if-예시');
+  await expect(page.locator('#sg-build')).toBeDisabled();
+});

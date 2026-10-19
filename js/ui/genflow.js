@@ -5,6 +5,7 @@
  */
 (function (CC) {
   function $(s) { return document.querySelector(s); }
+  var gen = 0;   /* 가장 최근 요청만 화면에 반영한다 — 늦게 온 옛 응답은 버린다 */
   var st = { concept: null, examples: [], seen: [], pick: -1, py: null };
 
   function level() {
@@ -43,11 +44,13 @@
 
   /* more=true 면 지금 보인 제목을 seen 에 쌓아 겹치지 않게 받는다. 개념을 바꾸면 처음부터 */
   function load(more) {
-    if (more) st.examples.forEach(function (x) { st.seen.push(x.title); }); else st.seen = [];
+    var my = ++gen;
+    if (more) st.examples.forEach(function (x) { st.seen.push(x.title); }); else { st.seen = []; show([]); }
     say('예시를 가져오는 중이에요.');
     return call({ action: 'examples', concept: st.concept, seen: st.seen.slice() }).then(function (r) {
+      if (my !== gen) return;
       show(r.examples || []); say('');
-    }).catch(fail);
+    }).catch(function (e) { if (my === gen) fail(e); });
   }
 
   function boot() {
