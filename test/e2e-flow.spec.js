@@ -632,3 +632,57 @@ test('로컬 모드 — 진단은 뜨지 않고 미션이 바로 열린다', asy
   await expect(page.locator('#onboard-view')).toBeHidden();
   await expect(page.locator('.m-btn[data-id="ai-e2e"]')).toBeVisible();
 });
+
+/* 골라내기 기준 목록은 숨은 설정이 아니라 자료다 — "민지 시간 vs 준호 시간" 이 학생 눈에 보여야 한다 (2026-10-18) */
+test('골라내기 고정 목록이 01 문제·03 카드·04 요청에 보인다', async ({ page }) => {
+  await local(page.context());
+  await page.goto(BASE + '/sentence.html');
+  await page.evaluate(() => {
+    const m = JSON.parse(JSON.stringify(window.CC.sentenceMission('sm-filter-1')));
+    m.id = 'ai-e2e'; m.no = 'AI'; m.title = '시험용 미션';
+    localStorage.setItem('cutcheck.generated', JSON.stringify([m]));
+    window.CC.store.clear();
+  });
+  await page.reload();
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await expect(page.locator('#samples')).toContainText('주의 재료 목록');
+  await expect(page.locator('#samples .sample-fixed')).toHaveText('우유,달걀,땅콩');
+  await expect(page.locator('#samples .sample-data')).toHaveCount(2);           // 반례는 여전히 숨는다
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  await page.locator('.card-pick', { hasText: '골라내기' }).click();
+  await expect(page.locator('.design-item .card-list')).toHaveText('우유,달걀,땅콩');
+  await page.locator('.card-pick', { hasText: '나누기' }).click();
+  await page.locator('.card-pick', { hasText: '개수 세기' }).click();
+  for (const s of await page.locator('.design-item select').all()) await s.selectOption({ index: 1 });
+  await page.locator('#go-run').click();
+  await expect(page.locator('#step4-fixed')).toHaveText('주의 재료 목록: 우유,달걀,땅콩');
+});
+
+test('고정 목록이 없는 미션에는 목록 칸이 없다', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await expect(page.locator('#samples .sample-fixed')).toHaveCount(0);
+});
+
+test('교사 초안에 고정 목록이 보이고 고칠 수 있다', async ({ context, page }) => {
+  await local(context);
+  const fixture = require('./fixtures/mission.json');
+  const draft = { ...fixture, pipelineId: 'split-filter-join', filterDesc: '민지 시간',
+    pipelineParams: { filterTarget: ['3시', '4시', '5시'] }, guard: { fallback: [], reasons: {} } };
+  delete draft.method;
+  await page.route('**/api/generate-mission', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(draft) }));
+  await page.goto(BASE + '/teacher.html');
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gen-lesson').fill('집합');
+  await page.locator('#gen-key').fill('모두 되는 시간');
+  await page.locator('#gen-btn').click();
+  await expect(page.locator('#draft-fixed')).toHaveValue('3시,4시,5시');
+  await expect(page.locator('#draft-fixed-name')).toHaveValue('민지 시간');
+  await page.locator('#draft-fixed').fill('3시, 4시');
+  await page.locator('#confirm-mission').click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.generated')).pop());
+  expect(saved.pipelineParams.filterTarget).toEqual(['3시', '4시']);
+});

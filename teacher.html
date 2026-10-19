@@ -525,6 +525,13 @@ window.CC_SUPABASE = {
               row.innerHTML = '<b>' + esc(inp.name) + ':</b> ' + esc(inp.v);
               detailDiv.appendChild(row);
             });
+            var fx = CC.cards.fixedList(d);   /* 학생에게 자료처럼 보이는 고정 목록 */
+            if (fx) {
+              var frow = el('div');
+              frow.style.cssText = 'background:var(--surface);border-radius:8px;padding:6px 12px;margin-top:4px;font-family:var(--mono);font-size:13px';
+              frow.innerHTML = '<b>' + esc(fx.name) + ' (고정 목록):</b> ' + esc(fx.items.join(','));
+              detailDiv.appendChild(frow);
+            }
           }
         });
 
@@ -618,6 +625,13 @@ window.CC_SUPABASE = {
         if (isCounter) draft += '<span class="h-sub">반례' + (AXIS[inp.axis] ? ' · ' + AXIS[inp.axis] : '') + '</span>' + fb('counter');
         draft += '</span><input class="in mono draft-data-val" data-idx="' + i + '" aria-label="자료 ' + (i + 1) + ' 내용" value="' + esc(inp.v) + '"></div>';
       });
+      /* 골라내기 고정 목록 — 학생 화면에도 자료처럼 보인다. 정답을 미리 담지 않았는지 교사가 본다 */
+      var fixed = CC.cards.fixedList(m);
+      if (fixed) {
+        draft += '<div class="drow"><span class="dname"><input class="in" id="draft-fixed-name" aria-label="고정 목록 이름" value="' + esc(fixed.name) + '">' +
+          '<span class="h-sub">고정 목록 · 학생에게 보여요</span></span>' +
+          '<input class="in mono" id="draft-fixed" aria-label="고정 목록 내용" value="' + esc(fixed.items.join(',')) + '"></div>';
+      }
       draft += '</div>';
 
       /* 성공 조건 보기 — 무엇이 진짜인지는 교사에게만 */
@@ -672,6 +686,11 @@ window.CC_SUPABASE = {
           var idx = parseInt(el.dataset.idx);
           if (m.inputs[idx]) m.inputs[idx].v = el.value.trim() || m.inputs[idx].v;
         });
+        if ($('#draft-fixed')) {
+          var ft = $('#draft-fixed').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+          if (ft.length) m.pipelineParams = { filterTarget: ft };
+          m.filterDesc = ($('#draft-fixed-name').value || '').trim() || m.filterDesc;
+        }
 
         if (editingMissionId && selectedRoom) {
           CC.sb.updateMission(editingMissionId, m).then(loadMissions);
