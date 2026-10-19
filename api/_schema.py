@@ -198,7 +198,7 @@ Item = Annotated[str, AfterValidator(_item)]
 
 # 칸 → 글자 수 한도. 스키마에는 maxLength 로 보이고, 검사는 model_validator 에서 한꺼번에 한다
 # (필드 검사가 하나라도 실패하면 pydantic 이 model_validator 를 건너뛰어 다른 사유가 묻힌다)
-_LIMIT = {'title': 20, 'brief': 60, 'situation': 90, 'itemName': 6, 'data': 15, 'counter': 15,
+_LIMIT = {'title': 20, 'brief': 60, 'situation': 110, 'itemName': 6, 'data': 15, 'counter': 15,
           'goals': 25, 'sentences': 25, 'filterDesc': 10, 'counterText': 40}
 
 
@@ -284,7 +284,7 @@ class _Base(BaseModel):
 
     title: str = _max('title', description='중학생이 바로 알아듣는 상황 이름. 명사형 ("급식 알레르기 찾기"). 컴퓨터 용어 금지.')
     brief: str = _max('brief', description=(
-        '무엇을 알아내서 그걸로 무엇을 정하는지 한 문장 ("~를 알아내서 ~를 정해 주세요" 꼴). '
+        '무엇을 알아내야 하는지와 그걸로 무엇을 하려는지가 함께 드러나는 한 문장(~해 주세요). 꼴은 자유다. '
         '함수·자료구조·단계 이름(딕셔너리·키·값·나누기·세기·리스트)과 푸는 방법은 쓰지 않는다. '
         '항목을 부르는 말을 넣고, "몇 가지", "모두 얼마", "가장 큰" 처럼 구할 값은 꼭 쓴다. 영어 칸 이름은 쓰지 않는다.'))
     situation: str = _max('situation', description=(
@@ -308,6 +308,10 @@ class _Base(BaseModel):
             bad.append(('data', f"자료 이름 '{n}' — 요일·날짜만 다르다. " + NAME_RULE))
         for n in [n for n in names if date_only_names([n, self.counter.name])]:
             bad.append(('counter', f"자료 이름 '{n}'·'{self.counter.name}' — 요일·날짜만 다르다. " + NAME_RULE))
+        who = _counter_source_named(self.counter.name, names + [getattr(self, 'filterDesc', '') or ''],
+                                    {'situation': self.situation, 'brief': self.brief})
+        if who:
+            bad.append((who[0], f"'{who[1]}' 는 세 번째 자료에만 나오는 출처다 — 학생은 처음에 앞 두 자료만 보니 이야기에 미리 쓰지 않는다"))
         key = next(iter(spec['keys']))
         why = _ask_mismatch(key, self.brief, [d.items for d in self.data] + [self.counter.text.split(',')])
         if why:
@@ -369,6 +373,16 @@ class _Base(BaseModel):
         if 'groupCount' in ops and not any(len(set(d.items)) < len(d.items) for d in self.data):
             bad.append(('data', '묶어 세기 유형인데 같은 항목이 두 번 나오는 자료가 없음'))
         return bad
+
+
+def _counter_source_named(counter_name, shown_names, texts):
+    """→ (칸, 이름) | None. "세 사람 목록에서…" 처럼 반례에만 나오는 사람을 이야기가 먼저 불렀다 (2026-10-18).
+    이름의 첫 낱말에서 '네'·'이네' 를 떼어 본다. 두 글자 미만이거나 앞 자료에도 나오는 말이면 보지 않는다."""
+    first = (counter_name.split() or [''])[0]
+    who = re.sub(r'(이네|네|이의|의|이)$', '', first)
+    if len(who) < 2 or any(who in n for n in shown_names):
+        return None
+    return next(((f, who) for f, t in texts.items() if who in (t or '')), None)
 
 
 def _ask_mismatch(key, brief, lists):

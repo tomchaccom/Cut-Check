@@ -30,7 +30,7 @@ DEADLINE = 55     # 초. Vercel maxDuration 60 안에서 응답까지 끝낸다
 RETRY_NEEDS = 15  # 초. 이만큼 안 남았으면 재요청 대신 바로 기본 틀로 간다
 MAX_RETRY = 2     # 자료는 기본 틀이 없어서, 시간이 남으면 한 번 더 기회를 준다
 # 시간 계산 (gpt-5.4 실측 호출당 평균 9초·최대 13초, 2026-10-18). 호출마다 timeout 은 남은 시간이라 합이 55초를 못 넘는다.
-#   유형 2 + 초안 13 + 재요청 13 + 재요청 13 = 41 → 검수(≤15, 실측 3~5) 46 → 남은 9 < REGEN_NEEDS 25 라 재생성 안 함.
+#   유형 2 + 초안 13 + 재요청 13 + 재요청 13 = 41 → 검수(min(20, 남은 시간), 실측 3~5) 46 → 남은 9 < REGEN_NEEDS 25 라 재생성 안 함.
 #   재요청 0번이면 2 + 13 + 검수 5 = 20 → 남은 35 ≥ 25 라 재생성 1번(유형 2 + 초안 13 + 검수 5 = 40) → 남은 15 < 25 에서 멈춤.
 #   마지막 재요청은 남은 시간이 15초보다 많을 때만 시작한다. 그래서 호출 timeout·횟수는 그대로 둔다.
 
@@ -40,14 +40,17 @@ SYSTEM = '\n'.join([
     '세 자료는 한 이야기 속 서로 다른 사람·모둠·곳에서 온 자료다. 같은 자료에 요일만 바꿔 붙이지 않는다.',
     '앞 두 자료로는 대충 세운 기준도 통하게 만든다. 세 번째 자료는 반례다 — 셋째 출처가 낸 자료로, 앞 자료 항목과 새 항목을 섞고',
     '그 대충 세운 기준이 깨지게 쓴다. 코드가 실제로 돌려 보고 안 깨지면 코드가 다시 만든다.',
+    '학생은 처음에 앞 두 자료만 본다. 그래서 상황·요청에 세 번째 자료의 출처(사람 이름, "세 사람" 같은 수)를 미리 쓰지 않는다.',
     '',
     '지키는 것',
     '- 답, 방법, 고칠 곳을 문제에 쓰지 않는다. 문제는 일부러 모호하게 쓴다.',
     '- 상황은 구체적인 생활 이야기로 쓰고(인물 이름이 나온다), 이야기 속에 푸는 방법은 쓰지 않는다.',
     '- 그 값이 왜 필요한지가 이야기에 있어야 한다. 상황 첫 문장은 누가 왜 곤란한지, 둘째 문장은 무엇을 정해야 하는지.',
-    '  요청은 무엇을 알아내서 무엇을 정하는지까지 말한다. 답을 알면 할 일이 생겨야 한다.',
-    '  좋은 예: 상황 "민지네 모둠은 각자 되는 시간을 쪽지로 냈어요. 모두 되는 시간을 알아야 회의 시간을 정할 수 있어요."'
-    ' → 요청 "모두 되는 시간을 알아내서 모둠 회의 시간을 정해 주세요."',
+    '  요청에는 구할 값과 그 값으로 할 일이 함께 드러난다. 답을 알면 할 일이 생겨야 한다. 문장 꼴은 하나로 맞추지 않는다.',
+    '  여러 꼴의 예 (내용은 베끼지 않는다):',
+    '    "모둠 회의를 잡으려는데 모두 되는 시간을 알려 주세요."',
+    '    "체육복이 몇 벌 모자란지 봐서 주문서를 채워 주세요."',
+    '    상황 "…회의 시간을 정해야 해요." → 요청 "둘 다 되는 시간을 찾아 주세요."',
     '  나쁜 예: "민지가 간식 이름이 몇 번 나왔는지 알아봐요." — 왜 알아야 하는지, 알아서 무엇을 하는지가 없다.',
     '  나쁜 예: "딕셔너리에서 명성 키를 찾아 값을 추출해 주세요" — 방법을 말한다.',
     '  예의 이야기를 그대로 쓰지 말고 오늘 수업에 맞는 새 이야기를 만든다.',
@@ -273,6 +276,7 @@ KEYWORDS = [  # 구체적인 것이 먼저 걸리게 위에 둔다
     (['정렬', 'sort', '순서', '나열'], 'split-sort-join'),
     (['함수', 'def ', '변환', 'strip', 'replace', 'upper', 'lower', '공백'], 'split-transform-join'),
     (['조건', 'if', '필터', '걸러', '선별', '골라', '반복', 'for', 'while'], 'split-filter-count'),
+    (['교집합', '공통', '둘 다', '모두 되는'], 'split-filter-join'),
     (['집합', 'set', '중복'], 'split-unique-count'),
     (['숫자', 'int', 'sum', '합계', '형변환', '계산', '더하'], 'split-num-sum'),
 ]
@@ -283,11 +287,22 @@ def by_keyword(lesson, key_point):
     return next((pid for words, pid in KEYWORDS if any(w in text for w in words)), 'split-unique-count')
 
 
+# 집합 수업은 겹친 것 세기로만 가고 '두 사람 모두' 로는 한 번도 안 왔다 (2026-10-18 eval 2/2).
+# 규칙이 아니라 힌트다 — 모델이 수업을 보고 다른 유형을 고를 수 있다.
+INTERSECT = re.compile(r'집합|교집합|공통|겹치는|둘 다|모두 되는')
+INTERSECT_TYPES = ('split-filter-join', 'split-filter-count', 'split-filter-sort-join', 'split-filter-unique-count')
+INTERSECT_HINT = ('힌트: 이 수업은 "두 사람 모두에게 있는 것 찾기"(모두 되는 시간, 둘 다 먹는 간식)와 잘 이어진다. '
+                  '그 문제는 split-filter-join 이다 — 고정 목록이 한 사람의 자료다. 수업에 더 맞는 유형이 있으면 그걸 고른다.')
+STORY_INTERSECT = ('이 문제는 "두 사람 모두에게 있는 것 찾기" 이야기로 만들면 좋다: 고정 목록 = 한 사람의 자료(학생에게 보인다), '
+                   '앞 두 자료 = 그와 맞춰 볼 다른 사람들이 낸 자료, 셋째 자료 = 같은 이야기의 또 다른 사람.')
+
+
 def choose(lesson, key_point, call_llm, timeout):
+    hint = ('\n\n' + INTERSECT_HINT) if INTERSECT.search(f'{lesson} {key_point}') else ''
     messages = [
         {'role': 'system', 'content': '중학교 1학년 데이터 정리 문제의 유형을 고른다. JSON 하나만 응답한다.'},
         {'role': 'user', 'content': f'오늘 수업: {lesson}\n핵심: {key_point}\n\n이 수업과 가장 잘 이어지는 유형:\n' +
-         '\n'.join(f'- {k}: {v}' for k, v in DESC.items())},
+         '\n'.join(f'- {k}: {v}' for k, v in DESC.items()) + hint},
     ]
     try:
         pid = (_json(call_llm(messages, CHOICE.model_json_schema(), timeout)) or {}).get('pipelineId')
@@ -464,6 +479,8 @@ def generate(lesson, key_point, call_llm=pickle_llm, feedback=None, t0=None, lev
     pid, picked = choose(lesson, key_point, call_llm, min(15, left()))
     schema = _ask_schema(pid)
     ask = f'오늘 수업: {lesson}\n핵심: {key_point}\n유형: {DESC[pid]}\n\n이 수업과 이어지는 문제 하나를 만드세요.' + level_note(level)
+    if pid in INTERSECT_TYPES and INTERSECT.search(f'{lesson} {key_point}'):
+        ask += '\n\n' + STORY_INTERSECT
     if feedback:  # 검수에서 걸린 이유 — 처음부터 다시 만들 때만 온다
         ask += '\n\n지난번 문제는 검수에서 이렇게 걸렸습니다. 이번엔 피하세요:\n' + '\n'.join('- ' + f for f in feedback)
     messages = [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': ask}]

@@ -445,6 +445,26 @@ inname['data'] = [{'name': '서연이 쪽지', 'items': ['쿠키', '하린이 �
 _, b = _generate._parse(J, inname)
 t('자료 항목이 자료 이름이면 걸린다', any('이름' in r for r in b.get('data', [])), b)
 
+print('\n[집합·교집합 수업은 "두 사람 모두" 유형으로 기울인다 — 규칙이 아니라 힌트]')
+llm = fake(J, snack)
+quiet(lambda: generate('파이썬 집합의 활용법', '두 사람 모두 되는 것', llm))
+t('유형 고르기에 교집합 힌트', '두 사람 모두에게 있는 것' in llm.calls[0]['messages'][-1]['content'])
+t('초안 요청에 고정 목록 = 한 사람의 자료', '고정 목록 = 한 사람의 자료' in llm.calls[1]['messages'][-1]['content'])
+llm = fake(U, GOOD)
+quiet(lambda: generate('딕셔너리', '개수 세기', llm))
+t('다른 수업에는 힌트가 없다', '힌트:' not in llm.calls[0]['messages'][-1]['content']
+  and '고정 목록 = 한 사람' not in llm.calls[1]['messages'][-1]['content'])
+t('키워드 폴백: 교집합 → split-filter-join', by_keyword('교집합', '공통 시간') == J)
+t('요청 설명이 한 문장 꼴을 강요하지 않는다', '알아내서 ~를 정해' not in json.dumps(_generate._ask_schema(U), ensure_ascii=False)
+  and '꼴은 자유' in json.dumps(_generate._ask_schema(U), ensure_ascii=False))
+
+print('\n[반례에만 나오는 사람을 이야기가 먼저 부르면 걸린다]')
+early = {**copy.deepcopy(snack), 'situation': '지훈이와 서연이, 도윤이가 간식을 같이 사려고 해요. 둘 다 먹을 수 있는 걸로 정해야 해요.'}
+_, b = _generate._parse(J, early)
+t("반례 '도윤이 쪽지' 의 도윤을 상황이 먼저 부름 → situation", 'situation' in b and '도윤' in str(b['situation']), b)
+_, b = _generate._parse(J, copy.deepcopy(snack))
+t('앞 자료 사람(서연)·고정 목록 사람(지훈)은 불러도 된다', 'situation' not in b, b)
+
 print('\n[기본 모델]')
 t("LLM_MODEL 이 없으면 openai/gpt-5.4", subprocess.run(
     [sys.executable, '-c', 'import sys; sys.path.insert(0, "api"); import _generate; print(_generate.MODEL)'],

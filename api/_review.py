@@ -13,6 +13,7 @@ from _generate import DEADLINE, _json, generate, pickle_llm
 MAX_REGEN = 2
 REGEN_NEEDS = 25   # 초. 다시 만들고(~8초) 다시 검수(~3초)할 여유
 REVIEW_NEEDS = 5   # 초. 이만큼도 없으면 검수 없이 교사에게
+REVIEW_TIMEOUT = 20  # 초. 검수 실측 3~5초 + 504(~8초) 뒤 한 번 더
 
 ITEMS = {
     'understand': '중1이 요청을 읽고 무엇을 구해야 하는지 아는가',
@@ -20,8 +21,11 @@ ITEMS = {
     'noAnswer': '요청·상황 문장(이야기 포함)에 답이나 푸는 방법("겹쳐도 한 번만 세어" 같은)이 드러나지 않았나 (성공 조건 보기는 보지 않는다)',
     'easy': '쉬운 말로 짧게 썼나',
     # 2026-10-18 '간식 세기' 조사에서 위 넷을 다 통과한 채 나간 것들
-    'sameAsk': ('요청이 묻는 값과 정답 보기가 같은 양인가. "몇 가지"는 겹친 것을 한 번만 센 수, "모두 몇 개"는 겹친 것까지 '
-                '전부 센 수다. 이 둘처럼 엇갈릴 때만 아니다 — 말이 달라도 같은 양이면 맞다'),
+    # 구할 값의 종류만 본다. 요청 속 '할 일'(몇 가지 살지 정하기)을 정답 보기와 맞대 떨어뜨린 오탈락이 있었다 (2026-10-18)
+    'sameAsk': ('요청이 알아내라는 값과 정답 보기의 값이 엇갈리지 않는가. 요청 뒤쪽의 할 일(무엇을 정하기·사기)은 비교하지 않는다. '
+                '탈락은 "몇 가지"(겹친 것은 한 번만) ↔ "모두 몇 개"(겹친 것까지 전부)처럼 같은 목록을 다르게 세는 엇갈림뿐이다. '
+                '맞는 예: 요청 "간식마다 몇 번씩 나왔는지 봐서 몇 가지 살지 정해 주세요" ↔ 정답 "간식마다 몇 번 나왔는지가 나오면 성공". '
+                '틀린 예: 요청 "준비물이 몇 가지인지 알려 주세요" ↔ 정답 "준비물이 모두 몇 개인지 나오면 성공"'),
     'noFieldName': '학생이 보는 문장에 itemName·filterTarget 같은 영어 칸 이름이 그대로 나오지 않았나',
     'cleanData': '자료의 "항목" 값 안에 자료 "이름"("민지 쪽지" 같은)이나 목록 이름이 항목으로 끼어들지 않았나. "이름" 칸은 항목이 아니다',
 }
@@ -93,7 +97,9 @@ def make_mission(lesson, key_point, call_llm=pickle_llm, level=None):
             break
         rounds += 1
         try:
-            reasons = review(m, call_llm, min(15, left()))
+            # 게이트웨이가 8초쯤 504 를 내면 _post 가 한 번 다시 보내는데, 15초 예산이면 남은 7초에 또 끊겼다
+            # (2026-10-18 eval 8회 중 3회 '검수를 못 했어요'). 다시 보낼 몫까지 20초.
+            reasons = review(m, call_llm, min(REVIEW_TIMEOUT, left()))
         except Exception as e:  # noqa: BLE001 — 504·JSON 아님 등. 생성은 살리고 교사에게
             print('[generate-mission] 검수 실패', repr(e), file=sys.stderr)
             reasons = ['검수를 못 했어요']

@@ -158,6 +158,8 @@ t('고정 목록을 넘긴다 — 학생에게 보이는 자료다', shown.get('
 diff = {**OK, 'sameAsk': {'ok': False, 'why': '요청은 몇 가지, 정답은 모두 몇 개예요'}}
 r = review(mission2, lambda *a: json.dumps(diff, ensure_ascii=False), 10)
 t('sameAsk 탈락은 이유로 남는다', any('몇 가지' in x for x in r), r)
+t('sameAsk 에 맞는 예·틀린 예가 함께 있다 (할 일은 비교하지 않는다)', '맞는 예' in ITEMS['sameAsk'] and '틀린 예' in ITEMS['sameAsk']
+  and '할 일' in ITEMS['sameAsk'])
 
 print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
 sys.exit(1 if fail else 0)

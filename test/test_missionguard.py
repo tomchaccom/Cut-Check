@@ -84,8 +84,8 @@ broken(U, '요청이 60자 넘음', setp(['brief'], '이번 주 월요일부터 
 STORY = '엄마가 명성이 번호를 물어봤어요. 내 연락처에는 있는데 엄마 폰에는 없어요.'
 m = copy.deepcopy(GOOD[U]); m['situation'] = STORY
 t('이야기 situation 두 문장은 통과', 'situation' not in check(U, m), check(U, m))
-m['situation'] = '가' * 90 + '요.'  # 92자
-t('situation 91자 이상은 걸린다', 'situation' in check(U, m))
+m['situation'] = '가' * 110 + '요.'  # 112자
+t('situation 111자 이상은 걸린다', 'situation' in check(U, m))
 m['situation'] = '엄마가 물어봤어요. 폰에 없어요. 내 폰에는 있어요.'
 t('situation 세 문장은 걸린다', 'situation' in check(U, m))
 for bad in ['딕셔너리에서 명성 키를 찾아 주세요', '리스트에서 골라 주세요']:
@@ -98,11 +98,11 @@ m = copy.deepcopy(GOOD[U]); m['situation'] = '민지의 플레이리스트가 �
 t('situation 플레이리스트는 통과', 'situation' not in check(U, m), check(U, m))
 m['situation'] = '선생님이 딕셔너리를 쓰라고 하셨어요.'
 t('situation 에 딕셔너리는 막는다', 'situation' in check(U, m))
-m['situation'] = '가' * 89 + '요.'
-m['situation'] = '가' * 88 + '요.'
-t('situation 정확히 90자는 통과', len(m['situation']) == 90 and 'situation' not in check(U, m), check(U, m))
-m['situation'] = '가' * 89 + '요.'
-t('situation 91자는 걸린다', len(m['situation']) == 91 and 'situation' in check(U, m))
+# 두 문장(누가 왜 곤란한지 + 무엇을 정해야 하는지)이 90자에 안 들어가 재요청이 났다 (2026-10-18 eval) → 110
+m['situation'] = '가' * 108 + '요.'
+t('situation 정확히 110자는 통과', len(m['situation']) == 110 and 'situation' not in check(U, m), check(U, m))
+m['situation'] = '가' * 109 + '요.'
+t('situation 111자는 걸린다', len(m['situation']) == 111 and 'situation' in check(U, m))
 broken(U, '한자 섞임', setp(['title'], '給食 재료'), 'title')
 broken(U, '코드 조각', setp(['situation'], 'items.split(",") 해요.'), 'situation')
 broken(U, '반례가 첫 자료와 결과가 같음', setp(['counter', 'text'], '빵,국,떡,빵'), 'counter')
@@ -176,7 +176,7 @@ t('유형 고르기 — 14개', len(choice['properties']['pipelineId']['enum']) 
 s = DRAFTS[F].model_json_schema()
 t('초안 — 다른 유형이 섞이지 않는다', 'oneOf' not in json.dumps(s) and 'anyOf' not in json.dumps(s))
 t('초안 — 성공 조건·방법 칸이 없다 (코드가 쓴다)', 'goals' not in s['properties'] and 'sentences' not in s['properties'])
-t('초안 — 글자 수 한도가 스키마에 보인다', s['properties']['brief'].get('maxLength') == 60 and s['properties']['situation'].get('maxLength') == 90)
+t('초안 — 글자 수 한도가 스키마에 보인다', s['properties']['brief'].get('maxLength') == 60 and s['properties']['situation'].get('maxLength') == 110)
 t('초안 — description 이 생성 지시로 들어간다', '반례' in s['properties']['counter']['description'])
 t('14개 유형 모두 초안 스키마가 만들어진다', len(DRAFTS) == 14 == len(SPEC))
 
