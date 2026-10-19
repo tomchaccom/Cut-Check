@@ -29,18 +29,28 @@ DEFINE_Q = '어떤 결과가 나오면 성공일까요?'
 DEADLINE = 55     # 초. Vercel maxDuration 60 안에서 응답까지 끝낸다
 RETRY_NEEDS = 15  # 초. 이만큼 안 남았으면 재요청 대신 바로 기본 틀로 간다
 MAX_RETRY = 2     # 자료는 기본 틀이 없어서, 시간이 남으면 한 번 더 기회를 준다
+# 시간 계산 (gpt-5.4 실측 호출당 평균 9초·최대 13초, 2026-10-18). 호출마다 timeout 은 남은 시간이라 합이 55초를 못 넘는다.
+#   유형 2 + 초안 13 + 재요청 13 + 재요청 13 = 41 → 검수(≤15, 실측 3~5) 46 → 남은 9 < REGEN_NEEDS 25 라 재생성 안 함.
+#   재요청 0번이면 2 + 13 + 검수 5 = 20 → 남은 35 ≥ 25 라 재생성 1번(유형 2 + 초안 13 + 검수 5 = 40) → 남은 15 < 25 에서 멈춤.
+#   마지막 재요청은 남은 시간이 15초보다 많을 때만 시작한다. 그래서 호출 timeout·횟수는 그대로 둔다.
 
 SYSTEM = '\n'.join([
     '당신은 중학교 1학년 수업에 쓸 데이터 정리 문제를 만든다.',
     '학생은 문제를 보고 성공 조건과 처리 방법을 스스로 정한 뒤, 자료 세 개로 실행해 보고 판단한다.',
-    '세 번째 자료는 반례다. 반례 자료는 코드가 실제로 돌려 보고 만든다 — 당신은 반례의 이름만 짓는다.',
-    '그래서 앞 두 자료는 같은 상황의 자료로, 대충 세운 기준도 통하게 만든다.',
+    '세 자료는 한 이야기 속 서로 다른 사람·모둠·곳에서 온 자료다. 같은 자료에 요일만 바꿔 붙이지 않는다.',
+    '앞 두 자료로는 대충 세운 기준도 통하게 만든다. 세 번째 자료는 반례다 — 셋째 출처가 낸 자료로, 앞 자료 항목과 새 항목을 섞고',
+    '그 대충 세운 기준이 깨지게 쓴다. 코드가 실제로 돌려 보고 안 깨지면 코드가 다시 만든다.',
     '',
     '지키는 것',
     '- 답, 방법, 고칠 곳을 문제에 쓰지 않는다. 문제는 일부러 모호하게 쓴다.',
     '- 상황은 구체적인 생활 이야기로 쓰고(인물 이름이 나온다), 이야기 속에 푸는 방법은 쓰지 않는다.',
-    '  좋은 예: 상황 "엄마가 명성이 번호를 물어봤어요. 내 연락처에는 있는데 엄마 폰에는 없어요." → 요청 "엄마한테 명성이 번호를 알려 주세요"',
-    '  나쁜 예: "딕셔너리에서 명성 키를 찾아 값을 추출해 주세요"',
+    '- 그 값이 왜 필요한지가 이야기에 있어야 한다. 상황 첫 문장은 누가 왜 곤란한지, 둘째 문장은 무엇을 정해야 하는지.',
+    '  요청은 무엇을 알아내서 무엇을 정하는지까지 말한다. 답을 알면 할 일이 생겨야 한다.',
+    '  좋은 예: 상황 "민지네 모둠은 각자 되는 시간을 쪽지로 냈어요. 모두 되는 시간을 알아야 회의 시간을 정할 수 있어요."'
+    ' → 요청 "모두 되는 시간을 알아내서 모둠 회의 시간을 정해 주세요."',
+    '  나쁜 예: "민지가 간식 이름이 몇 번 나왔는지 알아봐요." — 왜 알아야 하는지, 알아서 무엇을 하는지가 없다.',
+    '  나쁜 예: "딕셔너리에서 명성 키를 찾아 값을 추출해 주세요" — 방법을 말한다.',
+    '  예의 이야기를 그대로 쓰지 말고 오늘 수업에 맞는 새 이야기를 만든다.',
     '- 학생에게 보이는 문장은 존댓말, 한 칸에 한 문장(상황만 두 문장까지). 괄호·줄표·"예를 들어" 같은 덧붙임 없이 쓴다.',
     '- 칭찬하지 않는다. 한국어만 쓴다.',
     '- 성공 조건과 처리 방법은 코드가 붙인다. 당신은 쓰지 않는다.',
@@ -55,7 +65,9 @@ SYSTEM = '\n'.join([
 API_URL = 'https://llm.pcl.kr/v1/chat/completions'
 # 자체 서빙 pickle-general 은 2026-10-16 03시경부터 첫 토큰 전에 30초로 끊긴다. 같은 키의 유료 모델로 바꾸고,
 # 서버를 고르는 일은 코드 수정 없이 Vercel 환경변수 LLM_MODEL 로 한다.
-MODEL = os.environ.get('LLM_MODEL') or 'openai/gpt-5.4-mini'
+# 기본은 gpt-5.4 (2026-10-18 eval): mini 는 집합 수업을 공백 정리로 엉뚱하게 골랐고, claude-sonnet-5-5 는 15~28초에
+# 게이트웨이가 켠 추론이 max_tokens 의 절반을 먹어 JSON 이 잘릴 위험이 있었다.
+MODEL = os.environ.get('LLM_MODEL') or 'openai/gpt-5.4'
 
 
 def _post(body, key, timeout):
@@ -159,7 +171,12 @@ def _repair(pid, d):
                 d['filterTarget'] = ft + list(dict.fromkeys(words))
                 notes.append(f"걸러낼 대상에 {', '.join(dict.fromkeys(words))} 를 넣었어요")
     elif 'filter' in ops:
-        ft = d.get('filterTarget') or []
+        # 자료 이름("민지 쪽지")을 걸러낼 대상에 넣어 오면, 아래에서 그게 자료 항목으로 끼어들었다 (2026-10-18)
+        names = {str(ds.get('name', '')).strip() for ds in data[:2]}
+        ft = [x for x in (d.get('filterTarget') or []) if x not in names]
+        if ft != (d.get('filterTarget') or []):
+            d['filterTarget'] = ft
+            notes.append('걸러낼 대상에서 자료 이름을 뺐어요')
         items = [x for ds in data[:2] for x in ds.get('items', [])]
         if ft and not set(ft) & set(items):  # 걸러낼 대상이 자료에 없으면 걸러낼 게 없다
             for ds, w in zip(data[:2], (ft[0], ft[-1])):
@@ -180,24 +197,25 @@ def _repair(pid, d):
 
 
 def _ask_schema(pid):
-    """모델에게는 반례의 이름만 묻는다. 반례가 학생 기준을 깨는지는 돌려 봐야 아는데,
-    모델은 이 계산을 자주 틀렸다 (2026-10-16 eval 성공 미션 18개 중 9개가 반례만 기본 틀)."""
+    """반례 자료도 모델이 쓴다 — 이야기 속 셋째 출처의 자료여야 해서 코드가 첫 자료를 복사해 만들면
+    "요일만 바뀐 같은 자료" 가 됐다 (2026-10-18 기준 12회 중 10회). 깨지는지는 _make_counter 가 돌려 본다."""
     s = DRAFTS[pid].model_json_schema()
-    s['properties']['counter'] = {
-        'type': 'object', 'description': ('세 번째 자료의 이름. 앞 자료와 같은 상황의 다른 날·다른 반 ("금요일 재료"). '
-                                          '"반례"·"예시" 같은 말은 쓰지 않는다 — 학생이 함정인 걸 미리 안다. 자료 내용은 코드가 만든다.'),
-        'properties': {'name': {**s['$defs']['Counter']['properties']['name']}}, 'required': ['name']}
+    s['properties']['counter'] = {**s['properties']['counter'], 'description': (
+        '세 번째이자 마지막 자료. 반례 — 같은 이야기 속 셋째 출처가 낸 자료로, 앞 두 자료로 세운 기준이 여기서 깨진다.')}
     return s
 
 
 def _make_counter(pid, d):
-    """반례 자료는 코드가 만든다: 앞 자료로 후보를 만들고, 정답으로 실제로 돌려서 깨지는 첫 후보를 쓴다.
-    이름은 모델이 지은 것을 둔다. 자료가 아직 틀려서 후보를 못 돌리면 그대로 두고 검사에 맡긴다."""
+    """모델이 쓴 반례를 정답으로 실제로 돌려 본다. 깨지면 그대로 쓰고, 안 깨지면 코드 후보 중 깨지는 첫 것으로 바꾼다.
+    이름은 모델이 지은 것을 둔다. 자료가 아직 틀려서 돌릴 수 없으면 그대로 두고 검사에 맡긴다."""
     c = d.get('counter') if isinstance(d.get('counter'), dict) else {}
     data, ft = d.get('data'), d.get('filterTarget') or []
     try:
         items1, items2 = [str(x) for x in data[0]['items']], [str(x) for x in data[1]['items']]
         rows = [{'items': items1}, {'items': items2}]
+        own = isinstance(c.get('text'), str) and c.get('axis') in AXES
+        if own and not counter_problems(pid, rows, ft, c):
+            return
         pick = next((x for x in _counter_candidates(pid, items1, items2, ft)
                      if not counter_problems(pid, rows, ft, x)), None)
     except Exception:  # noqa: BLE001 — 자료 칸이 깨진 초안. 그 사유는 pydantic 이 따로 낸다
@@ -207,6 +225,8 @@ def _make_counter(pid, d):
         if not name.strip() or re.search(r'반례|예시|함정|보조', name):  # 이름이 함정을 알려 버린다
             name = pick['name']
         d['counter'] = {**pick, 'name': name}
+        if own:  # 교사 화면 '자동으로 손봤어요' — 반례 내용을 코드가 바꿨다는 사실은 숨기지 않는다
+            d.setdefault('_repaired', []).append('세 번째 자료가 기준을 깨지 못해서 코드가 다시 만들었어요')
 
 
 def _retype(pid, m, bad):
@@ -305,24 +325,31 @@ BRIEF_FALLBACK = {  # 요청 기본 틀 — 구할 값만 말하고 방법은 �
 }
 
 
+AXES = ('count', 'sep', 'empty', 'invisible')
+
+
 def _counter_candidates(pid, items1, items2, ft):
+    """모델 반례가 안 깨질 때만 쓴다. 첫 자료로 그대로 시작하는 후보는 counter_problems 가 거른다 —
+    두 자료 항목을 섞고 순서·개수를 바꿔 '셋째 출처' 처럼 보이게 만든다."""
     ops = SPEC[pid]['ops']
-    other = '다른 날 자료'
-    if 'filter' in ops:  # 걸러낼 대상이 하나도 없는 날 → 결과가 비어 버린다
-        safe = list(dict.fromkeys(x for x in items1 + items2 if x not in ft))
+    other = '다른 곳에서 온 자료'
+    mix = [x for pair in zip(items2, items1) for x in pair] + items2[len(items1):] + items1[len(items2):]
+    if 'filter' in ops:  # 걸러낼 대상이 하나도 없는 자료 → 결과가 비어 버린다
+        safe = list(dict.fromkeys(x for x in mix if x not in ft))
         rest = ft + ft[:1] if 'toNumber' in ops else (safe + ['사과', '바나나', '포도'])[:4]
         yield {'name': other, 'text': ','.join(rest), 'axis': 'empty'}
     if 'transform' in ops:  # 눈에 안 보이는 앞뒤 공백
-        yield {'name': other, 'text': ','.join(' ' + x.strip() + ' ' for x in items2), 'axis': 'invisible'}
+        yield {'name': other, 'text': ','.join(' ' + x.strip() + ' ' for x in reversed(items2)), 'axis': 'invisible'}
     new = [x for x in items2 if x not in items1][:1]  # 둘째 자료에만 있는 항목 — 서로 다른 개수가 바뀐다
+    for n in range(len(items1) + 2, 1, -1):  # 개수를 바꿔 가며
+        yield {'name': other, 'text': ','.join(mix[:n]), 'axis': 'count'}
     for extra in ([items1[0], items2[0]], items2[:2], items2[:1], new):
-        yield {'name': other, 'text': ','.join(items1 + extra), 'axis': 'count'}
-    # 있던 항목만 더하면 서로 다른 개수가 그대로라, 두 자료의 개수가 같으면 위 후보가 전부 안 깨진다
-    yield {'name': other, 'text': ','.join(items1[:2]), 'axis': 'count'}
+        yield {'name': other, 'text': ','.join(items2 + extra), 'axis': 'count'}
+        yield {'name': other, 'text': ','.join(list(reversed(items1)) + extra), 'axis': 'count'}
     if 'toNumber' in ops and 'filter' not in ops:  # 최댓값·최솟값은 끝값이 바뀌어야 깨진다
         nums = [int(x) for x in items1]
         for v in (max(nums) + 100, min(nums) - 1):
-            yield {'name': other, 'text': ','.join(items1 + [str(v)]), 'axis': 'count'}
+            yield {'name': other, 'text': ','.join(items2[:2] + [str(v)] + items1[:1]), 'axis': 'count'}
 
 
 def _fallback(field, pid, m):

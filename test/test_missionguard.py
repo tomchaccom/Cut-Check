@@ -41,12 +41,12 @@ U, F = 'split-unique-count', 'split-filter-count'
 GOOD = {
     U: {'title': '급식 재료 확인', 'brief': '이번 주 급식 재료가 몇 가지인지 알려 주세요.', 'situation': '우리 반이 급식 당번이에요.',
         'itemName': '재료',
-        'data': [{'name': '월요일 재료', 'items': ['밥', '우유', '김치']}, {'name': '화요일 재료', 'items': ['빵', '국', '떡']}],
-        'counter': {'name': '수요일 재료', 'text': '밥,우유,김치,밥,국', 'axis': 'count'}},
+        'data': [{'name': '1반 신청', 'items': ['밥', '우유', '김치']}, {'name': '2반 신청', 'items': ['빵', '국', '떡']}],
+        'counter': {'name': '3반 신청', 'text': '국,밥,우유,밥,떡', 'axis': 'count'}},
     F: {'title': '급식 알레르기 찾기', 'brief': '주의할 재료가 몇 개인지 알려 주세요.', 'situation': '우리 반이 급식 당번이에요.',
-        'itemName': '재료', 'filterTarget': ['우유', '달걀'], 'filterDesc': '알레르기 목록',
-        'data': [{'name': '월요일 재료', 'items': ['밥', '우유', '김치']}, {'name': '화요일 재료', 'items': ['빵', '달걀', '국', '우유']}],
-        'counter': {'name': '수요일 재료', 'text': '밥 우유 김치 달걀', 'axis': 'sep'}},
+        'itemName': '재료', 'filterTarget': ['우유', '달걀', '땅콩'], 'filterDesc': '알레르기 목록',
+        'data': [{'name': '1반 신청', 'items': ['밥', '우유', '김치']}, {'name': '2반 신청', 'items': ['빵', '달걀', '국', '우유']}],
+        'counter': {'name': '3반 신청', 'text': '달걀 빵 김치 우유', 'axis': 'sep'}},
 }
 
 print('\n[통과해야 하는 것]')
@@ -91,7 +91,7 @@ t('situation 세 문장은 걸린다', 'situation' in check(U, m))
 for bad in ['딕셔너리에서 명성 키를 찾아 주세요', '리스트에서 골라 주세요']:
     m = copy.deepcopy(GOOD[U]); m['brief'] = bad
     t(f'brief 방법 단어 막는다: {bad}', 'brief' in check(U, m), check(U, m))
-for ok in ['재료가 몇 가지인지 값을 알려 주세요.', '플레이리스트에 재료가 몇 개인지 알려 주세요.']:
+for ok in ['재료가 몇 가지인지 값을 알려 주세요.', '플레이리스트에 재료가 몇 가지인지 알려 주세요.']:
     m = copy.deepcopy(GOOD[U]); m['brief'] = ok
     t(f'brief 통과: {ok}', 'brief' not in check(U, m), check(U, m))
 m = copy.deepcopy(GOOD[U]); m['situation'] = '민지의 플레이리스트가 길어졌어요.'
@@ -122,6 +122,29 @@ broken(U, "반례가 이름표 ('과일 개수')", setp(['counter'], {'name': 'x
 broken(U, "항목 이름이 영어 ('count')", setp(['itemName'], 'count'), 'itemName')
 broken(F, '걸러낼 대상이 자료에 없음', setp(['filterTarget'], ['땅콩', '새우']), 'data')
 broken(F, '걸러내기 유형인데 대상이 없음', lambda m: m.pop('filterTarget'), 'filterTarget')
+
+# 2026-10-18 '간식 세기' 불만 조사에서 실제로 나온 것들
+broken(U, '자료 이름이 요일만 다름', lambda m: m['data'][0].update(name='수요일 재료') or m['data'][1].update(name='금요일 재료'), 'data')
+broken(U, '자료 이름이 날짜만 다름', lambda m: m['data'][0].update(name='3월 2일 신청') or m['data'][1].update(name='3월 9일 신청'), 'data')
+broken(U, '자료 이름이 요일 하나뿐', lambda m: m['data'][0].update(name='월요일') or m['data'][1].update(name='화요일'), 'data')
+broken(U, '반례 이름만 요일 바꿈', lambda m: m['data'][0].update(name='월요일 신청') or m['counter'].update(name='금요일 신청'), 'counter')
+broken(U, '반례가 첫 자료로 그대로 시작', setp(['counter', 'text'], '밥,우유,김치,빵,국'), 'counter')
+broken(U, '요청에 칸 이름 itemName', setp(['brief'], '적어 낸 itemName마다 몇 가지인지 알려 주세요.'), 'brief')
+broken(U, "요청에 방법 '한 번만 세어'", setp(['brief'], '겹쳐도 한 번만 세어 재료가 몇 가지인지 알려 주세요.'), 'brief')
+broken(U, "가지 수를 묻는데 '몇 개'", setp(['brief'], '이번 주 급식 재료가 몇 개인지 알려 주세요.'), 'brief')
+m = copy.deepcopy(GOOD[U]) | {'brief': '이번 주 급식 재료가 몇 가지인지 알려 주세요.',
+                              'counter': {'name': '3반 신청', 'text': '국,밥,국,떡', 'axis': 'count'}}
+t("[brief] 전부 세는데 '몇 가지' (겹친 항목이 있다)", 'brief' in check('split-count', m), check('split-count', m))
+broken(F, '고정 목록 = 두 자료에 모두 있는 것', setp(['filterTarget'], ['우유']), 'filterTarget')
+broken(F, '고정 목록 = 한 자료의 답', setp(['filterTarget'], ['우유', '달걀']), 'filterTarget')
+broken(F, '자료 항목이 자료 이름', setp(['data', 0, 'items'], ['밥', '우유', '2반 신청']), 'data')
+for ok in ['1반 신청', '민지 쪽지']:
+    m = copy.deepcopy(GOOD[U]); m['data'][0]['name'] = ok
+    t(f'출처가 다른 이름은 통과: {ok}', 'data' not in check(U, m), check(U, m))
+m = copy.deepcopy(GOOD[F]); m['filterTarget'] = ['우유', '달걀', '땅콩']
+t('고정 목록에 자료에 없는 항목이 섞이면 통과', 'filterTarget' not in check(F, m), check(F, m))
+m = copy.deepcopy(GOOD[U]); m['brief'] = '재료가 몇 가지인지 알아내서 장 볼 목록을 정해 주세요.'
+t('목적이 있는 요청은 통과', 'brief' not in check(U, m), check(U, m))
 
 print('\n[중1이 모르는 개발 용어와 지시문 — 밤샘 스펙 3.3 학생 문장 규칙]')
 for bad in ['데이터 집계 로직을 검토해 주세요.', '처리 결과의 타당성을 확인해 주세요.',

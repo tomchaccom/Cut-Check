@@ -8,6 +8,7 @@ import io
 import json
 import os
 import re
+import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,12 +55,12 @@ def quiet(fn, *a):
 def base(d1, d2, **extra):
     m = {'title': '급식 재료 확인', 'brief': '이번 주 재료 목록을 확인해 주세요.',
          'situation': '우리 반이 급식 당번이에요.', 'itemName': '재료',
-         'data': [{'name': '월요일 재료', 'items': d1}, {'name': '화요일 재료', 'items': d2}]}
+         'data': [{'name': '민지 메모', 'items': d1}, {'name': '준호 메모', 'items': d2}]}
     m.update(extra)
     return m
 
 
-FT = {'filterTarget': ['우유', '달걀'], 'filterDesc': '알레르기 목록'}
+FT = {'filterTarget': ['우유', '달걀', '땅콩'], 'filterDesc': '알레르기 목록'}
 NUM = (['1000', '2000', '500'], ['300', '700', '100'])
 DATA = {  # 자료만 있는 초안 — 나머지 칸은 기본 틀이 채운다
     'split-count': base(['밥', '우유', '김치'], ['빵', '국', '떡']),
@@ -82,7 +83,7 @@ t('평가 셋이 14개 유형을 모두 덮는다', set(DATA) == set(SPEC))
 
 U = 'split-unique-count'
 GOOD = {**DATA[U], 'brief': '이번 주 재료가 모두 몇 가지인지 알려 주세요.',
-        'counter': {'name': '수요일 재료'}}
+        'counter': {'name': '서연 메모'}}
 
 print('\n[한 번에 통과]')
 llm = fake(U, GOOD)
@@ -101,7 +102,7 @@ t('성공 조건 보기는 코드 문장: 요청이 묻는 진짜 하나 + 함�
 traps = sorted(str(o['trap']) for o in m['define']['options'])
 t('보기 = 하드코딩 1 + 진짜 1 + 요행 1', traps == ['None', 'hardcode', 'luck'], m['define']['options'])
 hard = next(o['v'] for o in m['define']['options'] if o['trap'] == 'hardcode')
-t('하드코딩 함정은 어느 자료의 답인지 밝힌다', hard == '월요일 재료의 답과 같은 3이 나오면 성공', hard)
+t('하드코딩 함정은 어느 자료의 답인지 밝힌다', hard == '민지 메모의 답과 같은 3이 나오면 성공', hard)
 t('보기는 모두 "성공" 으로 끝난다', all(o['v'].endswith('성공') for o in m['define']['options']), m['define']['options'])
 t('함정 보기에는 key 가 없다', all('key' not in o for o in m['define']['options'] if o['trap']))
 t('성공 질문은 존댓말', m['define']['q'].endswith('요?'))
@@ -181,9 +182,9 @@ nums = {**DATA['split-num-sum'], 'data': [{'name': '월', 'items': ['1,000원', 
 m, _ = quiet(generate, '형변환', '숫자', fake('split-num-sum', nums, nums, nums))
 t('단위·쉼표를 떼고 숫자로 보낸 것도 받는다', m['inputs'][0]['v'] == '1000,2000,500' and m['inputs'][1]['v'] == '300,700,100'
   and m['guard']['repaired'], (m['inputs'][:2], m['guard']))
-ft = {**DATA['split-filter-count'], 'filterTarget': ['땅콩'], 'filterDesc': '알레르기'}
+ft = {**DATA['split-filter-count'], 'filterTarget': ['땅콩', '새우'], 'filterDesc': '알레르기'}
 m, _ = quiet(generate, '조건문', '거르기', fake('split-filter-count', ft, ft, ft))
-t('걸러낼 대상이 자료에 없으면 넣는다', '땅콩' in m['inputs'][0]['v'] and '땅콩' in m['inputs'][1]['v'], m['inputs'][:2])
+t('걸러낼 대상이 자료에 없으면 넣는다', '땅콩' in m['inputs'][0]['v'] and '새우' in m['inputs'][1]['v'], m['inputs'][:2])
 mix = {**DATA['split-filter-num-sum'], 'filterTarget': ['메모']}
 m, _ = quiet(generate, '예외', '숫자만', fake('split-filter-num-sum', mix, mix, mix))
 t('숫자 걸러내기에서 글자 항목은 걸러낼 대상이 된다', set(m['pipelineParams']['filterTarget']) == {'메모', '간식'},
@@ -355,7 +356,7 @@ for k, tpl in _generate.CORRECT.items():
 
 print('\n[숫자뿐인 자료로 "글자 빼고 더하기" 를 고르면 "숫자 더하기" 로 바꾼다]')
 _num = {**base(['1000', '2000', '500'], ['300', '700', '100'], itemName='금액'),
-        'brief': '금액을 모두 더하면 얼마인지 알려 주세요.', 'counter': {'name': '수요일 금액'},
+        'brief': '금액을 모두 더하면 얼마인지 알려 주세요.', 'counter': {'name': '서연 금액'},
         'filterTarget': ['메모'], 'filterDesc': '메모 항목'}
 m, _ = quiet(generate, '숫자 더하기', 'int로 바꿔서 합계', fake('split-filter-num-sum', _num, _num, _num))
 t('유형이 split-num-sum', m['pipelineId'] == 'split-num-sum', m['pipelineId'])
@@ -371,6 +372,83 @@ print('\n[검수 이유를 받아 다시 만들 때 프롬프트에 넣는다]')
 llm = fake(U, GOOD)
 quiet(lambda: generate('리스트', '중복', llm, feedback=['세 자료가 다른 이야기예요']))
 t('feedback 이 사용자 메시지에', '세 자료가 다른 이야기예요' in llm.calls[1]['messages'][-1]['content'])
+
+print('\n[반례 — 모델이 쓴 것을 돌려 보고, 깨지면 쓰고 안 깨지면 코드 후보로]')
+own = {**GOOD, 'counter': {'name': '서연 메모', 'text': '국,밥,빵,국,떡', 'axis': 'count'}}
+m, _ = quiet(generate, '리스트', '중복', fake(U, own))
+t('깨지는 모델 반례는 그대로 쓴다', m['inputs'][2]['v'] == '국,밥,빵,국,떡' and m['guard']['repaired'] == [], (m['inputs'][2], m['guard']))
+weak = {**GOOD, 'counter': {'name': '서연 메모', 'text': '빵,국,떡,빵', 'axis': 'count'}}  # 결과 3 = 첫 자료와 같다
+m, _ = quiet(generate, '리스트', '중복', fake(U, weak))
+first = m['inputs'][0]['v'].split(',')
+t('안 깨지는 모델 반례는 코드 후보로 바꾸고 이름은 둔다', m['inputs'][2]['v'] != weak['counter']['text']
+  and m['inputs'][2]['name'] == '서연 메모' and any('다시 만들었어요' in x for x in m['guard']['repaired']), (m['inputs'][2], m['guard']))
+t('코드 후보는 첫 자료로 그대로 시작하지 않는다', m['inputs'][2]['v'].split(',')[:len(first)] != first, m['inputs'][2])
+copied = {**GOOD, 'counter': {'name': '서연 메모', 'text': '밥,우유,김치,빵,국', 'axis': 'count'}}
+m, _ = quiet(generate, '리스트', '중복', fake(U, copied))
+t('첫 자료를 베끼고 덧붙인 모델 반례도 바꾼다', not m['inputs'][2]['v'].startswith('밥,우유,김치'), m['inputs'][2])
+for pid, d in DATA.items():
+    items1, items2 = d['data'][0]['items'], d['data'][1]['items']
+    for c in _generate._counter_candidates(pid, items1, items2, d.get('filterTarget') or []):
+        if not _generate.counter_problems(pid, d['data'], d.get('filterTarget') or [], c):
+            t(f'{pid}: 쓰이는 코드 후보가 첫 자료로 시작하지 않는다', [x.strip() for x in c['text'].split(',')][:len(items1)] != [x.strip() for x in items1], c)
+            break
+t('반례 스키마는 이름·내용·축을 다 묻는다', set(_generate._ask_schema(U)['properties']['counter'].get('required', [])) >= {'name', 'text', 'axis'}
+  or set(_generate._ask_schema(U)['$defs']['Counter']['required']) >= {'name', 'text', 'axis'}, _generate._ask_schema(U)['properties']['counter'])
+
+print('\n[자료 이름 — 요일·날짜만 다르면 다시 묻는다]')
+day = copy.deepcopy(GOOD)
+day['data'][0]['name'], day['data'][1]['name'] = '수요일 간식', '금요일 간식'
+llm = fake(U, day, GOOD)
+m, log = quiet(generate, '리스트', '중복', llm)
+t('요일만 다른 자료 이름은 재요청 사유', len(llm.calls) == 3 and '요일' in llm.calls[2]['messages'][-1]['content'], log)
+dayc = {**GOOD, 'counter': {'name': '민지 메모 2일', 'text': '국,밥,빵,국,떡', 'axis': 'count'}}
+dayc['data'] = [{'name': '민지 메모 1일', 'items': ['밥', '우유', '김치']}, {'name': '준호 메모', 'items': ['빵', '국', '떡']}]
+_, b = _generate._parse(U, copy.deepcopy(dayc))
+t('반례 이름이 날짜만 다른 것도 걸린다', 'counter' in b, b)
+p = json.dumps(_generate._ask_schema(U), ensure_ascii=False) + _generate.SYSTEM
+t('모델에게 주는 글에 요일 예시가 없다', not re.search(r'[월화수목금]요일|다른 날', p), re.findall(r'.{10}(?:요일|다른 날).{10}', p))
+
+print('\n[목적이 있는 요청은 통과한다]')
+J = 'split-filter-join'
+snack = {'title': '같이 먹을 간식 찾기', 'situation': '지훈이와 서연이가 간식을 같이 사려고 해요. 둘 다 먹을 수 있는 걸로 메뉴를 정해야 해요.',
+         'brief': '둘 다 먹을 수 있는 간식을 찾아 메뉴를 정해 주세요.', 'itemName': '간식',
+         'filterTarget': ['젤리', '쿠키', '바나나', '우유'], 'filterDesc': '지훈이 간식',
+         'data': [{'name': '서연이 쪽지', 'items': ['쿠키', '사탕', '바나나']}, {'name': '하린이 쪽지', 'items': ['초콜릿', '젤리', '과자']}],
+         'counter': {'name': '도윤이 쪽지', 'text': '사탕,초콜릿,과자', 'axis': 'empty'}}
+_, b = _generate._parse(J, copy.deepcopy(snack))
+t('"둘 다 먹을 수 있는 간식을 찾아 메뉴를 정해 주세요." 통과', b == {}, b)
+for brief in ['친구들이 모두 되는 간식만 알아내 메뉴를 정해 주세요.', '모두가 함께 먹을 간식을 찾아 주세요.']:
+    _, b = _generate._parse(J, {**copy.deepcopy(snack), 'brief': brief})
+    t(f"'{brief}' 통과", 'brief' not in b, b)
+
+print('\n[고정 목록에 정답을 미리 넣으면 걸린다]')
+leak = {**copy.deepcopy(snack), 'filterTarget': ['쿠키'], 'data': [
+    {'name': '서연이 쪽지', 'items': ['쿠키', '사탕', '바나나']}, {'name': '하린이 쪽지', 'items': ['쿠키', '젤리', '과자']}]}
+_, b = _generate._parse(J, leak)
+t('목록 = 두 자료에 모두 있는 것 → filterTarget', 'filterTarget' in b, b)
+leak2 = {**copy.deepcopy(snack), 'filterTarget': ['쿠키', '바나나']}
+_, b = _generate._parse(J, leak2)
+t('목록 = 한 자료의 답 그대로 → filterTarget', 'filterTarget' in b, b)
+try:
+    quiet(generate, '집합', '교집합', fake(J, leak, leak, leak))
+    t('세 번 다 새면 내보내지 않는다', False, '통과해버림')
+except GenerateError as e:
+    t('세 번 다 새면 내보내지 않는다', 'filterTarget' in e.reasons, e.reasons)
+
+print('\n[자료 이름이 자료 항목으로 끼어들지 않는다]')
+named = {**copy.deepcopy(snack), 'filterTarget': ['서연이 쪽지', '하린이 쪽지']}
+m2, b = _generate._parse(J, named)
+t('_repair 가 자료 이름을 걸러낼 대상에서 빼고 자료에 넣지 않는다',
+  not any(x in ('서연이 쪽지', '하린이 쪽지') for ds in m2['data'] for x in ds['items']) and b, (m2['data'], b))
+inname = {**copy.deepcopy(snack)}
+inname['data'] = [{'name': '서연이 쪽지', 'items': ['쿠키', '하린이 쪽지', '바나나']}, snack['data'][1]]
+_, b = _generate._parse(J, inname)
+t('자료 항목이 자료 이름이면 걸린다', any('이름' in r for r in b.get('data', [])), b)
+
+print('\n[기본 모델]')
+t("LLM_MODEL 이 없으면 openai/gpt-5.4", subprocess.run(
+    [sys.executable, '-c', 'import sys; sys.path.insert(0, "api"); import _generate; print(_generate.MODEL)'],
+    cwd=ROOT, capture_output=True, text=True, env={k: v for k, v in os.environ.items() if k != 'LLM_MODEL'}).stdout.strip() == 'openai/gpt-5.4')
 
 print('\n[보내는 스키마 — $ref 없이, 모든 객체가 닫혀 있다]')
 
