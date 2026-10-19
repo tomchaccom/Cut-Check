@@ -23,7 +23,7 @@
       }
 
       function pump() {
-        if (!ok || cur || !queue.length) return;
+        if (!ok || cur || !queue.length || (!main && !w)) return;
         var job = queue.shift();
         if (main) {
           main.runPython('import io, sys; sys.stdout = io.StringIO()');
@@ -60,7 +60,9 @@
         w.onerror = function (e) {
           e.preventDefault();           /* 처리했다 — 페이지 에러로 올리지 않는다 */
           if (cur) { clearTimeout(cur.timer); queue.unshift(cur); cur = null; }
-          w = null; bootMain();
+          w = null;
+          status('Python 로딩 중...', false);   /* bootMain 이 끝날 때까지 ready 가 켜져 있으면 run 이 null worker 를 부른다 */
+          bootMain();
         };
       }
 
