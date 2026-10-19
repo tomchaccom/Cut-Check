@@ -3,13 +3,12 @@
 HTTP 는 create-student.py 가 다루고, 여기는 규칙과 Supabase 호출 순서만 둔다.
 Supabase 호출은 http(method, url, headers, body) -> (status, json) 로 받아서 테스트가 가짜를 끼운다.
 """
-import json
 import re
 import secrets
 import sys
-import urllib.error
 import urllib.parse
-import urllib.request
+
+from _auth import Fail, bearer, teacher, urllib_http  # noqa: F401 — bearer 는 create-student.py 가 여기서 가져간다
 
 DOMAIN = 'students.invalid'
 LOGIN_RE = re.compile(r'^[a-z0-9-]{3,30}$')
@@ -17,21 +16,7 @@ LOGIN_RE = re.compile(r'^[a-z0-9-]{3,30}$')
 ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'
 UUID_RE = re.compile(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
 # 한 요청의 Supabase 호출은 최대 9번 — 사용자·역할·교실·생성·[차지한 계정 찾기·지우기·다시 생성]·수강·되돌리기
-# (reset 은 6번). 9 × 3초 = 27초 < vercel.json maxDuration 30초 — 호출을 늘리면 이 숫자도 다시 계산한다.
-TIMEOUT = 3
-
-
-class Fail(Exception):
-    def __init__(self, status, msg):
-        super().__init__(msg)
-        self.status = status
-        self.msg = msg
-
-
-def bearer(header):
-    """'Bearer <token>' 에서 토큰만. 형식이 다르면 빈 문자열 → 401"""
-    parts = str(header or '').split()
-    return parts[1] if len(parts) == 2 and parts[0].lower() == 'bearer' else ''
+# (reset 은 6번). 9 × 3초(_auth.TIMEOUT) = 27초 < vercel.json maxDuration 30초 — 호출을 늘리면 이 숫자도 다시 계산한다.
 
 
 def valid_login(s):
@@ -44,21 +29,6 @@ def email_of(login_id):
 
 def new_password(n=8):
     return ''.join(secrets.choice(ALPHABET) for _ in range(n))
-
-
-def urllib_http(method, url, headers, body=None):
-    data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method, headers={**headers, 'Content-Type': 'application/json'})
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-            raw = r.read()
-            return r.status, (json.loads(raw) if raw else None)
-    except urllib.error.HTTPError as e:
-        raw = e.read()
-        try:
-            return e.code, json.loads(raw) if raw else None
-        except ValueError:
-            return e.code, None
 
 
 def _password(body):
@@ -77,7 +47,7 @@ def handle(body, token, env, http=urllib_http):
         return 502, {'error': '서버에 계정 설정이 없어요. 관리자에게 알려 주세요.'}
     url = url.rstrip('/')
     try:
-        return 200, _run(body, token, url, anon, service, http)
+        return 200, _run(body, token, env, url, service, http)
     except Fail as f:
         return f.status, {'error': f.msg}
     except Exception as e:  # 시간 초과·연결 끊김 — 원문은 로그에만
@@ -85,7 +55,7 @@ def handle(body, token, env, http=urllib_http):
         return 502, {'error': 'Supabase 에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.'}
 
 
-def _run(body, token, url, anon, service, http):
+def _run(body, token, env, url, service, http):
     if not token:
         raise Fail(401, '다시 로그인해 주세요.')
     if not isinstance(body, dict):
@@ -102,12 +72,8 @@ def _run(body, token, url, anon, service, http):
         raise Fail(400, '학생 이름을 적어 주세요.')
     pw = _password(body)
 
-    # 1) 부른 사람이 누구인가 — 그 사람의 토큰으로 묻는다
-    st, me = http('GET', url + '/auth/v1/user', {'apikey': anon, 'Authorization': 'Bearer ' + token})
-    if st == 401 or st == 403:
-        raise Fail(401, '다시 로그인해 주세요.')
-    if st != 200 or not isinstance(me, dict) or not me.get('id'):
-        raise Fail(502, 'Supabase 에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.')
+    # 1·2) 강사인가 — _auth 가 토큰으로 사용자와 역할을 묻는다
+    uid = teacher(token, env, http)
 
     adm = {'apikey': service, 'Authorization': 'Bearer ' + service}
     rest = url + '/rest/v1/'
@@ -119,13 +85,8 @@ def _run(body, token, url, anon, service, http):
         return rows
 
     q = urllib.parse.quote
-    # 2) 강사인가 — 학생 토큰으로는 아무것도 못 한다
-    prof = get('profiles?select=role&id=eq.' + q(me['id']))
-    if not prof or prof[0].get('role') != 'teacher':
-        raise Fail(403, '선생님 계정만 할 수 있어요.')
-
     # 3) 이 교실의 선생님인가
-    rooms = get('classrooms?select=id&id=eq.' + q(room) + '&teacher_id=eq.' + q(me['id']))
+    rooms = get('classrooms?select=id&id=eq.' + q(room) + '&teacher_id=eq.' + q(uid))
     if not rooms:
         raise Fail(403, '이 교실의 선생님만 할 수 있어요.')
 

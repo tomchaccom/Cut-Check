@@ -47,6 +47,10 @@
   }
 
   function forMission(m) {
+    if (m && Array.isArray(m.cards)) {   /* 새 꼴 미션: 카드를 미션이 직접 가진다 */
+      return m.cards.map(function (c, i) { return { op: 'c' + i, label: c.label, detail: null, decoy: !!c.decoy }; })
+        .sort(function (a, b) { return a.label.localeCompare(b.label, 'ko'); });
+    }
     var all = m && opsOf(m.pipelineId);
     if (!all) return [];
     var list = all.map(function (op) { return make(op, all, m, false); });
@@ -58,6 +62,7 @@
   /* 골라내기의 고정 목록 — 숨은 설정이 아니라 학생이 보는 자료다 ("민지 시간 vs 준호 시간").
    * 글자 빼고 숫자 더하기는 목록이 곧 '글자 항목'이라 보여 주면 판단을 대신하므로 뺀다. */
   function fixedList(m) {
+    if (m && m.kind === 'code') return null;
     var all = m && opsOf(m.pipelineId);
     var ft = m && m.pipelineParams && m.pipelineParams.filterTarget;
     if (!all || all.indexOf('filter') < 0 || all.indexOf('toNumber') >= 0 || !ft || !ft.length) return null;

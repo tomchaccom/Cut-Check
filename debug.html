@@ -226,9 +226,8 @@ window.CC_SUPABASE = {
     var area=document.getElementById('gen-area');
     area.innerHTML='<p style="color:var(--ink-3)">미션을 만들고 있어요...</p>';
     try{
-      var res=await fetch('/api/generate-mission',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson:'테스트 수업',keyPoint:'데이터 흐름 확인'})});
-      var data=await res.json();
-      if(!res.ok)throw new Error(data.error);
+      /* 서버는 로그인한 강사만 받는다 — 토큰은 CC.sb.api 가 붙인다. 로그인 안 한 디버그 창은 401 로 돌아온다 */
+      var data=await CC.sb.api('/api/generate-mission',{lesson:'테스트 수업',keyPoint:'데이터 흐름 확인'});
       var v=data.verify||[];var last=v[v.length-1]||{};
       area.innerHTML='<table class="d-table">'+
         '<tr><td><b>제목</b></td><td>'+esc(data.title)+'</td></tr>'+

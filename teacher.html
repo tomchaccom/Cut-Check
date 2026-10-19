@@ -115,8 +115,17 @@
             <select id="gen-diff" style="padding:8px 12px;border:1px solid var(--line-strong);border-radius:10px;font-size:14px;background:var(--surface);color:var(--ink)">
               <option value="easy">쉬움</option><option value="medium" selected>보통</option><option value="hard">어려움</option>
             </select>
-            <button id="gen-btn" class="btn primary">미션 초안 생성</button>
+            <button id="gen-btn" class="btn">빠른 생성</button>
+            <button id="sg-concept" class="btn primary">개념 확인</button>
           </div>
+        </div>
+        <div id="sg" hidden>
+          <label class="sg-lb">개념 <select id="sg-concept-pick" class="sg-in"></select></label>
+          <div id="sg-examples"></div>
+          <button id="sg-more" class="btn" type="button">다른 예시 더 보기</button>
+          <label class="sg-lb">이렇게 바꿔 줬으면 (선택) <textarea id="sg-wish" class="sg-in" rows="2" maxlength="200"></textarea></label>
+          <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>만들기</button><span id="sg-status" role="status"></span></div>
+          <div id="sg-draft"></div>
         </div>
         <div id="gen-result" style="margin-top:14px"></div>
       </section>
@@ -169,12 +178,17 @@ window.CC_SUPABASE = {
 <script src="js/core/hangul.js"></script>
 <script src="js/core/alerts.js"></script>
 <script src="js/core/pipeline.js"></script>
+<script src="js/core/codemission.js"></script>
+<script src="js/core/facts.js"></script>
 <script src="js/core/cards.js"></script>
 <script src="js/core/missions.js"></script>
 <script src="js/data/api.js"></script>
 <script src="js/data/store.js"></script>
 <script src="js/core/blocks.js"></script>
+<script src="js/core/pyerr.js"></script>
+<script src="js/ui/pyrun.js"></script>
 <script src="js/ui/classroom.js"></script>
+<script src="js/ui/genflow.js"></script>
 <script src="js/ui/teacher.js"></script>
 <script>
 /* ── 교실 선택 + 탭 + 미션 초안 생성 ────────────────── */
@@ -303,7 +317,13 @@ window.CC_SUPABASE = {
         var who = el('span', 'name', s.name);
         if (s.login_id) who.appendChild(el('span', 'meta', s.login_id));
         row.appendChild(who);
+        who.appendChild(el('span', 'meta roster-level'));   /* 레벨 — 기록을 읽은 뒤 showLevels 가 채운다 */
+        row.dataset.sid = s.id;
         var acts = el('div', 'acts');
+        var lt = el('button', 'pill roster-test', s.onboard_due ? '레벨 테스트 지정 풀기' : '레벨 테스트 지정');
+        lt.type = 'button';
+        lt.addEventListener('click', function () { assignTest(s, lt); });
+        acts.appendChild(lt);
         if (s.login_id) {
           var rp = el('button', 'pill roster-reset', '비밀번호 다시 만들기');
           rp.type = 'button';
@@ -324,12 +344,45 @@ window.CC_SUPABASE = {
     });
   }
 
-  /* 이 반 진단 분포 — 숫자 한 줄. 이름·순서는 띄우지 않는다. 기본 난이도는 처음 한 번만 맞춘다 */
+  /* 레벨 테스트 대상 지정 — 학생은 다음 로그인 때 건너뛸 수 없는 테스트를 본다 (2026-10-19) */
+  function assignTest(s, btn) {
+    if (!selectedRoom || !CC.sb.active()) return;
+    /* 끝난 지정은 '다시 지정' — 시각을 새로 찍는다. 기록을 아직 못 읽었으면(levelWait 없음) 버튼 글자와 같은
+       기준(onboard_due 만)으로 본다: '지정 풀기' 를 눌렀는데 다시 지정되면 안 된다 */
+    var wait = s.levelWait == null ? CC.onboard.pending(s.onboard_due, []) : s.levelWait;
+    var on = !(s.onboard_due && wait);
+    btn.disabled = true;
+    CC.sb.assignOnboard(selectedRoom.id, s.id, on).then(function () {
+      return loadStudents().then(loadStudentEvents);
+    }).catch(function (e) { btn.disabled = false; window.alert(e.message || '지정하지 못했어요.'); });
+  }
+
+  /* 명단 줄마다 레벨 한 칸 — 학생 화면에는 절대 나가지 않는다.
+   * 지정 뒤 아직 안 본 학생은 '테스트 대기'. 지정 뒤 테스트를 마쳤으면 지정 버튼을 되돌린다 */
+  function showLevels(students, rows) {
+    var ats = {};
+    rows.forEach(function (r) {
+      if (r.event && r.event.type === CC.events.T.S_ONBOARD) (ats[r.student_id] = ats[r.student_id] || []).push(r.created_at);
+    });
+    (CC.classroom.roster || []).forEach(function (r) {
+      var row = document.querySelector('#student-list .roster-row[data-sid="' + r.id + '"]');
+      if (!row) return;
+      var st = students.filter(function (x) { return x.id === r.id; })[0];
+      var o = st && st.onboard;
+      var wait = CC.onboard.pending(r.onboard_due, ats[r.id]);
+      row.querySelector('.roster-level').textContent = wait ? '레벨 테스트 대기'
+        : o && o.stage ? '레벨 ' + CC.onboard.LABEL[o.stage] : o && o.skipped ? '레벨 테스트 건너뜀' : '레벨 테스트 안 함';
+      r.levelWait = wait;
+      if (r.onboard_due && !wait) row.querySelector('.roster-test').textContent = '레벨 테스트 다시 지정';
+    });
+  }
+
+  /* 이 반 진단 분포 — 숫자 한 줄. 기본 난이도는 처음 한 번만 맞춘다 */
   var diffSeeded = false;
   function showSpread(students) {
     var n = CC.onboard.spread(students);
-    $('#gen-spread').textContent = '이 반 진단: 기초 ' + n.base + ' · 조합 전 ' + n.combine +
-      ' · 조합 가능 ' + n.ready + ' · 안 함 ' + n.none;
+    $('#gen-spread').textContent = '이 반 레벨: 하 ' + n.base + ' · 중 ' + n.combine +
+      ' · 상 ' + n.ready + ' · 안 함 ' + n.none;
     if (!diffSeeded && n.base > n.combine && n.base > n.ready) { $('#gen-diff').value = 'easy'; diffSeeded = true; }
   }
 
@@ -375,6 +428,7 @@ window.CC_SUPABASE = {
       CC.classroom.students = students;
       CC.classroom.events = evs;   /* 학생 서랍이 미션별로 다시 접고 시각을 읽는다 */
       showSpread(students);
+      showLevels(students, rows);
       if (CC._alertsLoaded) CC._alertsLoaded(students);
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
@@ -576,16 +630,21 @@ window.CC_SUPABASE = {
     btn.disabled = true; btn.textContent = '초안 생성 중...';
     result.innerHTML = '<span style="color:var(--ink-3)">미션을 만들고 있어요...</span>';
 
-    fetch('/api/generate-mission', {
+    var req = { lesson: lesson, keyPoint: keyPoint, difficulty: $('#gen-diff').value, stages: CC.onboard.spread(CC.classroom.students) };
+    /* 서버는 로그인한 강사만 받는다 — 토큰은 CC.sb.api 가 붙인다.
+     * 로컬 모드(Supabase 없음)는 토큰 없이 보낸다: 배포 서버는 401 로 거절하고, 로컬 개발 서버·시험은 그대로 돈다 */
+    (CC.sb && CC.sb.active() ? CC.sb.api('/api/generate-mission', req) : fetch('/api/generate-mission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lesson: lesson, keyPoint: keyPoint, difficulty: $('#gen-diff').value, stages: CC.onboard.spread(CC.classroom.students) })
-    })
-    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
-    .then(function (r) {
-      if (!r.ok) throw new Error(r.data.error || '생성 실패');
-      var m = r.data;
-      btn.disabled = false; btn.textContent = '미션 초안 생성';
+      body: JSON.stringify(req)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) throw new Error(d.error || '생성 실패');
+        return d;
+      });
+    }))
+    .then(function (m) {
+      btn.disabled = false; btn.textContent = '빠른 생성';
 
       /* ── 초안 편집 폼 ── */
       /* PIPE_LABEL은 미션 카드 렌더링(위)에서 이미 정의됨 — 재사용 */
@@ -731,9 +790,14 @@ window.CC_SUPABASE = {
     })
     .catch(function (err) {
       result.innerHTML = '<span style="color:var(--coral)">' + esc(err.message) + '</span>';
-      btn.disabled = false; btn.textContent = '미션 초안 생성';
+      btn.disabled = false; btn.textContent = '빠른 생성';
     });
   });
+  /* 단계별 생성은 늘 새 미션이다 — '수정' 으로 걸어 둔 editingMissionId 가 남으면 나중의 빠른 생성이 그 미션을 덮어쓴다 */
+  function notEditing() { editingMissionId = null; $('#gen-btn').textContent = '빠른 생성'; }
+  $('#sg-concept').addEventListener('click', notEditing);
+  CC.genflow.init({ room: function () { return selectedRoom; }, students: function () { return CC.classroom.students; },
+    saved: function () { notEditing(); loadMissions(); } });
 })();
 </script>
 </body>

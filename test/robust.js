@@ -88,6 +88,20 @@ function launchOpts() {
   console.log('튜터 질문이 교사 화면에 보임:', tutorShown ? '✓' : '✗ 없음');
   console.log('alert 발생:', alerted ? '✗' : '✓ 없음');
 
+  // 학생 코드의 출력(s-probe)은 서랍의 '코드 사실'로 올라간다 — 글자로만 보여야 한다
+  await t.evaluate((EVIL) => {
+    CC.store.clear();
+    localStorage.setItem('cutcheck.generated', JSON.stringify([{ id: 'mx', kind: 'code', concept: 'while', title: 'x', inputs: [{ name: '자료 1', v: '[1]' }, { name: '빈 상자', v: '[]', counter: true }] }]));
+    var T = CC.events.T;
+    CC.store.push({ type: T.S_CODE, mid: 'mx', code: 'print(1)', dataId: '[1]', output: '1', error: '' });
+    CC.store.push({ type: T.S_PROBE, mid: 'mx', sig: CC.codemission.sig('print(1)'), outs: [{ dataId: '[1]', output: EVIL, error: '' }, { dataId: '[]', output: EVIL, error: '' }], uses: ['For'] });
+  }, EVIL);
+  await t.goto(BASE + '/teacher.html'); await t.waitForTimeout(400);
+  await t.locator('#livebar .tbtn').first().click(); await t.waitForTimeout(300);
+  const factTxt = (await t.locator('.detail').textContent()) || '';
+  const factBad = !!(await t.evaluate(() => window.__pwned)) || (await t.locator('.detail img').count()) > 0 || alerted || factTxt.indexOf('코드 사실') < 0 || factTxt.indexOf('<img') < 0;
+  console.log('코드 사실(probe 출력)이 글자로만 보임:', factBad ? '✗' : '✓');
+
   // 선생님이 쓴 학생 이름 — 계정 만들기 칸에서 명단·학생 폴더로 흐른다 (서버는 가짜로 끼운다)
   const tc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
   await tc.route('**/supabase-js@2/**', r => r.abort());
@@ -111,9 +125,46 @@ createStudent:function(rid,s){roster.push({id:'n'+roster.length,name:s.name,logi
   const nameBad = nPwned || nImgs > 0 || !nShown || nw.d > nw.w + 1;
   console.log('학생 이름(선생님 입력)이 글자로만 보임:', nameBad ? '✗ ' + JSON.stringify({ nPwned, nImgs, nShown, nw }) : '✓');
 
+  // 강사의 '이렇게 바꿔 줬으면'(#sg-wish) — LLM 에게만 가고 학생이 읽는 미션에는 실리지 않는다.
+  // AI 가 그 말을 제목에 옮겨 써도 4단계에는 글자로만 보인다 (가짜 build, Pyodide 는 강사 브라우저에서 돈다)
+  const gc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
+  await gc.route('**/supabase-js@2/**', r => r.abort());
+  await gc.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: `(function(CC){var P=function(v){return Promise.resolve(v)};
+CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},
+myClassrooms:function(){return P([{id:'r1',name:'반',code:'AB12CD'}])},getMissions:function(){return P([])},getClassroomEvents:function(){return P([])},getClassroomStudents:function(){return P([])},
+saveMission:function(r,m){window.__saved=JSON.stringify(m);return P({})},
+api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json()})}}
+})(window.CC=window.CC||{});` }));
+  await gc.route('**/api/mission-steps', r => {
+    const q = r.request().postDataJSON();
+    const out = q.action === 'concept' ? { concept: 'for' } : q.action === 'examples' ? { examples: [{ title: EVIL, situation: EVIL, why: EVIL }] }
+      : { draft: { kind: 'code', concept: 'for', title: q.wish, situation: EVIL, brief: EVIL,
+        inputs: [{ id: 'd01', name: EVIL, v: '[1, 2]' }, { id: 'd02', name: '자료 2', v: '[5]' }, { id: 'd03', name: '자료 3', v: '[]', counter: true, axis: 'empty' }],
+        cards: [{ label: EVIL }, { label: '더하기' }, { label: '빼기', decoy: true }],
+        define: { q: '어떤 결과가 나오면 성공일까요?', options: [{ v: EVIL, trap: null }, { v: '오류 없이 끝나면 성공', trap: 'luck' }] },
+        solution: 't = 0\nfor x in data:\n    t += x\nprint(t)' } };
+    return r.fulfill({ contentType: 'application/json', body: JSON.stringify(out) });
+  });
+  const g = await gc.newPage();
+  g.on('pageerror', e => errs.push('G: ' + e.message));
+  await g.goto(BASE + '/teacher.html'); await g.waitForTimeout(300);
+  await g.locator('#classroom-cards .room-tile').first().click();
+  await g.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await g.locator('#gen-lesson').fill('반복문');
+  await g.locator('#sg-concept').click();
+  await g.locator('.sg-ex').first().click();
+  await g.locator('#sg-wish').fill('WISH-' + EVIL);
+  await g.locator('#sg-build').click();
+  await g.locator('.sg-answer').first().filter({ hasText: '3' }).waitFor({ timeout: 60000 });
+  await g.locator('#sg-save').click();
+  await g.waitForFunction(() => window.__saved, null, { timeout: 5000 });
+  const gs = await g.evaluate(() => ({ pwned: !!window.__pwned, imgs: document.querySelectorAll('#sg img').length, saved: JSON.parse(window.__saved) }));
+  const wishBad = gs.pwned || gs.imgs > 0 || 'wish' in gs.saved || 'solution' in gs.saved || gs.saved.title.indexOf('WISH-') !== 0;
+  console.log('강사 바람(#sg-wish)은 학생 미션에 키로 실리지 않고, AI 글은 글자로만 보임:', wishBad ? '✗ ' + JSON.stringify({ pwned: gs.pwned, imgs: gs.imgs, keys: Object.keys(gs.saved) }) : '✓');
+
   console.log(errs.length ? '✗ JS 에러: ' + errs.join(' | ') : '✓ JS 에러 없음');
   await b.close();
-  const failed = !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad;
+  const failed = !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad || wishBad || factBad;
   console.log(failed ? '\n안전성 검사 실패' : '\n안전성 검사 전부 통과');
   process.exit(failed ? 1 : 0);
 })();

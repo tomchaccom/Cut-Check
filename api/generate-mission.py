@@ -9,16 +9,9 @@ import sys
 from http.server import BaseHTTPRequestHandler
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _generate import GenerateError  # noqa: E402
+from _auth import bearer, refuse  # noqa: E402
+from _generate import GenerateError, level_of  # noqa: E402
 from _review import make_mission  # noqa: E402
-
-
-def _level(body):
-    """난이도·분포는 힌트일 뿐 — 모양이 틀리면 400 이 아니라 버리고 진행한다."""
-    d, st = body.get('difficulty'), body.get('stages')
-    d = d if d in ('easy', 'medium', 'hard') else None
-    st = {k: v for k, v in st.items() if type(v) is int and v >= 0} if isinstance(st, dict) else {}
-    return {'difficulty': d, 'stages': st} if d or st else None
 
 
 class handler(BaseHTTPRequestHandler):
@@ -28,7 +21,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
         self.wfile.write(data)
 
@@ -36,6 +29,10 @@ class handler(BaseHTTPRequestHandler):
         self._send(200, {})
 
     def do_POST(self):
+        # 로그인한 강사만 — LLM 비용 남용을 막는 장치다 (보안 경계는 아니다: 가입하면 누구나 강사)
+        denied = refuse(bearer(self.headers.get('Authorization')), os.environ)
+        if denied:
+            return self._send(*denied)
         try:
             body = json.loads(self.rfile.read(int(self.headers.get('Content-Length') or 0)) or b'{}')
         except json.JSONDecodeError:
@@ -47,7 +44,7 @@ class handler(BaseHTTPRequestHandler):
         if not key_point:
             return self._send(400, {'error': '핵심을 입력해주세요.'})
         try:
-            self._send(200, make_mission(lesson, key_point, level=_level(body)))
+            self._send(200, make_mission(lesson, key_point, level=level_of(body)))
         except GenerateError as e:
             # 사유는 로그에 남긴다 — 어떤 규칙이 얼마나 자주 걸리는지가 프롬프트 개선의 근거다 (docs/llm.md)
             print('[generate-mission] 실패', json.dumps(e.reasons, ensure_ascii=False), file=sys.stderr)

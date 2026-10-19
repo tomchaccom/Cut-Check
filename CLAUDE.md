@@ -32,6 +32,11 @@
 | 학생 화면에 반 전체 현황 표시 | 옆자리가 어디까지 갔는지 보이면 수업이 속도 경쟁이 된다 |
 | AI가 쓰는 칭찬 문구 | 타이밍만 알려주고 말은 교사가 한다 |
 
+**예외 하나 — 학생별 레벨(상/중/하)은 선생님 화면에만 보인다.** 2026-10-19 사람이 정했다:
+레벨 테스트 진단 결과를 선생님이 명단에서 보고 반 분포로 문제 난이도를 맞춘다.
+학생 화면에는 절대 나가지 않는다 — 위 표의 "레벨" 금지는 학생 쪽에 그대로 살아 있다.
+되돌리거나("레벨은 금지인데요") 학생 쪽으로 넓히자고 다시 제안하지 않는다.
+
 ---
 
 ## 화면 문구 규칙
@@ -169,6 +174,7 @@ uv run --with-requirements requirements.txt python test/test_missionguard.py    
 uv run --with-requirements requirements.txt python test/test_pipeline_parity.py  # JS·Python 엔진이 같은 답을 내는지
 uv run --with-requirements requirements.txt python test/test_generate.py         # LLM 을 가짜로 끼워 재요청·칸별 폴백 흐름
 uv run --with-requirements requirements.txt python test/test_accounts.py         # 학생 계정 만들기 — 남의 교실·중복 아이디·키 노출
+uv run --with-requirements requirements.txt python test/test_steps.py            # 단계별 생성 — 개념 낱말 규칙·예시 거르기·초안 검사·재요청·강사만
 ```
 
 8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.

@@ -21,7 +21,7 @@
   var state = {};
   var lastRun = { output: '', error: '' };   /* 튜터에게 넘기는 마지막 코드 실행 결과 */
 
-  var rec = function (type, payload) {
+  var rec = function (type, payload, dbId) {
     /* 어느 미션의 기록인지 담는다 — 로컬 저장소는 브라우저 하나에 모든 미션·계정이 섞인다 */
     payload = payload || {};
     if (M && payload.mid == null) payload.mid = M.id;
@@ -29,7 +29,7 @@
     if (CC.store) CC.store.push(ev);
     /* Supabase에도 저장 */
     if (CC.sb && CC.sb.active() && currentClassroomId) {
-      CC.sb.pushEvent(currentClassroomId, currentMissionDbId, ev);
+      CC.sb.pushEvent(currentClassroomId, dbId === undefined ? currentMissionDbId : dbId, ev);
     }
     return ev;
   };
@@ -38,7 +38,7 @@
     rec: rec,
     context: function () {
       var items = [];
-      (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
+      if (!(M && M.kind === 'code')) (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
       return {
         mission: {
           title: M ? M.title : '', itemName: M ? (M.itemName || '') : '',
@@ -327,70 +327,11 @@
   function runBtns(off) {   /* 실행 · 자료 3개로 실행 — 하나가 도는 동안 둘 다 꺼진다 */
     ['#run-code', '#run-all'].forEach(function (id) { if ($(id)) $(id).disabled = off; });
   }
-  var py = (function () {
-    var w = null, pending = null, seq = 0, main = null;
-    var LOAD_FAIL = 'Python을 불러오지 못했어요. 코드는 계속 쓸 수 있어요.';
-
-    function status(text, ready) {
-      pyodideReady = ready;
-      if ($('#pyodide-status')) $('#pyodide-status').textContent = text;
-      runBtns(!ready);
-    }
-
-    function boot() {
-      status('Python 로딩 중...', false);
-      try { w = new Worker('js/ui/pyworker.js'); } catch (e) { w = null; return bootMain(); }
-      w.onmessage = function (e) {
-        var d = e.data;
-        if (d.type === 'ready') status('Python 준비 완료', true);
-        else if (d.type === 'load-error') status(LOAD_FAIL, false);
-        else if (d.type === 'done' && pending && pending.id === d.id) {
-          clearTimeout(pending.timer);
-          var cb = pending.cb; pending = null;
-          pyodideReady = true;
-          runBtns(false);
-          cb(d.output, d.error ? CC.pyerr.short(d.error) : '');
-        }
-      };
-      w.onerror = function (e) {
-        e.preventDefault();           /* 처리했다 — 페이지 에러로 올리지 않는다 */
-        if (pending) { clearTimeout(pending.timer); pending = null; }
-        w = null; bootMain();
-      };
-    }
-
-    function bootMain() {
-      if (typeof loadPyodide !== 'function') return status(LOAD_FAIL, false);
-      loadPyodide().then(function (p) {
-        p.runPython('import builtins\ndef _no_input(*a):\n    raise RuntimeError("__NO_INPUT__")\nbuiltins.input = _no_input');
-        main = p; status('Python 준비 완료', true);
-      }, function () { status(LOAD_FAIL, false); });
-    }
-
-    function run(code, cb) {
-      if (main) {
-        main.runPython('import io, sys; sys.stdout = io.StringIO()');
-        var err = '';
-        try { main.runPython(code); } catch (x) { err = CC.pyerr.short(String((x && x.message) || x)); }
-        return cb(main.runPython('sys.stdout.getvalue()'), err);
-      }
-      if (!w) return;
-      var id = ++seq;
-      var timer = setTimeout(function () {
-        pending = null;
-        w.terminate();
-        boot();                       /* 새 worker 가 준비될 때까지 실행 버튼은 꺼져 있다 */
-        cb('', CC.pyerr.TIMEOUT);
-      }, 5000);
-      pending = { id: id, cb: cb, timer: timer };
-      pyodideReady = false;           /* 실행 중에는 화면을 오가도 버튼이 다시 켜지지 않는다 */
-      runBtns(true);
-      w.postMessage({ id: id, code: code });
-    }
-
-    boot();
-    return { run: run };
-  })();
+  var py = CC.pyrun.create(function (text, ready) {
+    pyodideReady = ready;
+    if ($('#pyodide-status')) $('#pyodide-status').textContent = text;
+    runBtns(!ready);
+  });
 
   function renderCodeStep() {
     /* 설계도 표시 */
@@ -415,14 +356,14 @@
         o.value = inp.v; o.textContent = inp.name;
         fresh.appendChild(o);
       });
-      if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + M.inputs[0].v + '"';
+      if ($('#code-data-preview')) $('#code-data-preview').textContent = CC.codemission.dataLine(M, M.inputs[0].v);
       fresh.addEventListener('change', function () {
-        if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + this.value + '"';
+        if ($('#code-data-preview')) $('#code-data-preview').textContent = CC.codemission.dataLine(M, this.value);
         var editor = $('#code-editor');
         if (editor) {
-          var line = 'data = ' + JSON.stringify(String(this.value));
+          var line = CC.codemission.dataLine(M, this.value);
           var wasSkeleton = editor.value === state.skeleton;
-          editor.value = editor.value.replace(/^data = ".*"/m, function () { return line; });
+          editor.value = editor.value.replace(CC.codemission.DATA_RE, function () { return line; });
           /* 뼈대 그대로였으면 뼈대도 같이 옮겨, 다음 렌더에서 학생 코드로 오인되지 않게 한다 */
           if (wasSkeleton) state.skeleton = editor.value;
         }
@@ -433,7 +374,7 @@
     var editor = $('#code-editor');
     if (editor && (!editor.value || editor.value === state.skeleton)) {
       /* JSON 문자열은 보통 문자열에서 그대로 파이썬 문자열이다 — 자료에 " · \\ · 줄바꿈이 있어도 깨지지 않는다 */
-      state.skeleton = 'data = ' + JSON.stringify(M ? String(M.inputs[0].v) : '') + '\n# data 에 자료가 들어 있어요.\n' + CC.cards.skeleton(picked());
+      state.skeleton = (M ? CC.codemission.dataLine(M, M.inputs[0].v) : 'data = ""') + '\n# data 에 자료가 들어 있어요.\n' + CC.cards.skeleton(picked());
       editor.value = state.skeleton;
     }
 
@@ -464,15 +405,50 @@
   /* 코드 한 번 실행 → 기록. 학생의 data 줄은 같은 자리에서 바꿔 줄 번호를 지킨다.
    * 없으면 앞에 한 줄을 붙이고 에러 줄 번호에서 1을 뺀다 */
   function runWith(code, dataVal, cb) {
-    var dataLine = 'data = "' + dataVal.replace(/"/g, '\\"') + '"';
-    var hasData = /^data = ".*"/m.test(code);
-    var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
+    var dataLine = CC.codemission.dataLine(M, dataVal);
+    var hasData = CC.codemission.DATA_RE.test(code);
+    var fullCode = hasData ? code.replace(CC.codemission.DATA_RE, function () { return dataLine; }) : dataLine + '\n' + code;
+    pyodideReady = false;             /* 실행 중에는 화면을 오가도 버튼이 다시 켜지지 않는다 */
+    runBtns(true);
     py.run(fullCode, function (output, error) {
+      pyodideReady = py.ready();      /* 시간 초과면 새 worker 가 준비될 때까지 꺼져 있다 */
+      runBtns(!pyodideReady);
       if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
       lastRun = { output: String(output || ''), error: String(error || '') };
       state.codes.push(rec('s-code', { code: code, dataId: dataVal, output: output, error: error }));
       cb(output, error);
     });
+  }
+
+  /* 판정 뒤 모든 자료로 조용히 돌려 기록만 남긴다. 화면·state.codes 에는 아무것도 더하지 않는다.
+   * 같은 py 대기열을 쓰므로 학생이 그 사이에 실행해도 차례로 돈다 */
+  var lastProbeSig = null;
+  function quietProbe() {
+    var cm = CC.codemission, m = M, dbId = currentMissionDbId;   /* 도는 사이 미션이 바뀌어도 이 기록은 처음 미션 것이다 */
+    var lastC = state.codes[state.codes.length - 1];
+    if (!m || !lastC || lastC.error || !py.ready()) return;
+    var code = lastC.code, sg = cm.sig(code);
+    if (m.id + sg === lastProbeSig) return;
+    lastProbeSig = m.id + sg;
+    var hasData = cm.DATA_RE.test(code), outs = [], i = 0, dead = false;
+    function done(u) { rec('s-probe', { sig: sg, outs: outs, uses: u, mid: m.id }, dbId); }
+    (function next() {
+      if (i >= m.inputs.length || dead) {
+        if (dead) return done(null);   /* 시간 초과면 worker 가 한 번 다시 뜬 것으로 끝 — 남은 자료로 또 죽이지 않는다 */
+        py.run(cm.usesCode(code), function (o, e) {
+          var u = null;
+          try { u = e ? null : JSON.parse(String(o).trim()); } catch (x) { u = null; }
+          done(u);
+        });
+        return;
+      }
+      var v = m.inputs[i++].v, dl = cm.dataLine(m, v);
+      py.run(hasData ? code.replace(cm.DATA_RE, function () { return dl; }) : dl + '\n' + code, function (output, error) {
+        outs.push({ dataId: v, output: String(output || '').slice(0, 200), error: String(error || '') });
+        if (error === CC.pyerr.TIMEOUT) dead = true;
+        next();
+      });
+    })();
   }
 
   function showResult(text, isError) {
@@ -507,6 +483,7 @@
     });
     $('#code-judge-save').addEventListener('click', function () {
       state.judge = rec('s-code-judge', { verdict: selectedVerdict, basis: ($('#code-basis') || {}).value || '' });
+      quietProbe();
       this.disabled = true; this.textContent = '저장됨';
       btnsDiv.querySelectorAll('.judge-btn').forEach(function (x) { x.disabled = true; });
       if ($('#go-wrap')) { $('#go-wrap').style.display = ''; $('#go-wrap').disabled = false; }
@@ -842,6 +819,21 @@
     /* 교실은 선생님이 넣어 준다 — 스스로 들어가는 문은 없다 (2026-10-18) */
     if (!rooms.length) grid.appendChild(el('p', 'home-lead room-empty', '아직 들어간 교실이 없어요. 선생님께 교실에 넣어 달라고 말해 주세요.'));
     showRooms();
+    openDue(rooms.filter(function (r) { return r.onboard_due; }));
+  }
+
+  /* 선생님이 레벨 테스트 대상으로 정한 교실이 있으면 로그인하자마자 그 교실을 연다 — openRoom 이 테스트를 띄운다 */
+  function openDue(list) {
+    if (!list.length) return;
+    var r = list[0];
+    CC.sb.getMyEvents(r.id).then(function (evs) {
+      if (viewedRoom) return;   /* 그사이 학생이 직접 교실을 열었다 */
+      if (CC.onboard.pending(r.onboard_due, onboardAts(evs))) openRoom(r); else openDue(list.slice(1));
+    }, function () {});
+  }
+
+  function onboardAts(evs) {
+    return evs.filter(function (e) { return e.type === CC.events.T.S_ONBOARD; }).map(function (e) { return e._at; });
   }
 
   function showRooms() { $('#rooms-view').hidden = false; $('#room-view').hidden = true; $('#onboard-view').hidden = true; }
@@ -864,12 +856,13 @@
         showMyStatus($('#mission-grid'));
       });
     }
-    /* 교실마다 처음 한 번 진단. 교실은 서버에만 있으니 로컬 모드는 검사하지 않는다 */
+    /* 교실마다 처음 한 번 진단 + 선생님이 대상으로 정하면 다시. 교실은 서버에만 있으니 로컬 모드는 검사하지 않는다 */
     if (!CC.sb.active()) return showMissions();
     CC.sb.getMyEvents(r.id).then(function (evs) {
       if (viewedRoom !== asked) return;
-      var done = evs.some(function (e) { return e.type === CC.events.T.S_ONBOARD; });
-      if (done) showMissions(); else CC.onboardView.open(r.id, showMissions);
+      var ats = onboardAts(evs);
+      var forced = CC.onboard.pending(r.onboard_due, ats);   /* 선생님이 정했으면 건너뛸 수 없다 */
+      if (ats.length && !forced) showMissions(); else CC.onboardView.open(r.id, showMissions, forced);
     }, showMissions);  /* 확인이 안 되면 막지 않는다 — 진단 때문에 수업이 멈추면 안 된다 */
   }
   if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });

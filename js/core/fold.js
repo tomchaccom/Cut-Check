@@ -59,6 +59,7 @@
       sDesign: null,         /* { define, cards, pipelineId } — 예전 기록은 slots */
       sCodes: [],            /* [{ code, dataId, output, error, t }] */
       sCodeJudges: [],       /* [{ verdict, basis, t }] */
+      sProbe: null,          /* 마지막 s-probe { sig, outs, uses, t } */
       sTutor: [],            /* [{ question, answer, kind, refused, reasons, step, t }] */
 
       /* 교실 입장 진단 — 교사 화면만 쓴다. 학생 화면에 띄우지 않는다 */
@@ -135,6 +136,8 @@
         s.sCodes.push({ code: e.code, dataId: e.dataId, output: e.output, error: e.error, t: e.t }); break;
       case 's-code-judge':
         s.sCodeJudges.push({ verdict: e.verdict, basis: e.basis, t: e.t }); break;
+      case 's-probe':
+        s.sProbe = { sig: e.sig, outs: e.outs || [], uses: e.uses == null ? null : e.uses, t: e.t }; break;
       case 's-tutor':
         s.sTutor.push({ question: e.question, answer: e.answer, kind: e.kind, refused: !!e.refused, reasons: e.reasons || [], retried: !!e.retried, mid: e.mid || '', step: e.step == null ? null : e.step, t: e.t }); break;
       case 's-onboard':

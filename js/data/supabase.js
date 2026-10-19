@@ -17,27 +17,36 @@
     sb = window.supabase.createClient(url, key);
   }
 
-  function accounts(body) {
+  /* 서버 함수 부르기 — 지금 세션의 토큰을 붙인다. 생성·계정 함수는 로그인한 강사만 받는다.
+   * 실패면 Error(서버가 준 문장), 422 면 err.reasons 에 걸린 이유. */
+  function api(path, body) {
     if (!sb) return Promise.reject(new Error('Supabase 미설정'));
     return sb.auth.getSession().then(function (res) {
       var token = res.data && res.data.session && res.data.session.access_token;
       if (!token) throw new Error('다시 로그인해 주세요.');
-      return fetch('/api/create-student', {
+      return fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify(body)
       });
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
-        if (!r.ok) throw new Error(j.error || '서버에 연결하지 못했어요.');
+        if (!r.ok) {
+          var err = new Error(j.error || '서버에 연결하지 못했어요.');
+          if (r.status === 422) err.reasons = j.reasons;
+          throw err;
+        }
         return j;
       });
     });
   }
 
+  function accounts(body) { return api('/api/create-student', body); }
+
   CC.sb = {
     active: function () { return !!sb; },
     client: function () { return sb; },
+    api: api,
 
     /* ── 인증 ────────────────────────────────── */
     /* 프로필은 DB 트리거(handle_new_user)가 자동 생성한다.
@@ -119,9 +128,14 @@
         return sb.from('classrooms').select('*').eq('teacher_id', uid)
           .then(function (tRes) {
             if (tRes.data && tRes.data.length) return tRes.data;
-            return sb.from('enrollments').select('classroom_id, classrooms(*)').eq('student_id', uid)
+            return sb.from('enrollments').select('classroom_id, onboard_due, classrooms(*)').eq('student_id', uid)
               .then(function (sRes) {
-                return (sRes.data || []).map(function (e) { return e.classrooms; });
+                /* onboard_due: 선생님이 레벨 테스트 대상으로 정한 시각 (없으면 null) */
+                return (sRes.data || []).filter(function (e) { return e.classrooms; }).map(function (e) {
+                  var r = {}; for (var k in e.classrooms) r[k] = e.classrooms[k];
+                  r.onboard_due = e.onboard_due;
+                  return r;
+                });
               });
           });
       });
@@ -164,11 +178,22 @@
     getClassroomStudents: function (classroomId) {
       if (!sb) return Promise.resolve([]);
       return sb.from('enrollments')
-        .select('student_id, profiles(id, name, login_id)')
+        .select('student_id, onboard_due, profiles(id, name, login_id)')
         .eq('classroom_id', classroomId)
         .then(function (r) {
-          return (r.data || []).map(function (e) { return e.profiles; }).filter(Boolean);
+          return (r.data || []).filter(function (e) { return e.profiles; }).map(function (e) {
+            var p = {}; for (var k in e.profiles) p[k] = e.profiles[k];
+            p.onboard_due = e.onboard_due;
+            return p;
+          });
         });
+    },
+
+    /* 레벨 테스트 대상 지정 · 풀기 — 시각은 서버가 찍는다 (assign_onboard) */
+    assignOnboard: function (classroomId, studentId, assign) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return sb.rpc('assign_onboard', { cid: classroomId, sid: studentId, assign: !!assign })
+        .then(function (r) { if (r.error) throw r.error; return r.data; });
     },
 
     /* 학생 계정 만들기 · 비밀번호 다시 만들기 — 서버(api/create-student.py)가 service 키로 한다.
@@ -222,7 +247,7 @@
       if (!sb) return Promise.resolve([]);
       return sb.auth.getUser().then(function (res) {
         if (!res.data.user) return [];
-        var q = sb.from('student_events').select('mission_id, event')
+        var q = sb.from('student_events').select('mission_id, event, created_at')
           .eq('student_id', res.data.user.id)
           .eq('classroom_id', classroomId)
           .order('created_at', { ascending: true });
@@ -232,6 +257,7 @@
           return (r.data || []).map(function (row) {
             var ev = {}; for (var k in row.event) ev[k] = row.event[k];
             ev._missionDbId = row.mission_id;
+            ev._at = row.created_at;   /* 서버 시각 — 레벨 테스트 지정 시각과 견준다 */
             return ev;
           });
         });

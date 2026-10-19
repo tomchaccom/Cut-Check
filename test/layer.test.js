@@ -7,6 +7,7 @@ require('../js/core/onboard.js');
 require('../js/core/hangul.js'); require('../js/core/alerts.js');
 require('../js/core/pyerr.js');
 require('../js/core/csv.js');
+require('../js/core/codemission.js'); require('../js/core/facts.js'); require('../js/core/cards.js');
 const CC = global.window.CC;
 const T = CC.events.T;
 
@@ -161,25 +162,35 @@ t('input() 은 쓸 수 없다고 알려준다', /input\(\)을 쓸 수 없어요/
 t('줄 번호가 없으면 마지막 줄만', CC.pyerr.short('SyntaxError: invalid syntax') === 'SyntaxError: invalid syntax');
 t('원인을 해석하지 않는다', !/때문|하세요|넣으|고치/.test(CC.pyerr.short(tb)));
 
-console.log('\n[진단] 8문항 · 결과는 교사만');
+console.log('\n[레벨 테스트] 10문항 · 결과는 교사만');
 const OB = CC.onboard;
-t('문항은 8개', OB.QUESTIONS.length === 8);
-t('모든 문항 마지막 보기는 모르겠어요', OB.QUESTIONS.every(q => q.options[q.options.length - 1] === '모르겠어요'));
+t('문항은 10개', OB.QUESTIONS.length === 10);
+t('객관식과 단답형이 섞여 있다', OB.QUESTIONS.some(q => q.options) && OB.QUESTIONS.some(q => !q.options));
+t('객관식 마지막 보기는 모르겠어요', OB.QUESTIONS.filter(q => q.options).every(q => q.options[q.options.length - 1] === '모르겠어요'));
 t('모든 질문은 ? 로 끝나고 80자 이하', OB.QUESTIONS.every(q => /\?$/.test(q.ask) && q.ask.length <= 80));
-t('정답표는 밖에 없다', !('KEY' in OB) && OB.QUESTIONS.every(q => Object.keys(q).sort().join() === 'ask,code,id,options'));
-/* 정답은 문항을 보고 사람이 적은 것 — core 의 정답표를 베끼지 않는다 */
-const RIGHT = { q1: '34', q2: "['a', 'b', 'c']", q3: '나', q4: '3번', q5: '크다', q6: '010-1234', q7: '2', q8: 'A는 10, B는 2' };
-const ans = (over) => OB.QUESTIONS.map(q => ({ q: q.id, pick: q.id in (over || {}) ? over[q.id] : q.options.indexOf(RIGHT[q.id]) }));
-const DUNNO = q => OB.QUESTIONS.find(x => x.id === q).options.length - 1;
-t('보기에 사람이 적은 정답이 다 있다', OB.QUESTIONS.every(q => q.options.indexOf(RIGHT[q.id]) >= 0 && q.options.indexOf(RIGHT[q.id]) < q.options.length - 1));
-t('다 맞으면 ready, hardcode 아님', JSON.stringify(OB.stage(ans())) === JSON.stringify({ stage: 'ready', hardcode: false }));
-t('1~3 중 하나라도 모르겠어요 → base', OB.stage(ans({ q2: DUNNO('q2') })).stage === 'base');
-t('1~3 오답이면 7 이 틀려도 base', OB.stage(ans({ q1: 1, q7: 0 })).stage === 'base');
-t('1~6 맞고 7 오답 → combine', OB.stage(ans({ q7: 0 })).stage === 'combine');
-t('4~6 에서 막혀도 combine', OB.stage(ans({ q5: DUNNO('q5') })).stage === 'combine');
-t('8 모르겠어요 → hardcode', OB.stage(ans({ q8: DUNNO('q8') })).hardcode === true);
-t('8 오답 → hardcode, 단계는 그대로', JSON.stringify(OB.stage(ans({ q8: 1 }))) === JSON.stringify({ stage: 'ready', hardcode: true }));
+t('정답표는 밖에 없다', !('KEY' in OB) && OB.QUESTIONS.every(q => Object.keys(q).every(k => ['id', 'code', 'ask', 'options'].indexOf(k) >= 0)));
+/* 정답은 문항을 보고 사람이 적은 것 — core 의 정답표를 베끼지 않는다. 단답형은 쓴 글자 그대로 */
+const RIGHT = { d1: '34', d2: '나', d3: '3', d4: '크다', d5: '3', d6: '2', d7: 'A는 10, B는 2',
+  d8: '나누기 → 겹친 것은 하나만 → 개수 세기', d9: '>=', d10: '-1' };
+const pickOf = (q, v) => q.options ? q.options.indexOf(v) : v;
+const ans = (over) => OB.QUESTIONS.map(q => ({ q: q.id, pick: q.id in (over || {}) ? over[q.id] : pickOf(q, RIGHT[q.id]) }));
+const DUNNO = q => { const x = OB.QUESTIONS.find(y => y.id === q); return x.options ? x.options.length - 1 : null; };
+t('보기에 사람이 적은 정답이 다 있다', OB.QUESTIONS.filter(q => q.options).every(q => q.options.indexOf(RIGHT[q.id]) >= 0 && q.options.indexOf(RIGHT[q.id]) < q.options.length - 1));
+t('다 맞으면 상(ready), hardcode 아님', JSON.stringify(OB.stage(ans())) === JSON.stringify({ stage: 'ready', hardcode: false }));
+t('단답형은 공백·따옴표·대소문자를 보지 않는다', OB.stage(ans({ d2: ' "나" ', d9: '> =', d10: 'LEN(names) - 1' })).stage === 'ready');
+t('단답형 3번 도 받는다', OB.stage(ans({ d3: '3번' })).stage === 'ready');
+t('문법 6개 중 4개 틀리면 하(base)', OB.stage(ans({ d1: 1, d2: '가', d3: DUNNO('d3'), d4: 0 })).stage === 'base');
+t('문법 3개만 맞으면 의도를 다 맞혀도 중', OB.stage(ans({ d1: 1, d2: '가', d3: '4' })).stage === 'combine');
+t('문법은 다 맞고 의도 2개만 → 중(combine)', OB.stage(ans({ d8: 1, d9: '>' })).stage === 'combine');
+t('문법 5개 + 의도 3개 → 상', OB.stage(ans({ d5: '1', d10: '2' })).stage === 'ready');
+t('d7 모르겠어요 → hardcode', OB.stage(ans({ d7: DUNNO('d7') })).hardcode === true);
+t('d7 오답 → hardcode, 단계는 그대로', JSON.stringify(OB.stage(ans({ d7: 1 }))) === JSON.stringify({ stage: 'ready', hardcode: true }));
 t('답하지 않은 문항은 틀린 것으로', OB.stage([]).stage === 'base' && OB.stage([]).hardcode === true);
+t('예전 8문항 기록은 예전 규칙으로', JSON.stringify(OB.stage(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'].map((q, i) => ({ q, pick: [0, 2, 1, 1, 1, 1, 0, 2][i] })))) === JSON.stringify({ stage: 'combine', hardcode: false }));
+t('상·중·하 이름', OB.LABEL.ready === '상' && OB.LABEL.combine === '중' && OB.LABEL.base === '하');
+t('지정이 없으면 볼 차례가 아니다', OB.pending(null, []) === false);
+t('지정 뒤 기록이 없으면 볼 차례', OB.pending('2026-10-19T01:00:00Z', ['2026-10-18T01:00:00Z']) === true);
+t('지정 뒤 기록이 있으면 끝', OB.pending('2026-10-19T01:00:00Z', ['2026-10-18T01:00:00Z', '2026-10-19T02:00:00Z']) === false);
 
 const of = CC.fold.fold([
   CC.events.make(T.S_ONBOARD, { answers: ans({ q1: 3 }), skipped: false }),
@@ -217,9 +228,64 @@ t('수식으로 시작하는 질문은 앞에 \' 를 붙인다', CC.csv.toCsv([[
 t('쉼표·따옴표·줄바꿈이 든 셀은 감싸고 따옴표는 두 번', csv.indexOf('"왜 ""빈 줄"", 나와요?\n두 줄"') >= 0);
 t('평범한 셀은 감싸지 않는다', csv.indexOf(',준호,') >= 0);
 
+console.log('\n[코드 미션]');
+const CM = CC.codemission;
+t('개념 8개, 순서 고정', CM.CONCEPTS.map(c => c.id).join() === 'split,index,if,for,while,dict,set,func');
+t('uses: while 은 For 로 안 된다', CM.uses('while', ['For']) === false);
+t('uses: While 이면 된다', CM.uses('while', ['While']) === true);
+t('uses: 목록이 null 이면 판단 안 함', CM.uses('x', null) === true);
+t('dataLine 새 꼴은 리터럴 그대로', CM.dataLine({ kind: 'code' }, '[1, 2]') === 'data = [1, 2]');
+t('dataLine 옛 꼴은 따옴표 문자열', CM.dataLine({}, 'a,b') === 'data = "a,b"');
+t('dataLine 따옴표·역슬래시는 JSON 이스케이프', CM.dataLine({}, 'a\\b"c') === 'data = ' + JSON.stringify('a\\b"c'));
+t('DATA_RE 는 줄 처음의 data 줄을 찾는다', CM.DATA_RE.test('x=1\ndata = [1]\n'));
+t('usesCode 는 새 dict 안에서 돌려 전역을 더럽히지 않는다', CM.usesCode('x=1').indexOf('exec(') === 0 && /, \{\}\)$/.test(CM.usesCode('x=1')) && CM.usesCode('x=1').indexOf('_src = \\"x=1\\"') > 0);
+t('USES_PY 는 NUL 같은 ValueError 도 null 로 받는다', CM.USES_PY.indexOf('except (SyntaxError, ValueError):') >= 0);
+t('sig: 같은 입력 같은 값, 다른 입력 다른 값', CM.sig('a') === CM.sig('a') && CM.sig('a') !== CM.sig('b') && /^[0-9a-f]+$/.test(CM.sig('print(1)')));
+const pe = CC.events.make(CC.events.T.S_PROBE, { sig: 'ab', outs: [{ dataId: 'x', output: '3', error: '' }], uses: ['For'] });
+t('s-probe 이벤트는 만들어진다', pe.type === 's-probe');
+t('s-probe 에 NEVER 필드를 넣으면 예외', (() => { try { CC.events.make(CC.events.T.S_PROBE, { sig: 'a', score: 1 }); return false; } catch (e) { return true; } })());
+const pf = CC.fold.fold([pe, CC.events.make(CC.events.T.S_PROBE, { sig: 'cd', outs: [], uses: null })]);
+t('fold: 마지막 probe 만 남긴다', pf.sProbe && pf.sProbe.sig === 'cd' && pf.sProbe.uses === null);
+const ok2 = [{ output: '3', error: '' }, { output: '0', error: '' }];
+const dr = { concept: 'for', brief: '합계는?', inputs: [{ name: 'a' }, { name: 'b', counter: true }] };
+const codes = (d, r, u) => CM.solcheck(d, r, u).map(x => x.code).join();
+t('solcheck 통과: 반례가 빈 배열', codes(dr, ok2, ['For']) === '');
+t('solcheck error', codes(dr, [{ output: '', error: '1번째 줄 에러' }, ok2[1]], ['For']) === 'error');
+t('solcheck error 조사: 받침 있으면 으로, ㄹ·없으면 로', ['영수증', '교실', '버스'].map(n => CM.solcheck({ concept: 'for', inputs: [{ name: n }, {}] }, [{ output: '', error: 'x' }, ok2[1]], ['For'])[0].msg).join('|') === '영수증으로 돌리면 에러가 나요.|교실로 돌리면 에러가 나요.|버스로 돌리면 에러가 나요.');
+t('solcheck timeout', codes(dr, [{ output: '', error: CC.pyerr.TIMEOUT }, ok2[1]], ['For']) === 'timeout');
+t('solcheck concept', codes(dr, ok2, ['While']) === 'concept');
+t('solcheck counter-same', codes(dr, [ok2[0], { output: ' 3\n', error: '' }], ['For']) === 'counter-same');
+t('solcheck shape: 빈 출력·여러 줄·200자 초과', ['', '1\n2', 'x'.repeat(201)].every(o => codes({ concept: 'for', inputs: [{}, {}] }, [{ output: o, error: '' }, { output: 'z', error: '' }], ['For']) === 'shape'));
+t('solcheck count-not-number', codes({ concept: 'for', brief: '몇 개?', inputs: [{}, {}] }, [{ output: 'abc', error: '' }, { output: '2', error: '' }], ['For']) === 'count-not-number');
+t('hardcodeOption 조사 계산', CM.hardcodeOption('주문서 1', '7').v === '주문서 1의 답과 같은 7이 나오면 성공' && CM.hardcodeOption('주문서 1', '7').trap === 'hardcode');
+t('hardcodeOption 빈 값', CM.hardcodeOption('영수증', '').v === '영수증처럼 빈 결과가 나오면 성공');
+console.log('\n[코드 사실]');
+const FM = { concept: 'for', inputs: [{ name: '영수증', v: '[1, 2]' }, { name: '주문서', v: '[5]' }, { name: '빈 상자', v: '[]', counter: true }] };
+const O = (id, output, error) => ({ dataId: id, output, error: error || '' });
+const kinds = (st, m) => CC.facts.of(st, m || FM).map(f => f.kind).join();
+const stu = (codes, probe) => ({ sCodes: codes.map(d => ({ dataId: d, code: 'c' })), sProbe: probe ? Object.assign({ sig: CM.sig('c') }, probe) : null });
+t('facts nocounter: 반례로 실행 안 함', CC.facts.of(stu(['[1, 2]']), FM)[0].text === '새로 온 자료로는 실행하지 않았어요');
+t('facts nocounter: 반례로 실행했으면 없음', kinds(stu(['[]'])) === '');
+t('facts probe 없으면 nocounter 만', kinds(stu([])) === 'nocounter');
+t('facts hardcode 문장·조사', CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', '3\n'), O('[]', ' 3 ')], uses: ['For'] }), FM)[0].text === '새로 온 자료에서도 영수증과 같은 결과 3이 나와요');
+t('facts hardcode: 다르면 없음', kinds(stu(['[]'], { outs: [O('[1, 2]', '3'), O('[]', '0')], uses: ['For'] })) === '');
+t('facts error 문장, 에러가 있으면 hardcode 없음', (() => { const f = CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', ''), O('[5]', '', 'x'), O('[]', '')], uses: ['For'] }), FM); return f.map(x => x.kind).join() === 'error' && f[0].text === '자료 주문서에서는 에러가 나요'; })());
+t('facts concept 문장', CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', '3'), O('[]', '0')], uses: ['For'] }), { concept: 'while', inputs: FM.inputs })[0].text === '오늘 개념(반복문 while)이 코드에 없어요');
+t('facts concept: uses null 이면 없음', kinds(stu(['[]'], { outs: [], uses: null })) === '');
+t('facts 예전 미션(concept 없음)은 concept 없음', kinds(stu(['[]'], { outs: [], uses: ['x'] }), { inputs: FM.inputs }) === '');
+t('facts probe 가 옛 코드(sig 다름)면 probe 사실은 없고 nocounter 만', (() => {
+  const st = { sCodes: [{ dataId: '[1, 2]', code: 'print(3)' }], sProbe: { sig: CM.sig('old'), outs: [O('[1, 2]', '3'), O('[]', '3')], uses: [] } };
+  return kinds(st) === 'nocounter';
+})());
+t('facts probe 가 마지막 코드와 같으면 사실을 띄운다', kinds({ sCodes: [{ dataId: '[]', code: 'old' }, { dataId: '[]', code: 'new' }], sProbe: { sig: CM.sig('new'), outs: [O('[1, 2]', '3'), O('[]', '3')], uses: ['For'] } }) === 'hardcode');
+t('facts hardcode: 반례 값이 자료 1과 같으면 없음', kinds(stu(['[1, 2]'], { outs: [O('[1, 2]', '3')], uses: ['For'] }), { concept: 'for', inputs: [{ name: '영수증', v: '[1, 2]' }, { name: '같은 것', v: '[1, 2]', counter: true }] }) === '');
+const fc = CC.cards.forMission({ kind: 'code', cards: [{ label: '더하기' }, { label: '나누기', decoy: true }] });
+t('cards.forMission: m.cards 가나다순·decoy 유지', fc.length === 2 && fc[0].label === '나누기' && fc[0].decoy === true && fc[1].label === '더하기' && fc[1].decoy === false);
+t('fixedList 새 꼴은 null', CC.cards.fixedList({ kind: 'code' }) === null);
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js', 'csv.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js', 'csv.js', 'codemission.js', 'facts.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
