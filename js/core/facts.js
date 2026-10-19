@@ -40,7 +40,7 @@
     }
     var c = mission.concept && CC.codemission.concept(mission.concept);
     if (c && Array.isArray(probe.uses) && !CC.codemission.uses(c.id, probe.uses)) {
-      out.push({ kind: 'concept', text: '오늘 개념 ' + c.label + CC.particle(c.label, '이/가') + ' 코드에 없어요' });
+      out.push({ kind: 'concept', text: '오늘 개념(' + c.label + ')이 코드에 없어요' });
     }
     return out;
   }

@@ -270,7 +270,7 @@ t('facts probe 없으면 nocounter 만', kinds(stu([])) === 'nocounter');
 t('facts hardcode 문장·조사', CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', '3\n'), O('[]', ' 3 ')], uses: ['For'] }), FM)[0].text === '새로 온 자료에서도 영수증과 같은 결과 3이 나와요');
 t('facts hardcode: 다르면 없음', kinds(stu(['[]'], { outs: [O('[1, 2]', '3'), O('[]', '0')], uses: ['For'] })) === '');
 t('facts error 문장, 에러가 있으면 hardcode 없음', (() => { const f = CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', ''), O('[5]', '', 'x'), O('[]', '')], uses: ['For'] }), FM); return f.map(x => x.kind).join() === 'error' && f[0].text === '자료 주문서에서는 에러가 나요'; })());
-t('facts concept 문장', CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', '3'), O('[]', '0')], uses: ['For'] }), { concept: 'while', inputs: FM.inputs })[0].text === '오늘 개념 반복문 while가 코드에 없어요');
+t('facts concept 문장', CC.facts.of(stu(['[]'], { outs: [O('[1, 2]', '3'), O('[]', '0')], uses: ['For'] }), { concept: 'while', inputs: FM.inputs })[0].text === '오늘 개념(반복문 while)이 코드에 없어요');
 t('facts concept: uses null 이면 없음', kinds(stu(['[]'], { outs: [], uses: null })) === '');
 t('facts 예전 미션(concept 없음)은 concept 없음', kinds(stu(['[]'], { outs: [], uses: ['x'] }), { inputs: FM.inputs }) === '');
 const fc = CC.cards.forMission({ kind: 'code', cards: [{ label: '더하기' }, { label: '나누기', decoy: true }] });

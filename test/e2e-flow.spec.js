@@ -1133,7 +1133,7 @@ test('서랍에 코드 사실과 설계·코드 나란히', async ({ page }) => 
   const d = page.locator('#detail');
   await expect(d.getByText('코드 사실', { exact: true })).toHaveCount(2);
   await expect(d).toContainText('새로 온 자료에서도 영수증과 같은 결과 3이 나와요');
-  await expect(d).toContainText('오늘 개념 반복문 while가 코드에 없어요');
+  await expect(d).toContainText('오늘 개념(반복문 while)이 코드에 없어요');
   const a = await d.locator('.d-pair-cards').boundingBox();
   const b = await d.locator('.d-pair-code').boundingBox();
   expect(a && b && Math.abs(a.y - b.y) < 4 && b.x > a.x).toBeTruthy();       // 나란히
