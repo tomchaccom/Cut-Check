@@ -348,3 +348,8 @@ details.more[open] > summary { margin-bottom: 16px; }
 .sg-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 #sg-more { align-self: flex-start; }
 #sg-status { font-size: 13px; color: var(--ink-3); }
+.sg-drow { grid-template-columns: 150px minmax(0, 1fr) minmax(0, 120px); }
+.drow.counter .sg-data-val { border-style: dashed; }
+.sg-answer { font-family: var(--mono); font-size: 15px; overflow-wrap: anywhere; }
+#sg-draft .opt .in { flex: 1 1 220px; }
+@media (max-width: 600px) { .sg-drow { grid-template-columns: minmax(0, 1fr); } }
