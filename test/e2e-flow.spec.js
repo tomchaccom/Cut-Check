@@ -454,7 +454,9 @@ test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ p
 const FAKE_TEACHER = `(function(CC){var P=function(v){return Promise.resolve(v)};
 var roster=[{id:'s1',name:'태인',login_id:'m9676u-1'},{id:'s2',name:'가은'},{id:'s3',name:'한결',login_id:'m9676u-2'}];
 window.__removed=[];window.__created=[];window.__reset=[];
-CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:window.__role||'teacher',name:'김선생'})},
+CC.sb={active:function(){return true},
+api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(j){if(!r.ok){var e=new Error(j.error||'x');e.reasons=j.reasons;throw e}return j})})},
+getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:window.__role||'teacher',name:'김선생'})},
 createStudent:function(rid,s){if(s.loginId==='taken')return Promise.reject(new Error('이미 있는 아이디예요.'));window.__created.push([rid,s]);roster.push({id:'n'+roster.length,name:s.name,login_id:s.loginId});return P({loginId:s.loginId,password:s.password||'k7mpq2xa'})},
 resetStudentPassword:function(rid,lid){window.__reset.push([rid,lid]);return P({loginId:lid,password:'zz88aa44'})},
 onAuthChange:function(){},signOut:function(){return P()},createClassroom:function(){return P({})},
@@ -832,4 +834,20 @@ test('실행기 — 앞 실행이 도는 동안 부른 실행도 차례로 끝�
     });
   }));
   expect(r.got).toEqual([['a', '1\n', ''], ['b', '2\n', ''], ['c', '', r.TIMEOUT], ['d', '3\n', '']]);
+});
+
+/* 서버가 로그인한 강사만 받는다 — 강사 모드의 빠른 생성은 CC.sb.api(토큰을 붙이는 data 층 함수)로 간다 */
+test('강사 모드 — 빠른 생성은 CC.sb.api 로 부른다', async ({ page }) => {
+  await asTeacher(page);
+  const fixture = require('./fixtures/mission.json');
+  await page.route('**/api/generate-mission', r => r.fulfill({ contentType: 'application/json',
+    body: JSON.stringify({ ...fixture, guard: { fallback: [], reasons: {} } }) }));
+  await page.evaluate(() => { const f = CC.sb.api; window.__api = []; CC.sb.api = (p, b) => { window.__api.push(p); return f(p, b); }; });
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gen-lesson').fill('리스트와 반복문');
+  await page.locator('#gen-key').fill('같은 값이 여러 번 나올 때');
+  await page.locator('#gen-btn').click();
+  await expect(page.locator('#confirm-mission')).toBeVisible();
+  expect(await page.evaluate(() => window.__api)).toEqual(['/api/generate-mission']);
 });

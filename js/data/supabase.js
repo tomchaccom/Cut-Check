@@ -17,27 +17,36 @@
     sb = window.supabase.createClient(url, key);
   }
 
-  function accounts(body) {
+  /* 서버 함수 부르기 — 지금 세션의 토큰을 붙인다. 생성·계정 함수는 로그인한 강사만 받는다.
+   * 실패면 Error(서버가 준 문장), 422 면 err.reasons 에 걸린 이유. */
+  function api(path, body) {
     if (!sb) return Promise.reject(new Error('Supabase 미설정'));
     return sb.auth.getSession().then(function (res) {
       var token = res.data && res.data.session && res.data.session.access_token;
       if (!token) throw new Error('다시 로그인해 주세요.');
-      return fetch('/api/create-student', {
+      return fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify(body)
       });
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
-        if (!r.ok) throw new Error(j.error || '서버에 연결하지 못했어요.');
+        if (!r.ok) {
+          var err = new Error(j.error || '서버에 연결하지 못했어요.');
+          if (r.status === 422) err.reasons = j.reasons;
+          throw err;
+        }
         return j;
       });
     });
   }
 
+  function accounts(body) { return api('/api/create-student', body); }
+
   CC.sb = {
     active: function () { return !!sb; },
     client: function () { return sb; },
+    api: api,
 
     /* ── 인증 ────────────────────────────────── */
     /* 프로필은 DB 트리거(handle_new_user)가 자동 생성한다.

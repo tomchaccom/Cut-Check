@@ -616,15 +616,20 @@ window.CC_SUPABASE = {
     btn.disabled = true; btn.textContent = '초안 생성 중...';
     result.innerHTML = '<span style="color:var(--ink-3)">미션을 만들고 있어요...</span>';
 
-    fetch('/api/generate-mission', {
+    var req = { lesson: lesson, keyPoint: keyPoint, difficulty: $('#gen-diff').value, stages: CC.onboard.spread(CC.classroom.students) };
+    /* 서버는 로그인한 강사만 받는다 — 토큰은 CC.sb.api 가 붙인다.
+     * 로컬 모드(Supabase 없음)는 토큰 없이 보낸다: 배포 서버는 401 로 거절하고, 로컬 개발 서버·시험은 그대로 돈다 */
+    (CC.sb && CC.sb.active() ? CC.sb.api('/api/generate-mission', req) : fetch('/api/generate-mission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lesson: lesson, keyPoint: keyPoint, difficulty: $('#gen-diff').value, stages: CC.onboard.spread(CC.classroom.students) })
-    })
-    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
-    .then(function (r) {
-      if (!r.ok) throw new Error(r.data.error || '생성 실패');
-      var m = r.data;
+      body: JSON.stringify(req)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) throw new Error(d.error || '생성 실패');
+        return d;
+      });
+    }))
+    .then(function (m) {
       btn.disabled = false; btn.textContent = '미션 초안 생성';
 
       /* ── 초안 편집 폼 ── */

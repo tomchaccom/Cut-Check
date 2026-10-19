@@ -110,7 +110,7 @@ def _flat(s, defs=None):
     return s
 
 
-def pickle_llm(messages, schema, timeout):
+def pickle_llm(messages, schema, timeout, model=None):
     """structured output 을 쓴다. 서버가 거절하면 JSON 모드로 내려간다.
 
     평가에서 json_schema 는 매번 받아들여졌다. 어느 쪽이든 결과는 pydantic 이 똑같이 검사한다.
@@ -118,7 +118,7 @@ def pickle_llm(messages, schema, timeout):
     key = re.sub(r'\s', '', os.environ.get('PICKLE_API_KEY', ''))
     if not key:
         raise RuntimeError('PICKLE_API_KEY 가 설정되지 않았습니다.')
-    body = {'model': MODEL, 'max_tokens': 1500, 'messages': messages}
+    body = {'model': model or MODEL, 'max_tokens': 1500, 'messages': messages}
     end = time.monotonic() + timeout
     try:
         return _post({**body, 'response_format': {
@@ -453,6 +453,14 @@ class GenerateError(Exception):
 
 
 DIFFICULTY = {'easy': '쉽게', 'medium': '보통으로', 'hard': '어렵게'}
+
+
+def level_of(body):
+    """요청 body 의 난이도·분포. 힌트일 뿐 — 모양이 틀리면 400 이 아니라 버리고 진행한다."""
+    d, st = body.get('difficulty'), body.get('stages')
+    d = d if d in ('easy', 'medium', 'hard') else None
+    st = {k: v for k, v in st.items() if type(v) is int and v >= 0} if isinstance(st, dict) else {}
+    return {'difficulty': d, 'stages': st} if d or st else None
 
 
 def level_note(level):
