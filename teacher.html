@@ -630,7 +630,8 @@ window.CC_SUPABASE = {
       if (fixed) {
         draft += '<div class="drow"><span class="dname"><input class="in" id="draft-fixed-name" aria-label="고정 목록 이름" value="' + esc(fixed.name) + '">' +
           '<span class="h-sub">고정 목록 · 학생에게 보여요</span></span>' +
-          '<input class="in mono" id="draft-fixed" aria-label="고정 목록 내용" value="' + esc(fixed.items.join(',')) + '"></div>';
+          '<input class="in mono" id="draft-fixed" aria-label="고정 목록 내용" value="' + esc(fixed.items.join(',')) + '"></div>' +
+          '<div role="alert" class="review-box" id="draft-fixed-warn" hidden></div>';
       }
       draft += '</div>';
 
@@ -643,6 +644,7 @@ window.CC_SUPABASE = {
             : '<span class="kind real">진짜</span>';
           draft += '<div class="opt"><span>' + esc(o.v) + '</span>' + kind + '</div>';
         });
+        if (fixed) draft += '<p class="h-sub">외우기 함정의 값은 처음 고정 목록과 첫 자료로 계산했어요. 목록이나 자료를 고치면 이 문장을 확인해 주세요.</p>';
         draft += '</div></div>';
       }
 
@@ -688,6 +690,18 @@ window.CC_SUPABASE = {
         });
         if ($('#draft-fixed')) {
           var ft = $('#draft-fixed').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+          /* 서버 검사(_schema.fixed_list_leak)와 같은 기준 — 목록이 어느 자료 안에 통째로 있으면 그 자료의 답이
+             목록 그대로다. 자료와 하나도 안 겹치면 거를 게 없다. 교사가 고친 목록도 같은 이유로 막는다 */
+          var lists = m.inputs.map(function (inp) {   /* 쉼표가 없으면 반례(구분자 변화)라 띄어쓰기로 나눈다 */
+            var v = String(inp.v);
+            return v.split(v.indexOf(',') >= 0 ? ',' : /\s+/).map(function (x) { return x.trim(); }).filter(Boolean);
+          });
+          var inside = m.inputs.filter(function (inp, i) { return ft.length && ft.every(function (x) { return lists[i].indexOf(x) >= 0; }); })[0];
+          var touch = ft.some(function (x) { return lists[0].concat(lists[1] || []).indexOf(x) >= 0; });
+          var warn = !ft.length ? '고정 목록이 비어 있어요.'
+            : inside ? '고정 목록이 ' + inside.name + ' 안에 통째로 있어요. 그러면 그 자료의 답이 목록 그대로예요. 자료에 없는 항목도 섞어 주세요.'
+            : !touch ? '고정 목록이 앞 두 자료와 하나도 겹치지 않아요. 걸러 낼 게 없어요.' : '';
+          if (warn) { $('#draft-fixed-warn').textContent = warn; $('#draft-fixed-warn').hidden = false; return; }
           if (ft.length) m.pipelineParams = { filterTarget: ft };
           m.filterDesc = ($('#draft-fixed-name').value || '').trim() || m.filterDesc;
         }

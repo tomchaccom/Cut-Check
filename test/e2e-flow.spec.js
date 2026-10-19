@@ -693,7 +693,9 @@ test('교사 초안에 고정 목록이 보이고 고칠 수 있다', async ({ c
   await local(context);
   const fixture = require('./fixtures/mission.json');
   const draft = { ...fixture, pipelineId: 'split-filter-join', filterDesc: '민지 시간',
-    pipelineParams: { filterTarget: ['3시', '4시', '5시'] }, guard: { fallback: [], reasons: {} } };
+    pipelineParams: { filterTarget: ['3시', '4시', '5시'] }, guard: { fallback: [], reasons: {} },
+    inputs: [{ id: 'd01', name: '준호 쪽지', v: '4시,5시,6시' }, { id: 'd02', name: '서연 쪽지', v: '2시,3시' },
+             { id: 'd03', name: '하린 쪽지', v: '6시 7시', counter: true, axis: 'sep' }] };
   delete draft.method;
   await page.route('**/api/generate-mission', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(draft) }));
   await page.goto(BASE + '/teacher.html');
@@ -703,6 +705,15 @@ test('교사 초안에 고정 목록이 보이고 고칠 수 있다', async ({ c
   await page.locator('#gen-btn').click();
   await expect(page.locator('#draft-fixed')).toHaveValue('3시,4시,5시');
   await expect(page.locator('#draft-fixed-name')).toHaveValue('민지 시간');
+  await expect(page.locator('#gen-result')).toContainText('처음 고정 목록과 첫 자료로 계산했어요');
+  /* 목록이 한 자료 안에 통째로 있으면 그 자료의 답이 목록 그대로 — 저장을 막는다 */
+  await page.locator('#draft-fixed').fill('4시,5시');
+  await page.locator('#confirm-mission').click();
+  await expect(page.locator('#draft-fixed-warn')).toContainText('준호 쪽지 안에 통째로');
+  await page.locator('#draft-fixed').fill('8시,9시');
+  await page.locator('#confirm-mission').click();
+  await expect(page.locator('#draft-fixed-warn')).toContainText('하나도 겹치지 않아요');
+  expect(await page.evaluate(() => localStorage.getItem('cutcheck.generated'))).toBeNull();
   await page.locator('#draft-fixed').fill('3시, 4시');
   await page.locator('#confirm-mission').click();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.generated')).pop());

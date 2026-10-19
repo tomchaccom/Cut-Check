@@ -247,6 +247,10 @@ def counter_problems(pid, data, filter_target, counter):
         bad.append(('counter', 'axis=invisible 인데 앞뒤 공백 항목이 없음'))
     if axis == 'count' and len([p for p in text.split(',') if p]) == len(data[0]['items']):
         bad.append(('counter', 'axis=count 인데 항목 수가 첫 자료와 같음'))
+    # 반례가 고정 목록을 통째로 담으면 반례의 답이 목록 그대로다 — 앞 자료와 같은 누출 (리뷰 2026-10-19)
+    if filter_target and 'filter' in SPEC[pid]['ops'] and 'toNumber' not in SPEC[pid]['ops'] and axis != 'empty' \
+            and {x.strip() for x in filter_target} <= {p.strip() for p in pieces}:
+        bad.append(('counter', '반례 자료가 고정 목록을 통째로 담고 있다 — 반례의 답이 목록 그대로가 된다'))
     # 첫 자료를 그대로 두고 덧붙인 반례는 '같은 자료에 요일만 바꾼' 가짜로 읽혔다 (2026-10-18 기준 12회 중 10회)
     first = [x.strip() for x in data[0]['items']]
     if [p.strip() for p in pieces[:len(first)]] == first:
@@ -340,7 +344,14 @@ class _Base(BaseModel):
         }
         if getattr(self, 'filterDesc', None) is not None:
             said['filterDesc'] = ([self.filterDesc], False)
-        bad = []
+            m = re.search(r'거르|걸러|골라|고를|필터|제외', self.filterDesc)
+            if m:  # 목록 이름이 '걸러낼 재료' 면 카드 '골라내기' 를 이름이 알려 준다
+                bad_desc = [('filterDesc', f"'{self.filterDesc}': 방법 낱말 '{m.group(0)}' — 누구의 무엇인지만 쓴다")]
+            else:
+                bad_desc = []
+        else:
+            bad_desc = []
+        bad = bad_desc
         for field, (texts, speaks) in said.items():
             for t in texts:
                 n = len(t)
@@ -375,12 +386,17 @@ class _Base(BaseModel):
         return bad
 
 
+NOT_PERSON = {'우리', '우리반', '학교', '다른', '옆', '옆반', '반', '가게', '동네', '다음', '이번', '지난', '같은', '새',
+              '전체', '모둠', '학급', '교실', '동아리', '선생님', '엄마', '아빠', '가족', '친구', '친구들'}
+
+
 def _counter_source_named(counter_name, shown_names, texts):
     """→ (칸, 이름) | None. "세 사람 목록에서…" 처럼 반례에만 나오는 사람을 이야기가 먼저 불렀다 (2026-10-18).
     이름의 첫 낱말에서 '네'·'이네' 를 떼어 본다. 두 글자 미만이거나 앞 자료에도 나오는 말이면 보지 않는다."""
     first = (counter_name.split() or [''])[0]
     who = re.sub(r'(이네|네|이의|의|이)$', '', first)
-    if len(who) < 2 or any(who in n for n in shown_names):
+    # 사람 이름처럼 보일 때만 본다. '우리 반 메모' 의 '우리' 는 이야기에 나와도 셋째 출처를 밝힌 게 아니다
+    if len(who) < 2 or first in NOT_PERSON or who in NOT_PERSON or any(who in n for n in shown_names):
         return None
     return next(((f, who) for f, t in texts.items() if who in (t or '')), None)
 

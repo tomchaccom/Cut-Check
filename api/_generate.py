@@ -119,6 +119,7 @@ def pickle_llm(messages, schema, timeout):
     if not key:
         raise RuntimeError('PICKLE_API_KEY 가 설정되지 않았습니다.')
     body = {'model': MODEL, 'max_tokens': 1500, 'messages': messages}
+    end = time.monotonic() + timeout
     try:
         return _post({**body, 'response_format': {
             'type': 'json_schema', 'json_schema': {'name': 'mission', 'schema': _flat(schema)}}}, key, timeout)
@@ -127,7 +128,8 @@ def pickle_llm(messages, schema, timeout):
             raise
     messages = [{**messages[0], 'content': messages[0]['content'] + '\n\n스키마:\n' +
                  json.dumps(schema, ensure_ascii=False)}] + messages[1:]
-    return _post({**body, 'messages': messages, 'response_format': {'type': 'json_object'}}, key, timeout)
+    # 400 까지 쓴 시간을 빼고 남은 만큼만 — 처음 timeout 을 다시 주면 DEADLINE 을 넘을 수 있다
+    return _post({**body, 'messages': messages, 'response_format': {'type': 'json_object'}}, key, max(1, end - time.monotonic()))
 
 
 def _json(raw):
@@ -382,7 +384,7 @@ def _fallback(field, pid, m):
     if field == 'itemName':
         return '항목'
     if field == 'filterDesc':
-        return '골라낼 것'
+        return '정해 둔 목록'  # '골라낼' 은 방법 낱말이라 이름 검사에 걸린다
     if field == 'counter':
         for c in _counter_candidates(pid, items1, items2, ft):
             if not counter_problems(pid, m['data'], ft, c):
