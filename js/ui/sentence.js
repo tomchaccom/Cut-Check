@@ -327,70 +327,11 @@
   function runBtns(off) {   /* 실행 · 자료 3개로 실행 — 하나가 도는 동안 둘 다 꺼진다 */
     ['#run-code', '#run-all'].forEach(function (id) { if ($(id)) $(id).disabled = off; });
   }
-  var py = (function () {
-    var w = null, pending = null, seq = 0, main = null;
-    var LOAD_FAIL = 'Python을 불러오지 못했어요. 코드는 계속 쓸 수 있어요.';
-
-    function status(text, ready) {
-      pyodideReady = ready;
-      if ($('#pyodide-status')) $('#pyodide-status').textContent = text;
-      runBtns(!ready);
-    }
-
-    function boot() {
-      status('Python 로딩 중...', false);
-      try { w = new Worker('js/ui/pyworker.js'); } catch (e) { w = null; return bootMain(); }
-      w.onmessage = function (e) {
-        var d = e.data;
-        if (d.type === 'ready') status('Python 준비 완료', true);
-        else if (d.type === 'load-error') status(LOAD_FAIL, false);
-        else if (d.type === 'done' && pending && pending.id === d.id) {
-          clearTimeout(pending.timer);
-          var cb = pending.cb; pending = null;
-          pyodideReady = true;
-          runBtns(false);
-          cb(d.output, d.error ? CC.pyerr.short(d.error) : '');
-        }
-      };
-      w.onerror = function (e) {
-        e.preventDefault();           /* 처리했다 — 페이지 에러로 올리지 않는다 */
-        if (pending) { clearTimeout(pending.timer); pending = null; }
-        w = null; bootMain();
-      };
-    }
-
-    function bootMain() {
-      if (typeof loadPyodide !== 'function') return status(LOAD_FAIL, false);
-      loadPyodide().then(function (p) {
-        p.runPython('import builtins\ndef _no_input(*a):\n    raise RuntimeError("__NO_INPUT__")\nbuiltins.input = _no_input');
-        main = p; status('Python 준비 완료', true);
-      }, function () { status(LOAD_FAIL, false); });
-    }
-
-    function run(code, cb) {
-      if (main) {
-        main.runPython('import io, sys; sys.stdout = io.StringIO()');
-        var err = '';
-        try { main.runPython(code); } catch (x) { err = CC.pyerr.short(String((x && x.message) || x)); }
-        return cb(main.runPython('sys.stdout.getvalue()'), err);
-      }
-      if (!w) return;
-      var id = ++seq;
-      var timer = setTimeout(function () {
-        pending = null;
-        w.terminate();
-        boot();                       /* 새 worker 가 준비될 때까지 실행 버튼은 꺼져 있다 */
-        cb('', CC.pyerr.TIMEOUT);
-      }, 5000);
-      pending = { id: id, cb: cb, timer: timer };
-      pyodideReady = false;           /* 실행 중에는 화면을 오가도 버튼이 다시 켜지지 않는다 */
-      runBtns(true);
-      w.postMessage({ id: id, code: code });
-    }
-
-    boot();
-    return { run: run };
-  })();
+  var py = CC.pyrun.create(function (text, ready) {
+    pyodideReady = ready;
+    if ($('#pyodide-status')) $('#pyodide-status').textContent = text;
+    runBtns(!ready);
+  });
 
   function renderCodeStep() {
     /* 설계도 표시 */
@@ -467,7 +408,11 @@
     var dataLine = CC.codemission.dataLine(M, dataVal);
     var hasData = CC.codemission.DATA_RE.test(code);
     var fullCode = hasData ? code.replace(CC.codemission.DATA_RE, function () { return dataLine; }) : dataLine + '\n' + code;
+    pyodideReady = false;             /* 실행 중에는 화면을 오가도 버튼이 다시 켜지지 않는다 */
+    runBtns(true);
     py.run(fullCode, function (output, error) {
+      pyodideReady = py.ready();      /* 시간 초과면 새 worker 가 준비될 때까지 꺼져 있다 */
+      runBtns(!pyodideReady);
       if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
       lastRun = { output: String(output || ''), error: String(error || '') };
       state.codes.push(rec('s-code', { code: code, dataId: dataVal, output: output, error: error }));

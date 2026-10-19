@@ -89,7 +89,7 @@ const fs = require('fs'), rd = f => fs.readFileSync(__dirname + '/../' + f, 'utf
 const fixed = [];
 (rd('api/_tutor.py').match(/REFUSE = \{[\s\S]*?\n\}/)[0].match(/: '([^']+)'/g) || []).forEach(x => fixed.push(x.slice(3, -1)));
 fixed.push(rd('js/ui/tutor.js').match(/UNAVAILABLE = '([^']+)'/)[1]);
-fixed.push(rd('js/ui/sentence.js').match(/LOAD_FAIL = '([^']+)'/)[1]);
+fixed.push(rd('js/ui/pyrun.js').match(/LOAD_FAIL = '([^']+)'/)[1]);
 fixed.push(CC.pyerr.TIMEOUT, CC.pyerr.NO_INPUT);
 if (fixed.length !== 6) { console.log('  FAIL 고정 문장 수집: ' + fixed.length); fail2++; }
 /* 설계 카드 문구 — 학생 화면에 그대로 나간다. 고정 문장 개수(6) 확인 뒤에 더한다 */

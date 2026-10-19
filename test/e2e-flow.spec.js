@@ -814,3 +814,22 @@ test('예전 미션 — 쉼표 자료는 그대로 따옴표로 돈다', async (
   await studentToCode(page);
   expect((await page.locator('#code-editor').inputValue()).split('\n')[0]).toBe('data = "사과,바나나,우유"');
 });
+
+test('실행기 — 앞 실행이 도는 동안 부른 실행도 차례로 끝난다', async ({ context, page }) => {
+  test.setTimeout(60000);
+  await local(context);
+  await page.goto(BASE + '/sentence.html');
+  const r = await page.evaluate(() => new Promise(resolve => {
+    let up; const ready = new Promise(r => { up = r; });
+    const py = window.CC.pyrun.create((t, ok) => { if (ok) up(); });
+    const got = [];
+    const done = (k) => (o, e) => { got.push([k, o, e]); if (got.length === 4) resolve({ got, TIMEOUT: window.CC.pyerr.TIMEOUT }); };
+    ready.then(() => {
+      py.run('print(1)', done('a'));
+      py.run('print(2)', done('b'));
+      py.run('while True: pass', done('c'));
+      py.run('print(3)', done('d'));
+    });
+  }));
+  expect(r.got).toEqual([['a', '1\n', ''], ['b', '2\n', ''], ['c', '', r.TIMEOUT], ['d', '3\n', '']]);
+});
