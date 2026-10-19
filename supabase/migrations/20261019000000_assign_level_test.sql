@@ -16,7 +16,7 @@ begin
   if not found then raise exception '이 교실의 학생이 아니에요.'; end if;
   return due;
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer set search_path = public, pg_temp;  -- pg_temp 를 끝에: 임시 스키마의 같은 이름 테이블이 앞서지 않게
 
 revoke execute on function public.assign_onboard(uuid, uuid, boolean) from public, anon;
 grant execute on function public.assign_onboard(uuid, uuid, boolean) to authenticated;

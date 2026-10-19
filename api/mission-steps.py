@@ -53,9 +53,11 @@ def handle(body, token, env, http=urllib_http, llm=None):
     """→ (status, json). llm 은 시험용 — 없으면 단계마다 정한 모델."""
     # 55초 예산은 강사 확인(Supabase 2번 × 최대 3초)부터 센다 — build 안에서 재면 최악 61초 > maxDuration 60
     t0 = time.monotonic()
-    denied = refuse(token, env, http)
-    if denied:
-        return denied
+    return refuse(token, env, http) or serve(body, llm, t0)
+
+
+def serve(body, llm, t0):
+    """강사 확인을 마친 뒤의 일 — do_POST 는 본문을 읽기 전에 refuse 를 먼저 부르고 이걸 부른다."""
     if not isinstance(body, dict):
         return BAD
     try:
@@ -84,8 +86,13 @@ class handler(BaseHTTPRequestHandler):
         self._send(200, {})
 
     def do_POST(self):
+        # 강사 확인이 먼저 — 로그인 안 한 요청의 본문은 읽지도 파싱하지도 않는다
+        t0 = time.monotonic()
+        denied = refuse(bearer(self.headers.get('Authorization')), os.environ, urllib_http)
+        if denied:
+            return self._send(*denied)
         try:
             body = json.loads(self.rfile.read(int(self.headers.get('Content-Length') or 0)) or b'{}')
         except (ValueError, TypeError, UnicodeDecodeError):
             return self._send(*BAD)
-        self._send(*handle(body, bearer(self.headers.get('Authorization')), os.environ))
+        self._send(*serve(body, None, t0))
