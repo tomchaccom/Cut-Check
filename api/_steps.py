@@ -19,7 +19,7 @@ from _generate import GenerateError, _json, level_note, pickle_llm
 from _schema import (_LIMIT, YOU, _brief_problem, _method_problem, _plain_problem, _polite_problem,
                      _sentence_problem, _text_problem)
 
-MINI = os.environ.get('LLM_MODEL_MINI') or 'openai/gpt-5.4-mini'
+MINI = os.environ.get('LLM_MODEL_LIGHT') or 'openai/gpt-5.4-mini'
 
 
 def mini_llm(messages, schema, timeout):

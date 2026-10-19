@@ -11,6 +11,7 @@ Vercel Python 핸들러. 일은 _steps.py 가 하고, 여기는 HTTP·강사 확
 import json
 import os
 import sys
+import time
 from http.server import BaseHTTPRequestHandler
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +26,7 @@ def _s(v, n):
     return str(v).strip()[:n] if isinstance(v, (str, int, float)) else ''
 
 
-def _run(body, llm):
+def _run(body, llm, t0):
     kw = {'call_llm': llm} if llm else {}
     a = body.get('action')
     if a == 'concept':
@@ -41,7 +42,7 @@ def _run(body, llm):
             return BAD
         problems = body.get('problems') if isinstance(body.get('problems'), list) else []
         return 200, _steps.build(body.get('concept'), body['example'], _s(body.get('wish'), 200),
-                                 level_of(body), problems, **kw)
+                                 level_of(body), problems, t0=t0, **kw)
     if a == 'solve':
         inputs = body.get('inputs') if isinstance(body.get('inputs'), list) else []
         return 200, _steps.solve(_s(body.get('situation'), 200), _s(body.get('brief'), 200), inputs, **kw)
@@ -50,13 +51,15 @@ def _run(body, llm):
 
 def handle(body, token, env, http=urllib_http, llm=None):
     """→ (status, json). llm 은 시험용 — 없으면 단계마다 정한 모델."""
+    # 55초 예산은 강사 확인(Supabase 2번 × 최대 3초)부터 센다 — build 안에서 재면 최악 61초 > maxDuration 60
+    t0 = time.monotonic()
     denied = refuse(token, env, http)
     if denied:
         return denied
     if not isinstance(body, dict):
         return BAD
     try:
-        return _run(body, llm)
+        return _run(body, llm, t0)
     except GenerateError as e:
         # 사유는 로그에 남긴다 — 어떤 규칙이 얼마나 자주 걸리는지가 프롬프트 개선의 근거다
         print('[mission-steps] 실패', body.get('action'), json.dumps(e.reasons, ensure_ascii=False), file=sys.stderr)

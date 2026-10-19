@@ -206,6 +206,28 @@ st, out = quiet(ms.handle, {'action': 'solve', 'situation': 's', 'brief': 'b', '
                 llm=lambda *a: (_ for _ in ()).throw(RuntimeError('down')))
 t('LLM 이 죽으면 502', st == 502, (st, out))
 
+import time  # noqa: E402
+_seen = {}
+
+
+def _spy_build(*a, t0=None, **k):
+    _seen.update(t0=t0, called=time.monotonic())
+    return {'draft': {}}
+
+
+def _slow_sb(*a):
+    time.sleep(0.02)  # 강사 확인이 시간을 쓴다
+    return sb(*a)
+
+
+_orig, ms._steps.build = ms._steps.build, _spy_build
+_before = time.monotonic()
+ms.handle({'action': 'build', 'concept': 'for', 'example': EXAMPLE}, 'TCH', ENV, _slow_sb)
+ms._steps.build = _orig
+t('build 의 55초 예산은 강사 확인 전부터 센다 (handle 의 t0)', _seen.get('t0') is not None
+  and _before <= _seen['t0'] <= _seen['called'] - 0.03, _seen)
+t('가벼운 모델은 LLM_MODEL_LIGHT 로 바꾼다', 'LLM_MODEL_LIGHT' in open(_steps.__file__).read() and 'LLM_MODEL_MINI' not in open(_steps.__file__).read())
+
 
 def post(mod, body, auth=None):
     h = mod.handler.__new__(mod.handler)
