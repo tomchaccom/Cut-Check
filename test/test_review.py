@@ -28,8 +28,8 @@ def t(name, cond, extra=''):
 
 
 U = 'split-unique-count'
-DRAFT = {**DATA[U], 'brief': '이번 주 재료가 모두 몇 가지인지 알려 주세요.', 'counter': {'name': '수요일 재료'}}
-OK = {k: {'ok': True, 'why': '좋아요'} for k in ('understand', 'sameStory', 'noAnswer', 'easy')}
+DRAFT = {**DATA[U], 'brief': '이번 주 재료가 모두 몇 가지인지 알려 주세요.', 'counter': {'name': '서연 메모'}}
+OK = {k: {'ok': True, 'why': '좋아요'} for k in _review.ITEMS}
 BAD = {**OK, 'sameStory': {'ok': False, 'why': '셋째 자료만 다른 이야기예요'}}
 
 
@@ -144,6 +144,22 @@ mission = {'title': '급식', 'brief': '몇 가지인지 알려 주세요.', 'si
            'inputs': [{'name': '월', 'v': '밥,국'}], 'define': {'options': [{'v': '2가 나오면 성공', 'trap': 'hardcode'}]}}
 t('통과면 빈 목록', review(mission, spy, 10) == [])
 t('guard·함정 표시는 넘기지 않는다', '비밀' not in seen['user'] and 'hardcode' not in seen['user'], seen['user'])
+
+print('[2026-10-18 — 요청과 정답이 다른 값을 묻는지, 칸 이름·자료 이름이 섞였는지도 본다]')
+t('검수 항목에 sameAsk · noFieldName · cleanData', {'sameAsk', 'noFieldName', 'cleanData'} <= set(ITEMS), list(ITEMS))
+t('noAnswer 는 방법 노출 예("한 번만 세어")를 든다', '한 번만 세어' in ITEMS['noAnswer'])
+mission2 = {**mission, 'define': {'options': [{'v': '3이 나오면 성공', 'trap': 'hardcode'},
+                                              {'v': '재료가 모두 몇 개인지 나오면 성공', 'trap': None, 'key': 'count'}]},
+            'pipelineParams': {'filterTarget': ['3시', '4시']}, 'filterDesc': '민지 시간'}
+review(mission2, spy, 10)
+shown = json.loads(seen['user'])
+t('정답 보기를 따로 넘긴다 (sameAsk 비교용)', shown.get('정답 보기') == '재료가 모두 몇 개인지 나오면 성공', shown)
+t('고정 목록을 넘긴다 — 학생에게 보이는 자료다', shown.get('고정 목록') == '민지 시간: 3시,4시', shown)
+diff = {**OK, 'sameAsk': {'ok': False, 'why': '요청은 몇 가지, 정답은 모두 몇 개예요'}}
+r = review(mission2, lambda *a: json.dumps(diff, ensure_ascii=False), 10)
+t('sameAsk 탈락은 이유로 남는다', any('몇 가지' in x for x in r), r)
+t('sameAsk 에 맞는 예·틀린 예가 함께 있다 (할 일은 비교하지 않는다)', '맞는 예' in ITEMS['sameAsk'] and '틀린 예' in ITEMS['sameAsk']
+  and '할 일' in ITEMS['sameAsk'])
 
 print(f'\n{"FAIL " + str(fail) if fail else "ALL PASS"}')
 sys.exit(1 if fail else 0)

@@ -46,7 +46,8 @@ DESC = {  # 유형 고르기에 쓰는 설명. 학생이 무엇을 처리하는�
     'split-count': '목록의 항목 수 세기',
     'split-unique-count': '같은 항목이 겹쳐 나오는 목록에서 개수 세기',
     'split-filter-count': '조건에 맞는 항목만 골라 세기',
-    'split-filter-join': '조건에 맞는 항목만 골라 다시 이어 붙이기',
+    # 두 사람 교집합은 새 연산 없이 여기로 온다 — '있는 것만' 과 같은 판단이고, 연산은 이미 12개 한계선이다
+    'split-filter-join': '조건에 맞는 항목만 골라 다시 이어 붙이기. 두 사람 모두 되는 것 찾기(모두 되는 시간 등)도 여기 — 고정 목록이 한 사람의 자료',
     'split-filter-unique-count': '조건에 맞는 항목만 골라, 겹치는 건 한 번만 세기',
     'split-sort-join': '항목을 순서대로 늘어놓기',
     'split-filter-sort-join': '조건에 맞는 항목만 골라 순서대로 늘어놓기',
@@ -63,7 +64,10 @@ DESC = {  # 유형 고르기에 쓰는 설명. 학생이 무엇을 처리하는�
 KEY_TARGET = {
     'count': r'몇', 'total': r'몇', 'unique': r'몇', 'filtered_count': r'몇', 'group': r'몇|횟수',
     'sum': r'얼마|합|모두 더', 'filtered_sum': r'얼마|합|모두 더', 'max': r'가장|제일', 'min': r'가장|제일',
-    'sorted': r'순서|차례', 'filtered': r'만 남|빼고|뺀|없는|있는 것만|골라', 'transformed': r'깔끔|다듬|정리된|고친|바꾼',
+    'sorted': r'순서|차례',
+    # 목적이 있는 요청("둘 다 먹을 수 있는 간식을 찾아 메뉴를 정해 주세요")이 '…만 남겨' 만 통과시키던 규칙에 계속 걸렸다
+    'filtered': r'만 남|빼고|뺀|없는|있는|골라|둘 다|모두|함께|같이|공통|되는|만 알',
+    'transformed': r'깔끔|다듬|정리|고친|바꾼',
 }
 
 
@@ -147,18 +151,32 @@ def _polite_problem(v):
 
 # 방법 단어 — 이야기가 길어져도 새면 안 된다. 플레이리스트·체크리스트는 통과해야 해서 리스트는 앞이 한글이 아닐 때만
 METHOD = re.compile(r'딕셔너리|키를|(?<![가-힣])리스트')
+# 스키마 칸 이름이 학생 문장에 그대로 나왔다 ("적어 낸 itemName마다…", gpt-5.4 2026-10-18)
+FIELD = re.compile(r'itemName|filterTarget|filterDesc|pipeline|counter', re.I)
 
 
 def _method_problem(v):
-    m = METHOD.search(v)
+    m = METHOD.search(v) or FIELD.search(v)
     if m:
-        return f"방법 단어 '{m.group(0)}' — 이야기 속에 푸는 방법을 쓰지 않는다"
+        return f"방법 단어 '{m.group(0)}' — 이야기 속에 푸는 방법이나 칸 이름을 쓰지 않는다"
 
 
 def _brief_problem(v):
-    m = re.search(r'서로\s*다른|전체\s*개수|중복', v)
+    m = re.search(r'서로\s*다른|전체\s*개수|중복|한\s*번만\s*세', v)
     if m:
         return f"답 암시 '{m.group(0)}' — 업무 요청은 모호해야 분해가 학생 몫으로 남는다"
+
+
+# 요일·날짜 낱말. '월요일 간식 / 금요일 간식' 처럼 이것만 다른 이름은 같은 자료를 날만 바꿔 붙인 것으로 읽힌다
+DATE = re.compile(r'[월화수목금토일]요일|오늘|어제|내일|모레|그제|그저께|주말|평일|(이번|지난|다음)\s*주|'
+                  r'\d+\s*(월|일|주차|주)|(첫|둘|셋|넷|다섯)째\s*(날|주)')
+
+
+def date_only_names(names):
+    """→ 요일·날짜만 다른 이름 쌍의 첫 번째 것 목록. 출처(사람·모둠·곳)가 이름에서 갈려야 한다."""
+    key = [re.sub(r'\s+', ' ', DATE.sub('', n)).strip() for n in names]
+    return [names[j] for i in range(len(names)) for j in range(i + 1, len(names))
+            if names[i] != names[j] and key[i] == key[j] and (DATE.search(names[i]) or DATE.search(names[j]))]
 
 
 ITEM_MAX = 12  # 항목은 단어다. 목록을 통째로("7 3 2 4") 넣거나 문장을 넣으면 길어진다
@@ -180,7 +198,7 @@ Item = Annotated[str, AfterValidator(_item)]
 
 # 칸 → 글자 수 한도. 스키마에는 maxLength 로 보이고, 검사는 model_validator 에서 한꺼번에 한다
 # (필드 검사가 하나라도 실패하면 pydantic 이 model_validator 를 건너뛰어 다른 사유가 묻힌다)
-_LIMIT = {'title': 20, 'brief': 60, 'situation': 90, 'itemName': 6, 'data': 15, 'counter': 15,
+_LIMIT = {'title': 20, 'brief': 60, 'situation': 110, 'itemName': 6, 'data': 15, 'counter': 15,
           'goals': 25, 'sentences': 25, 'filterDesc': 10, 'counterText': 40}
 
 
@@ -229,21 +247,31 @@ def counter_problems(pid, data, filter_target, counter):
         bad.append(('counter', 'axis=invisible 인데 앞뒤 공백 항목이 없음'))
     if axis == 'count' and len([p for p in text.split(',') if p]) == len(data[0]['items']):
         bad.append(('counter', 'axis=count 인데 항목 수가 첫 자료와 같음'))
+    # 첫 자료를 그대로 두고 덧붙인 반례는 '같은 자료에 요일만 바꾼' 가짜로 읽혔다 (2026-10-18 기준 12회 중 10회)
+    first = [x.strip() for x in data[0]['items']]
+    if [p.strip() for p in pieces[:len(first)]] == first:
+        bad.append(('counter', '반례가 첫 자료로 그대로 시작함 — 셋째 출처의 자료답게 앞 두 자료 항목과 새 항목을 섞고 순서를 바꾼다'))
     return bad
 
 
 # ── 모델 ────────────────────────────────────────────────────
 
+# 이름 예시를 고정해 주면 모델이 그대로 베꼈다 ("월요일 재료" → 요일 21/36, "민지 쪽지" → 4회 반복). 규칙만 준다
+NAME_RULE = ('이야기 속에서 이 자료를 누가·어디서 냈는지가 이름에 드러난다(사람·모둠·가게 같은 출처). '
+             '세 자료는 서로 다른 출처다. 요일·날짜만 다른 이름은 안 된다. "자료 1" 같은 번호 이름 금지.')
+
+
 class DataSet(BaseModel):
-    name: str = _max('data', description='자료 이름. 구체적으로 ("월요일 재료", "1반 신청"). "자료 1" 금지.')
+    name: str = _max('data', description='자료 이름. ' + NAME_RULE)
     items: list[Item] = Field(min_length=3, max_length=5, description='항목 3~5개. 실제 한국어 단어. 항목 안에 쉼표 금지.')
 
 
 class Counter(BaseModel):
-    name: str = _max('counter', description='반례 자료 이름. 앞 자료와 같은 상황의 다른 날·다른 반 등.')
+    name: str = _max('counter', description=(
+        '세 번째 자료 이름. 같은 이야기 속 세 번째 출처. ' + NAME_RULE + ' "반례"·"예시" 같은 말은 쓰지 않는다 — 학생이 함정인 걸 미리 안다.'))
     text: str = Field(json_schema_extra={'maxLength': _LIMIT['counterText']}, description=(
-        '반례 자료 원문 그대로 — 설명 문장이 아니라 앞 자료처럼 항목을 늘어놓은 것. '
-        '앞 자료에 나온 항목을 하나 이상 다시 쓴다 (empty 제외). '
+        '세 번째 출처가 낸 자료 원문 그대로 — 설명 문장이 아니라 앞 자료처럼 항목을 쉼표로 늘어놓은 것. '
+        '앞 자료에 나온 항목과 새 항목을 섞는다 (empty 제외). 첫 자료를 그대로 베끼고 덧붙이지 않는다. '
         '학생이 앞 두 자료로 세운 기준이 여기서 깨져야 한다. axis 에 맞게 만든다: '
         'count=항목 수가 다름 / sep=쉼표 대신 띄어쓰기 같은 다른 구분자 / empty=결과가 0이나 비어 있게 / '
         'invisible=항목 앞뒤에 공백.'))
@@ -256,11 +284,12 @@ class _Base(BaseModel):
 
     title: str = _max('title', description='중학생이 바로 알아듣는 상황 이름. 명사형 ("급식 알레르기 찾기"). 컴퓨터 용어 금지.')
     brief: str = _max('brief', description=(
-        '그 장면에서 무엇을 알아내야 하는지 한 문장(~해 주세요). '
-        '함수·자료구조·단계 이름(딕셔너리·키·값·나누기·세기·리스트) 금지. itemName 은 그대로 쓴다. '
-        '"몇 가지", "모두 얼마", "가장 큰" 처럼 구할 값은 꼭 쓴다.'))
+        '무엇을 알아내야 하는지와 그걸로 무엇을 하려는지가 함께 드러나는 한 문장(~해 주세요). 꼴은 자유다. '
+        '함수·자료구조·단계 이름(딕셔너리·키·값·나누기·세기·리스트)과 푸는 방법은 쓰지 않는다. '
+        '항목을 부르는 말을 넣고, "몇 가지", "모두 얼마", "가장 큰" 처럼 구할 값은 꼭 쓴다. 영어 칸 이름은 쓰지 않는다.'))
     situation: str = _max('situation', description=(
-        "중학생이 겪는 생활 장면(가족·친구·학교·매점·단톡방). 인물 이름 하나 이상. 두 문장까지, 존댓말 '~요.'. 덧붙임 금지."))
+        "중학생이 겪는 생활 장면. 첫 문장은 누가(인물 이름) 왜 곤란한지, 둘째 문장은 무엇을 정해야 하는지. "
+        "답을 알면 할 일이 생겨야 한다. 두 문장까지, 존댓말 '~요.'. 덧붙임 금지."))
     itemName: str = _max('itemName', description='항목을 부르는 말 ("재료", "이름", "금액").')
     counter: Counter = Field(description='세 번째이자 마지막 자료. 반드시 반례.')
 
@@ -274,7 +303,19 @@ class _Base(BaseModel):
         if not any(f == 'data' for f, _ in bad):
             data = [d.model_dump() for d in self.data]
             bad += counter_problems(self.PID, data, getattr(self, 'filterTarget', None), self.counter.model_dump())
+        names = [d.name for d in self.data]
+        for n in date_only_names(names):
+            bad.append(('data', f"자료 이름 '{n}' — 요일·날짜만 다르다. " + NAME_RULE))
+        for n in [n for n in names if date_only_names([n, self.counter.name])]:
+            bad.append(('counter', f"자료 이름 '{n}'·'{self.counter.name}' — 요일·날짜만 다르다. " + NAME_RULE))
+        who = _counter_source_named(self.counter.name, names + [getattr(self, 'filterDesc', '') or ''],
+                                    {'situation': self.situation, 'brief': self.brief})
+        if who:
+            bad.append((who[0], f"'{who[1]}' 는 세 번째 자료에만 나오는 출처다 — 학생은 처음에 앞 두 자료만 보니 이야기에 미리 쓰지 않는다"))
         key = next(iter(spec['keys']))
+        why = _ask_mismatch(key, self.brief, [d.items for d in self.data] + [self.counter.text.split(',')])
+        if why:
+            bad.append(('brief', f"'{self.brief}' — {why}"))
         if not re.search(KEY_TARGET[key], self.brief):
             bad.append(('brief', f"'{self.brief}' — 구할 값이 없음. '{KEY_TARGET[key].split('|')[0]}' 처럼 "
                                  '무엇을 알아내야 하는지 생활 말로 쓴다 (방법은 쓰지 않는다)'))
@@ -319,6 +360,12 @@ class _Base(BaseModel):
         ft = getattr(self, 'filterTarget', None) or []
         if 'filter' in ops and not set(ft) & set(items):
             bad.append(('data', '걸러낼 대상(filterTarget)이 자료에 하나도 없음'))
+        bad += [('filterTarget', w) for w in fixed_list_leak(ops, ft, [d.items for d in self.data], [d.name for d in self.data])]
+        # 모델이 자료 이름을 걸러낼 대상에 넣어 '민지 쪽지' 가 자료 항목이 됐다 (2026-10-18)
+        labels = {d.name.strip() for d in self.data} | {self.counter.name.strip(), (getattr(self, 'filterDesc', '') or '').strip()}
+        hit = [x for x in items if x in labels]
+        if hit:
+            bad.append(('data', f"자료 항목 '{hit[0]}' 이 자료·목록 이름이다 — 항목은 이야기 속 물건·시간 같은 낱말"))
         if 'toNumber' in ops and any(not num(x) for x in items if x not in ft):
             bad.append(('data', '숫자 유형인데 정수가 아닌 항목이 있음' + (' (걸러낼 대상 말고)' if ft else '')))
         if 'transform' in ops and not any(x != x.strip() for d in self.data for x in d.items):
@@ -326,6 +373,47 @@ class _Base(BaseModel):
         if 'groupCount' in ops and not any(len(set(d.items)) < len(d.items) for d in self.data):
             bad.append(('data', '묶어 세기 유형인데 같은 항목이 두 번 나오는 자료가 없음'))
         return bad
+
+
+def _counter_source_named(counter_name, shown_names, texts):
+    """→ (칸, 이름) | None. "세 사람 목록에서…" 처럼 반례에만 나오는 사람을 이야기가 먼저 불렀다 (2026-10-18).
+    이름의 첫 낱말에서 '네'·'이네' 를 떼어 본다. 두 글자 미만이거나 앞 자료에도 나오는 말이면 보지 않는다."""
+    first = (counter_name.split() or [''])[0]
+    who = re.sub(r'(이네|네|이의|의|이)$', '', first)
+    if len(who) < 2 or any(who in n for n in shown_names):
+        return None
+    return next(((f, who) for f, t in texts.items() if who in (t or '')), None)
+
+
+def _ask_mismatch(key, brief, lists):
+    """요청이 묻는 양과 정답 보기가 다르면 학생은 어느 쪽에 맞출지 모른다.
+    split-count 인데 '몇 가지' 를 물었고 반례에 같은 항목이 겹쳤다 (2026-10-18 Claude·gpt-5.4)."""
+    dup = any(len({x.strip() for x in li}) < len([x for x in li if x.strip()]) for li in lists)
+    if key in ('count', 'total') and '가지' in brief and dup:
+        return "'몇 가지' 는 겹친 것을 한 번만 세는 말인데, 이 문제는 전부 센 개수를 묻는다 — '모두 몇 개' 로"
+    # 골라 남기기 문제에 '둘 다 먹을 몇 가지인지' 를 물었고 검수도 통과시켰다 (2026-10-18 eval 2회차)
+    if key in ('filtered', 'sorted', 'transformed') and '몇' in brief:
+        return "이 문제의 답은 목록인데 '몇' 은 수를 묻는다 — 무엇이 남는지를 묻는다"
+    if key == 'unique' and re.search(r'몇\s*개', brief) and not re.search(r'가지|종류', brief):
+        return "'몇 개' 는 겹친 것까지 센 수로 읽힌다 — 이 문제는 '몇 가지' 를 묻는다"
+
+
+def fixed_list_leak(ops, ft, lists, names):
+    """고정 목록(filterTarget)이 정답을 미리 담고 있으면 학생이 할 판단을 모델이 끝낸 것이다.
+    gpt-5.4 가 '둘 다 되는 시간' 문제에서 두 자료의 교집합을 그대로 넣었다 (2026-10-18).
+    글자 빼고 숫자 더하기는 목록이 곧 '글자 항목' 이라 보지 않는다."""
+    if 'filter' not in ops or 'toNumber' in ops or not ft:
+        return []
+    fs = {x.strip() for x in ft}
+    sets = [{x.strip() for x in li} for li in lists]
+    out = []
+    if fs <= sets[0] & sets[1]:
+        out.append('고정 목록의 항목이 전부 두 자료에 다 들어 있다 — 두 자료에 모두 있는 것(정답)을 미리 넣지 않는다. '
+                   '목록은 이야기 속 한 사람의 자료로, 자료에 없는 항목도 섞는다')
+    elif any(fs <= s for s in sets):  # 목록이 통째로 한 자료 안에 있다 = 그 자료의 답이 목록 그대로다
+        n = names[next(i for i, s in enumerate(sets) if fs <= s)]
+        out.append(f"고정 목록이 '{n}' 의 답과 똑같다 — 목록에는 자료에 없는 항목도 섞는다")
+    return out
 
 
 def _data_desc(ops):
@@ -349,9 +437,14 @@ def _draft(pid):
         'data': (list[DataSet], Field(min_length=2, max_length=2, description=_data_desc(spec['ops']))),
     }
     if 'filter' in spec['ops']:
-        fields['filterTarget'] = (list[str], Field(min_length=1, max_length=6, description=(
-            '걸러낼 대상 1~3개. 자료 항목에 실제로 들어 있어야 한다.')))  # 보정이 글자 항목을 더할 수 있어 6
-        fields['filterDesc'] = (str, _max('filterDesc', description='걸러낼 대상의 이름. 명사형 ("알레르기 목록").'))
+        if 'toNumber' in spec['ops']:
+            ft_desc = '걸러낼 글자 항목 1~3개. 자료 항목에 실제로 들어 있어야 한다.'
+        else:  # 학생 화면에 자료처럼 보인다 — 숨은 설정이 아니라 이야기 속 한 사람의 자료다
+            ft_desc = ('고정 목록 2~5개. 학생에게 자료처럼 보인다. 이야기 속 한 사람(또는 한 곳)의 목록이고, '
+                       '일부는 자료 항목에 들어 있고 일부는 없다. 두 사람 모두 되는 것을 찾는 문제면 그중 한 사람의 목록이다. '
+                       '정답(두 자료에 모두 있는 것)을 미리 계산해 넣지 않는다.')
+        fields['filterTarget'] = (list[str], Field(min_length=1, max_length=6, description=ft_desc))  # 보정이 글자 항목을 더할 수 있어 6
+        fields['filterDesc'] = (str, _max('filterDesc', description='고정 목록의 이름. 누구의 무엇인지 명사형 (자료 이름처럼 출처가 드러나게).'))
     model = create_model('Draft_' + pid.replace('-', '_'), __base__=_Base, __doc__=DESC[pid], **fields)
     model.PID = pid
     return model

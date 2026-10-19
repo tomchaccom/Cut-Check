@@ -55,6 +55,15 @@
     return list.sort(function (a, b) { return a.label.localeCompare(b.label, 'ko'); });
   }
 
+  /* 골라내기의 고정 목록 — 숨은 설정이 아니라 학생이 보는 자료다 ("민지 시간 vs 준호 시간").
+   * 글자 빼고 숫자 더하기는 목록이 곧 '글자 항목'이라 보여 주면 판단을 대신하므로 뺀다. */
+  function fixedList(m) {
+    var all = m && opsOf(m.pipelineId);
+    var ft = m && m.pipelineParams && m.pipelineParams.filterTarget;
+    if (!all || all.indexOf('filter') < 0 || all.indexOf('toNumber') >= 0 || !ft || !ft.length) return null;
+    return { name: m.filterDesc || '목록', items: ft.slice() };
+  }
+
   function text(c) {
     return c.label + (c.detail ? ' (' + c.detail + ')' : '');
   }
@@ -69,5 +78,5 @@
     if (CARD[k].detail) ALL_LABELS = ALL_LABELS.concat(CARD[k].detail.options);
   });
 
-  CC.cards = { forMission: forMission, text: text, skeleton: skeleton, ALL_LABELS: ALL_LABELS };
+  CC.cards = { forMission: forMission, fixedList: fixedList, text: text, skeleton: skeleton, ALL_LABELS: ALL_LABELS };
 })(window.CC = window.CC || {});

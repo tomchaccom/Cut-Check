@@ -41,12 +41,12 @@ U, F = 'split-unique-count', 'split-filter-count'
 GOOD = {
     U: {'title': '급식 재료 확인', 'brief': '이번 주 급식 재료가 몇 가지인지 알려 주세요.', 'situation': '우리 반이 급식 당번이에요.',
         'itemName': '재료',
-        'data': [{'name': '월요일 재료', 'items': ['밥', '우유', '김치']}, {'name': '화요일 재료', 'items': ['빵', '국', '떡']}],
-        'counter': {'name': '수요일 재료', 'text': '밥,우유,김치,밥,국', 'axis': 'count'}},
+        'data': [{'name': '1반 신청', 'items': ['밥', '우유', '김치']}, {'name': '2반 신청', 'items': ['빵', '국', '떡']}],
+        'counter': {'name': '3반 신청', 'text': '국,밥,우유,밥,떡', 'axis': 'count'}},
     F: {'title': '급식 알레르기 찾기', 'brief': '주의할 재료가 몇 개인지 알려 주세요.', 'situation': '우리 반이 급식 당번이에요.',
-        'itemName': '재료', 'filterTarget': ['우유', '달걀'], 'filterDesc': '알레르기 목록',
-        'data': [{'name': '월요일 재료', 'items': ['밥', '우유', '김치']}, {'name': '화요일 재료', 'items': ['빵', '달걀', '국', '우유']}],
-        'counter': {'name': '수요일 재료', 'text': '밥 우유 김치 달걀', 'axis': 'sep'}},
+        'itemName': '재료', 'filterTarget': ['우유', '달걀', '땅콩'], 'filterDesc': '알레르기 목록',
+        'data': [{'name': '1반 신청', 'items': ['밥', '우유', '김치']}, {'name': '2반 신청', 'items': ['빵', '달걀', '국', '우유']}],
+        'counter': {'name': '3반 신청', 'text': '달걀 빵 김치 우유', 'axis': 'sep'}},
 }
 
 print('\n[통과해야 하는 것]')
@@ -84,25 +84,25 @@ broken(U, '요청이 60자 넘음', setp(['brief'], '이번 주 월요일부터 
 STORY = '엄마가 명성이 번호를 물어봤어요. 내 연락처에는 있는데 엄마 폰에는 없어요.'
 m = copy.deepcopy(GOOD[U]); m['situation'] = STORY
 t('이야기 situation 두 문장은 통과', 'situation' not in check(U, m), check(U, m))
-m['situation'] = '가' * 90 + '요.'  # 92자
-t('situation 91자 이상은 걸린다', 'situation' in check(U, m))
+m['situation'] = '가' * 110 + '요.'  # 112자
+t('situation 111자 이상은 걸린다', 'situation' in check(U, m))
 m['situation'] = '엄마가 물어봤어요. 폰에 없어요. 내 폰에는 있어요.'
 t('situation 세 문장은 걸린다', 'situation' in check(U, m))
 for bad in ['딕셔너리에서 명성 키를 찾아 주세요', '리스트에서 골라 주세요']:
     m = copy.deepcopy(GOOD[U]); m['brief'] = bad
     t(f'brief 방법 단어 막는다: {bad}', 'brief' in check(U, m), check(U, m))
-for ok in ['재료가 몇 가지인지 값을 알려 주세요.', '플레이리스트에 재료가 몇 개인지 알려 주세요.']:
+for ok in ['재료가 몇 가지인지 값을 알려 주세요.', '플레이리스트에 재료가 몇 가지인지 알려 주세요.']:
     m = copy.deepcopy(GOOD[U]); m['brief'] = ok
     t(f'brief 통과: {ok}', 'brief' not in check(U, m), check(U, m))
 m = copy.deepcopy(GOOD[U]); m['situation'] = '민지의 플레이리스트가 길어졌어요.'
 t('situation 플레이리스트는 통과', 'situation' not in check(U, m), check(U, m))
 m['situation'] = '선생님이 딕셔너리를 쓰라고 하셨어요.'
 t('situation 에 딕셔너리는 막는다', 'situation' in check(U, m))
-m['situation'] = '가' * 89 + '요.'
-m['situation'] = '가' * 88 + '요.'
-t('situation 정확히 90자는 통과', len(m['situation']) == 90 and 'situation' not in check(U, m), check(U, m))
-m['situation'] = '가' * 89 + '요.'
-t('situation 91자는 걸린다', len(m['situation']) == 91 and 'situation' in check(U, m))
+# 두 문장(누가 왜 곤란한지 + 무엇을 정해야 하는지)이 90자에 안 들어가 재요청이 났다 (2026-10-18 eval) → 110
+m['situation'] = '가' * 108 + '요.'
+t('situation 정확히 110자는 통과', len(m['situation']) == 110 and 'situation' not in check(U, m), check(U, m))
+m['situation'] = '가' * 109 + '요.'
+t('situation 111자는 걸린다', len(m['situation']) == 111 and 'situation' in check(U, m))
 broken(U, '한자 섞임', setp(['title'], '給食 재료'), 'title')
 broken(U, '코드 조각', setp(['situation'], 'items.split(",") 해요.'), 'situation')
 broken(U, '반례가 첫 자료와 결과가 같음', setp(['counter', 'text'], '빵,국,떡,빵'), 'counter')
@@ -122,6 +122,29 @@ broken(U, "반례가 이름표 ('과일 개수')", setp(['counter'], {'name': 'x
 broken(U, "항목 이름이 영어 ('count')", setp(['itemName'], 'count'), 'itemName')
 broken(F, '걸러낼 대상이 자료에 없음', setp(['filterTarget'], ['땅콩', '새우']), 'data')
 broken(F, '걸러내기 유형인데 대상이 없음', lambda m: m.pop('filterTarget'), 'filterTarget')
+
+# 2026-10-18 '간식 세기' 불만 조사에서 실제로 나온 것들
+broken(U, '자료 이름이 요일만 다름', lambda m: m['data'][0].update(name='수요일 재료') or m['data'][1].update(name='금요일 재료'), 'data')
+broken(U, '자료 이름이 날짜만 다름', lambda m: m['data'][0].update(name='3월 2일 신청') or m['data'][1].update(name='3월 9일 신청'), 'data')
+broken(U, '자료 이름이 요일 하나뿐', lambda m: m['data'][0].update(name='월요일') or m['data'][1].update(name='화요일'), 'data')
+broken(U, '반례 이름만 요일 바꿈', lambda m: m['data'][0].update(name='월요일 신청') or m['counter'].update(name='금요일 신청'), 'counter')
+broken(U, '반례가 첫 자료로 그대로 시작', setp(['counter', 'text'], '밥,우유,김치,빵,국'), 'counter')
+broken(U, '요청에 칸 이름 itemName', setp(['brief'], '적어 낸 itemName마다 몇 가지인지 알려 주세요.'), 'brief')
+broken(U, "요청에 방법 '한 번만 세어'", setp(['brief'], '겹쳐도 한 번만 세어 재료가 몇 가지인지 알려 주세요.'), 'brief')
+broken(U, "가지 수를 묻는데 '몇 개'", setp(['brief'], '이번 주 급식 재료가 몇 개인지 알려 주세요.'), 'brief')
+m = copy.deepcopy(GOOD[U]) | {'brief': '이번 주 급식 재료가 몇 가지인지 알려 주세요.',
+                              'counter': {'name': '3반 신청', 'text': '국,밥,국,떡', 'axis': 'count'}}
+t("[brief] 전부 세는데 '몇 가지' (겹친 항목이 있다)", 'brief' in check('split-count', m), check('split-count', m))
+broken(F, '고정 목록 = 두 자료에 모두 있는 것', setp(['filterTarget'], ['우유']), 'filterTarget')
+broken(F, '고정 목록 = 한 자료의 답', setp(['filterTarget'], ['우유', '달걀']), 'filterTarget')
+broken(F, '자료 항목이 자료 이름', setp(['data', 0, 'items'], ['밥', '우유', '2반 신청']), 'data')
+for ok in ['1반 신청', '민지 쪽지']:
+    m = copy.deepcopy(GOOD[U]); m['data'][0]['name'] = ok
+    t(f'출처가 다른 이름은 통과: {ok}', 'data' not in check(U, m), check(U, m))
+m = copy.deepcopy(GOOD[F]); m['filterTarget'] = ['우유', '달걀', '땅콩']
+t('고정 목록에 자료에 없는 항목이 섞이면 통과', 'filterTarget' not in check(F, m), check(F, m))
+m = copy.deepcopy(GOOD[U]); m['brief'] = '재료가 몇 가지인지 알아내서 장 볼 목록을 정해 주세요.'
+t('목적이 있는 요청은 통과', 'brief' not in check(U, m), check(U, m))
 
 print('\n[중1이 모르는 개발 용어와 지시문 — 밤샘 스펙 3.3 학생 문장 규칙]')
 for bad in ['데이터 집계 로직을 검토해 주세요.', '처리 결과의 타당성을 확인해 주세요.',
@@ -153,7 +176,7 @@ t('유형 고르기 — 14개', len(choice['properties']['pipelineId']['enum']) 
 s = DRAFTS[F].model_json_schema()
 t('초안 — 다른 유형이 섞이지 않는다', 'oneOf' not in json.dumps(s) and 'anyOf' not in json.dumps(s))
 t('초안 — 성공 조건·방법 칸이 없다 (코드가 쓴다)', 'goals' not in s['properties'] and 'sentences' not in s['properties'])
-t('초안 — 글자 수 한도가 스키마에 보인다', s['properties']['brief'].get('maxLength') == 60 and s['properties']['situation'].get('maxLength') == 90)
+t('초안 — 글자 수 한도가 스키마에 보인다', s['properties']['brief'].get('maxLength') == 60 and s['properties']['situation'].get('maxLength') == 110)
 t('초안 — description 이 생성 지시로 들어간다', '반례' in s['properties']['counter']['description'])
 t('14개 유형 모두 초안 스키마가 만들어진다', len(DRAFTS) == 14 == len(SPEC))
 

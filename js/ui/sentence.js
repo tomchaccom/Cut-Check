@@ -108,6 +108,11 @@
       samples.appendChild(el('dt', 'sample-label', inp.name));
       samples.appendChild(el('dd', 'sample-data', inp.v));
     });
+    var fixed = CC.cards.fixedList(M);   /* 골라내기 기준 목록도 자료다 — 02·03 에서도 왼쪽 단에 남는다 */
+    if (fixed) {
+      samples.appendChild(el('dt', 'sample-label sample-fixed-label', fixed.name));
+      samples.appendChild(el('dd', 'sample-fixed', fixed.items.join(',')));
+    }
     if ($('#req-from')) $('#req-from').textContent = (M.stage || '') + ' · 업무 요청';
 
     /* 화면 2: 성공 조건 — 받은 요청을 다시 보여 주고, 카드형 버튼으로 고른다 */
@@ -229,6 +234,7 @@
         sel.value = c.choice;
         sel.addEventListener('change', function () { c.choice = sel.value; $('#go-run').disabled = !checkMethodComplete(); });
         li.appendChild(sel);
+        if (c.op === 'filter' && CC.cards.fixedList(M)) li.appendChild(el('span', 'card-list', CC.cards.fixedList(M).items.join(',')));
       }
       var moves = el('span', 'moves');
       [['card-up', '▲', '위로', -1], ['card-down', '▼', '아래로', 1]].forEach(function (b) {
@@ -395,6 +401,9 @@
     $('#step4-req').textContent = M ? M.brief : '';
     $('#step4-situation').textContent = (M && M.situation) || '';
     $('#step4-situation').hidden = !(M && M.situation);
+    var fx = M && CC.cards.fixedList(M);   /* 코드에도 이 목록이 필요하다 */
+    $('#step4-fixed').textContent = fx ? fx.name + ': ' + fx.items.join(',') : '';
+    $('#step4-fixed').hidden = !fx;
 
     /* 자료 드롭다운 — clone으로 이전 리스너 제거 */
     var dataSel = $('#code-data-select');
