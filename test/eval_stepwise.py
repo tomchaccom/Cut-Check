@@ -124,7 +124,8 @@ const CM = CC.codemission, a = JSON.parse(require('fs').readFileSync(0, 'utf8'))
 const out = a.op === 'uses' ? CM.usesCode(a.src)
   : a.op === 'check' ? CM.solcheck(a.draft, a.runs, a.uses)
   : a.op === 'line' ? CM.dataLine(a.draft, a.v)
-  : a.op === 'hard' ? CM.hardcodeOption(a.name, a.value) : CC.pyerr.TIMEOUT;
+  : a.op === 'hard' ? CM.hardcodeOption(a.name, a.value)
+  : a.op === 'usesok' ? CM.uses(a.concept, a.uses) : CC.pyerr.TIMEOUT;
 process.stdout.write(JSON.stringify(out));
 """
 
@@ -182,8 +183,14 @@ def build_one(concept, ex, wish):
     try:
         code = _steps.solve(d['situation'], d['brief'], d['inputs'])['code']
         sr = [py(node(op='line', draft=d, v=x['v']) + '\n' + code) for x in d['inputs']]
+        u = py(node(op='uses', src=code))  # genflow.solve 와 같게 — 따로 푼 풀이가 고른 개념 없이 풀었는가
+        try:
+            ul = None if u['error'] else json.loads(u['output'].strip())
+        except ValueError:
+            ul = None
         solved = {'code': code, 'runs': sr,
-                  'same': all(not r['error'] and r['output'].strip() == e for r, e in zip(sr, d['expected']))}
+                  'same': all(not r['error'] and r['output'].strip() == e for r, e in zip(sr, d['expected'])),
+                  'uses_concept': node(op='usesok', concept=concept, uses=ul)}
     except GenerateError as e:
         solved = {'error': str(e)}
     return {'rounds': rounds, 'ok': not p, 'final': d, 'solve': solved}
@@ -205,6 +212,7 @@ def main():
     ap.add_argument('--dry', action='store_true')
     ap.add_argument('--only', default='')
     ap.add_argument('--tag', default='')
+    ap.add_argument('--titles', default='', help='build: 이 고른 제목만 (쉼표)')
     ap.add_argument('--more', action='store_true', help='examples: 이미 받은 묶음에 "다른 예시 더 보기" 한 번')
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
@@ -248,6 +256,8 @@ def main():
             out = {}
             for c in only:
                 for pk in picks.get(c, []):
+                    if a.titles and pk['title'] not in a.titles.split(','):
+                        continue
                     ex = next(e for e in exs[c]['examples'] if e['title'] == pk['title'])
                     r = build_one(c, ex, pk.get('wish', ''))
                     r.update(pick=pk, example=ex)

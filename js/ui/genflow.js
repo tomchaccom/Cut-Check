@@ -190,12 +190,21 @@
         return py(CM.dataLine(d, x.v) + '\n' + r.code);
       })).then(function (rs) {
         if (my !== sgen || rs.some(function (q) { return q.error; })) return;
-        var diff = [];
-        rs.forEach(function (q, i) {
-          var o = String(q.output).trim();
-          if (o !== d.expected[i]) diff.push(d.inputs[i].name + ' — ' + d.expected[i] + ' / ' + o);
+        /* 따로 푼 풀이가 고른 개념 없이 답을 냈다면 그 문제는 개념 없이도 풀린다(스펙 '하면 안 되는 것').
+           판정이 아니라 사실 한 줄 — 강사가 자료나 요청을 고칠지 정한다 */
+        return py(CM.usesCode(r.code)).then(function (u) {
+          if (my !== sgen) return;
+          var list = null;
+          try { list = u.error ? null : JSON.parse(String(u.output).trim()); } catch (e) { list = null; }
+          var diff = [];
+          rs.forEach(function (q, i) {
+            var o = String(q.output).trim();
+            if (o !== d.expected[i]) diff.push(d.inputs[i].name + ' — ' + d.expected[i] + ' / ' + o);
+          });
+          var c = CM.concept(d.concept);
+          out.textContent = (diff.length ? '따로 푼 답과 달라요: ' + diff.join(' · ') : '따로 푼 답과 같아요') +
+            (c && !CM.uses(d.concept, list) ? ' · 따로 푼 풀이에는 고른 개념(' + c.label + ')이 쓰이지 않았어요' : '');
         });
-        out.textContent = diff.length ? '따로 푼 답과 달라요: ' + diff.join(' · ') : '따로 푼 답과 같아요';
       });
     }).catch(function () {});
   }

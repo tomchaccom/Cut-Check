@@ -1032,7 +1032,7 @@ test('강사 화면에서 Python 을 못 불러오면 멈추지 않고 그렇다
 
 test('따로 푼 답이 다르면 사실 한 줄로 보인다', async ({ page }) => {
   test.setTimeout(120000);
-  const builds = await sgBuild(page, [SG_FOR], 'print(sum(data)+1)');
+  const builds = await sgBuild(page, [SG_FOR], SG_FOR.replace('print(t)', 'print(t + 1)'));
   await expect(page.locator('#sg-solve')).toHaveText('따로 푼 답과 달라요: 영수증 1 — 2300 / 2301 · 영수증 2 — 300 / 301 · 새 영수증 — 0 / 1', { timeout: 60000 });
   expect(builds.solves).toHaveLength(1);
   expect(JSON.stringify(builds.solves[0])).not.toContain('solution');
@@ -1041,8 +1041,15 @@ test('따로 푼 답이 다르면 사실 한 줄로 보인다', async ({ page })
 
 test('따로 푼 답이 같으면 같다고만, 못 풀면 아무것도 안 띄운다', async ({ page }) => {
   test.setTimeout(120000);
-  await sgBuild(page, [SG_FOR], 'print(sum(data))');
+  await sgBuild(page, [SG_FOR], SG_FOR);
   await expect(page.locator('#sg-solve')).toHaveText('따로 푼 답과 같아요', { timeout: 60000 });
+});
+
+/* sum() 한 번으로 풀리면 for 없이 풀리는 문제다 — 강사에게만 사실 한 줄 */
+test('따로 푼 풀이에 고른 개념이 없으면 그렇다고 덧붙인다', async ({ page }) => {
+  test.setTimeout(120000);
+  await sgBuild(page, [SG_FOR], 'print(sum(data))');
+  await expect(page.locator('#sg-solve')).toHaveText('따로 푼 답과 같아요 · 따로 푼 풀이에는 고른 개념(반복문 for)이 쓰이지 않았어요', { timeout: 60000 });
 });
 
 test('따로 풀기가 실패하면 줄은 비어 있다', async ({ page }) => {

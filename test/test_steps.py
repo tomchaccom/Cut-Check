@@ -155,6 +155,10 @@ t('상황에 리스트가 있으면 걸린다', V(with_(situation='민지가 리
 t('solution 이 data 를 다시 정하면 걸린다', V(with_(solution='data = [1]\nprint(sum(data))')))
 t('solution 에 print 가 두 번이면 걸린다', V(with_(solution='print(1)\nprint(data)')))
 t('solution 에 __ 이 있으면 걸린다', V(with_(solution='print(data.__class__)')))
+for sv in ['유나, 민아, 없음이 나오면 성공', '자료 1은 3, 자료 2는 3이 나오면 성공', '월 4시,화 5시 / 금 3시 이 나오면 성공', '민지 영수증은 3800이 나오면 성공']:
+    t(f'성공 보기에 자료별 답·자료 이름이면 걸린다: {sv}', any('늘어놓지' in p for p in V(with_(define={'q': 'q', 'options': [{'v': sv, 'trap': None}]}))))
+for sv in ['세 번째 이름이나 없음이 나오면 성공', '영수증 금액을 모두 더한 값이 나오면 성공', '통과 또는 재도전이 나오면 성공']:
+    t(f'결과로 쓴 성공 기준은 통과: {sv}', not V(with_(define={'q': 'q', 'options': [{'v': sv, 'trap': None}]})))
 t('요청이 보여해 주세요처럼 깨지면 걸린다', V(with_(brief='준비물 이름을 보여해 주세요.')) and not V(with_(brief='모두 얼마인지 구해 주세요.')))
 t('solution 에 input( 이 있으면 걸린다', V(with_(solution='x = input()\nprint(data)')))
 
@@ -166,7 +170,13 @@ t('wish 는 200자에서 자르고 지시 아님을 붙인다', '가' * 200 in u
 t('고른 예시가 프롬프트에', '매점 영수증' in u)
 f = fake(GOOD)
 quiet(_steps.build, 'dict', EXAMPLE, '', None, [], f)
-t('개념마다 모범 답안에 있어야 할 것을 말로 준다 (dict: 자료는 리스트)', '딕셔너리를 직접 만든다' in f.calls[0]['messages'][-1]['content'])
+u = f.calls[0]['messages'][-1]['content']
+t('개념마다 모범 답안에 있어야 할 것을 말로 준다 (dict: 찾기형은 찾기형 그대로)', '딕셔너리를 직접 만든다' in u and '찾기형을 세기형으로 바꾸지 않는다' in u)
+sys_ = f.calls[0]['messages'][0]['content']
+t('sum()·len()·max() 한 번으로 풀리는 문제를 막는 줄', 'sum()·len()·max() 한 번으로 풀리면' in sys_)
+t('정해진 낱말(없음·통과/재도전)은 요청에 적게 한다', '없으면 없음이라고 보여 주세요' in sys_)
+t('출력 낱말을 적은 요청(한 문장)은 문구 검사를 통과한다', not V(with_(brief='세 번째 이름을 구하고, 없으면 없음이라고 보여 주세요.'))
+  and not V(with_(brief='60점 이상이면 통과, 아니면 재도전이라고 보여 주세요.')), V(with_(brief='세 번째 이름을 구하고, 없으면 없음이라고 보여 주세요.')))
 f = fake(GOOD)
 quiet(_steps.build, 'for', EXAMPLE, '', None, ['x' * 300] * 10, f)
 u = f.calls[0]['messages'][-1]['content']
