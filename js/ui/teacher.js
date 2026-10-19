@@ -194,14 +194,22 @@
     return last ? last + ' · ' + step : step;
   }
 
+  /* 한 줄 = 시각 · 무엇 · 내용. 시각을 맨 앞에 둬서 위에서 아래로 훑으면 순서가 읽힌다 */
   function row(dl, label, t, fill) {
     var r = el('div', 'row');
+    r.appendChild(el('span', 'tm', hm(t)));
     r.appendChild(el('dt', null, label));
     var dd = el('dd');
     fill(dd);
     r.appendChild(dd);
-    r.appendChild(el('span', 'tm', hm(t)));
+    if (dd.querySelector('.mark')) r.classList.add('moment');   /* 고친 순간 — 줄 왼쪽에 노란 선 */
     dl.appendChild(r);
+  }
+  /* 코드는 줄마다 한 칸 — 줄 번호는 CSS 가 센다. 긴 줄은 접어서 서랍이 옆으로 밀리지 않는다 */
+  function codeBlock(src) {
+    var pre = el('pre', 'code');
+    String(src || '').replace(/\n+$/, '').split('\n').forEach(function (line) { pre.appendChild(el('span', 'ln', line)); });
+    return pre;
   }
   function mark(dd, txt) { dd.appendChild(el('span', 'mark', txt)); }
   function was(dd, txt) { if (txt) dd.appendChild(el('span', 'was', txt)); }
@@ -220,22 +228,35 @@
     close.addEventListener('click', closeDetail);
     d.appendChild(close);
 
-    d.appendChild(el('h3', 'big-title', s.name));
-    d.appendChild(el('p', 'dsub', s.noRecord ? '아직 기록이 없어요' : C.STAGES[s.stage] + ' 단계 · 마지막 조작 ' + mmss(s.idleSec)));
+    /* 머리 — 이름과 지금 상태 한 줄. 계정 일은 오른쪽 끝에 작게: 서랍을 연 이유가 아니다 */
+    var head = el('header', 'd-head');
+    var who = el('div', 'd-who');
+    who.appendChild(el('h3', 'big-title', s.name));
+    who.appendChild(el('p', 'dsub', s.noRecord ? '아직 기록이 없어요' : '지금 ' + whereNow(s) + ' · 마지막 조작 ' + mmss(s.idleSec)));
+    head.appendChild(who);
     if (CC.sb && CC.sb.active() && CC._removeStudent) {   /* 교실이 서버에만 있다 — 로컬 모드에는 뺄 교실이 없다 */
-      var rm = el('button', 'pill roster-remove', '교실에서 빼기');
-      rm.type = 'button';
-      rm.addEventListener('click', function () { CC._removeStudent(s); });
-      d.appendChild(rm);
+      var acts = el('div', 'd-acts');
       var inRoster = (CC.classroom.roster || []).filter(function (r) { return r.id === s.id; })[0];
       if (inRoster && inRoster.login_id && CC._resetPassword) {   /* 선생님이 만든 계정만 — 이메일로 가입한 예전 학생은 아이디가 없다 */
         var rp = el('button', 'pill roster-reset', '비밀번호 다시 만들기');
         rp.type = 'button';
         rp.addEventListener('click', function () { CC._resetPassword(inRoster); });
-        d.appendChild(rp);
+        acts.appendChild(rp);
       }
+      var rm = el('button', 'pill roster-remove', '교실에서 빼기');
+      rm.type = 'button';
+      rm.addEventListener('click', function () { CC._removeStudent(s); });
+      acts.appendChild(rm);
+      head.appendChild(acts);
     }
+    d.appendChild(head);
     delete fresh[s.id];
+
+    /* 교사가 할 말을 대신 써주지 않는다. 물어볼 질문만 고른다. 서랍을 열면 제일 먼저 보인다 */
+    var say = el('div', 'saybox');
+    say.appendChild(el('span', 'k', '이 학생에게 먼저 물어볼 것'));
+    say.appendChild(el('span', null, nextQuestion(s)));
+    d.appendChild(say);
 
     /* 미션 고르기 — 기록이 미션 하나뿐이면 고를 게 없다 */
     if (ms.length > 1) {
@@ -286,23 +307,31 @@
     if (v.sCodes.length) {
       var lastCode = v.sCodes[v.sCodes.length - 1];
       row(dl, '코드 실행', lastCode.t, function (dd) {
-        dd.appendChild(document.createTextNode('마지막으로 실행한 코드'));
-        dd.appendChild(el('div', 'code', lastCode.code || ''));
-        was(dd, '실행 ' + v.sCodes.length + '번');
+        dd.appendChild(el('span', 'sub', '마지막으로 실행한 코드 · 실행 ' + v.sCodes.length + '번'));
+        dd.appendChild(codeBlock(lastCode.code));
       });
       /* 자료마다 마지막 결과 — dataId 에는 자료 값이 들어 있다 (sentence.js lastResults 와 같은 규칙) */
       var byData = {}, order = [];
       v.sCodes.forEach(function (c) {
         if (!(c.dataId in byData)) order.push(c.dataId);
-        byData[c.dataId] = c.error || String(c.output || '').trim() || '출력 없음';
+        byData[c.dataId] = { out: c.error || String(c.output || '').trim() || '출력 없음', err: !!c.error };
       });
       var m = missionOf(mid || (ms.length === 1 ? ms[0] : null));   /* 자료 값 → 자료 이름 */
       row(dl, '자료별 결과', lastCode.t, function (dd) {
-        dd.className = 'mono';
-        order.forEach(function (val) {
+        /* 학생 04 화면의 결과 표와 같은 세 칸 — 자료 · 내용 · 결과 */
+        var tb = el('table', 'd-tbl');
+        var hr = el('tr');
+        ['자료', '내용', '결과'].forEach(function (h) { var th = el('th', null, h); th.scope = 'col'; hr.appendChild(th); });
+        tb.appendChild(el('thead')).appendChild(hr);
+        var body = tb.appendChild(el('tbody'));
+        order.forEach(function (val, i) {
           var inp = m && (m.inputs || []).filter(function (x) { return x.v === val; })[0];
-          dd.appendChild(el('div', null, (inp ? inp.name : String(val == null ? '' : val).slice(0, 40)) + ' → ' + byData[val]));
+          var tr = body.appendChild(el('tr'));
+          tr.appendChild(el('td', null, inp ? inp.name : '자료 ' + (i + 1)));
+          tr.appendChild(el('td', 'mono', String(val == null ? '' : val)));
+          tr.appendChild(el('td', 'mono out' + (byData[val].err ? ' err' : ''), byData[val].out));
         });
+        dd.appendChild(tb);
       });
     }
     var judges = v.sJudges.concat(v.sCodeJudges).sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
@@ -364,12 +393,6 @@
     }
     if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
     main.appendChild(dl);
-
-    /* 교사가 할 말을 대신 써주지 않는다. 물어볼 질문만 고른다. */
-    var say = el('div', 'saybox');
-    say.appendChild(el('span', 'k', '이 학생에게 먼저 물어볼 것'));
-    say.appendChild(el('span', null, nextQuestion(s)));
-    main.appendChild(say);
     cols.appendChild(main);
 
     var side = el('section', 'd-side');
@@ -377,11 +400,18 @@
     side.appendChild(el('h4', null, '튜터에게 물은 것' + (v.sTutor.length ? ' (' + v.sTutor.length + '번)' : '')));
     side.appendChild(el('p', 'lead', '질문과 답을 그대로 보여 드려요.'));
     var qs = el('div', 'd-qs');
+    /* 한 번 묻고 한 번 답한 것이 한 묶음. 되물음·답 안 함은 시각 옆 꼬리표로 */
     v.sTutor.forEach(function (x) {
       var q = el('div', 'q');
-      q.appendChild(el('div', null, 'Q. ' + x.question));
-      q.appendChild(el('div', 'a', 'A. ' + x.answer));
-      q.appendChild(el('span', 'was', hm(x.t) + (x.kind === 'ask_back' ? ' · 튜터가 되물었어요' : x.refused ? ' · 튜터가 답하지 않았어요' : '')));
+      var meta = el('div', 'q-meta');
+      meta.appendChild(el('span', 'tm', hm(x.t)));
+      var tag = x.kind === 'ask_back' ? '튜터가 되물었어요' : x.refused ? '튜터가 답하지 않았어요' : '';
+      if (tag) meta.appendChild(el('span', 'tag', tag));
+      q.appendChild(meta);
+      var qq = el('p', 'qq'); qq.appendChild(el('span', 'who', '학생')); qq.appendChild(document.createTextNode(x.question || ''));
+      var qa = el('p', 'a'); qa.appendChild(el('span', 'who', '튜터')); qa.appendChild(document.createTextNode(x.answer || ''));
+      q.appendChild(qq);
+      q.appendChild(qa);
       if (x.reasons && x.reasons.length) q.appendChild(el('div', 'why', x.reasons.join(' / ')));
       qs.appendChild(q);
     });

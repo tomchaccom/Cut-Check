@@ -488,6 +488,28 @@ test('강사 — 교실 폴더, 기록 없는 학생도 폴더, 교실에서 빼
   expect(await page.evaluate(() => window.__removed)).toEqual(['s3']);
 });
 
+/* 2026-10-19 선생님 피드백 — "학생 정보 화면이 읽기 불편하다 · 비는 화면이 많다".
+ * 넓은 화면에서 서랍은 넓게(1200px 넘게) 쓰되 옆으로 넘치지 않고, 먼저 물어볼 것이 기록보다 위에 있다 */
+test('강사 — 1440 폭에서 학생 서랍은 넓고 옆으로 넘치지 않는다', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const d = page.locator('#detail');
+  await expect(d).toBeVisible();
+  const box = await d.boundingBox();
+  expect(box.width).toBeGreaterThan(1200);
+  expect(box.width).toBeLessThanOrEqual(1320);
+  const o = await d.evaluate(el => ({ sw: el.scrollWidth, cw: el.clientWidth, page: document.documentElement.scrollWidth - innerWidth }));
+  expect(o.sw).toBeLessThanOrEqual(o.cw);
+  expect(o.page).toBeLessThanOrEqual(0);
+  const ask = await d.locator('.saybox').boundingBox();
+  const rows = await d.locator('.d-rows').boundingBox();
+  expect(ask.y).toBeLessThan(rows.y);
+  const side = await d.locator('.d-side').boundingBox();
+  expect(side.x).toBeGreaterThan(rows.x + rows.width - 1);   // 튜터 대화는 기록 옆 단
+});
+
 async function asTeacher(page, role) {
   await page.route('**/supabase-js@2/**', r => r.abort());
   await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
@@ -556,7 +578,7 @@ test('로그인 화면 — 역할 고르기도 교실 코드 입력도 없다, �
     .toEqual(['kim-1@students.invalid', 't@school.kr']);
 });
 
-test('04 는 설계|코드 반반이고, 지난 단계 탭으로 돌아갈 수 있다', async ({ context, page }) => {
+test('04 는 설계|코드 두 단이고, 지난 단계 탭으로 돌아갈 수 있다', async ({ context, page }) => {
   await local(context);
   await seedMission(page);
   await studentToCode(page);
