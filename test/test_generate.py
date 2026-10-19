@@ -468,6 +468,39 @@ t("반례 '도윤이 쪽지' 의 도윤을 상황이 먼저 부름 → situation
 _, b = _generate._parse(J, copy.deepcopy(snack))
 t('앞 자료 사람(서연)·고정 목록 사람(지훈)은 불러도 된다', 'situation' not in b, b)
 
+print('\n[리뷰 2026-10-19 — 반례 누출 · 사람 아닌 출처 · 목록 이름의 방법 낱말]')
+d2 = copy.deepcopy(snack); d2['counter'] = {'name': '도윤이 쪽지', 'text': '젤리,쿠키,바나나,우유,사탕', 'axis': 'count'}
+rows = [{'items': x['items']} for x in d2['data']]
+t('counter_problems 가 반례 누출을 잡는다', any('통째로' in w for _, w in _generate.counter_problems(J, rows, d2['filterTarget'], d2['counter'])))
+m3, b = _generate._parse(J, copy.deepcopy(d2))
+t('코드 후보로 바뀐 반례는 누출이 없다', not set(d2['filterTarget']) <= {x.strip() for x in re.split(r'[,\s]+', m3['counter']['text'])} and 'counter' not in b, (m3['counter'], b))
+ours = {**copy.deepcopy(snack), 'situation': '우리 반이 간식을 같이 사려고 해요. 둘 다 먹을 수 있는 걸로 정해야 해요.',
+        'counter': {'name': '우리 반 메모', 'text': '사탕,초콜릿,과자', 'axis': 'empty'}}
+_, b = _generate._parse(J, ours)
+t("'우리 반 메모' 는 사람 이름이 아니라 이야기에 '우리' 가 나와도 통과", 'situation' not in b and 'brief' not in b, b)
+for bad in ['걸러낼 간식', '골라 둔 것', '제외 목록']:
+    _, b = _generate._parse(J, {**copy.deepcopy(snack), 'filterDesc': bad})
+    t(f"목록 이름에 방법 낱말 '{bad}' → filterDesc", 'filterDesc' in b, b)
+_seen = []
+def _post400(body, key, timeout):
+    _seen.append(timeout)
+    if len(_seen) == 1:
+        _generate.time.sleep(0.3)
+        raise urllib.error.HTTPError('u', 400, 'bad', {}, None)
+    return '{}'
+_orig_post, _generate._post = _generate._post, _post400
+os.environ['PICKLE_API_KEY'], _k = 'k', os.environ.get('PICKLE_API_KEY')
+try:
+    _generate.pickle_llm([{'role': 'system', 'content': 's'}], {}, 10)
+finally:
+    _generate._post = _orig_post
+    if _k is None:
+        os.environ.pop('PICKLE_API_KEY')
+    else:
+        os.environ['PICKLE_API_KEY'] = _k
+t('JSON 모드로 내려갈 때는 남은 시간만 준다', len(_seen) == 2 and _seen[1] < 9.8, _seen)
+t('목록 이름 기본 틀은 방법 낱말이 없다', not re.search(r'거르|걸러|골라|필터|제외', _generate._fallback('filterDesc', J, snack)))
+
 print('\n[기본 모델]')
 t("LLM_MODEL 이 없으면 openai/gpt-5.4", subprocess.run(
     [sys.executable, '-c', 'import sys; sys.path.insert(0, "api"); import _generate; print(_generate.MODEL)'],
