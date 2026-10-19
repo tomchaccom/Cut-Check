@@ -764,3 +764,53 @@ test('교사 초안에 고정 목록이 보이고 고칠 수 있다', async ({ c
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('cutcheck.generated')).pop());
   expect(saved.pipelineParams.filterTarget).toEqual(['3시', '4시']);
 });
+
+/* 새 꼴(kind:'code') 미션은 자료가 파이썬 리터럴이다. 손으로 만들어 같은 경로(cutcheck.generated)로 넣는다 */
+async function seedCodeMission(page, m) {
+  await page.goto(BASE + '/sentence.html');
+  await page.evaluate((mm) => {
+    localStorage.setItem('cutcheck.generated', JSON.stringify([mm]));
+    window.CC.store.clear();
+  }, m);
+  await page.reload();
+}
+
+test('새 꼴 미션 — 리터럴 자료로 돌고 반례로 바꾸면 반례로 돈다', async ({ context, page }) => {
+  test.setTimeout(120000);
+  await local(context);
+  await seedCodeMission(page, {
+    id: 'ai-code', no: 'AI', type: 'sentence', kind: 'code', concept: 'for', stage: '분해',
+    title: '영수증을 합쳐요', brief: '영수증 금액이 모두 얼마인지 알려 주세요.',
+    define: { q: '어떤 결과가 나오면 성공일까요?', options: [
+      { v: '영수증 금액을 모두 합친 값', key: 'a' },
+      { v: '영수증 1의 답과 같은 2300이 나오면 성공', key: 'b', trap: 'hardcode' },
+      { v: '오류 없이 끝나면 성공', key: 'c', trap: 'luck' }] },
+    inputs: [{ id: 'd01', name: '영수증 1', v: '[1500, 800]' }, { id: 'd02', name: '영수증 2', v: '[300]' },
+      { id: 'd03', name: '새 영수증', v: '[]', counter: true, axis: 'empty' }],
+    cards: [{ label: '하나씩 꺼내기' }, { label: '모두 더하기' }, { label: '가장 큰 값 찾기', decoy: true }]
+  });
+  await page.locator('.m-btn[data-id="ai-code"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('모두 합해야 하니까');
+  await page.locator('#go-method').click();
+  await expect(page.locator('.card-pick')).toHaveCount(3);
+  await page.locator('.card-pick', { hasText: '모두 더하기' }).click();
+  await page.locator('#reason-method').fill('보이는 대로');
+  await page.locator('#go-run').click();
+  await expect(page.locator('#step4')).toHaveClass(/active/);
+  expect((await page.locator('#code-editor').inputValue()).split('\n')[0]).toBe('data = [1500, 800]');
+  await waitPython(page);
+  await page.locator('#code-editor').fill('data = [1500, 800]\nprint(sum(data))\n');
+  await page.locator('#code-data-select').selectOption({ label: '새 영수증' });
+  expect((await page.locator('#code-editor').inputValue()).split('\n')[0]).toBe('data = []');
+  await page.locator('#run-code').click();
+  await expect(page.locator('#code-result')).toHaveText('0', { timeout: 10000 });
+});
+
+test('예전 미션 — 쉼표 자료는 그대로 따옴표로 돈다', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  await studentToCode(page);
+  expect((await page.locator('#code-editor').inputValue()).split('\n')[0]).toBe('data = "사과,바나나,우유"');
+});

@@ -38,7 +38,7 @@
     rec: rec,
     context: function () {
       var items = [];
-      (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
+      if (!(M && M.kind === 'code')) (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
       return {
         mission: {
           title: M ? M.title : '', itemName: M ? (M.itemName || '') : '',
@@ -415,14 +415,14 @@
         o.value = inp.v; o.textContent = inp.name;
         fresh.appendChild(o);
       });
-      if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + M.inputs[0].v + '"';
+      if ($('#code-data-preview')) $('#code-data-preview').textContent = CC.codemission.dataLine(M, M.inputs[0].v);
       fresh.addEventListener('change', function () {
-        if ($('#code-data-preview')) $('#code-data-preview').textContent = 'data = "' + this.value + '"';
+        if ($('#code-data-preview')) $('#code-data-preview').textContent = CC.codemission.dataLine(M, this.value);
         var editor = $('#code-editor');
         if (editor) {
-          var line = 'data = ' + JSON.stringify(String(this.value));
+          var line = CC.codemission.dataLine(M, this.value);
           var wasSkeleton = editor.value === state.skeleton;
-          editor.value = editor.value.replace(/^data = ".*"/m, function () { return line; });
+          editor.value = editor.value.replace(CC.codemission.DATA_RE, function () { return line; });
           /* 뼈대 그대로였으면 뼈대도 같이 옮겨, 다음 렌더에서 학생 코드로 오인되지 않게 한다 */
           if (wasSkeleton) state.skeleton = editor.value;
         }
@@ -433,7 +433,7 @@
     var editor = $('#code-editor');
     if (editor && (!editor.value || editor.value === state.skeleton)) {
       /* JSON 문자열은 보통 문자열에서 그대로 파이썬 문자열이다 — 자료에 " · \\ · 줄바꿈이 있어도 깨지지 않는다 */
-      state.skeleton = 'data = ' + JSON.stringify(M ? String(M.inputs[0].v) : '') + '\n# data 에 자료가 들어 있어요.\n' + CC.cards.skeleton(picked());
+      state.skeleton = (M ? CC.codemission.dataLine(M, M.inputs[0].v) : 'data = ""') + '\n# data 에 자료가 들어 있어요.\n' + CC.cards.skeleton(picked());
       editor.value = state.skeleton;
     }
 
@@ -464,9 +464,9 @@
   /* 코드 한 번 실행 → 기록. 학생의 data 줄은 같은 자리에서 바꿔 줄 번호를 지킨다.
    * 없으면 앞에 한 줄을 붙이고 에러 줄 번호에서 1을 뺀다 */
   function runWith(code, dataVal, cb) {
-    var dataLine = 'data = "' + dataVal.replace(/"/g, '\\"') + '"';
-    var hasData = /^data = ".*"/m.test(code);
-    var fullCode = hasData ? code.replace(/^data = ".*"/m, function () { return dataLine; }) : dataLine + '\n' + code;
+    var dataLine = CC.codemission.dataLine(M, dataVal);
+    var hasData = CC.codemission.DATA_RE.test(code);
+    var fullCode = hasData ? code.replace(CC.codemission.DATA_RE, function () { return dataLine; }) : dataLine + '\n' + code;
     py.run(fullCode, function (output, error) {
       if (error && !hasData) error = error.replace(/^(\d+)번째 줄/, function (_, n) { return (n - 1) + '번째 줄'; });
       lastRun = { output: String(output || ''), error: String(error || '') };

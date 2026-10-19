@@ -14,7 +14,7 @@
     var code = ch.charCodeAt(0);
     if (code < 0xAC00 || code > 0xD7A3) {
       /* 한글이 아니면 숫자·영문 발음 기준으로 대충 맞춘다 */
-      return '13680lmnr'.indexOf(ch.toLowerCase()) !== -1;
+      return '136780lmnr'.indexOf(ch.toLowerCase()) !== -1;
     }
     return (code - 0xAC00) % 28 !== 0;
   }

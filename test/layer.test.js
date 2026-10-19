@@ -7,6 +7,7 @@ require('../js/core/onboard.js');
 require('../js/core/hangul.js'); require('../js/core/alerts.js');
 require('../js/core/pyerr.js');
 require('../js/core/csv.js');
+require('../js/core/codemission.js'); require('../js/core/cards.js');
 const CC = global.window.CC;
 const T = CC.events.T;
 
@@ -227,9 +228,36 @@ t('수식으로 시작하는 질문은 앞에 \' 를 붙인다', CC.csv.toCsv([[
 t('쉼표·따옴표·줄바꿈이 든 셀은 감싸고 따옴표는 두 번', csv.indexOf('"왜 ""빈 줄"", 나와요?\n두 줄"') >= 0);
 t('평범한 셀은 감싸지 않는다', csv.indexOf(',준호,') >= 0);
 
+console.log('\n[코드 미션]');
+const CM = CC.codemission;
+t('개념 8개, 순서 고정', CM.CONCEPTS.map(c => c.id).join() === 'split,index,if,for,while,dict,set,func');
+t('uses: while 은 For 로 안 된다', CM.uses('while', ['For']) === false);
+t('uses: While 이면 된다', CM.uses('while', ['While']) === true);
+t('uses: 목록이 null 이면 판단 안 함', CM.uses('x', null) === true);
+t('dataLine 새 꼴은 리터럴 그대로', CM.dataLine({ kind: 'code' }, '[1, 2]') === 'data = [1, 2]');
+t('dataLine 옛 꼴은 따옴표 문자열', CM.dataLine({}, 'a,b') === 'data = "a,b"');
+t('dataLine 따옴표·역슬래시는 JSON 이스케이프', CM.dataLine({}, 'a\\b"c') === 'data = ' + JSON.stringify('a\\b"c'));
+t('DATA_RE 는 줄 처음의 data 줄을 찾는다', CM.DATA_RE.test('x=1\ndata = [1]\n'));
+t('usesCode 는 _src 한 줄을 앞에 붙인다', CM.usesCode('x=1').indexOf('_src = "x=1"\n') === 0);
+const ok2 = [{ output: '3', error: '' }, { output: '0', error: '' }];
+const dr = { concept: 'for', brief: '합계는?', inputs: [{ name: 'a' }, { name: 'b', counter: true }] };
+const codes = (d, r, u) => CM.solcheck(d, r, u).map(x => x.code).join();
+t('solcheck 통과: 반례가 빈 배열', codes(dr, ok2, ['For']) === '');
+t('solcheck error', codes(dr, [{ output: '', error: '1번째 줄 에러' }, ok2[1]], ['For']) === 'error');
+t('solcheck timeout', codes(dr, [{ output: '', error: CC.pyerr.TIMEOUT }, ok2[1]], ['For']) === 'timeout');
+t('solcheck concept', codes(dr, ok2, ['While']) === 'concept');
+t('solcheck counter-same', codes(dr, [ok2[0], { output: ' 3\n', error: '' }], ['For']) === 'counter-same');
+t('solcheck shape: 빈 출력·여러 줄·200자 초과', ['', '1\n2', 'x'.repeat(201)].every(o => codes({ concept: 'for', inputs: [{}, {}] }, [{ output: o, error: '' }, { output: 'z', error: '' }], ['For']) === 'shape'));
+t('solcheck count-not-number', codes({ concept: 'for', brief: '몇 개?', inputs: [{}, {}] }, [{ output: 'abc', error: '' }, { output: '2', error: '' }], ['For']) === 'count-not-number');
+t('hardcodeOption 조사 계산', CM.hardcodeOption('주문서 1', '7').v === '주문서 1의 답과 같은 7이 나오면 성공' && CM.hardcodeOption('주문서 1', '7').trap === 'hardcode');
+t('hardcodeOption 빈 값', CM.hardcodeOption('영수증', '').v === '영수증처럼 빈 결과가 나오면 성공');
+const fc = CC.cards.forMission({ kind: 'code', cards: [{ label: '더하기' }, { label: '나누기', decoy: true }] });
+t('cards.forMission: m.cards 가나다순·decoy 유지', fc.length === 2 && fc[0].label === '나누기' && fc[0].decoy === true && fc[1].label === '더하기' && fc[1].decoy === false);
+t('fixedList 새 꼴은 null', CC.cards.fixedList({ kind: 'code' }) === null);
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js', 'csv.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js', 'csv.js', 'codemission.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');

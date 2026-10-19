@@ -11,5 +11,6 @@ t(josa('우유','을/를'), '우유를');
 t(josa('땅콩','을/를'), '땅콩을');
 t(particle('아무것도 안 나옴','이/가'), '이');
 t(particle('모르겠어요','이/가'), '가');
+t(josa('7','이/가'), '7이');
 console.log(fail?`\n실패 ${fail}건`:'\n전체 통과');
 process.exit(fail?1:0);
