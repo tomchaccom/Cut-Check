@@ -111,9 +111,11 @@
       /* 문장형 미션 */
       case 's-define':
         s.sDefine = { choice: e.choice, reason: e.reason };
+        if (e.trap !== undefined) s.define = { text: e.choice, trap: e.trap };   /* 예전 기록은 trap 이 없다 — 분류하지 않는다 */
         s.sDefineVer++; break;
       case 's-redefine':
         s.sDefine = { choice: e.to, reason: e.reason };
+        if (e.trap !== undefined) s.define = { text: e.to, trap: e.trap };
         s.sDefineVer++; break;
       case 's-method':
         s.sMethod = { slots: e.slots, cards: e.cards, reason: e.reason };

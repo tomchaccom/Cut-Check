@@ -79,6 +79,8 @@
     /* 상태 초기화 */
     state = {
       defineChoice: '',
+      defineTrap: null,
+      lastDefine: '',
       defineReason: '',
       design: [],
       methodReason: '',
@@ -136,6 +138,7 @@
           defineCards.querySelectorAll('.define-card').forEach(function (c) { c.classList.remove('selected'); });
           card.classList.add('selected');
           state.defineChoice = o.v;
+          state.defineTrap = o.trap || null;
           defineSelect.value = o.v;
           $('#go-method').disabled = false;
         });
@@ -151,6 +154,8 @@
     });
     defineSelect.value = '';
     $('#reason-define').value = '';
+    $('#msg-define').textContent = ''; $('#msg-method').textContent = '';
+    if ($('#help-btn')) $('#help-btn').hidden = true;
     $('#go-method').disabled = true;
 
     /* 화면 3: 설계 카드 */
@@ -360,15 +365,25 @@
     state.defineReason = this.value.trim();
   });
 
+  /* 이유는 글자(한글·영문·숫자) 2자 이상 — "." 하나로 넘어가지 않게. 막을 때는 위치와 사실만 말한다 */
+  function reasonOk(text, msgSel) {
+    var ok = (String(text).match(/[가-힣A-Za-z0-9]/g) || []).length >= 2;
+    $(msgSel).textContent = ok ? '' : '이유를 한 줄 적어 주세요.';
+    return ok;
+  }
+
   $('#go-method').addEventListener('click', function () {
     if (!state.defineChoice) return;
+    if (!reasonOk(state.defineReason, '#msg-define')) { $('#reason-define').focus(); return; }
     if (!state.firstDefine) state.firstDefine = state.defineChoice;
     $('#side-define').textContent = state.defineChoice;
+    /* 처음 고른 것은 lastDefine 에 남겨 두고, 실제로 바뀐 때만 s-redefine 을 남긴다 */
     if (state.defineVer > 0) {
-      rec('s-redefine', { from: state.defineChoice, to: state.defineChoice, reason: state.defineReason });
+      if (state.lastDefine !== state.defineChoice) rec('s-redefine', { from: state.lastDefine, to: state.defineChoice, reason: state.defineReason, trap: state.defineTrap });
     } else {
-      rec('s-define', { choice: state.defineChoice, reason: state.defineReason });
+      rec('s-define', { choice: state.defineChoice, reason: state.defineReason, trap: state.defineTrap });
     }
+    state.lastDefine = state.defineChoice;
     state.defineVer++;
     showStep(3);
   });
@@ -382,6 +397,7 @@
 
   $('#go-run').addEventListener('click', function () {
     if (!checkMethodComplete()) return;
+    if (!reasonOk(state.methodReason, '#msg-method')) { $('#reason-method').focus(); return; }
     var cardsSnapshot = picked();
     if (state.methodVer > 0) {
       rec('s-remethod', { toCards: cardsSnapshot, reason: state.methodReason });
@@ -536,6 +552,7 @@
     outputBox.hidden = false;
     resultEl.textContent = text;
     resultEl.style.color = isError ? 'var(--coral)' : 'var(--ink)';
+    if (isError && $('#help-btn')) $('#help-btn').hidden = false;   /* 증상이 나온 뒤에만 — 실행 전에는 열지 않는다 */
   }
 
   /* 판정은 학생이 한다 — 시스템은 결과만 보여 준다 */
@@ -598,6 +615,7 @@
           });
           $('#code-table-wrap').hidden = false;
           $('#code-output').hidden = true;
+          if ($('#help-btn')) $('#help-btn').hidden = false;   /* 반례까지 돌린 뒤 */
           if (anyOk) showJudge();
           return;
         }

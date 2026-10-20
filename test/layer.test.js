@@ -366,5 +366,17 @@ global.window.CC_CONFIG = {};
 require('../js/data/config.js');
 t('기본은 로컬 모드', CC.config.online() === false);
 
+// ── 발신함은 200개 상한이 없다: 오프라인으로 쌓인 250개가 하나도 안 잘린다 (읽은 기록 KEY 만 200개로 자른다)
+{
+  const mem = {};
+  global.localStorage = { getItem: k => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } };
+  CC.config.online = () => true; CC.config.retryMs = 1e9; CC.config.batchSize = 50;
+  CC.api = { send: () => new Promise(() => {}) };   // 서버가 답이 없다 = 오프라인
+  require('../js/data/store.js');
+  for (let i = 0; i < 250; i++) CC.store.push({ type: 's-wrap', mid: 'm', text: 'n' + i, v: 1, t: i + 1 });
+  t('발신함 250개가 그대로 남는다', JSON.parse(mem['cutcheck.outbox.v1']).length === 250);
+  t('읽은 기록은 200개로 자른다', JSON.parse(mem['cutcheck.log.v1']).length === 200);
+}
+
 console.log(fail ? '\n실패 ' + fail + '건' : '\n전부 통과');
 process.exit(fail ? 1 : 0);

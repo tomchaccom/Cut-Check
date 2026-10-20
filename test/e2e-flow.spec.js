@@ -161,9 +161,11 @@ test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({
   await page.locator('#go-define').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
   await pickCards(page);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(1);
   await page.locator('#back-method').click();
@@ -301,8 +303,10 @@ async function toCode(page, id) {
   await page.locator('.m-btn[data-id="' + id + '"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await pickCards(page);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(1);
 }
@@ -418,6 +422,7 @@ test('무한루프는 5초 뒤 멈추고 화면은 살아 있다', async ({ cont
   await expect(page.locator('#run-code')).toBeDisabled();
   await page.locator('#back-method').click();                          // 그동안에도 화면은 반응한다
   await expect(page.locator('#step3')).toHaveClass(/active/);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator('#code-result')).toHaveText('5초 안에 끝나지 않아서 멈췄어요.', { timeout: 10000 });
   await expect(page.locator('#run-code')).toBeDisabled();              // 새 worker 준비 전
@@ -456,12 +461,14 @@ test('설계 카드가 코드 뼈대가 되고, 쓴 코드는 설계를 고쳐�
   await expect(page.locator('#samples .sample-data')).toHaveCount(2);           // 첫 화면에 자료 2개
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await expect(page.locator('.card-pick')).toHaveCount(4);                      // 진짜 3 + 헷갈리는 1
   await pickCards(page);
   await page.locator('.design-item').nth(2).locator('.card-up').click();        // 개수 세기를 위로
   await expect(page.locator('.design-item').nth(1)).toContainText('개수 세기');
   await page.locator('.design-item').nth(1).locator('.card-down').click();      // 되돌리기
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   const code = await page.locator('#code-editor').inputValue();
   expect(code).toContain('# 1. 나누기 (기준: 쉼표)');
@@ -471,11 +478,13 @@ test('설계 카드가 코드 뼈대가 되고, 쓴 코드는 설계를 고쳐�
   await page.locator('#code-editor').fill('data = "a,b"\nprint(1)\n');
   await page.locator('#back-method').click();
   await page.locator('.design-item').nth(2).locator('.card-remove').click();
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   expect(await page.locator('#code-editor').inputValue()).toContain('print(1)'); // 덮어쓰지 않는다
 
   /* 설계↔코드를 오가도 Tab 리스너는 하나 — 한 번 눌러 공백 4칸 */
   await page.locator('#back-method').click();
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await page.locator('#code-editor').fill('');
   await page.locator('#code-editor').focus();
@@ -491,8 +500,10 @@ test('다른 미션으로 바꾸면 앞 미션 코드가 남지 않는다', asyn
   await page.locator('.m-btn[data-id="sm2"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await pickCards(page);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   expect(await page.locator('#code-editor').inputValue()).not.toContain('앞 미션');
 });
@@ -615,6 +626,7 @@ test('다른 교실을 둘러보고 돌아와도 기록은 미션을 연 교실�
   await expect(page.locator('#crumb-play-room')).toHaveText('1학년 3반');
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   const pushed = await page.evaluate(() => window.__pushed);
   expect(pushed).toEqual([['r1', 'db1']]);
@@ -660,6 +672,7 @@ test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ p
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await pickCards(page);
   const rows = page.locator('.design-item');
@@ -686,6 +699,7 @@ test('설계도 — 390 폭 긴 카드 이름에서도 번호와 버튼이 이�
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   for (const l of long) await page.locator('.card-pick', { hasText: l }).click();
   const r = await page.evaluate(() => {
@@ -1053,12 +1067,14 @@ test('골라내기 고정 목록이 01 문제·03 카드·04 요청에 보인다
   await expect(page.locator('#samples .sample-data')).toHaveCount(2);           // 반례는 여전히 숨는다
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await page.locator('.card-pick', { hasText: '골라내기' }).click();
   await expect(page.locator('.design-item .card-list')).toHaveText('우유,달걀,땅콩');
   await page.locator('.card-pick', { hasText: '나누기' }).click();
   await page.locator('.card-pick', { hasText: '개수 세기' }).click();
   for (const s of await page.locator('.design-item select').all()) await s.selectOption({ index: 1 });
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator('#step4-fixed')).toHaveText('주의 재료 목록: 우유,달걀,땅콩');
 });
@@ -2932,4 +2948,31 @@ test('교실을 바꾸면 단계별 만들기는 처음부터 — 옛 교실의 
   await expect(page.locator('#gp-count')).toHaveText('1 / 4 수업 내용');
   await expect(page.locator('.sg-ex')).toHaveCount(0);
   expect(await page.evaluate(() => window.__saved || [])).toEqual([]);
+});
+
+
+test('철학 틈 — 이유 두 글자 · 다시 고른 성공 조건은 처음 것이 남고 · 도움 요청은 증상 뒤에만', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').nth(1).click();
+  await page.locator('#reason-define').fill('.');
+  await page.locator('#go-method').click();
+  await expect(page.locator('#msg-define')).toHaveText('이유를 한 줄 적어 주세요.');
+  await expect(page.locator('#step2')).toHaveClass(/active/);
+  await page.locator('#reason-define').fill('모두 세야 하니까');
+  await page.locator('#go-method').click();
+  await expect(page.locator('#step3')).toHaveClass(/active/);
+  await expect(page.locator('#step3 .step-title')).toHaveText('내 설계');
+  await page.locator('#back-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  const evs = await page.evaluate(() => window.CC.store.all().filter(e => e.type === 's-define' || e.type === 's-redefine'));
+  expect(evs.length).toBe(2);
+  expect(evs[1].type).toBe('s-redefine');
+  expect(evs[1].from).toBe(evs[0].choice);
+  expect(evs[1].to).not.toBe(evs[1].from);
+  expect(evs[0]).toHaveProperty('trap');
+  await expect(page.locator('#help-btn')).toBeHidden();
 });
