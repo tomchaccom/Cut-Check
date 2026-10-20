@@ -875,7 +875,16 @@ dialog::backdrop {
 }
 
 /* 나침반 — 선생님이 보낸 뒤에만 나온다. 회색·검정 (브랜드 색 미정) */
-.compass-mine { border: 1px solid var(--line-strong); border-radius: 12px; padding: 16px; margin: 0 0 16px; max-width: 560px; }
-.compass-mine .step-title { margin: 0 0 4px; }
-.compass-fig { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
-.compass-note { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; }
+/* 내 나침반 — 바늘을 크게, 선생님 말은 본문보다 크게. 좁은 상자에 가두지 않는다 */
+.compass-mine { border: 2px solid var(--line-strong); border-radius: 16px; padding: 20px 24px; margin: 0 0 20px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 28px; align-items: center; }
+.compass-mine > .step-title, .compass-mine > .muted { grid-column: 1 / -1; }
+.compass-mine .step-title { margin: 0 0 2px; }
+.compass-mine .compass-fig { margin: 10px 0 0; }
+.compass-mine .compass-says.wide { grid-column: 1 / -1; }
+.compass-mine .compass-fig svg { width: 168px; height: 168px; }
+.compass-mine .compass-dir { display: block; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.compass-mine .compass-note { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0 0; font-size: 19px; line-height: 1.6; }
+@media (max-width: 560px) { .compass-mine { grid-template-columns: minmax(0, 1fr); } .compass-mine .compass-fig svg { width: 140px; height: 140px; } }
+/* 로고 — 나침반 아이콘 그림이 칸을 채운다 */
+span.mark.icon { background: none; padding: 0; overflow: hidden; }
+span.mark.icon img { display: block; width: 100%; height: 100%; }

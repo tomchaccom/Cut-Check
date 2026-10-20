@@ -271,3 +271,7 @@ dialog::backdrop { background: rgba(20,30,50,.5); }
 .wrapcard .k { font-size: 11.5px; font-weight: 700; color: var(--amber); display: block; }
 .wrapcard .line { font-family: var(--disp); font-size: 18px; font-weight: 700; margin-top: 7px; line-height: 1.45; }
 .wrapcard .after { font-size: 13px; color: var(--ink-2); margin-top: 8px; line-height: 1.55; }
+
+/* 로고 — 나침반 아이콘 그림이 칸을 채운다 */
+span.mark.icon { background: none; padding: 0; overflow: hidden; }
+span.mark.icon img { display: block; width: 100%; height: 100%; }
