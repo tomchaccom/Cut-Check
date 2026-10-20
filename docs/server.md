@@ -222,6 +222,7 @@ POST /api/create-student        Authorization: Bearer <선생님 access token>
 ```
 
 환경변수(Vercel): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. 값은 저장소에 두지 않는다.
+관리자 API(`/api/admin`)는 환경변수 `ADMIN_EMAILS`(쉼표로 구분한 이메일, 대소문자·공백 무시)에 있는 선생님만 쓴다. 비어 있으면 아무도 못 쓴다. 값은 저장소에 두지 않는다.
 서버가 없으면(로컬 모드) 계정은 못 만들지만 수업 흐름은 그대로 돈다.
 
 ### 미션 만들기 API — `api/mission-steps.py` · `api/generate-mission.py`

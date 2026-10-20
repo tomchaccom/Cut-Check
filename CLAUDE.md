@@ -177,6 +177,7 @@ uv run --with-requirements requirements.txt python test/test_accounts.py        
 uv run --with-requirements requirements.txt python test/test_steps.py            # 단계별 생성 — 개념 낱말 규칙·예시 거르기·초안 검사·재요청·강사만
 uv run --with-requirements requirements.txt python test/test_tutor_recap.py      # 수업에서 짚을 거리 — 항목 검사·인용 대조·상한·재요청·강사만
 uv run --with-requirements requirements.txt python test/test_quota.py            # 강사별 생성 한도 — 예약·반환·재요청 ticket·0개면 403·네트워크 실패
+uv run --with-requirements requirements.txt python test/test_admin.py            # 관리자 API — 관리자만·한도 0..1000 정수·낮춰도 left 0·목록·로그
 ```
 
 8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.
