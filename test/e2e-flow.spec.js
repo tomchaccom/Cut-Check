@@ -945,6 +945,7 @@ async function sgBuild(page, solutions, solveCode, before, quota = { left: 3, di
         : r.fulfill({ status: 502, contentType: 'application/json', body: '{"error":"x"}' });
     }
     builds.push(b);
+    if (quota.failRetry && b.ticket) return r.fulfill({ status: 422, contentType: 'application/json', body: JSON.stringify({ error: '문제를 만들지 못했어요. 다시 만들어 주세요.', reasons: {} }) });
     return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...SG_DRAFT(solutions[Math.min(builds.length, solutions.length) - 1]),
       ticket: 'tk-' + builds.length, left: 2 }) });
   });
@@ -1405,6 +1406,18 @@ test('남은 생성 — 처음 수를 보이고, 만들기가 성공하면 줄�
   await page.locator('#sg-build').click();                   // 다시 누른 "만들기" 는 새 미션 — ticket 없이
   await expect.poll(() => builds.length).toBe(3);
   expect('ticket' in builds[2]).toBe(false);
+});
+
+/* 2026-10-20 운영: 첫 초안은 차감되고 저장됐는데 자동 재요청이 422 로 끝나자 초안까지 버려 "남은 생성 2개 + 만들지 못했어요"만 남았다.
+ * 재요청이 실패하면 이미 만든 초안을 걸린 이유와 함께 보여 준다 — 낸 횟수로 받은 것을 잃지 않는다 */
+test('자동 재요청이 실패해도 이미 만든 초안은 걸린 이유와 함께 남는다', async ({ page }) => {
+  test.setTimeout(120000);
+  const builds = await sgBuild(page, ['print(2300)'], null, null, { left: 3, disabled: false, failRetry: true });
+  await expect.poll(() => builds.length, { timeout: 90000 }).toBe(2);
+  await expect(page.locator('.sg-answer')).toHaveText(['2300', '2300', '2300'], { timeout: 60000 });
+  await expect(page.locator('#sg-problems')).toBeVisible();
+  await expect(page.locator('#sg-title')).toHaveValue('영수증 합치기');
+  await expect(page.locator('#sg-status')).toContainText('처음 만든 문제를 보여 드려요');
 });
 
 test('남은 생성 — 열면 서버가 준 수, 403 left 0 이면 두 버튼이 꺼지고 문장', async ({ page }) => {
