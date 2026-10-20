@@ -695,18 +695,36 @@ dialog::backdrop {
 .tutor-open { position: fixed; right: 16px; bottom: 16px; z-index: 40; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,.12); cursor: pointer; }
 /* 폰 폭에서는 떠 있지 않고 페이지 끝에 놓인다 — 떠 있으면 04 결과 표 오른쪽 칸(결과 값)을 덮는다 */
 @media (max-width: 600px) { .tutor-open { position: static; display: block; margin: 0 16px 24px auto; } .tutor-open[hidden] { display: none; } }
-.tutor { width: min(420px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 32px)); padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); }
+/* 튜터 — 보통의 채팅 창. 글자 16px · 누를 곳 44px 이상 (WCAG 2.2 AA) */
+.tutor { width: min(480px, calc(100vw - 16px)); height: min(640px, calc(100dvh - 32px)); max-height: none; padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); }
+.tutor[open] { display: flex; flex-direction: column; }
 .tutor::backdrop { background: rgba(0,0,0,.25); }
-.tutor-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-.tutor-head h2 { font-size: 15px; margin: 0; }
-.tutor-head button { border: 0; background: none; font-size: 20px; color: var(--ink-2); cursor: pointer; }
-.tutor-note { margin: 0; padding: 8px 16px; font-size: 12px; color: var(--ink-3); }
-.tutor-log { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px; min-height: 120px; max-height: 320px; overflow-y: auto; }
-.tutor-msg { padding: 8px 12px; border-radius: 10px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.tutor-msg.me { align-self: flex-end; background: var(--green-soft); }
-.tutor-msg.ai { align-self: flex-start; background: var(--surface-2); }
-.tutor-form { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
-.tutor-form textarea { flex: 1; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 8px; font: inherit; font-size: 14px; background: var(--surface); color: var(--ink); resize: none; }
+.tutor-head { display: flex; align-items: center; gap: 4px; padding: 4px 8px 4px 16px; border-bottom: 1px solid var(--line); }
+.tutor-head h2 { flex: 1; min-width: 0; font-size: 17px; margin: 0; overflow-wrap: anywhere; }
+.tutor-head button { min-width: 44px; min-height: 44px; border: 0; border-radius: 8px; background: none; color: var(--ink); cursor: pointer; }
+.tutor-icon { font-size: 24px; line-height: 1; }
+.tutor-text { padding: 0 10px; font: inherit; font-size: 16px; text-decoration: underline; text-underline-offset: 3px; }
+.tutor-head button:hover { background: var(--surface-2); }
+.tutor-head #tutor-back:not([hidden]) { margin-left: -8px; }
+.tutor-note { margin: 0; padding: 8px 16px; font-size: 16px; line-height: 1.5; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.tutor-note[hidden] { display: none; }
+.tutor-log { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow-y: auto; }
+.tutor-row { display: flex; flex-direction: column; gap: 4px; max-width: 85%; }
+.tutor-row.me { align-self: flex-end; align-items: flex-end; }
+.tutor-row.ai { align-self: flex-start; align-items: flex-start; }
+.tutor-who { font-size: 16px; font-weight: 700; color: var(--ink-2); }
+.tutor-msg { padding: 10px 14px; border-radius: 16px; font-size: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.tutor-msg.me { background: var(--green-soft); color: var(--ink); border-bottom-right-radius: 4px; }
+.tutor-msg.ai { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.tutor-row.typing .tutor-msg { color: var(--ink-2); font-style: italic; }
+.tutor-empty { margin: auto; font-size: 16px; color: var(--ink-2); }
+.tutor-past-item { min-height: 44px; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; text-align: left; cursor: pointer; }
+.tutor-past-item:hover { background: var(--surface-2); }
+.tutor-form { display: flex; align-items: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.tutor-form[hidden] { display: none; }
+.tutor-form textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 140px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 10px; font: inherit; font-size: 16px; line-height: 1.5; background: var(--surface); color: var(--ink); resize: none; }
+.tutor-form button { min-height: 44px; font-size: 16px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* 설계 카드 */
 .card-hint { color: var(--ink-2); font-size: 14px; margin: 0 0 10px; }
@@ -717,15 +735,18 @@ dialog::backdrop {
 .design-title { font-size: 15px; margin: 0; color: var(--ink); }
 .design-list { list-style: none; padding: 0; margin: 6px 0 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .design-list:empty::before { content: '아직 고른 카드가 없어요.'; display: block; color: var(--ink-3); font-size: 14px; }
-.design-item { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; max-width: 100%; min-height: 38px; padding: 0 6px 0 12px; border-radius: 10px; background: var(--folder); color: var(--on-folder); }
-.design-item .num { font-size: 13px; color: #6B6B6B; }
-.design-item .label { font-size: 14px; font-weight: 600; }
-.design-item select { height: 28px; padding: 0 6px; border: 0; border-radius: 999px; font: inherit; font-size: 13px; background: #FFFFFF; color: #111111; }
-.design-item .card-list { font-family: var(--mono); font-size: 12px; word-break: break-all; }
-.design-item .moves { margin-left: 6px; display: flex; }
-.design-item .moves button { width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--on-folder); font-size: 11px; cursor: pointer; }
+/* 한 줄은 번호 · 이름 · ▲▼✕ 가 같이 다닌다 — 좁은 폭에서 flex-wrap 이면 번호와 버튼이 저마다 다른 줄로 흩어졌다.
+   줄바꿈은 이름 안에서만. 버튼은 44px, 글자는 16px (WCAG 2.2 AA) */
+.design-item { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 48px; padding: 2px 2px 2px 12px; border-radius: 10px; background: var(--folder); color: var(--on-folder); font-size: 16px; word-break: keep-all; overflow-wrap: anywhere; }
+.design-item .num { flex: none; color: #555555; }
+.design-item .label { min-width: 0; font-weight: 600; line-height: 1.4; }
+.design-item select { flex: none; height: 44px; padding: 0 8px; border: 0; border-radius: 999px; font: inherit; font-size: 16px; background: #FFFFFF; color: #111111; }
+.design-item .card-list { min-width: 0; font-family: var(--mono); font-size: 14px; word-break: break-all; }
+.design-item .moves { flex: none; display: flex; }
+.design-item .moves button { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--on-folder); font-size: 14px; cursor: pointer; }
 .design-item .moves button:hover:not(:disabled) { background: rgba(0,0,0,.08); }
 .design-item .moves button:disabled { opacity: .35; cursor: default; }
+.design-item :focus-visible { outline-color: var(--on-folder); outline-offset: -3px; }   /* 어두운 테마의 노란 테두리는 노란 카드 위에서 안 보인다 */
 
 /* 성공 조건 — 받은 요청을 붙잡고 묻는다 */
 .define-brief { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); text-align: right; }
@@ -830,10 +851,31 @@ dialog::backdrop {
 .split-main-head { display:flex; justify-content:flex-end; margin-bottom:8px; }
 .split-main-head .tutor-open { position:static; padding:8px 14px; box-shadow:none; margin:0; }
 .split-main-head .tutor-open[hidden] { display:none; }
-.design-side { list-style:decimal inside; padding:0; margin:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
-.design-side .design-item { display:list-item; padding:8px 12px; font-size:14px; font-weight:600; }
+.design-side { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.design-side .design-item { display:flex; align-items:baseline; gap:6px; padding:8px 12px; font-weight:600; line-height:1.4; }   /* 번호는 sentence.js 가 붙인다 — 긴 줄이 번호 밑으로 파고들지 않게 */
 @media (min-width: 1100px) { .code-split { grid-template-columns:minmax(0,2fr) minmax(0,3fr); gap:40px; } }   /* 넓은 화면에서는 코드 쪽에 자리를 더 — 설계 줄은 글자 폭만큼이라 반이 남는다 */
 @media (max-width: 720px) { .code-split { grid-template-columns:1fr; } }
 
 /* 교실이 없는 학생 — 폴더 자리에 안내 한 줄 */
 .room-empty { grid-column: 1 / -1; }
+
+/* ── 사용법 안내 (js/ui/tour.js) ───────────────────── */
+/* 돌 때만 DOM 에 있다. 바깥 전체가 클릭을 막고, 밝힌 곳도 누를 수 없다 — 읽는 동안 화면이 바뀌지 않게 */
+.tour { position: fixed; inset: 0; z-index: 1000; }
+.tour-hole { position: fixed; border-radius: 10px; box-shadow: 0 0 0 200vmax rgba(0,0,0,.62); outline: 3px solid #FFF23D; outline-offset: 0; pointer-events: none; }
+.tour-box { position: fixed; width: min(360px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); font-size: 16px; line-height: 1.6; word-break: keep-all; }
+.tour-count { font-size: 16px; color: var(--ink-2); font-family: var(--mono); }
+.tour-title { font-size: 19px; margin: 2px 0 6px; }
+.tour-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+.tour-btn { min-height: 44px; min-width: 44px; padding: 8px 16px; border-radius: 10px; font-size: 16px; font-weight: 600; background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); }
+.tour-btn.primary { background: var(--green); color: var(--paper); border-color: var(--green); }
+.tour-btn.quiet { border-color: transparent; color: var(--ink-2); margin-right: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  .tour-hole, .tour-box { transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease; }
+}
+
+/* 나침반 — 선생님이 보낸 뒤에만 나온다. 회색·검정 (브랜드 색 미정) */
+.compass-mine { border: 1px solid var(--line-strong); border-radius: 12px; padding: 16px; margin: 0 0 16px; max-width: 560px; }
+.compass-mine .step-title { margin: 0 0 4px; }
+.compass-fig { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.compass-note { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; }

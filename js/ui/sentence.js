@@ -36,6 +36,11 @@
 
   if (CC.tutor) CC.tutor.init({
     rec: rec,
+    mine: function (cb) { myEvents(cb); },
+    past: function (cb) {   /* 지난 대화 — 이 교실(로컬이면 이 브라우저)의 내 기록 전부 */
+      if (CC.sb && CC.sb.active() && currentClassroomId) CC.sb.getMyEvents(currentClassroomId).then(cb, function () { cb([]); });
+      else cb(CC.store ? CC.store.all() : []);
+    },
     context: function () {
       var items = [];
       if (!(M && M.kind === 'code')) (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
@@ -69,7 +74,7 @@
     M = CC.sentenceMission(id);
     if (!M) return;
     lastRun = { output: '', error: '' };
-    if (CC.tutor) CC.tutor.reset();
+    if (CC.tutor) CC.tutor.reset(M.id);
 
     /* 상태 초기화 */
     state = {
@@ -166,10 +171,59 @@
     $('#wrap-done').hidden = true;
 
     showStep(1);
+    showCompass();
   }
+
+  /* 선생님이 보낸 나침반 — 바늘과 한마디만. 단계·AI 메모는 서버가 주지 않고, 와도 그리지 않는다 */
+  function showCompass() {
+    var box = $('#compass-mine');
+    box.hidden = true;
+    box.innerHTML = '';
+    if (!CC.sb || !CC.sb.active() || !currentMissionDbId) return;
+    var db = currentMissionDbId;
+    CC.sb.compassMine(db).then(function (c) {
+      if (!c || db !== currentMissionDbId) return;
+      box.innerHTML = '';   /* A → B → A 로 빨리 바꾸면 A 응답이 둘 온다 — 두 번 그리지 않게 */
+      var dir = c.teacher_dir || CC.compass.dirOf(c.needle_deg);
+      var h = el('h2', 'step-title', '내 나침반');
+      box.appendChild(h);
+      box.appendChild(el('p', 'muted', '선생님이 남긴 말이에요.'));
+      if (c.needle_deg != null && dir) {
+        var wrap = el('div', 'compass-fig');
+        wrap.innerHTML = CC.compass.svg(null, c.needle_deg);
+        wrap.appendChild(el('strong', 'compass-dir', CC.compass.DIRS[dir]));
+        box.appendChild(wrap);
+      }
+      if (c.teacher_note) box.appendChild(el('p', 'compass-note', c.teacher_note));
+      box.hidden = false;
+    }, function () {});
+  }
+
+  /* ── 사용법 안내 — 단계마다 처음 그 화면을 열 때 한 번. 무엇을 하는 곳인지만 말한다 ── */
+  var TOUR = {
+    1: [
+      { key: 'steps', title: '단계', text: '지금 어느 단계인지 보여요. 지나온 단계는 눌러서 다시 볼 수 있어요.' },
+      { key: 'brief', title: '받은 요청', text: '무엇을 만들어 달라는 요청인지 여기서 읽어요.' },
+      { key: 'replay', title: '사용법 보기', text: '이 안내는 여기서 언제든 다시 볼 수 있어요.' }
+    ],
+    2: [{ key: 'define', title: '성공 조건 고르기', text: '언제 성공한 것인지 내가 골라요. 나중에 다시 바꿀 수 있어요.' }],
+    3: [
+      { key: 'cards', title: '설계 카드', text: '할 일 카드예요. 누르면 내 설계도에 담겨요.' },
+      { key: 'design', title: '내 설계도', text: '담은 카드가 여기 쌓여요. 순서를 바꾸거나 뺄 수 있어요.' }
+    ],
+    4: [
+      { key: 'data', title: '자료 바꾸기', text: '코드에 넣을 자료를 바꿔요. 다른 자료로도 실행해 볼 수 있어요.' },
+      { key: 'run', title: '코드 실행', text: '‘실행’은 고른 자료 하나로 돌려요. ‘자료 3개로 실행’은 세 결과를 표로 보여 줘요.' },
+      { key: 'tutor', title: '파이썬 문법 물어보기', text: '문법이 궁금할 때 물어봐요. 코드는 직접 써요.' }
+    ]
+  };
+  $('#tour-replay').addEventListener('click', function () {
+    CC.tour.start([].concat(TOUR[1].slice(0, 2), TOUR[2], TOUR[3], TOUR[4], TOUR[1].slice(2)));
+  });
 
   /* ── 화면 전환 ─────────────────────────────────── */
   function showStep(n) {
+    if (TOUR[n]) CC.tour.auto('sentence-' + n, TOUR[n]);
     if (CC.tutor) CC.tutor.visible(n === 4);
     document.querySelectorAll('.step').forEach(function (s) { s.classList.remove('active'); });
     var target = $('#step' + n);
@@ -336,8 +390,8 @@
   function renderCodeStep() {
     /* 설계도 표시 */
     if ($('#design-define')) $('#design-define').textContent = '성공: ' + state.defineChoice;
-    $('#design-side').innerHTML = picked().map(function (c) {
-      return '<li class="design-item">' + esc(CC.cards.text(c)) + '</li>';
+    $('#design-side').innerHTML = picked().map(function (c, i) {
+      return '<li class="design-item"><span class="num">' + (i + 1) + '.</span><span>' + esc(CC.cards.text(c)) + '</span></li>';
     }).join('');
     $('#step4-req').textContent = M ? M.brief : '';
     $('#step4-situation').textContent = (M && M.situation) || '';

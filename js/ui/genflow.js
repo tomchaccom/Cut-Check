@@ -117,7 +117,8 @@
 
   /* 3단계 — 만들고 돌려 보고, 걸리면 이유를 붙여 다시 만든다(최대 RETRIES 번).
      다시 만들 때는 직전 응답의 ticket 을 싣는다 — 서버가 같은 1개로 센다. 새 "만들기" 는 ticket 없이 */
-  function make(probs, left, ticket) {
+  /* prev: 직전에 만들어 돌려 본 초안 {d, res, p}. 재요청이 실패해도 이건 이미 한 번 차감되고 받은 것이라 버리지 않는다 */
+  function make(probs, left, ticket, prev) {
     var my = ++bgen;
     say(probs.length ? '다시 만드는 중이에요.' : '만드는 중이에요.');
     boot();
@@ -134,11 +135,17 @@
       return runAll(d).then(function (res) {
         if (my !== bgen) return;
         var p = problems(d, res);
-        if (p.length && left > 0) return make(p, left - 1, r.ticket);
+        if (p.length && left > 0) return make(p, left - 1, r.ticket, { d: d, res: res, p: p });
         draft(d, res, p);
         say('');
       });
-    }).catch(function (e) { spent(e); if (my === bgen) fail(e); });
+    }).catch(function (e) {
+      spent(e);
+      if (my !== bgen) return;
+      if (!prev) return fail(e);
+      draft(prev.d, prev.res, prev.p);
+      say('다시 만들지 못해서 처음 만든 문제를 보여 드려요. 걸린 곳을 고쳐 쓰거나 만들기를 다시 눌러 주세요.');
+    });
   }
 
   /* 자료는 한 줄짜리 리터럴 — 학생 화면의 자료 줄 찾기(DATA_RE)가 한 줄만 본다 */
