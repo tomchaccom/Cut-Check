@@ -51,7 +51,7 @@
       ask: '하고 싶은 것과 맞게 하려면 < 자리에 무엇을 써야 할까요?' },
     { id: 'h8', code: '# 하고 싶은 것: 점수 중 가장 큰 값 보여 주기\nscores = [70, 95, 88]\nprint(95)',
       ask: 'scores를 [60, 75]로 바꾸면 무엇이 나올까요?', options: ['75', '95', '에러가 나요', DUNNO] },
-    { id: 'h9', code: '# 하고 싶은 것: 우리 반 평균 키 구하기\nheights = []   # 명단이 비어 있을 수도 있어요',
+    { id: 'h9', code: '# 하고 싶은 것: 우리 반 평균 키 구하기\nprint(sum(heights) / len(heights))',
       ask: '평균을 구하기 전에 무엇을 먼저 확인해야 할까요?', options: ['명단이 비었는지', '가장 큰 키가 얼마인지', '명단이 정렬됐는지', DUNNO] },
     { id: 'h10', code: 'names = ["가은", "도윤", "서아"]\nfor i in range(len(names) - 1):\n    print(names[i])', ask: '이름은 몇 개 나올까요?' }
   ];
