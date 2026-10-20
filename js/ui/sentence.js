@@ -173,8 +173,31 @@
     showStep(1);
   }
 
+  /* ── 사용법 안내 — 단계마다 처음 그 화면을 열 때 한 번. 무엇을 하는 곳인지만 말한다 ── */
+  var TOUR = {
+    1: [
+      { key: 'steps', title: '단계', text: '지금 어느 단계인지 보여요. 지나온 단계는 눌러서 다시 볼 수 있어요.' },
+      { key: 'brief', title: '받은 요청', text: '무엇을 만들어 달라는 요청인지 여기서 읽어요.' },
+      { key: 'replay', title: '사용법 보기', text: '이 안내는 여기서 언제든 다시 볼 수 있어요.' }
+    ],
+    2: [{ key: 'define', title: '성공 조건 고르기', text: '언제 성공한 것인지 내가 골라요. 나중에 다시 바꿀 수 있어요.' }],
+    3: [
+      { key: 'cards', title: '설계 카드', text: '할 일 카드예요. 누르면 내 설계도에 담겨요.' },
+      { key: 'design', title: '내 설계도', text: '담은 카드가 여기 쌓여요. 순서를 바꾸거나 뺄 수 있어요.' }
+    ],
+    4: [
+      { key: 'data', title: '자료 바꾸기', text: '코드에 넣을 자료를 바꿔요. 다른 자료로도 실행해 볼 수 있어요.' },
+      { key: 'run', title: '코드 실행', text: '‘실행’은 고른 자료 하나로 돌려요. ‘자료 3개로 실행’은 세 결과를 표로 보여 줘요.' },
+      { key: 'tutor', title: '파이썬 문법 물어보기', text: '문법이 궁금할 때 물어봐요. 코드는 직접 써요.' }
+    ]
+  };
+  $('#tour-replay').addEventListener('click', function () {
+    CC.tour.start([].concat(TOUR[1].slice(0, 2), TOUR[2], TOUR[3], TOUR[4], TOUR[1].slice(2)));
+  });
+
   /* ── 화면 전환 ─────────────────────────────────── */
   function showStep(n) {
+    if (TOUR[n]) CC.tour.auto('sentence-' + n, TOUR[n]);
     if (CC.tutor) CC.tutor.visible(n === 4);
     document.querySelectorAll('.step').forEach(function (s) { s.classList.remove('active'); });
     var target = $('#step' + n);

@@ -23,6 +23,7 @@
     </div>
     <div class="toptools">
       <span class="tbtn" id="user-info" style="cursor:default" hidden></span>
+      <button class="tbtn" id="tour-replay" type="button" data-tour="replay">사용법 보기</button>
       <button class="tbtn" id="logout-btn" aria-label="로그아웃">로그아웃</button>
     </div>
   </header>
@@ -76,7 +77,7 @@
     <header id="mission-head" hidden>
     <nav class="crumb" aria-label="위치" id="play-crumb"><a href="#" id="crumb-play-home">내 교실</a><span class="sep" aria-hidden="true">/</span><span id="crumb-play-room"></span><span class="sep" aria-hidden="true">/</span><span id="crumb-play-mission"></span></nav>
     <h1 class="big-title" id="mission-title"></h1>
-    <nav class="step-tabs" id="steps-nav" aria-label="단계">
+    <nav class="step-tabs" id="steps-nav" aria-label="단계" data-tour="steps">
       <button type="button" data-step="1" disabled>01 문제</button>
       <button type="button" data-step="2" disabled>02 성공</button>
       <button type="button" data-step="3" disabled>03 설계</button>
@@ -91,7 +92,7 @@
     <!-- 02·03 단계에서는 왼쪽 단으로 남는다 (showStep 의 data-side) -->
     <section class="step active" id="step1" tabindex="-1" aria-label="받은 요청">
       <h2 class="step-title">뭘 해야 할까?</h2>
-      <p class="req-text" id="brief"></p>
+      <p class="req-text" id="brief" data-tour="brief"></p>
       <p class="req-situation" id="situation" hidden></p>
       <dl class="samples" id="samples"></dl>
       <p class="side-define"><span>내가 정한 성공</span><br><span id="side-define"></span></p>
@@ -105,7 +106,7 @@
       <!-- 무엇에 대한 성공인지 — 받은 요청은 왼쪽에 있고, 여기는 작게 다시 -->
       <blockquote class="define-brief" id="define-brief"></blockquote>
       <h2 class="define-q" id="define-q"></h2>
-      <div class="define-cards" id="define-cards">
+      <div class="define-cards" id="define-cards" data-tour="define">
         <!-- JS에서 카드 생성 -->
       </div>
       <!-- 기존 select는 숨기고 호환 유지 -->
@@ -125,12 +126,12 @@
     <section class="step" id="step3" tabindex="-1">
       <h2 class="step-title">어떻게 할까?</h2>
       <p class="card-hint">할 일을 눌러 담고, 위에서 아래로 순서를 맞춰 보세요.</p>
-      <div class="card-pool" id="card-pool" aria-label="고를 수 있는 카드"></div>
+      <div class="card-pool" id="card-pool" data-tour="cards" aria-label="고를 수 있는 카드"></div>
       <div class="design-head">
         <h3 class="design-title">내 설계도</h3>
         <button type="button" class="btn text" id="design-reset">처음부터</button>
       </div>
-      <ol class="design-list" id="design-list" aria-label="내 설계도"></ol>
+      <ol class="design-list" id="design-list" data-tour="design" aria-label="내 설계도"></ol>
       <label class="reason-label">이유
         <textarea class="reason" id="reason-method" placeholder="이 방법을 고른 이유를 적어보세요." rows="2"></textarea>
       </label>
@@ -162,9 +163,9 @@
           <ol class="design-side" id="design-side" aria-label="내 설계도 순서"></ol>
         </div>
         <div class="split-main">
-          <div class="split-main-head"><button id="tutor-open" class="tutor-open" type="button" hidden>파이썬 문법 물어보기</button></div>
+          <div class="split-main-head"><button id="tutor-open" class="tutor-open" data-tour="tutor" type="button" hidden>파이썬 문법 물어보기</button></div>
       <!-- 자료 선택 -->
-      <div class="data-row">
+      <div class="data-row" data-tour="data">
         <label for="code-data-select" class="field-label">자료 선택</label>
         <select id="code-data-select" class="data-select"></select>
       </div>
@@ -177,7 +178,7 @@
       </div>
       <textarea id="code-editor" class="code-editor" rows="8" placeholder="# data 에 자료가 들어 있어요."></textarea>
 
-      <div class="run-row">
+      <div class="run-row" data-tour="run">
         <button class="pill primary" id="run-all" disabled>자료 3개로 실행</button>
         <button class="pill" id="run-code" disabled>실행</button>
         <button class="pill" id="back-method">설계 수정</button>
@@ -308,6 +309,7 @@ window.CC_SUPABASE = {
 <script src="js/core/hangul.js"></script>
 <script src="js/data/api.js"></script>
 <script src="js/data/store.js"></script>
+<script src="js/data/seen.js"></script>
 <script src="js/core/missions.js"></script>
 <script src="js/core/pipeline.js"></script>
 <script src="js/core/codemission.js"></script>
@@ -318,6 +320,7 @@ window.CC_SUPABASE = {
 <script src="js/ui/pyrun.js"></script>
 <script src="js/ui/tutor.js"></script>
 <script src="js/ui/onboard.js"></script>
+<script src="js/ui/tour.js"></script>
 <script src="js/ui/sentence.js"></script>
 </body>
 </html>

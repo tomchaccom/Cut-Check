@@ -858,3 +858,18 @@ dialog::backdrop {
 
 /* 교실이 없는 학생 — 폴더 자리에 안내 한 줄 */
 .room-empty { grid-column: 1 / -1; }
+
+/* ── 사용법 안내 (js/ui/tour.js) ───────────────────── */
+/* 돌 때만 DOM 에 있다. 바깥 전체가 클릭을 막고, 밝힌 곳도 누를 수 없다 — 읽는 동안 화면이 바뀌지 않게 */
+.tour { position: fixed; inset: 0; z-index: 1000; }
+.tour-hole { position: fixed; border-radius: 10px; box-shadow: 0 0 0 200vmax rgba(0,0,0,.62); outline: 3px solid #FFF23D; outline-offset: 0; pointer-events: none; }
+.tour-box { position: fixed; width: min(360px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); font-size: 16px; line-height: 1.6; word-break: keep-all; }
+.tour-count { font-size: 16px; color: var(--ink-2); font-family: var(--mono); }
+.tour-title { font-size: 19px; margin: 2px 0 6px; }
+.tour-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+.tour-btn { min-height: 44px; min-width: 44px; padding: 8px 16px; border-radius: 10px; font-size: 16px; font-weight: 600; background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); }
+.tour-btn.primary { background: var(--green); color: var(--paper); border-color: var(--green); }
+.tour-btn.quiet { border-color: transparent; color: var(--ink-2); margin-right: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  .tour-hole, .tour-box { transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease; }
+}
