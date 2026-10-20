@@ -251,11 +251,19 @@
   }
 
 
-  /* ── 나침반 — 서버 모드에서만. 미션을 마친(첫 s-code-judge) 학생·미션마다 카드 하나.
-   * 값(단계)과 AI 멘트는 선생님만 본다. 학생에게는 선생님이 고른 방위와 쓴 문장만 간다.
-   * 단계로 정렬·평균·순위를 만들지 않는다 — 명단에는 "한마디 기다림" 꼬리표 하나뿐 */
+  /* ── 나침반 2차 — 서버 모드에서만. 학생 한 명에 카드 하나: 누적 바늘 + 최근 5개 미션의 12칸 체크리스트.
+   * 체크·점수는 선생님만 본다. 학생에게는 바늘 하나와 선생님이 쓴 한마디만 간다.
+   * 점수로 정렬·평균·순위를 만들지 않는다 — 명단에는 "한마디 기다림" 꼬리표 하나뿐.
+   * 바늘이 서로 지워지면(cancel) 기계가 고르지 않는다 — 겹친 후보만 버튼으로 두고 선생님이 고른다 */
   var cRoom = null, cRows = null, cTried = {}, cDraw = {}, cSyncing = false, cListFail = false, cListFailAt = 0, cSeq = 0;
+  var cCum = {}, cCumFail = {}, cPick = {}, cInit = false;
   var COMPASS_FAIL = '지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.';
+  var CHECKS = [
+    ['N', 'N1', '함정이 아닌 성공 조건을 골랐어요'], ['N', 'N2', '성공 조건을 코드로 직접 옮겼어요'], ['N', 'N3', '튜터에게 이해한 것을 설명하고 물었어요'],
+    ['E', 'E1', '설계 카드를 냈어요'], ['E', 'E2', '설계 이유를 자기 말로 적었어요'], ['E', 'E3', '실행해 본 뒤 설계를 고쳤어요'],
+    ['S', 'S1', '에러 없이 실행되는 코드가 있어요'], ['S', 'S2', '에러가 난 뒤 스스로 고쳐 다시 돌렸어요'], ['S', 'S3', '반례 자료까지 같은 코드로 돌렸어요'],
+    ['W', 'W1', '반례 자료를 직접 돌렸어요'], ['W', 'W2', '판정 근거를 실제 실행 결과에 기댔어요'], ['W', 'W3', '반례가 깨진 걸 보고 고쳤어요']
+  ];
   var serverOn = function () { return !!(CC.sb && CC.sb.active()); };
   var ckey = function (sid, mid) { return sid + ':' + mid; };
 
@@ -275,13 +283,38 @@
     var e = eventsOf(s).filter(function (x) { return x._missionDbId === dbId && x.mid; })[0];
     return e ? e.mid : null;
   }
+  /* 알림 재료 — 누적 바늘이 지워졌으면 가장 최근 미션과 겹친 후보 */
+  function cancelOf(s) {
+    var c = cCum[s.id];
+    return c && c.cumulative && c.cumulative.cancel && c.rows && c.rows[0] ? { dbId: c.rows[0].missionId, cands: c.cumulative.candidates || [] } : null;
+  }
+
+  /* 누적 바늘을 서버에서 받는다. silent — 화면을 처음 열 때 이미 있던 일이라 알리지 않는다 */
+  function refreshCum(st, silent) {
+    var roomId = cRoom;
+    return CC.sb.compass('cumulative', { classroomId: roomId, studentId: st.id }).then(function (j) {
+      if (cRoom !== roomId) return;
+      cCum[st.id] = j;
+      delete cCumFail[st.id];
+      if (silent && lastSnap && lastSnap[st.id]) {   /* 기준선에 넣어 둔다 — 새 알림으로 쏟아지지 않게 */
+        var ns = CC.alerts.snap([st], alertOpt())[st.id];
+        Object.keys(ns.keys).forEach(function (k) { if (!(k in lastSnap[st.id].keys)) lastSnap[st.id].keys[k] = ns.keys[k]; });
+      }
+    }, function () { if (!cCum[st.id]) cCumFail[st.id] = true; }).then(function () {
+      if (cRoom !== roomId) return;
+      if (cDraw[st.id]) cDraw[st.id]();
+      renderFolders();
+    });
+  }
 
   /* 학생 화면을 열 때 이미 끝났는데 행이 없는 것 — 알림 없이 하나씩 차례로 읽어 둔다 */
   CC._compassSync = function (roomId) {
     if (!serverOn() || !roomId || !CC.sb.compass) return;
-    if (cRoom !== roomId) { cRoom = roomId; cRows = null; cTried = {}; cDraw = {}; cListFail = false; }
+    if (cRoom !== roomId) { cRoom = roomId; cRows = null; cTried = {}; cDraw = {}; cListFail = false; cCum = {}; cCumFail = {}; cPick = {}; cInit = false; }
     if (cListFail && Date.now() - cListFailAt > 60000) cListFail = false;   /* 한 번 끊겼다고 수업 내내 멈추지 않게 — 1분 뒤 다시 */
-    if (cListFail || cSyncing || !C.students.some(function (st) { return finishedOf(st).length; })) return;   /* 끝낸 미션이 없으면 서버에 물을 것도 없다 */
+    var fin = C.students.filter(function (st) { return finishedOf(st).length; });
+    if (!fin.length && !cRows) { cInit = true; return; }   /* 끝낸 미션이 없으면 서버에 물을 것도 없고, 이후 일은 모두 새 일이다 */
+    if (cListFail || cSyncing) return;
     cSyncing = true;
     var done = function () { cSyncing = false; };
     var loaded = cRows ? Promise.resolve() : CC.sb.compass('list', { classroomId: roomId }).then(function (j) {
@@ -294,16 +327,20 @@
       if (!cRows || cRoom !== roomId) return;
       renderFolders();
       Object.keys(cDraw).forEach(function (k) { cDraw[k](); });   /* 열려 있는 카드가 "읽고 있어요" 에 머물지 않게 */
-      var todo = [];
-      C.students.forEach(function (st) {
-        finishedOf(st).forEach(function (m) { if (!cRows[ckey(st.id, m)] && !cTried[ckey(st.id, m)]) todo.push([st, m]); });
+      var todo = [], chain = Promise.resolve();
+      fin.forEach(function (st) {
+        finishedOf(st).forEach(function (m) {
+          var r = cRows[ckey(st.id, m)];
+          if ((!r || !r.checks) && !cTried[ckey(st.id, m)]) todo.push([st, m]);   /* 1차 행(checks 없음)도 다시 읽는다 */
+        });
+        if (!cInit) chain = chain.then(function () { return cRoom === roomId ? refreshCum(st, true) : null; });
       });
       var next = function () {
         var it = todo.shift();
         if (!it || cRoom !== roomId) return;
         return analyze(it[0], it[1], false).then(next);
       };
-      return next();
+      return chain.then(next).then(function () { if (cRoom === roomId) cInit = true; });
     }).then(done, done);
   };
 
@@ -311,96 +348,159 @@
   function analyze(st, dbId, force) {
     var k = ckey(st.id, dbId), roomId = cRoom;
     cTried[k] = 'run';
-    if (cDraw[k]) cDraw[k]();
+    if (cDraw[st.id]) cDraw[st.id]();
     return CC.sb.compass('analyze', { classroomId: roomId, studentId: st.id, missionId: dbId, force: !!force }).then(function (row) {
       if (cRoom !== roomId) return;
       delete cTried[k];
       cRows[k] = row;
+      return refreshCum(st, !cInit);
     }, function () { cTried[k] = 'fail'; }).then(function () {
-      if (cDraw[k]) cDraw[k]();
+      if (cDraw[st.id]) cDraw[st.id]();
       renderFolders();
     });
   }
 
-  function compassCard(st, dbId, title) {
-    var k = ckey(st.id, dbId);
+  /* 학생 한 명의 나침반 카드. mid — 서랍의 미션 알약으로 고른 미션(없으면 끝낸 미션 전부의 한마디 칸) */
+  function compassCard(st, mid, nameOf) {
     var card = el('section', 'compass-card');
-    card.setAttribute('aria-label', '나침반 · ' + title);
+    card.setAttribute('aria-label', '나침반');
     var n = ++cSeq;
+    var D = CC.compass.DIRS, SH = CC.compass.SHAPE;
     var draw = function () {
       card.innerHTML = '';
-      card.appendChild(el('h4', null, '나침반 · ' + title));
-      var row = cRows && cRows[k];
-      if (!row) {
-        if (cTried[k] === 'fail' || (cListFail && !cRows)) {
+      card.appendChild(el('h4', null, '나침반'));
+      var cum = cCum[st.id], cu = cum && cum.cumulative, rows = (cum && cum.rows) || [];
+      var failed = cCumFail[st.id] || (cListFail && !cRows);
+      if (!cu) {
+        if (failed) {
           card.appendChild(el('p', 'recap-fail', COMPASS_FAIL));
           var again = el('button', 'pill compass-reread', '다시 읽기');
           again.type = 'button';
           again.addEventListener('click', function () {
-            if (!cRows) { cListFail = false; card.innerHTML = ''; draw(); CC._compassSync(cRoom); } else analyze(st, dbId, false);   /* 목록부터 못 받았으면 목록부터 */
+            if (cListFail && !cRows) { cListFail = false; draw(); CC._compassSync(cRoom); } else { delete cCumFail[st.id]; draw(); refreshCum(st, false); }
           });
           card.appendChild(again);
         } else card.appendChild(el('p', 'emptyrow', '읽고 있어요.'));
-        return;
-      }
-      var top = el('div', 'compass-top');
-      var fig = el('div', 'compass-fig');
-      fig.innerHTML = CC.compass.svg(row.levels, row.needle_deg);   /* core 가 숫자만으로 만든 마크업 */
-      top.appendChild(fig);
-      var dl = el('div', 'compass-dirs');
-      ['N', 'E', 'S', 'W'].forEach(function (d) {
-        var line = el('div', 'compass-dir');
-        line.appendChild(el('span', 'dn', CC.compass.DIRS[d]));
-        line.appendChild(el('span', 'lv', ((row.levels || {})[d] || 0) + '단계'));
-        var ids = (row.evidence || {})[d] || [];
-        ids.forEach(function (id) {
-          var f = (row.facts || []).filter(function (x) { return x.id === id; })[0];
-          line.appendChild(el('span', 'ev', f ? (f.kind === 'tutor' ? '튜터에게: "' + f.text + '"' : f.text) : '튜터 질문'));
-        });
-        dl.appendChild(line);
-      });
-      top.appendChild(dl);
-      card.appendChild(top);
-      if (row.needle_deg == null) card.appendChild(el('p', 'was', CC.compass.NONE));
-      if (row.ai_note) card.appendChild(el('p', 'compass-ai', row.ai_note));
+      } else if (!cu.n) {
+        card.appendChild(el('p', 'emptyrow', '아직 읽은 미션이 없어요.'));
+      } else {
+        var top = el('div', 'compass-top');
+        if (cu.cancel) {
+          /* 지워졌다 — 바늘을 그리지 않는다. 겹친 후보만, 선생님이 고른다 */
+          var pick = el('div', 'compass-pick');
+          pick.appendChild(el('p', 'compass-cancel', '바늘이 서로 지워져요. 어느 쪽이 더 보였는지 골라 주세요.'));
+          var bs = el('div', 'compass-cands');
+          bs.setAttribute('role', 'group');
+          bs.setAttribute('aria-label', '더 보인 방향');
+          (cu.candidates || []).forEach(function (d) {
+            var b = el('button', 'pill compass-cand', SH[d] + ' ' + D[d]);
+            b.type = 'button';
+            b.dataset.dir = d;
+            b.setAttribute('aria-pressed', cPick[st.id] === d ? 'true' : 'false');
+            b.addEventListener('click', function () { if (cPick[st.id] === d) delete cPick[st.id]; else cPick[st.id] = d; draw(); });
+            bs.appendChild(b);
+          });
+          pick.appendChild(bs);
+          top.appendChild(pick);
+        } else {
+          var fig = el('div', 'compass-fig');
+          fig.innerHTML = CC.compass.svg(cu.needle_deg, cu.length);   /* core 가 숫자만으로 만든 마크업 */
+          top.appendChild(fig);
+          var say = el('div', 'compass-now');
+          say.appendChild(el('strong', 'compass-dir', SH[cu.dir] + ' ' + D[cu.dir]));
+          say.appendChild(el('p', 'compass-line', CC.compass.line(cu.dir) + (CC.compass.even(cu.length) ? ' · 고르게 가고 있어요' : '')));
+          top.appendChild(say);
+        }
+        card.appendChild(top);
 
-      var form = el('div', 'compass-form');
-      var sid = 'cp-dir-' + n, tid = 'cp-note-' + n;
-      var l1 = el('label', null, '학생에게 보일 방향'); l1.htmlFor = sid;
-      var sel = el('select'); sel.id = sid;
-      [['', '고르지 않음']].concat(['N', 'E', 'S', 'W'].map(function (d) { return [d, CC.compass.DIRS[d]]; })).forEach(function (o) {
-        var op = el('option', null, o[1]); op.value = o[0]; sel.appendChild(op);
-      });
-      sel.value = (row.sent_at ? row.teacher_dir : row.strongest) || '';
-      var l2 = el('label', null, '한마디 — 학생에게 그대로 보여요.'); l2.htmlFor = tid;
-      var ta = el('textarea'); ta.id = tid; ta.rows = 3; ta.maxLength = 300;
-      ta.value = row.sent_at ? (row.teacher_note || '') : '';
-      var msg = el('p', 'compass-msg'); msg.setAttribute('aria-live', 'polite');
-      var acts = el('div', 'compass-acts');
-      var send = el('button', 'pill compass-send', '보내기'); send.type = 'button';
-      var re = el('button', 'pill compass-reread', '다시 읽기'); re.type = 'button';
-      send.addEventListener('click', function () {
-        if (!ta.value.trim()) { msg.textContent = '한마디를 적어 주세요.'; return; }
-        send.disabled = true;
-        CC.sb.compass('send', { classroomId: cRoom, studentId: st.id, missionId: dbId, dir: sel.value || null, note: ta.value })
-          .then(function (r) { cRows[k] = r; draw(); renderFolders(); },
-            function () { msg.textContent = '지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.'; send.disabled = false; });
-      });
-      if (cTried[k] === 'run') re.disabled = true;   /* 읽는 중에 또 누르면 AI 를 두 번 부른다 */
-      re.addEventListener('click', function () { if (cTried[k] === 'run') return; re.disabled = true; analyze(st, dbId, true); });
-      acts.appendChild(send); acts.appendChild(re);
-      [l1, sel, l2, ta].forEach(function (x) { form.appendChild(x); });
-      form.appendChild(acts);
-      form.appendChild(msg);
-      card.appendChild(form);
-      if (row.sent_at) {
-        var sent = el('div', 'compass-sent');
-        sent.appendChild(el('span', 'tag', '보냈어요'));
-        sent.appendChild(el('p', 'compass-sent-note', row.teacher_note || ''));
-        card.appendChild(sent);
+        /* 12칸 — 줄 = 항목, 열 = 최근 미션(왼쪽이 가장 최근). 예 ✓ / 아니오 –, 근거 인용은 글자 그대로 */
+        var wrap = el('div', 'compass-tablewrap');
+        var tb = el('table', 'compass-table');
+        tb.appendChild(el('caption', 'sr-only', '최근 미션 ' + rows.length + '개의 체크 항목'));
+        var hr = el('tr'); hr.appendChild(el('th', null, ''));
+        rows.forEach(function (r) {
+          var th = el('th', null, nameOf(r.missionId, clientMid(st, r.missionId))); th.scope = 'col'; hr.appendChild(th);
+        });
+        var thd = el('thead'); thd.appendChild(hr); tb.appendChild(thd);
+        var tbody = el('tbody'), last = '';
+        CHECKS.forEach(function (c) {
+          if (c[0] !== last) {
+            last = c[0];
+            var gr = el('tr', 'dir-head'), gh = el('th', null, SH[c[0]] + ' ' + D[c[0]]);
+            gh.colSpan = rows.length + 1; gr.appendChild(gh); tbody.appendChild(gr);
+          }
+          var tr = el('tr'); var lh = el('th', null, c[2]); lh.scope = 'row'; tr.appendChild(lh);
+          rows.forEach(function (r) {
+            var ck = (r.checks || {})[c[1]] || {}, td = el('td', ck.ok ? 'yes' : 'no');
+            td.appendChild(el('span', 'mk', ck.ok ? '✓' : '–'));
+            td.appendChild(el('span', 'sr-only', ck.ok ? '했어요' : '안 했어요'));
+            if (ck.ok && ck.quote) td.appendChild(el('span', 'q', '“' + ck.quote + '”'));
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        tb.appendChild(tbody); wrap.appendChild(tb); card.appendChild(wrap);
+
+        /* 튜터에게 물은 것을 네 방향으로 나눈 분포 — 참고 자료일 뿐 점수에 더하지 않는다 */
+        var tot = { N: 0, E: 0, S: 0, W: 0 };
+        rows.forEach(function (r) { ['N', 'E', 'S', 'W'].forEach(function (d) { tot[d] += Number((r.tutor_dirs || {})[d]) || 0; }); });
+        card.appendChild(el('p', 'compass-tutor', '튜터에게 물은 것 — ' + ['N', 'E', 'S', 'W'].map(function (d) { return SH[d] + ' ' + CC.compass.NAME[d] + ' ' + tot[d] + '번'; }).join(' · ')));
       }
+
+      /* 미션별 한마디 — 학생에게 그대로 간다 */
+      finishedOf(st).forEach(function (dbId, i) {
+        var cm = clientMid(st, dbId);
+        if (mid && cm !== mid) return;
+        var k = ckey(st.id, dbId), row = cRows && cRows[k];
+        var form = el('div', 'compass-form');
+        form.appendChild(el('h5', null, '한마디 · ' + nameOf(dbId, cm)));
+        if (!row) {
+          if (cTried[k] === 'fail') {
+            form.appendChild(el('p', 'recap-fail', COMPASS_FAIL));
+            var ag = el('button', 'pill compass-reread', '다시 읽기'); ag.type = 'button';
+            ag.addEventListener('click', function () { analyze(st, dbId, false); });
+            form.appendChild(ag);
+          } else form.appendChild(el('p', 'emptyrow', '읽고 있어요.'));
+          card.appendChild(form);
+          return;
+        }
+        var tid = 'cp-note-' + n + '-' + i;
+        var l2 = el('label', null, '한마디 — 학생에게 그대로 보여요.'); l2.htmlFor = tid;
+        var ta = el('textarea'); ta.id = tid; ta.rows = 3; ta.maxLength = 300;
+        ta.value = row.sent_at ? (row.teacher_note || '') : '';
+        var msg = el('p', 'compass-msg'); msg.setAttribute('aria-live', 'polite');
+        var acts = el('div', 'compass-acts');
+        var send = el('button', 'pill compass-send', '보내기'); send.type = 'button';
+        var re = el('button', 'pill compass-reread', '다시 읽기'); re.type = 'button';
+        send.addEventListener('click', function () {
+          if (!ta.value.trim()) { msg.textContent = '한마디를 적어 주세요.'; return; }
+          var body = { classroomId: cRoom, studentId: st.id, missionId: dbId, note: ta.value };
+          /* 고른 방향은 가장 최근 미션 행에만 싣는다 — 서버는 그 행의 선택으로 누적을 다시 계산한다 */
+          if (cu && cu.cancel && cPick[st.id] && rows[0] && rows[0].missionId === dbId) body.dir = cPick[st.id];
+          send.disabled = true;
+          CC.sb.compass('send', body).then(function (r) {
+            cRows[k] = r;
+            if (body.dir) delete cPick[st.id];
+            return refreshCum(st, false);
+          }, function () { msg.textContent = '지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.'; send.disabled = false; })
+            .then(function () { if (!send.disabled) return; draw(); renderFolders(); });
+        });
+        if (cTried[k] === 'run') re.disabled = true;   /* 읽는 중에 또 누르면 AI 를 두 번 부른다 */
+        re.addEventListener('click', function () { if (cTried[k] === 'run') return; re.disabled = true; analyze(st, dbId, true); });
+        acts.appendChild(send); acts.appendChild(re);
+        [l2, ta].forEach(function (x) { form.appendChild(x); });
+        form.appendChild(acts);
+        form.appendChild(msg);
+        if (row.sent_at) {
+          var sent = el('div', 'compass-sent');
+          sent.appendChild(el('span', 'tag', '보냈어요'));
+          sent.appendChild(el('p', 'compass-sent-note', row.teacher_note || ''));
+          form.appendChild(sent);
+        }
+        card.appendChild(form);
+      });
     };
-    cDraw[k] = draw;
+    cDraw[st.id] = draw;
     draw();
     return card;
   }
@@ -470,11 +570,8 @@
     }
 
     if (serverOn()) {   /* 로컬 모드에는 나침반이 없다 */
-      finishedOf(s).forEach(function (dbId) {
-        var cm = clientMid(s, dbId);
-        if (mid && cm !== mid) return;
-        d.appendChild(compassCard(s, dbId, missionName(cm, ms.indexOf(cm))));
-      });
+      d.appendChild(compassCard(s, mid, function (dbId, cm) { return missionName(cm, ms.indexOf(cm)); }));
+      if (cRoom) refreshCum(s, !cInit);   /* 열 때마다 새로 — 다른 기기에서 보낸 것도 보이게 */
     }
 
     var main = el('section', 'd-main');
@@ -758,7 +855,7 @@
   function alertOpt() {
     var on = serverOn();
     return {
-      server: on, eventsOf: eventsOf, missionOf: missionOf, finishedOf: on ? finishedOf : null,
+      server: on, cancelOf: on ? cancelOf : null, eventsOf: eventsOf, missionOf: missionOf, finishedOf: on ? finishedOf : null,
       missionName: function (mid) {
         var m = missionOf(mid);
         return m && m.title ? m.title : '';
@@ -817,7 +914,7 @@
       alCount();
       shell.alertsFull(false);
       var s = C.students.filter(function (x) { return x.id === a.id; })[0];
-      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined, a.kind === 'finish' ? 'compass' : a.kind === 'tutor-many' ? 'tutor' : undefined);
+      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined, a.kind === 'finish' || a.kind === 'cancel' ? 'compass' : a.kind === 'tutor-many' ? 'tutor' : undefined);
     });
     li.appendChild(b);
     list.insertBefore(li, list.firstChild);

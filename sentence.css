@@ -892,6 +892,7 @@ body.tutor-full { overflow: hidden; }
 .compass-mine .compass-fig svg { width: 168px; height: 168px; }
 .compass-mine .compass-dir { display: block; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .compass-mine .compass-note { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0 0; font-size: 19px; line-height: 1.6; }
+.compass-mine .compass-even { margin: 6px 0 0; font-size: 19px; }
 @media (max-width: 560px) { .compass-mine { grid-template-columns: minmax(0, 1fr); } .compass-mine .compass-fig svg { width: 140px; height: 140px; } }
 /* 로고 — 나침반 아이콘 그림이 칸을 채운다 */
 span.mark.icon { background: none; padding: 0; overflow: hidden; }

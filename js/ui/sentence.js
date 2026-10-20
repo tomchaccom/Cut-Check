@@ -174,28 +174,50 @@
     showCompass();
   }
 
-  /* 선생님이 보낸 나침반 — 바늘과 한마디만. 단계·AI 메모는 서버가 주지 않고, 와도 그리지 않는다 */
+  /* 미션 카드 — 선생님이 이 미션에 남긴 한마디만. 바늘·방향·체크는 없다 */
   function showCompass() {
     var box = $('#compass-mine');
     box.hidden = true;
     box.innerHTML = '';
     if (!CC.sb || !CC.sb.active() || !currentMissionDbId) return;
     var db = currentMissionDbId;
-    CC.sb.compassMine(db).then(function (c) {
-      if (!c || db !== currentMissionDbId) return;
+    CC.sb.compassNote(db).then(function (c) {
+      if (!c || !c.teacher_note || db !== currentMissionDbId) return;
       box.innerHTML = '';   /* A → B → A 로 빨리 바꾸면 A 응답이 둘 온다 — 두 번 그리지 않게 */
-      var dir = c.teacher_dir || CC.compass.dirOf(c.needle_deg);
-      var h = el('h2', 'step-title', '내 나침반');
-      box.appendChild(h);
-      box.appendChild(el('p', 'muted', '선생님이 남긴 말이에요.'));
-      var says = el('div', 'compass-says');   /* 오른쪽 — 방위 이름과 선생님 말. 바늘이 없으면 말만 넓게 */
-      if (c.needle_deg != null && dir) {
+      box.appendChild(el('h2', 'step-title', '선생님 한마디'));
+      var says = el('div', 'compass-says wide');
+      says.appendChild(el('p', 'compass-note', c.teacher_note));
+      box.appendChild(says);
+      box.hidden = false;
+    }, function () {});
+  }
+
+  /* 내 기록 탭 — 누적 나침반 하나. 바늘 · "○쪽으로 가고 있어요" (짧으면 "고르게 가고 있어요").
+   * 0행이면 아직 보낸 적 없는 것 — 기다리는 말만. 점수·체크·단계는 서버가 주지 않는다 */
+  var cumSeq = 0;
+  function showCumulative() {
+    var box = $('#compass-cum');
+    if (!box) return;
+    box.hidden = true;
+    box.innerHTML = '';
+    if (!CC.sb || !CC.sb.active()) return;
+    var n = ++cumSeq;
+    CC.sb.compassMine().then(function (c) {
+      if (n !== cumSeq) return;
+      box.innerHTML = '';
+      box.appendChild(el('h2', 'step-title', '내 나침반'));
+      var says = el('div', 'compass-says');
+      var dir = c && c.needle_deg != null ? CC.compass.dirOf(c.needle_deg) : null;
+      if (dir) {
         var wrap = el('div', 'compass-fig');
-        wrap.innerHTML = CC.compass.svg(null, c.needle_deg);
+        wrap.innerHTML = CC.compass.svg(c.needle_deg, c.length);
         box.appendChild(wrap);
-        says.appendChild(el('strong', 'compass-dir', CC.compass.DIRS[dir]));
-      } else says.classList.add('wide');
-      if (c.teacher_note) says.appendChild(el('p', 'compass-note', c.teacher_note));
+        says.appendChild(el('strong', 'compass-dir', CC.compass.line(c.dir || dir)));
+        if (CC.compass.even(c.length)) says.appendChild(el('p', 'compass-even', '고르게 가고 있어요'));
+      } else {
+        says.classList.add('wide');
+        says.appendChild(el('p', 'compass-note', '선생님이 곧 방향을 알려 주실 거예요.'));
+      }
       box.appendChild(says);
       box.hidden = false;
     }, function () {});
@@ -688,7 +710,7 @@
   document.querySelectorAll('.main-tab').forEach(function (t) {
     t.addEventListener('click', function () {
       switchTab(t.dataset.panel);
-      if (t.dataset.panel === 'panel-history') renderHistory();
+      if (t.dataset.panel === 'panel-history') { renderHistory(); showCumulative(); }
     });
   });
 

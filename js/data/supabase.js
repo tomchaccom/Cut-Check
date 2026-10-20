@@ -226,9 +226,17 @@
       return CC.sb.api('/api/compass', o);
     },
 
-    compassMine: function (missionDbId) {
+    /* 누적 나침반 — 학생에게 보낸 바늘 하나. 0행이면 null (선생님이 아직 안 보냄) → { needle_deg, dir, length, sent_at } */
+    compassMine: function () {
       if (!sb) return Promise.reject(new Error('Supabase 미설정'));
-      return sb.rpc('compass_mine', { mid: missionDbId })
+      return sb.rpc('compass_mine_v2')
+        .then(function (r) { if (r.error) throw r.error; return (r.data && r.data[0]) || null; });
+    },
+
+    /* 미션별 선생님 한마디 — 보낸 것만. → { teacher_note, sent_at } | null */
+    compassNote: function (missionDbId) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return sb.rpc('compass_note', { mid: missionDbId })
         .then(function (r) { if (r.error) throw r.error; return (r.data && r.data[0]) || null; });
     },
 

@@ -349,27 +349,30 @@ details.more[open] > summary { margin-bottom: 16px; }
   .ad-table td.ad-msg::before { content: none; }
 }
 
-/* 나침반 카드 — 회색·검정만 (브랜드 색 미정). 서랍 안, 기록 위 */
-.compass-card { border: 2px solid var(--line-strong); border-radius: 16px; padding: 20px 24px; margin: 12px 0; display: grid; gap: 12px; }
-/* 넓은 화면 — 왼쪽 그림·근거, 오른쪽 보내기. 한 줄로 길게 늘이지 않는다 */
-@media (min-width: 900px) {
-  .compass-card { grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); column-gap: 32px; align-items: start; }
-  .compass-card > h4 { grid-column: 1 / -1; }
-  .compass-card > .compass-top, .compass-card > .was, .compass-card > .compass-ai { grid-column: 1; }
-  .compass-card > .compass-form, .compass-card > .compass-sent { grid-column: 2; }
-  .compass-card > .compass-form { grid-row: 2 / span 3; border-left: 1px solid var(--line); padding-left: 24px; }
-}
-.compass-card h4 { margin: 0; }
-.compass-top { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+/* 나침반 카드 — 회색·검정만 (브랜드 색 미정). 서랍 안, 기록 위. 방향은 색이 아니라 모양(▲ ◧ ○ ◇) */
+.compass-card { border: 2px solid var(--line-strong); border-radius: 16px; padding: 20px 24px; margin: 12px 0; display: grid; gap: 14px; min-width: 0; }
+.compass-card h4, .compass-card h5 { margin: 0; }
+.compass-top { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
 .compass-card .compass-fig svg { width: 180px; height: 180px; display: block; }
-.compass-dirs { display: grid; gap: 6px; flex: 1; min-width: 220px; }
-.compass-dir { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 15px; padding: 6px 0; border-bottom: 1px solid var(--line); }
-.compass-dir:last-child { border-bottom: 0; }
-.compass-dir .dn { font-weight: 700; min-width: 5.5em; }
-.compass-dir .lv { font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.compass-dir .ev { color: var(--ink-2); font-size: 14px; flex-basis: 100%; }
-.compass-ai { font-size: 14px; color: var(--ink-2); margin: 0; padding: 10px 12px; background: var(--paper-2, rgba(127,127,127,.08)); border-radius: 10px; }
-.compass-form { display: grid; gap: 6px; }
+.compass-now { display: grid; gap: 4px; }
+.compass-dir { font-size: 20px; font-weight: 700; }
+.compass-line { margin: 0; color: var(--ink-2); }
+.compass-pick { display: grid; gap: 10px; }
+.compass-cancel { margin: 0; font-weight: 600; }
+.compass-cands { display: flex; gap: 8px; flex-wrap: wrap; }
+.compass-cand[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.compass-tablewrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 10px; }
+.compass-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.compass-table th, .compass-table td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.compass-table thead th { font-weight: 700; white-space: nowrap; }
+.compass-table tbody th[scope="row"] { font-weight: 400; min-width: 14em; }
+.compass-table .dir-head th { background: var(--paper-2, rgba(127,127,127,.08)); font-weight: 700; }
+.compass-table td { min-width: 6em; }
+.compass-table td.no { color: var(--ink-3); }
+.compass-table .mk { font-weight: 700; }
+.compass-table .q { display: block; color: var(--ink-2); font-size: 13px; overflow-wrap: anywhere; }
+.compass-tutor { margin: 0; font-size: 14px; color: var(--ink-2); }
+.compass-form { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 14px; }
 .compass-form label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .compass-form select, .compass-form textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); min-height: 44px; }
 .compass-acts { display: flex; gap: 8px; flex-wrap: wrap; }

@@ -22,9 +22,13 @@ t('say finish — 조사', CC.alerts.say({ kind: 'finish', name: '민지', compa
   CC.alerts.say({ kind: 'finish', name: '한결', compass: true }).indexOf('한결이 ') === 0);
 
 const none = CC.compass.svg(null, null);
-t('svg(null,null) 은 바늘도 다각형도 없다', none.indexOf('<svg') === 0 && none.indexOf('rotate(') < 0 && none.indexOf('<polygon') < 0 && none.indexOf('아직 방향이 뚜렷하지 않아요') > 0);
-const full = CC.compass.svg({ N: 3, E: 2, S: 0, W: 1 }, 18.4);
-t('svg 바늘·다각형·방향 이름', full.indexOf('rotate(18.4') > 0 && full.indexOf('compass-poly') > 0 && full.indexOf('aria-label="북쪽 · 이해"') > 0);
-t('svg 부채꼴 경계 — 45 는 동쪽, 315 는 북쪽', CC.compass.svg(null, 45).indexOf('동쪽 · 설계') > 0 && CC.compass.svg(null, 315).indexOf('북쪽 · 이해') > 0 && CC.compass.svg(null, 270).indexOf('서쪽 · 검증') > 0);
-t('DIRS', CC.compass.DIRS.S === '남쪽 · 구현');
+t('svg(null,null) 은 바늘이 없다', none.indexOf('<svg') === 0 && none.indexOf('rotate(') < 0 && none.indexOf('compass-poly') < 0);
+const full = CC.compass.svg(18.4, 0.9);
+t('svg 바늘 · 방향 이름 · 다각형 없음', full.indexOf('rotate(18.4') > 0 && full.indexOf('compass-poly') < 0 && full.indexOf('aria-label="북쪽 · 이해"') > 0);
+const tipY = x => +/<g class="compass-needle"[^>]*><polygon points="60,([-\d.]+) /.exec(x)[1];
+t('svg 바늘 길이 — 길이 비율이 클수록 끝이 멀다, 범위 밖은 0.25~0.9', tipY(CC.compass.svg(0, 0.25)) > tipY(CC.compass.svg(0, 0.6)) && tipY(CC.compass.svg(0, 0.6)) > tipY(CC.compass.svg(0, 0.9)) &&
+  tipY(CC.compass.svg(0, 0.01)) === tipY(CC.compass.svg(0, 0.25)) && tipY(CC.compass.svg(0, 5)) === tipY(CC.compass.svg(0, 0.9)));
+t('svg 부채꼴 경계 — 45 는 동쪽, 315 는 북쪽', CC.compass.svg(45).indexOf('동쪽 · 설계') > 0 && CC.compass.svg(315).indexOf('북쪽 · 이해') > 0 && CC.compass.svg(270).indexOf('서쪽 · 검증') > 0);
+t('DIRS · 모양 · 이름', CC.compass.DIRS.S === '남쪽 · 구현' && ['N','E','S','W'].map(d => CC.compass.SHAPE[d]).join('') === '▲◧○◇' && CC.compass.NAME.W === '검증');
+t('line · even — 방향 낱말, 길이 0.3 이하면 고르게', CC.compass.line('E') === '동쪽으로 가고 있어요' && CC.compass.line(null) === '' && CC.compass.even(0.3) && !CC.compass.even(0.31) && !CC.compass.even(null));
 if (fail) { console.log(fail + ' 실패'); process.exit(1); }
