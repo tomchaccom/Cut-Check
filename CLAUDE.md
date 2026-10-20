@@ -39,12 +39,17 @@
 학생 화면에는 절대 나가지 않는다 — 위 표의 "레벨" 금지는 학생 쪽에 그대로 살아 있다.
 되돌리거나("레벨은 금지인데요") 학생 쪽으로 넓히자고 다시 제안하지 않는다.
 
-**예외 둘 — 나침반.** 2026-10-20 사람이 정했다: 미션별 4방향 단계(0~3)와 AI 멘트는 선생님 화면에만.
-학생에게는 바늘과 선생님이 고른 방위 하나, 선생님이 쓴 문장만 간다. 단계로 정렬·평균·순위를 만들지 않는다.
-학생 문장은 AI 가 쓰지 않는다 — 학생이 미션을 마치면 선생님에게 알림이 가고, 한마디는 선생님이 쓴다.
-네 방향이 비슷하면(벡터 길이 1 미만) 학생에게 바늘을 보이지 않는다. 설계: `docs/superpowers/specs/2026-10-20-compass-design.md`.
+**예외 둘 — 나침반.** 2026-10-20 사람이 정했다(2차): 방향마다 예/아니오 3항목(코드 8 · AI 4, AI 는 기록에 글자 그대로 있는 인용이 있어야 예),
+충족 개수가 그 방향 점수. 학생 방향은 최근 5개 미션의 가중 평균 벡터(`WEIGHTS` · `CANCEL` 은 `api/_compass.py` 한 곳, 해 보면서 고친다).
+체크 항목 · 점수 · 인용 · 튜터 질문 분포는 선생님 화면에만. 학생에게는 누적 바늘 · 방위 · 선생님 한마디만 간다. 점수와 평균은 저장하지 않는다(원본 판정만).
+벡터가 상쇄되면 기계가 정하지 않는다 — 선생님에게 칭찬 타이밍 알림이 가고 겹친 후보 중 하나를 선생님이 고른다. 고르기 전에는 학생 바늘을 바꾸지 않는다.
+학생 문장은 AI 가 쓰지 않는다. 단계로 정렬 · 순위를 만들지 않는다. 설계: `docs/superpowers/specs/2026-10-20-compass-v2-design.md`.
 
-**알림은 타이밍만.** 선생님 화면 오른쪽 알림(`js/core/alerts.js`)은 세 이름표 — 칭찬 타이밍 · 살펴볼 것 · 레벨 테스트.
+**레벨 테스트 기록.** 문제지는 하 · 중 · 상(`js/core/onboard.js`, 정답표 `KEY` 는 그 파일 밖으로 나가지 않는다). 강사가 지정할 때 문제지를 고른다.
+이벤트에는 문제지(`set`)와 학생이 고른 답만 남고, 맞힌 수 · 레벨은 선생님 화면이 그때 계산한다. 학생 화면에 문제지 이름 · 맞음 · 점수를 띄우지 않는다.
+마지막 테스트 뒤 `RETEST_DAYS`(60) 가 지나면 "레벨 테스트" 알림.
+
+**알림은 타이밍만.** 선생님 화면 오른쪽 알림(`js/core/alerts.js`)은 세 이름표 — 칭찬 타이밍(미션 마침 · 성공 조건 바꿈 · 스스로 고침 · 나침반 상쇄) · 살펴볼 것 · 레벨 테스트(마침 · 재테스트).
 학생·미션당 종류별 한 번, 화면을 처음 열 때 있던 일은 알리지 않는다. 문장은 사실만 쓰고 칭찬 낱말을 넣지 않는다
 (말은 선생님이 한다). 순서 번호 · 소요 시간 · 반 평균을 붙이지 않는다. "튜터에게 많이 물었어요" 기준은 `TUTOR_MANY`(5) 하나.
 
@@ -184,7 +189,7 @@ node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
 node test/alerts.test.js     # 교사 알림 — 종류별 한 번 · 첫 화면 기준선 · 사실 문장
 node test/smoke.js           # 9개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
-node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG
+node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG · 방향 모양
 
 # 미션 생성 서버(api/*.py) — venv 없이 uv 가 pydantic 을 준비한다
 uv run --with-requirements requirements.txt python test/test_missionguard.py     # 생성 미션 검사 + 우리 미션 문장
@@ -195,8 +200,11 @@ uv run --with-requirements requirements.txt python test/test_steps.py           
 uv run --with-requirements requirements.txt python test/test_tutor_recap.py      # 수업에서 짚을 거리 — 항목 검사·인용 대조·상한·재요청·강사만
 uv run --with-requirements requirements.txt python test/test_quota.py            # 강사별 생성 한도 — 예약·반환·재요청 ticket·0개면 403·네트워크 실패
 uv run --with-requirements requirements.txt python test/test_admin.py            # 관리자 API — 관리자만·한도 0..1000 정수·낮춰도 left 0·목록·로그
-uv run --with-requirements requirements.txt python test/test_compass.py          # 나침반 규칙 — 사실·상한·근거 대조·벡터 바늘·JS 와 같은 답
-uv run --with-requirements requirements.txt python test/test_compass_api.py      # 나침반 API — 내 교실만·한 번만 읽기·보내기 바늘·학생에게 안 가는 열
+uv run --with-requirements requirements.txt python test/test_compass.py          # 나침반 규칙 — 체크 12항목·인용 대조·최근 5개 가중 평균·상쇄 후보·선생님 선택
+uv run --with-requirements requirements.txt python test/test_compass_api.py      # 나침반 API — 내 교실만·한 번만 읽기·누적·상쇄 때 고른 방향·학생에게 안 가는 열
+uv run --with-requirements requirements.txt python test/test_tutorguard.py      # 튜터 — 문법은 주고(이름·생김새·상관없는 예시 2줄) 미션 자료에 붙인 코드는 막기
+
+npx playwright test                # 화면 흐름 e2e (서버 8123) — 나침반 카드·상쇄 고르기·레벨 테스트 문제지·재테스트 알림
 ```
 
 8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.

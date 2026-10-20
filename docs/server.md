@@ -241,7 +241,7 @@ POST /api/mission-steps         Authorization: Bearer <선생님 access token>
 
 - **두 함수 모두 Bearer 토큰이 필요하다.** `mission-steps` 와 `generate-mission` 은 같은 확인(`api/_auth.py` 의 `refuse`)을 거친다. 토큰이 없거나 강사가 아니면 LLM 을 부르지 않는다. 로컬 모드(서버 없이 열기)에서는 호출이 로그인 안내로 돌아온다.
 - **`tutor-recap`** (`POST /api/tutor-recap`, 수업에서 짚을 거리) 도 같은 강사 확인을 거친다. 학생 이름은 보내지 않고(`s1`, `s2` …), 돌아온 `quote` 는 입력의 질문과 글자 그대로 같은 것만 남는다. 실패는 502.
-- **`compass`** (`POST /api/compass`, 나침반) — `list` · `analyze` · `send`. 강사 확인 뒤 그 교실의 담당인지, 학생이 그 교실에 있는지, 미션이 그 교실 것인지 본다(아니면 403). 이벤트는 서버가 service role 로 직접 읽는다 — 학생에게 갈 바늘의 근거를 강사 브라우저가 보낸 본문에 두지 않는다. AI 는 학생·미션당 한 번(`force` 는 "다시 읽기"). 생성 한도는 세지 않는다. 학생은 RPC `compass_mine` 으로 보낸 행의 `needle_deg · teacher_dir · teacher_note · sent_at` 만 읽는다.
+- **`compass`** (`POST /api/compass`, 나침반) — `list` · `analyze` · `send`. 강사 확인 뒤 그 교실의 담당인지, 학생이 그 교실에 있는지, 미션이 그 교실 것인지 본다(아니면 403). 이벤트는 서버가 service role 로 직접 읽는다 — 학생에게 갈 바늘의 근거를 강사 브라우저가 보낸 본문에 두지 않는다. AI 는 학생·미션당 한 번(`force` 는 "다시 읽기"). 생성 한도는 세지 않는다. `cumulative` 는 최근 5개 미션의 체크 12항목 · 튜터 질문 분포 · 누적 바늘(상쇄면 후보)을 강사에게 준다. `send` 의 `dir` 은 상쇄 때 선생님이 고른 방향(최신 미션에만). 학생은 RPC `compass_mine_v2`(누적 바늘 · 방위 · 길이 · 보낸 시각)와 `compass_note`(미션별 한마디)만 읽는다.
 - **서버는 AI 가 쓴 코드를 실행하지 않는다.** `build` 가 돌려주는 모범 답안은 강사 브라우저(Pyodide)가 자료마다 돌려 정답을 얻는다. 로그인은 비용 남용을 막을 뿐 보안 경계가 아니다(이메일로 가입하면 누구나 강사) — 그래서 코드 실행을 서버에 두지 않았다.
 - `solve` 는 모범 답안 없이 문제와 자료만 받아 따로 푼 코드를 돌려준다. 강사 화면이 같은 자료로 돌려 정답과 견준다.
 - `build` 는 응답 시간 예산 55초(`maxDuration` 60초 안)를 강사 확인부터 센다. 규칙에 걸리면 이유를 붙여 재요청하며, 시간이 모자라면 재요청하지 않는다.
@@ -290,5 +290,25 @@ DB 장애 한 번에 비용 한도가 통째로 풀린다. 그래서 순서가 �
 
 1. `supabase/migrations/20261021000000_compass.sql` 을 운영 DB 에 적용한다.
 2. 확인: anon 키로 `rest/v1/compass?select=*` 가 빈 목록, `rpc/compass_mine` 이 401 이다.
+3. 그다음 코드를 배포한다.
+
+#### 나침반 2차 — `20261022000000_compass_v2.sql`
+
+`compass` 에 `checks` · `tutor_dirs` · `student_view` · `done_at` 열을 더하고 `levels` · `evidence` 의 NOT NULL 을 푼다.
+학생 RPC `compass_mine_v2()`(누적 바늘 · 방위 · 길이 · 보낸 시각)와 `compass_note(mid)`(한마디 · 보낸 시각)를 만든다.
+1차 `compass_mine` 은 배포 사이 옛 화면을 위해 남긴다. 코드가 먼저 나가면 강사 카드가 "지금은 읽지 못했어요" 에 머문다.
+
+1. `supabase/migrations/20261022000000_compass_v2.sql` 을 운영 DB 에 적용한다.
+2. 확인: anon 키로 `rpc/compass_mine_v2` · `rpc/compass_note` 가 401, `rest/v1/compass?select=*` 가 빈 목록이다.
+3. 그다음 코드를 배포한다. 1차 행(`checks` 없음)은 강사 화면이 처음 열 때 한 번씩 다시 읽는다(AI 호출, 생성 한도와 무관).
+
+#### 레벨 테스트 문제지 — `20261023000000_onboard_set.sql`
+
+`enrollments.onboard_set`('low'|'mid'|'high') 과 RPC `assign_onboard2(cid, sid, assign, qset)` 을 만든다.
+**코드가 먼저 나가면 학생 교실 목록과 강사 명단이 빈 채로 온다**(없는 열을 고르기 때문) — 반드시 마이그레이션이 먼저다.
+옛 `assign_onboard` 는 배포 사이 옛 화면을 위해 남긴다(문제지를 바꾸지 않음).
+
+1. `supabase/migrations/20261023000000_onboard_set.sql` 을 운영 DB 에 적용한다.
+2. 확인: `select onboard_set from enrollments limit 1;` 이 에러 없이 돈다. anon 키로 `rpc/assign_onboard2` 가 401 이다.
 3. 그다음 코드를 배포한다.
 
