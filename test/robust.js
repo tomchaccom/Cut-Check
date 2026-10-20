@@ -43,7 +43,7 @@ function launchOpts() {
   await p.locator('.design-item select').first().selectOption('쉼표');
   await p.locator('#reason-method').fill(EVIL);
   await p.locator('#go-run').click();
-  await p.locator('#tutor-open').click();
+  if (await p.locator('#tutor-open').isVisible()) await p.locator('#tutor-open').click();
   await p.locator('#tutor-q').fill(EVIL);
   await p.locator('#tutor-send').click(); await p.waitForTimeout(300);
   await p.locator('#tutor-close').click();

@@ -157,24 +157,24 @@ test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({
   await local(context);
   await seedMission(page);
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
-  await expect(page.locator('#tutor-open')).toBeHidden();
+  await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
   await page.locator('#go-define').click();
-  await expect(page.locator('#tutor-open')).toBeHidden();
+  await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
   await page.locator('.define-card').first().click();
   await page.locator('#go-method').click();
-  await expect(page.locator('#tutor-open')).toBeHidden();
+  await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
   await pickCards(page);
   await page.locator('#go-run').click();
-  await expect(page.locator('#tutor-open')).toBeVisible();
+  await expect(page.locator(TUTOR_ANY)).toHaveCount(1);
   await page.locator('#back-method').click();
-  await expect(page.locator('#tutor-open')).toBeHidden();
+  await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
 });
 
 test('튜터: 서버가 없으면 쓸 수 없다고만 말하고, 있으면 답한다', async ({ context, page }) => {
   await local(context);
   await seedMission(page);
   await studentToCode(page);
-  await page.locator('#tutor-open').click();
+  await openTutor(page);
   await page.locator('#tutor-q').fill('split 이 뭐예요?');
   await page.locator('#tutor-send').click();
   await expect(page.locator('.tutor-msg.ai').last()).toHaveText('지금은 튜터를 쓸 수 없어요.');
@@ -198,6 +198,71 @@ async function mockTutor(page, calls) {
   });
 }
 
+
+/* 튜터는 접혀 있으면 #tutor-open(손잡이), 펼쳐 있으면 #tutor(aside) 하나만 보인다. 접혀 있을 때만 펼친다 */
+const TUTOR_ANY = '#tutor:visible, #tutor-open:visible';
+async function openTutor(page) {
+  if (await page.locator('#tutor-open').isVisible()) await page.locator('#tutor-open').click();
+  await expect(page.locator('#tutor')).toBeVisible();
+}
+
+test('튜터 사이드바(넓은 화면): 본문 오른쪽 aside, 본문은 계속 눌린다, 접고 펴도 대화가 남는다', async ({ context, page }) => {
+  await local(context);
+  const calls = [];
+  await mockTutor(page, calls);
+  await seedMission(page);
+  await studentToCode(page);
+  const side = page.locator('#tutor');
+  await expect(side).toBeVisible();
+  expect(await side.evaluate(e => e.tagName + e.open)).toBe('ASIDEundefined');
+  await expect(page.locator('#tutor-open')).toBeHidden();
+  const a = await side.boundingBox(), m = await page.locator('#step4').boundingBox();
+  expect(a.x).toBeGreaterThanOrEqual(m.x + m.width - 1);
+  expect(a.width).toBeLessThanOrEqual(400);
+  await page.locator('#tutor-q').fill('split?');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.tutor-msg.ai')).toHaveText(['답: split??']);
+  // 모달이 아니다 — 본문을 바로 누를 수 있다
+  await page.locator('#step4-brief summary').click();
+  await expect(page.locator('#step4-brief')).not.toHaveAttribute('open', '');
+  await page.locator('#tutor-close').click();
+  await expect(side).toBeHidden();
+  await expect(page.locator('#tutor-open')).toHaveAttribute('aria-expanded', 'false');
+  const h = await page.locator('#tutor-open').boundingBox();
+  expect(h.width).toBeGreaterThanOrEqual(44);
+  await page.reload();  // 접힘은 이 브라우저가 기억한다
+  await toCode(page, 'ai-e2e');
+  await expect(page.locator('#tutor-open')).toBeVisible();
+  await page.locator('#tutor-open').click();
+  await expect(page.locator('#tutor-close')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('.tutor-msg.ai')).toHaveText(['답: split??']);
+});
+
+test('튜터 사이드바(휴대폰): 아래 막대로 열면 전체 화면, 닫으면 막대로 돌아온다', async ({ context, page }) => {
+  await local(context);
+  await page.setViewportSize({ width: 390, height: 800 });
+  await seedMission(page);
+  await studentToCode(page);
+  const bar = page.locator('#tutor-open');
+  await expect(page.locator('#tutor')).toBeHidden();
+  await expect(bar).toHaveText('튜터에게 묻기');
+  const b = await bar.boundingBox();
+  expect(b.height).toBeGreaterThanOrEqual(44);
+  expect(b.y + b.height).toBeGreaterThan(700);
+  await bar.click();
+  await expect(page.locator('#tutor-q')).toBeFocused();
+  const a = await page.locator('#tutor').boundingBox();
+  expect(a.width).toBeGreaterThanOrEqual(389);
+  expect(a.height).toBeGreaterThanOrEqual(799);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#tutor')).toBeHidden();
+  await expect(bar).toBeFocused();
+  await bar.click();
+  await page.locator('#tutor-close').click();
+  await expect(bar).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 /* 두 번째 미션 — 시험용 미션을 하나 더 복제해 같은 경로로 넣는다 */
 async function seedTwoMissions(page) {
   await page.goto(BASE + '/sentence.html');
@@ -218,7 +283,7 @@ async function toCode(page, id) {
   await page.locator('#go-method').click();
   await pickCards(page);
   await page.locator('#go-run').click();
-  await expect(page.locator('#tutor-open')).toBeVisible();
+  await expect(page.locator(TUTOR_ANY)).toHaveCount(1);
 }
 
 test('튜터 대화창: 내 말은 오른쪽, 튜터 말은 이름표와 왼쪽 — Enter 로 보내고 Shift+Enter 는 줄바꿈', async ({ context, page }) => {
@@ -227,8 +292,7 @@ test('튜터 대화창: 내 말은 오른쪽, 튜터 말은 이름표와 왼쪽 
   await mockTutor(page, calls);
   await seedMission(page);
   await studentToCode(page);
-  await page.locator('#tutor-open').click();
-  await expect(page.locator('#tutor-q')).toBeFocused();
+  await openTutor(page);
   await page.locator('#tutor-q').type('첫 줄');
   await page.keyboard.press('Shift+Enter');
   await page.keyboard.type('둘째 줄');
@@ -262,7 +326,7 @@ test('튜터 대화창: 기다리는 동안 답을 쓰는 중이라고 보인다
     return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ kind: 'syntax', answer: '나눠요.', refused: false }) }); });
   await seedMission(page);
   await studentToCode(page);
-  await page.locator('#tutor-open').click();
+  await openTutor(page);
   await page.locator('#tutor-q').fill('split?');
   await page.keyboard.press('Enter');
   await expect(page.locator('.tutor-row.typing')).toHaveText(/답을 쓰는 중이에요/);
@@ -278,7 +342,7 @@ test('튜터 대화창: 미션마다 대화가 따로고, 새로고침해도 다
   await mockTutor(page, calls);
   await seedTwoMissions(page);
   await toCode(page, 'ai-e2e');
-  await page.locator('#tutor-open').click();
+  await openTutor(page);
   for (const q of ['A1', 'A2', 'A3', 'A4']) {
     await page.locator('#tutor-q').fill(q);
     await page.keyboard.press('Enter');
@@ -288,7 +352,7 @@ test('튜터 대화창: 미션마다 대화가 따로고, 새로고침해도 다
 
   // B 미션 — A 의 말은 보이지 않고, 서버에 가는 이전 대화도 B 것만
   await toCode(page, 'ai-e2e-b');
-  await page.locator('#tutor-open').click();
+  await openTutor(page);
   await expect(page.locator('#tutor-log .tutor-row')).toHaveCount(0);
   await page.locator('#tutor-q').fill('B1');
   await page.keyboard.press('Enter');
@@ -299,7 +363,7 @@ test('튜터 대화창: 미션마다 대화가 따로고, 새로고침해도 다
   // 새로고침 뒤 A 를 다시 열면 A 의 대화가 그대로, 서버에는 A 의 마지막 3턴
   await page.reload();
   await toCode(page, 'ai-e2e');
-  await page.locator('#tutor-open').click();
+  await openTutor(page);
   await expect(page.locator('.tutor-msg.me')).toHaveText(['A1', 'A2', 'A3', 'A4']);
   await expect(page.locator('#tutor-log')).not.toContainText('B1');
   await page.locator('#tutor-q').fill('A5');
@@ -535,26 +599,18 @@ test('다른 교실을 둘러보고 돌아와도 기록은 미션을 연 교실�
   expect(pushed).toEqual([['r1', 'db1']]);
 });
 
-test('폰 폭 04 — 튜터 버튼이 결과 표를 덮지 않는다 (어느 스크롤 위치에서도)', async ({ page }) => {
+test('폰 폭 04 — 튜터 막대가 결과 표를 덮지 않는다 (맨 아래까지 내려도)', async ({ page }) => {
   await page.setViewportSize({ width: 420, height: 860 });
   await local(page.context());
   await seedMission(page);
   await studentToCode(page);
-  await expect(page.locator('#tutor-open')).toBeVisible();
-  // 문서 좌표로 비교한다 — 떠 있는 버튼이면 스크롤에 따라 표 위로 올라오므로 이 비교가 깨진다
-  const [btnTop, stepBottom] = await page.evaluate(() => {
-    const y = window.scrollY;
-    return [document.querySelector('#tutor-open').getBoundingClientRect().top + y,
-      document.querySelector('#step4').getBoundingClientRect().bottom + y];
-  });
-  for (const yy of [0, 400, 100000]) {
-    await page.evaluate(v => window.scrollTo(0, v), yy);
-    const now = await page.evaluate(() => document.querySelector('#tutor-open').getBoundingClientRect().top + window.scrollY);
-    expect(Math.round(now)).toBe(Math.round(btnTop));
-  }
-  // 버튼은 오른쪽 열 머리에 흐름대로 놓인다 — 결과 표보다 위, 떠 있지 않다
-  expect(btnTop).toBeLessThan(stepBottom);
-  expect(await page.evaluate(() => getComputedStyle(document.querySelector('#tutor-open')).position)).toBe('static');
+  await expect(page.locator(TUTOR_ANY)).toHaveCount(1);
+  // 막대는 화면 아래에 붙어 있고, 맨 아래까지 내려도 결과 표를 덮지 않는다
+  await page.evaluate(() => window.scrollTo(0, 100000));
+  const [barTop, stepBottom] = await page.evaluate(() => [
+    document.querySelector('#tutor-open').getBoundingClientRect().top,
+    document.querySelector('#step4').getBoundingClientRect().bottom]);
+  expect(stepBottom).toBeLessThanOrEqual(barTop + 1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(420);
 });
 
