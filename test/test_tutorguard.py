@@ -10,7 +10,8 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'api'))
-from _tutor import REFUSE, ask  # noqa: E402
+from _tutor import REFUSE, SYSTEM, _messages, ask  # noqa: E402
+from _tutorjudge import judge  # noqa: E402
 from _tutorguard import problems  # noqa: E402
 
 fail = 0
@@ -74,8 +75,31 @@ CTX = {'mission': {'title': '메뉴 묶기', 'itemName': '메뉴', 'items': ['�
                    'inputs': [{'name': '자료 1', 'v': '떡볶이,우동,김밥,우동'}]},
        'code': 'data = "떡볶이,우동,김밥,우동"\nprint(data)', 'define': '', 'design': ['나누기', '세기'],
        'last_output': '떡볶이,우동,김밥,우동', 'last_error': '', 'history': [{'q': 'split은 뭐고', 'a': '`"a,b".split(",")` 처럼 나눠요.'}]}
-OK = {'leak': False, 'why': ''}
-LEAK = {'leak': True, 'why': '이 자료로 바로 세는 코드'}
+OK = {'verdict': 'pass', 'why': '', 'cut': ''}
+LEAK = {'verdict': 'leak', 'why': '이 자료로 바로 세는 코드', 'cut': ''}
+HARD = {'verdict': 'hardcode', 'why': '결과값 3을 그대로 쓰라고 함', 'cut': 'print(3) 하면 돼요'}
+
+print('[검수]')
+t('pass → ([], "")', judge('a', CTX, fake(OK), 5) == ([], ''))
+t('hardcode → reasons · cut', judge('a', CTX, fake(HARD), 5) == (['hardcode: 결과값 3을 그대로 쓰라고 함'], 'print(3) 하면 돼요'))
+rs, _ = judge('a', CTX, fake({'verdict': 'leak', 'why': '풀이 순서', 'cut': '나눈 뒤 세요'}), 5)
+t('leak → "leak: " 로 시작', rs[0].startswith('leak: '), rs)
+for name, bad in [('옛 모양', {'leak': True, 'why': 'x'}), ('verdict 밖', {'verdict': 'maybe', 'why': '', 'cut': ''}),
+                  ('cut 이 문자열 아님', {'verdict': 'leak', 'why': 'x', 'cut': None})]:
+    try:
+        judge('a', CTX, fake(bad), 5)
+        t(name + ' → ValueError', False)
+    except ValueError:
+        t(name + ' → ValueError', True)
+llm = fake(OK)
+judge('a', {**CTX, 'define': '메뉴별 개수가 맞는가'}, llm, 5)
+t('검수에 학생이 정한 목표', json.loads(llm.calls[0][-1]['content']).get('학생이 정한 목표') == '메뉴별 개수가 맞는가', llm.calls[0][-1])
+
+print('[답 프롬프트]')
+t('금지문 없음', '말하지 않는다' not in SYSTEM and '쓰지 않는다' not in SYSTEM, SYSTEM)
+t('형식은 남김', '존댓말' in SYSTEM and '300' in SYSTEM, SYSTEM)
+u = json.loads(_messages('q', {**CTX, 'define': '메뉴별 개수가 맞는가'})[-1]['content'])
+t('목표에 이름을 붙여 넘긴다', u.get('학생이 정한 목표') == '메뉴별 개수가 맞는가' and 'define' not in u, u)
 
 print('[흐름]')
 llm = fake({'kind': 'answer', 'answer': '딕셔너리에 없던 키를 넣으면 새로 생겨요. 예: `d["a"] = 1`'}, OK)
@@ -92,7 +116,7 @@ t('유출 → 재요청 → 재답도 판정 → 통과', len(llm.calls) == 4 an
 
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK,
            {'kind': 'ask_back', 'answer': '메뉴를 항목별로 나눈 다음, 같은 값이 나올 때마다 숫자를 올리는 생각까지는 정했나요?'},
-           {'leak': True, 'why': '풀이 순서'})
+           {'verdict': 'leak', 'why': '풀이 순서', 'cut': ''})
 r = ask('코드 줘', CTX, llm)
 t('재답을 두 번째 판정이 막음 → ask_back 고정 문장', len(llm.calls) == 4 and r['answer'] == REFUSE['ask_back'] and r['refused']
   and r['retried'] and 'leak: 풀이 순서' in r['reasons'], r)
@@ -142,6 +166,22 @@ clock = iter([0, 17])
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK)
 r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
 t('남은 시간 < 10초면 재요청 없음', len(llm.calls) == 2 and r['kind'] == 'ask_back' and not r['retried'], r)
+
+llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼요. 개수는 len 으로 세요.'}, HARD,
+           {'kind': 'answer', 'answer': '개수는 len 으로 세요.'}, OK)
+r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
+t('hardcode → 걸린 부분만 빼고 재답 → 통과', '아래 부분만 빼고 나머지 설명은 그대로 둔다: print(3) 하면 돼요' in llm.calls[2][-1]['content']
+  and not r['refused'] and r['retried'] and r['reasons'] == ['hardcode: 결과값 3을 그대로 쓰라고 함'], (llm.calls[2][-1], r))
+
+llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼요.'}, {**HARD, 'cut': '없는 문장'},
+           {'kind': 'answer', 'answer': '개수는 len 으로 세요.'}, OK)
+r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
+t('cut 이 답에 없으면 why 로 고쳐 쓰기', '아래 문제를 고쳐 다시 답한다: hardcode: 결과값 3을 그대로 쓰라고 함' in llm.calls[2][-1]['content']
+  and '빼고' not in llm.calls[2][-1]['content'], llm.calls[2][-1])
+
+llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼요.'}, HARD, {'kind': 'answer', 'answer': '결과가 3이면 그대로 출력해요.'}, HARD)
+r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
+t('재답도 걸리면 고정 되묻기', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
 
 r = ask('점심 뭐 먹어?', CTX, fake({'kind': 'off_topic', 'answer': ''}))
 t('범위 밖', r['answer'] == REFUSE['off_topic'] and r['refused'], r)
