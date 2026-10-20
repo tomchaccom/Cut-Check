@@ -17,6 +17,6 @@
     "api/tutor.py": { "maxDuration": 30 },
     "api/tutor-recap.py": { "maxDuration": 30 },
     "api/create-student.py": { "maxDuration": 30 },
-    "api/admin.py": { "maxDuration": 15 }
+    "api/admin.py": { "maxDuration": 30 }
   }
 }
