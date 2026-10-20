@@ -116,7 +116,8 @@ def _run(body, db, uid, llm, t0):
         raise Fail(409, '아직 미션을 마치지 않았어요.')
     r = _compass.read(events, ms[0].get('data'), **({'call_llm': llm} if llm else {}), t0=t0)
     new = {'student_id': stu, 'mission_id': mis, 'classroom_id': room, 'levels': r['levels'], 'evidence': r['evidence'],
-           'facts': r['facts'], 'ai_note': r['ai_note'], 'needle_deg': r['needle_deg'], 'strongest': r['strongest'], 'updated_at': _now()}
+           'facts': r['facts'] + [{'id': t['id'], 'dir': None, 'kind': 'tutor', 'text': t['q']} for t in r['tutor']],  # 튜터 인용은 근거 표시용 — caps 에는 안 들어간다
+           'ai_note': r['ai_note'], 'needle_deg': r['needle_deg'], 'strongest': r['strongest'], 'updated_at': _now()}
     if old and old[0].get('sent_at'):
         new.pop('needle_deg')  # 이미 보낸 바늘은 다시 읽어도 학생 화면에서 움직이지 않는다
     saved = db.rows('POST', 'compass?on_conflict=student_id,mission_id', new, 'resolution=merge-duplicates,return=representation')

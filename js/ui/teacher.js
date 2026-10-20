@@ -254,7 +254,7 @@
   /* ── 나침반 — 서버 모드에서만. 미션을 마친(첫 s-code-judge) 학생·미션마다 카드 하나.
    * 값(단계)과 AI 멘트는 선생님만 본다. 학생에게는 선생님이 고른 방위와 쓴 문장만 간다.
    * 단계로 정렬·평균·순위를 만들지 않는다 — 명단에는 "한마디 기다림" 꼬리표 하나뿐 */
-  var cRoom = null, cRows = null, cTried = {}, cDraw = {}, cSyncing = false, cSeq = 0;
+  var cRoom = null, cRows = null, cTried = {}, cDraw = {}, cSyncing = false, cListFail = false, cSeq = 0;
   var COMPASS_FAIL = '지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.';
   var serverOn = function () { return !!(CC.sb && CC.sb.active()); };
   var ckey = function (sid, mid) { return sid + ':' + mid; };
@@ -279,18 +279,20 @@
   /* 학생 화면을 열 때 이미 끝났는데 행이 없는 것 — 알림 없이 하나씩 차례로 읽어 둔다 */
   CC._compassSync = function (roomId) {
     if (!serverOn() || !roomId || !CC.sb.compass) return;
-    if (cRoom !== roomId) { cRoom = roomId; cRows = null; cTried = {}; cDraw = {}; }
-    if (cSyncing || !C.students.some(function (st) { return finishedOf(st).length; })) return;   /* 끝낸 미션이 없으면 서버에 물을 것도 없다 */
+    if (cRoom !== roomId) { cRoom = roomId; cRows = null; cTried = {}; cDraw = {}; cListFail = false; }
+    if (cListFail || cSyncing || !C.students.some(function (st) { return finishedOf(st).length; })) return;   /* 끝낸 미션이 없으면 서버에 물을 것도 없다 */
     cSyncing = true;
     var done = function () { cSyncing = false; };
     var loaded = cRows ? Promise.resolve() : CC.sb.compass('list', { classroomId: roomId }).then(function (j) {
       if (cRoom !== roomId) return;
       cRows = {};
+      cListFail = false;
       ((j && j.rows) || []).forEach(function (r) { cRows[ckey(r.studentId, r.missionId)] = r; });
     });
-    loaded.then(function () {
+    loaded.catch(function () { cListFail = true; Object.keys(cDraw).forEach(function (k) { cDraw[k](); }); }).then(function () {
       if (!cRows || cRoom !== roomId) return;
       renderFolders();
+      Object.keys(cDraw).forEach(function (k) { cDraw[k](); });   /* 열려 있는 카드가 "읽고 있어요" 에 머물지 않게 */
       var todo = [];
       C.students.forEach(function (st) {
         finishedOf(st).forEach(function (m) { if (!cRows[ckey(st.id, m)] && !cTried[ckey(st.id, m)]) todo.push([st, m]); });
@@ -329,11 +331,13 @@
       card.appendChild(el('h4', null, '나침반 · ' + title));
       var row = cRows && cRows[k];
       if (!row) {
-        if (cTried[k] === 'fail') {
+        if (cTried[k] === 'fail' || (cListFail && !cRows)) {
           card.appendChild(el('p', 'recap-fail', COMPASS_FAIL));
           var again = el('button', 'pill compass-reread', '다시 읽기');
           again.type = 'button';
-          again.addEventListener('click', function () { analyze(st, dbId, false); });
+          again.addEventListener('click', function () {
+            if (!cRows) { cListFail = false; card.innerHTML = ''; draw(); CC._compassSync(cRoom); } else analyze(st, dbId, false);   /* 목록부터 못 받았으면 목록부터 */
+          });
           card.appendChild(again);
         } else card.appendChild(el('p', 'emptyrow', '읽고 있어요.'));
         return;
@@ -350,7 +354,7 @@
         var ids = (row.evidence || {})[d] || [];
         ids.forEach(function (id) {
           var f = (row.facts || []).filter(function (x) { return x.id === id; })[0];
-          line.appendChild(el('span', 'ev', f ? f.text : '튜터 질문'));
+          line.appendChild(el('span', 'ev', f ? (f.kind === 'tutor' ? '튜터에게: "' + f.text + '"' : f.text) : '튜터 질문'));
         });
         dl.appendChild(line);
       });
@@ -728,7 +732,7 @@
   /* Supabase 모드는 첫 기록을 받기 전까지 기준선을 만들지 않는다 (빈 목록이 기준선이 되면
    * 이미 있던 제출이 전부 새 알림이 된다). 교실을 고를 때마다 다시 시작한다. */
   var alertsLoaded = !(CC.sb && CC.sb.active());
-  CC._resetAlerts = function () { lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); };
+  CC._resetAlerts = function () { cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); };
   CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], serverOn() ? finishedOf : null); };
   /* 말 걸 순간 — 시각 · 학생 이름 · 사실 문장. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다 */
   function showAlert(a) {

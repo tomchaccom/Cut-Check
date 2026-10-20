@@ -181,5 +181,14 @@ http, calls, _ = fake()
 st, out = api.handle(body('analyze'), 'tok', ENV, http, boom)
 t('LLM 예외 502 · 원문 안 샘', st == 502 and not writes(calls) and 'SECRET' not in json.dumps(out), (st, out))
 
+# 튜터 질문 원문은 facts 에 kind 'tutor' 로 저장된다 — 선생님이 근거를 읽는다
+TUT = [{'type': 's-tutor', 'question': '쉼표가 뭐예요? <img src=x onerror=1>'}]
+http, calls, _ = fake(events=EVENTS + TUT)
+tg = json.dumps({'levels': {'N': 1, 'E': 0, 'S': 0, 'W': 1}, 'evidence': {'N': ['t1']}, 'ai_note': ''})
+st, out = api.handle(body('analyze'), 'tok', ENV, http, llm_of([], tg))
+t('저장된 facts 에 튜터 질문 원문', st == 200 and {'id': 't1', 'dir': None, 'kind': 'tutor', 'text': TUT[0]['question']} in out['facts']
+  and out['evidence']['N'] == ['t1'], (st, out))
+t('저장 본문에도 있다', any(f.get('kind') == 'tutor' for f in writes(calls)[0][2]['facts']))
+
 print('\nFAIL ' + str(fail) if fail else '\nOK')
 sys.exit(1 if fail else 0)

@@ -1816,7 +1816,7 @@ test('사용법 안내 — 선생님 화면: 생성 두 방식을 밝히고, 닫
 
 /* 나침반 — 선생님 서랍 카드 (2026-10-20). 서버(api/compass)는 page.route 로 가짜 */
 const judgeEv = (mission_id, mid) => ({ student_id: 's1', mission_id, created_at: new Date().toISOString(), profiles: { name: '태인' }, event: { type: 's-code-judge', mid, verdict: '지켰다', basis: 'b', v: 1, t: Date.now() } });
-const cRow = (missionId, o) => Object.assign({ studentId: 's1', missionId, levels: { N: 3, E: 2, S: 0, W: 1 }, evidence: { N: ['f1'], W: ['t1'] }, facts: [{ id: 'f1', dir: 'N', kind: 'trap-fixed', text: '함정 보기를 고쳤다' }],
+const cRow = (missionId, o) => Object.assign({ studentId: 's1', missionId, levels: { N: 3, E: 2, S: 0, W: 1 }, evidence: { N: ['f1'], W: ['t1'] }, facts: [{ id: 'f1', dir: 'N', kind: 'trap-fixed', text: '함정 보기를 고쳤다' }, { id: 't1', dir: null, kind: 'tutor', text: '쉼표가 뭐예요?' }],
   ai_note: '성공 조건을 스스로 고쳤다', needle_deg: 18.4, strongest: 'N', teacher_dir: null, teacher_note: null, sent_at: null }, o || {});
 async function compassTeacher(page, evs, handler) {
   const calls = [];
@@ -1847,7 +1847,7 @@ test('강사 — 학생 서랍의 나침반 카드: 단계·근거·기본 방�
   await expect(card.locator('.compass-dir').first()).toContainText('북쪽 · 이해');
   await expect(card.locator('.compass-dir').first()).toContainText('3단계');
   await expect(card).toContainText('함정 보기를 고쳤다');
-  await expect(card).toContainText('튜터 질문');
+  await expect(card).toContainText('튜터에게: "쉼표가 뭐예요?"');
   await expect(card).toContainText('성공 조건을 스스로 고쳤다');
   await expect(card.getByLabel('학생에게 보일 방향')).toHaveValue('N');
   await expect(card.locator('select option')).toHaveText(['고르지 않음', '북쪽 · 이해', '동쪽 · 설계', '남쪽 · 구현', '서쪽 · 검증']);
@@ -1919,4 +1919,19 @@ test('강사 — 로컬 모드는 /api/compass 를 부르지 않고 나침반 �
   await page.waitForTimeout(500);
   expect(n).toBe(0);
   expect(await page.locator('.compass-card').count()).toBe(0);
+});
+
+test('강사 — list 가 실패하면 폴링마다 다시 부르지 않고 다시 읽기에서만 다시 부른다', async ({ page }) => {
+  let ok = false;
+  const calls = await compassTeacher(page, [judgeEv('M1', 'mx')], b => ok ? { json: { rows: [cRow('M1')] } } : { status: 502, json: { error: 'x' } });
+  await expect.poll(() => calls.length).toBe(1);
+  await page.evaluate(() => CC._compassSync('r1')); await page.evaluate(() => CC._compassSync('r1'));
+  await page.waitForTimeout(300);
+  expect(calls.length).toBe(1);
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  await expect(page.locator('#detail .compass-card')).toContainText('지금은 읽지 못했어요');
+  ok = true;
+  await page.locator('#detail .compass-reread').click();
+  await expect(page.locator('#detail .compass-send')).toBeVisible();
+  expect(calls.length).toBe(2);
 });

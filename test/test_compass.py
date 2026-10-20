@@ -157,5 +157,13 @@ except Exception as e:
     ok = repr(e)
 t('학생이 보낸 쓰레기(dict 아닌 outs·inputs)에도 안 죽는다', ok is True, ok)
 
+
+# 부채꼴 이름은 JS(CC.compass.dirOf) 와 같은 규칙이다
+DEGS = [0, 44.9, 45, 134.9, 135, 224.9, 225, 314.9, 315, 359.9, None]
+jd = json.loads(subprocess.run(['node', '-e', "global.window={};require(process.argv[1]+'/js/core/compass.js');var d=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(JSON.stringify(d.map(function(x){return window.CC.compass.dirOf(x)})))", ROOT],
+                               input=json.dumps(DEGS), capture_output=True, text=True, check=True).stdout)
+pd = [None if d is None else C._sector(d) for d in DEGS]
+t('부채꼴 이름이 JS 와 같다', jd == pd, (jd, pd))
+
 print('\nFAIL ' + str(fail) if fail else '\nOK')
 sys.exit(1 if fail else 0)

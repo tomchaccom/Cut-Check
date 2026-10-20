@@ -249,6 +249,7 @@ def read(events, mission, call_llm=mini_llm, t0=None, now=time.monotonic):
             r = vet(data, fs, ts)
             r['needle_deg'], r['strongest'] = needle(r['levels'], r['evidence'])
             r['facts'] = fs
+            r['tutor'] = ts
             return r
         print('[compass] 형식 오류', attempt, file=sys.stderr)
         if t0 + DEADLINE - now() < RETRY_NEEDS:

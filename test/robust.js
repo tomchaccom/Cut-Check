@@ -183,7 +183,7 @@ var NOTE=${JSON.stringify(EVIL + LONG + ' 🙂👍')};
 CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},
 myClassrooms:function(){return P([{id:'r1',name:'반',code:'AB12CD'}])},getMissions:function(){return P([])},getClassroomStudents:function(){return P([{id:'s1',name:'태인'}])},
 getClassroomEvents:function(){return P([{student_id:'s1',mission_id:'M1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-code-judge',mid:'mx',verdict:'지켰다',basis:'b',v:1,t:Date.now()}}])},
-compass:function(a){if(a==='list')return P({rows:[{studentId:'s1',missionId:'M1',levels:{N:1,E:1,S:1,W:1},evidence:{N:['f1']},facts:[{id:'f1',dir:'N',kind:'define',text:${JSON.stringify(EVIL)}}],ai_note:${JSON.stringify(EVIL)},needle_deg:null,strongest:null,teacher_dir:'N',teacher_note:NOTE,sent_at:'2026-10-20T00:00:00Z'}]});return Promise.reject(new Error('x'))}}
+compass:function(a){if(a==='list')return P({rows:[{studentId:'s1',missionId:'M1',levels:{N:1,E:1,S:1,W:1},evidence:{N:['f1','t1']},facts:[{id:'f1',dir:'N',kind:'define',text:${JSON.stringify(EVIL)}},{id:'t1',dir:null,kind:'tutor',text:${JSON.stringify(EVIL)}}],ai_note:${JSON.stringify(EVIL)},needle_deg:null,strongest:null,teacher_dir:'N',teacher_note:NOTE,sent_at:'2026-10-20T00:00:00Z'}]});return Promise.reject(new Error('x'))}}
 })(window.CC=window.CC||{});` }));
   const k = await kc.newPage();
   k.on('pageerror', e => errs.push('K: ' + e.message));
@@ -193,7 +193,7 @@ compass:function(a){if(a==='list')return P({rows:[{studentId:'s1',missionId:'M1'
   await k.locator('.student-tile', { hasText: '태인' }).click();
   await k.locator('.compass-card').waitFor({ timeout: 5000 });
   const ks = await k.evaluate(() => ({ pwned: !!window.__pwned, imgs: document.querySelectorAll('#detail img').length, sent: (document.querySelector('.compass-sent-note') || {}).textContent, ta: (document.querySelector('.compass-card textarea') || {}).value, w: document.documentElement.scrollWidth - innerWidth }));
-  const noteBad = ks.pwned || ks.imgs > 0 || alerted || ks.sent !== EVIL + LONG + ' 🙂👍' || ks.ta !== ks.sent || ks.w > 1 || (await k.locator('.compass-card').textContent()).indexOf('<img') < 0;
+  const noteBad = ks.pwned || ks.imgs > 0 || alerted || ks.sent !== EVIL + LONG + ' 🙂👍' || ks.ta !== ks.sent || ks.w > 1 || (await k.locator('.compass-card').textContent()).indexOf('튜터에게: "<img') < 0;
   console.log('나침반 한마디가 글자로만 보임:', noteBad ? '✗ ' + JSON.stringify({ pwned: ks.pwned, imgs: ks.imgs, w: ks.w }) : '✓');
 
   console.log(errs.length ? '✗ JS 에러: ' + errs.join(' | ') : '✓ JS 에러 없음');
