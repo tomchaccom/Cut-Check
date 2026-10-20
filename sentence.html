@@ -277,13 +277,18 @@
 
 <dialog id="tutor" class="tutor" aria-labelledby="tutor-title">
   <div class="tutor-head">
+    <button id="tutor-back" class="tutor-icon" type="button" aria-label="뒤로" hidden>‹</button>
     <h2 id="tutor-title">파이썬 문법 물어보기</h2>
-    <button id="tutor-close" type="button" aria-label="닫기">×</button>
+    <button id="tutor-past" class="tutor-text" type="button">지난 대화</button>
+    <button id="tutor-close" class="tutor-icon" type="button" aria-label="닫기">×</button>
   </div>
-  <p class="tutor-note">개념을 설명해 주고, 코드의 어느 부분을 보면 되는지 짚어 줘요. 되물을 때도 있어요. 코드는 직접 써요.</p>
-  <div id="tutor-log" class="tutor-log"></div>
+  <p id="tutor-note" class="tutor-note">개념을 설명해 주고, 코드의 어느 부분을 보면 되는지 짚어 줘요. 되물을 때도 있어요. 코드는 직접 써요.</p>
+  <div id="tutor-log" class="tutor-log" tabindex="0" aria-label="대화"></div>
+  <p id="tutor-live" class="sr-only" aria-live="polite"></p>
   <form id="tutor-form" class="tutor-form">
-    <textarea id="tutor-q" rows="2" maxlength="300" placeholder="예: split 은 뭐예요?"></textarea>
+    <label for="tutor-q" class="sr-only">튜터에게 물어볼 말</label>
+    <textarea id="tutor-q" rows="2" maxlength="300" placeholder="예: split 은 뭐예요?" aria-describedby="tutor-keys"></textarea>
+    <span id="tutor-keys" class="sr-only">Enter 를 누르면 보내고, Shift+Enter 를 누르면 줄이 바뀌어요.</span>
     <button id="tutor-send" class="btn primary" type="submit">보내기</button>
   </form>
 </dialog>

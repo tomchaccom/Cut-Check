@@ -36,6 +36,11 @@
 
   if (CC.tutor) CC.tutor.init({
     rec: rec,
+    mine: function (cb) { myEvents(cb); },
+    past: function (cb) {   /* 지난 대화 — 이 교실(로컬이면 이 브라우저)의 내 기록 전부 */
+      if (CC.sb && CC.sb.active() && currentClassroomId) CC.sb.getMyEvents(currentClassroomId).then(cb, function () { cb([]); });
+      else cb(CC.store ? CC.store.all() : []);
+    },
     context: function () {
       var items = [];
       if (!(M && M.kind === 'code')) (M ? M.inputs : []).forEach(function (inp) { items = items.concat(String(inp.v).split(/[,\n]/)); });
@@ -69,7 +74,7 @@
     M = CC.sentenceMission(id);
     if (!M) return;
     lastRun = { output: '', error: '' };
-    if (CC.tutor) CC.tutor.reset();
+    if (CC.tutor) CC.tutor.reset(M.id);
 
     /* 상태 초기화 */
     state = {
