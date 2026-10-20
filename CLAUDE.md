@@ -176,11 +176,12 @@ uv run --with-requirements requirements.txt python test/test_generate.py        
 uv run --with-requirements requirements.txt python test/test_accounts.py         # 학생 계정 만들기 — 남의 교실·중복 아이디·키 노출
 uv run --with-requirements requirements.txt python test/test_steps.py            # 단계별 생성 — 개념 낱말 규칙·예시 거르기·초안 검사·재요청·강사만
 uv run --with-requirements requirements.txt python test/test_tutor_recap.py      # 수업에서 짚을 거리 — 항목 검사·인용 대조·상한·재요청·강사만
+uv run --with-requirements requirements.txt python test/test_quota.py            # 강사별 생성 한도 — 예약·반환·재요청 ticket·0개면 403·네트워크 실패
 ```
 
 8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.
 
-아홉 다 통과해야 커밋한다. `js/core/pipeline.js` 를 고치면 `api/_pipeline.py` 도 같이 고친다.
+위 테스트가 모두 통과해야 커밋한다. `js/core/pipeline.js` 를 고치면 `api/_pipeline.py` 도 같이 고친다.
 브라우저 경로가 다르면 `CC_CHROME=/path/to/chrome node test/smoke.js`.
 
 학생의 자유 입력(직접 쓴 성공 조건, 마무리 문장, 만든 미션)은 **반드시 교사 화면에

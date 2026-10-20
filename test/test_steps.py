@@ -214,7 +214,8 @@ def sb(method, url, headers, body=None):
         return (200, {'id': {'TCH': 't1', 'STU': 's1'}[tok]}) if tok in ('TCH', 'STU') else (401, {})
     if '/rest/v1/profiles?select=role&id=eq.' in url:
         return 200, [{'role': 'teacher' if url.endswith('t1') else 'student'}]
-    return 500, None
+    rpc = {'gen_reserve': (200, 2), 'gen_refund': (204, None), 'gen_record': (200, '11111111-2222-3333-4444-555555555555')}
+    return rpc.get(url.rsplit('/rpc/', 1)[-1], (500, None))  # 생성 한도 흐름은 test_quota.py
 
 
 def load(name):
@@ -255,8 +256,8 @@ _orig, ms._steps.build = ms._steps.build, _spy_build
 _before = time.monotonic()
 ms.handle({'action': 'build', 'concept': 'for', 'example': EXAMPLE}, 'TCH', ENV, _slow_sb)
 ms._steps.build = _orig
-t('build 의 55초 예산은 강사 확인 전부터 센다 (handle 의 t0)', _seen.get('t0') is not None
-  and _before <= _seen['t0'] <= _seen['called'] - 0.03, _seen)
+t('build 의 55초 예산은 강사 확인 전부터 센다 + 기록 몫(TIMEOUT)을 미리 뺀다', _seen.get('t0') is not None
+  and _before - ms.TIMEOUT <= _seen['t0'] <= _seen['called'] - 0.03 - ms.TIMEOUT, _seen)
 t('가벼운 모델은 LLM_MODEL_LIGHT 로 바꾼다', 'LLM_MODEL_LIGHT' in open(_steps.__file__).read() and 'LLM_MODEL_MINI' not in open(_steps.__file__).read())
 
 

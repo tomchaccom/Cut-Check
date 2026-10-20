@@ -73,13 +73,17 @@ def whoami(token, env, http=urllib_http):
     return {'id': me['id'], 'email': me.get('email')}
 
 
-def refuse(token, env, http=urllib_http):
-    """핸들러용 — 강사면 None, 아니면 보낼 (status, json). 원문 에러는 로그에만."""
+def ident(token, env, http=urllib_http):
+    """핸들러용 — (강사 id, None) 또는 (None, 보낼 (status, json)). 원문 에러는 로그에만."""
     try:
-        teacher(token, env, http)
-        return None
+        return teacher(token, env, http), None
     except Fail as f:
-        return f.status, {'error': f.msg}
+        return None, (f.status, {'error': f.msg, **f.extra})
     except Exception as e:  # 시간 초과·연결 끊김
         print('[auth] 오류', type(e).__name__, file=sys.stderr)
-        return 502, {'error': NO_LINK}
+        return None, (502, {'error': NO_LINK})
+
+
+def refuse(token, env, http=urllib_http):
+    """강사면 None, 아니면 보낼 (status, json)."""
+    return ident(token, env, http)[1]
