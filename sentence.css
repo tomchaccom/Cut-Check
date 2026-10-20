@@ -697,7 +697,7 @@ dialog::backdrop {
 .content > .tutor-open { writing-mode: vertical-rl; letter-spacing: .1em; }
 .tutor-open:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 .content > .tutor-open { flex: 0 0 48px; align-self: flex-start; position: sticky; top: 16px; height: 120px; border-radius: 12px; }
-.tutor { flex: 0 0 360px; width: 360px; align-self: flex-start; position: sticky; top: 16px; height: calc(100dvh - 32px); display: flex; flex-direction: column; padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); overflow: hidden; }
+.tutor { flex: 0 0 360px; width: 360px; align-self: flex-start; position: sticky; top: 16px; height: min(calc(100dvh - 32px), 640px); display: flex; flex-direction: column; padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); overflow: hidden; }
 .tutor[hidden] { display: none; }
 body.tutor-full { overflow: hidden; }
 @media (max-width: 1099px) {

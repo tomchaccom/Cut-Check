@@ -216,6 +216,8 @@ test('튜터 사이드바(넓은 화면): 본문 오른쪽 aside, 본문은 계�
   await expect(side).toBeVisible();
   expect(await side.evaluate(e => e.tagName + e.open)).toBe('ASIDEundefined');
   await expect(page.locator('#tutor-open')).toBeHidden();
+  // 4단계에 들어오면 입력창이 바로 보인다 (접힌 아래에 있지 않다)
+  await expect.poll(() => page.locator('#tutor-send').evaluate(e => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; })).toBe(true);
   const a = await side.boundingBox(), m = await page.locator('#step4').boundingBox();
   expect(a.x).toBeGreaterThanOrEqual(m.x + m.width - 1);
   expect(a.width).toBeLessThanOrEqual(400);
@@ -238,6 +240,19 @@ test('튜터 사이드바(넓은 화면): 본문 오른쪽 aside, 본문은 계�
   await expect(page.locator('.tutor-msg.ai')).toHaveText(['답: split??']);
 });
 
+test('튜터 사이드바: 채팅 전에 접었다 펴도 입력창이 열린다', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  await studentToCode(page);
+  await page.locator('#tutor-close').click();
+  await expect(page.locator('#tutor')).toBeHidden();
+  await expect(page.locator('#tutor-open')).toBeVisible();
+  await page.locator('#tutor-open').click();
+  await expect(page.locator('#tutor')).toBeVisible();
+  await expect(page.locator('#tutor-open')).toBeHidden();
+  await expect(page.locator('#tutor-q')).toBeFocused();
+});
+
 test('튜터 사이드바(휴대폰): 아래 막대로 열면 전체 화면, 닫으면 막대로 돌아온다', async ({ context, page }) => {
   await local(context);
   await page.setViewportSize({ width: 390, height: 800 });
@@ -251,6 +266,12 @@ test('튜터 사이드바(휴대폰): 아래 막대로 열면 전체 화면, 닫
   expect(b.y + b.height).toBeGreaterThan(700);
   await bar.click();
   await expect(page.locator('#tutor-q')).toBeFocused();
+  // 뒤 화면은 막혀 있다 — Tab 을 아무리 눌러도 사이드바 밖(뒤 화면)으로 못 나간다
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => !!document.activeElement.closest('#tutor') || document.activeElement === document.body)).toBe(true);
+  }
+  await page.locator('#tutor-q').focus();
   const a = await page.locator('#tutor').boundingBox();
   expect(a.width).toBeGreaterThanOrEqual(389);
   expect(a.height).toBeGreaterThanOrEqual(799);

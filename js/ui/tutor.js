@@ -126,7 +126,7 @@
         if (at !== mid) return;
         history.push({ q: q, a: r.answer });
         $('#tutor-live').textContent = r.answer;
-        if (view === 'chat') { draw(history); if ($('#tutor').contains(document.activeElement) || document.activeElement === document.body) $('#tutor-q').focus(); }
+        if (view === 'chat') { draw(history); if ($('#tutor').contains(document.activeElement)) $('#tutor-q').focus(); }
       });
   }
 
@@ -139,6 +139,9 @@
   function sync() {
     var box = $('#tutor'), open = expanded(), full = narrow.matches && open;
     box.hidden = !open;
+    /* 사용법 안내는 지금 보이는 쪽(펼친 사이드바 · 손잡이/막대)을 가리킨다 */
+    box.removeAttribute('data-tour'); $('#tutor-open').removeAttribute('data-tour');
+    (open ? box : $('#tutor-open')).setAttribute('data-tour', 'tutor');
     $('#tutor-open').hidden = !on || open;
     $('#tutor-open').textContent = narrow.matches ? '튜터에게 묻기' : '튜터';
     $('#tutor-close').setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -159,7 +162,7 @@
       $('#tutor-open').addEventListener('click', function () { setOpen(true); show('chat'); });
       $('#tutor-close').addEventListener('click', function () { setOpen(false); $('#tutor-open').focus(); });
       $('#tutor').addEventListener('keydown', function (e) { if (e.key === 'Escape' && phoneOpen) $('#tutor-close').click(); });
-      if (narrow.addEventListener) narrow.addEventListener('change', sync);
+      if (narrow.addEventListener) narrow.addEventListener('change', function () { phoneOpen = false; sync(); });
       sync();
       $('#tutor-past').addEventListener('click', openList);
       $('#tutor-back').addEventListener('click', function () { if (view === 'read') openList(); else show('chat'); });
@@ -185,6 +188,11 @@
         if (view === 'chat') draw(history);
       });
     },
-    visible: function (v) { on = v; if (!v) phoneOpen = false; sync(); }
+    visible: function (v) {
+      var was = on;
+      on = v; if (!v) phoneOpen = false; sync();
+      /* 4단계에 막 들어왔을 때 입력창이 접힌 아래에 있지 않게 — 필요한 만큼만 내린다 */
+      if (v && !was && expanded() && !narrow.matches) setTimeout(function () { $('#tutor-send').scrollIntoView({ block: 'nearest' }); }, 0);
+    }
   };
 })(window.CC = window.CC || {});
