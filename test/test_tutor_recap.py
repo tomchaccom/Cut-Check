@@ -108,6 +108,33 @@ llm = fake({'items': [item('하나', ['s0'], 'q'), item('둘', ['s0', 's1', 's2'
 out = fn.handle({'students': many}, 'tk', ENV, http_ok, llm)[1]
 t('묶인 학생 많은 순', out['items'][0]['point'] == '둘', out)
 
+llm = fake({'items': [item(f'혼자 {i}', ['s0'], 'q') for i in range(3)] + [item('같이', ['s0', 's1'], 'q')]})
+out = fn.handle({'students': many}, 'tk', ENV, http_ok, llm)[1]
+t('학생당 3 은 묶인 who 모두에게 센다 (묶인 항목 우선, 혼자인 하나가 밀린다)', len(out['items']) == 3 and sum('s0' in i['who'] for i in out['items']) == 3 and out['items'][0]['point'] == '같이', out)
+
+# 시간 예산
+clock = [100.0]
+asked = []
+
+
+def slow(messages, schema, timeout):
+    asked.append(timeout)
+    clock[0] += 20
+    return '아무 말'
+
+
+try:
+    _tutorrecap.recap([stu('s1')], slow, t0=100.0, now=lambda: clock[0])
+except Exception:
+    pass
+t('남은 시간이 5초 미만이면 재요청 안 함', len(asked) == 1 and asked[0] <= 20, asked)
+clock[0], asked[:] = 100.0, []
+try:
+    _tutorrecap.recap([stu('s1')], slow, t0=90.0, now=lambda: clock[0])  # 이미 10초 썼다
+except Exception:
+    pass
+t('호출 제한시간은 남은 시간 이하', asked and asked[0] == 14, asked)
+
 # 재요청
 llm = fake('아무 말', '이것도 아님')
 st, out = fn.handle({'students': [stu('s1')]}, 'tk', ENV, http_ok, llm)

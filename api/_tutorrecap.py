@@ -8,11 +8,13 @@
 import json
 import re
 import sys
+import time
 
 from _generate import GenerateError, _json
 from _schema import BANMAL, FOREIGN, PRAISE, YOU
 from _steps import mini_llm
 
+DEADLINE, CALL_CAP, RETRY_NEEDS = 24, 20, 5  # 초. maxDuration 30 안에서 응답까지 — 강사 확인부터 센다
 MAX_STUDENTS, MAX_PAIRS, PER_STUDENT, TOTAL, POINT_LEN = 40, 20, 3, 8, 60
 ORDER_END = re.compile(r'세요[.!]?$')
 FAIL = '지금은 뽑지 못했어요. 잠시 뒤 다시 눌러 주세요.'
@@ -85,18 +87,21 @@ def vet(raw_items, students):
     return out
 
 
-def recap(students, call_llm=mini_llm):
+def recap(students, call_llm=mini_llm, t0=None, now=time.monotonic):
+    t0 = now() if t0 is None else t0
     students = clean(students)
     if not students:
         return {'items': []}
     messages = [{'role': 'system', 'content': SYSTEM},
                 {'role': 'user', 'content': json.dumps({'students': students}, ensure_ascii=False)}]
     for attempt in (1, 2):
-        raw = call_llm(messages, SCHEMA, 20)
+        raw = call_llm(messages, SCHEMA, min(CALL_CAP, t0 + DEADLINE - now()))
         data = _json(raw)
         if data is not None and isinstance(data.get('items'), list):
             return {'items': vet(data['items'], students)}
         print('[tutor-recap] 형식 오류', attempt, file=sys.stderr)
+        if t0 + DEADLINE - now() < RETRY_NEEDS:
+            break
         messages = messages + [{'role': 'assistant', 'content': raw if isinstance(raw, str) else ''},
                                {'role': 'user', 'content': '{"items": [...]} 형태의 JSON 하나만 다시 보내세요.'}]
     raise GenerateError(FAIL, {'format': ['JSON 아님']})
