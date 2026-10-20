@@ -724,7 +724,7 @@ getMissions:function(){return P(window.__missions||[])},saveMission:function(r,m
 getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
 getClassroomEvents:function(){if(window.__evs)return P(window.__evs);if(window.__evHang)return new Promise(function(){});var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:CC.codemission.sig('print(3)'),outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
 {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}]))},
-assignOnboard:function(rid,sid,on){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);roster.forEach(function(r){if(r.id===sid)r.onboard_due=on?new Date(Date.now()+60000).toISOString():null});return P(null)},
+assignOnboard:function(rid,sid,on,set){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);(window.__sets=window.__sets||[]).push(set);roster.forEach(function(r){if(r.id===sid){r.onboard_due=on?new Date(Date.now()+60000).toISOString():null;r.onboard_set=on?set:null}});return P(null)},
 removeStudent:function(rid,sid){window.__removed.push(sid);return P({})},
 compass:function(a,b){return CC.sb.api('/api/compass',Object.assign({action:a},b))}}
 })(window.CC=window.CC||{});`;
@@ -823,6 +823,52 @@ test('강사 — 명단에 레벨이 보이고, 대상자로 지정·풀기', as
   await page.locator('.main-tab[data-dtab="dtab-students"]').click();
   await page.locator('.student-tile', { hasText: '태인' }).click();
   await expect(page.locator('#detail .dsub')).toContainText('레벨 하');
+});
+
+test('강사 — 문제지를 골라 지정하고, 서랍에 레벨 테스트 기록이 남는다', async ({ page }) => {
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  const 가은 = page.locator('.roster-row', { hasText: '가은' });
+  await expect(가은.locator('.roster-set')).toHaveValue('mid');                   // 기본은 중
+  const h = await 가은.locator('.roster-set').boundingBox();
+  expect(h.height).toBeGreaterThanOrEqual(44);
+  await 가은.locator('.roster-set').selectOption('high');
+  await 가은.locator('.roster-test').click();
+  await expect(가은.locator('.roster-level')).toHaveText('레벨 테스트 대기');
+  expect(await page.evaluate(() => window.__sets)).toEqual(['high']);
+  await page.locator('.main-tab[data-dtab="dtab-students"]').click();
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const rec = page.locator('#detail .lv-rec');
+  await expect(rec).toHaveCount(1);
+  await expect(rec).toContainText('문제지 중');                                  // set 없던 기록은 중
+  await expect(rec.locator('.lv-n')).toHaveText('0/10');
+  await expect(rec.locator('.lv-ox')).toHaveText('××××××××××');
+  await expect(rec.locator('.lv-stage')).toHaveText('레벨 하');
+});
+
+test('강사 — 마지막 테스트 두 달 뒤 재테스트 알림, 학생당 한 번, 지정하면 사라진다', async ({ page }) => {
+  const now = Date.now();                                                         // 새로고침해도 같은 기록 — 시각을 한 번만 정한다
+  await page.addInitScript(now => {
+    const row = (sid, name, ev) => ({ student_id: sid, created_at: new Date().toISOString(), profiles: { name }, event: Object.assign({ v: 1 }, ev) });
+    window.__evs = [row('s1', '태인', { type: 's-onboard', answers: [], skipped: false, set: 'low', t: now - 61 * 864e5 }),
+      row('s3', '한결', { type: 's-onboard', answers: [], skipped: false, t: now - 59 * 864e5 })];
+  }, now);
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  const al = page.locator('#alert-list li[data-kind="retest"]');
+  await expect(al).toHaveCount(1);
+  await expect(al).toContainText('태인의 레벨 테스트가 두 달 지났어요. 다시 지정할까요?');
+  await expect(al.locator('.al-tag')).toHaveText('레벨 테스트');
+  await page.waitForTimeout(5500);                                               // 다음 기록 읽기 뒤에도 한 번
+  await expect(al).toHaveCount(1);
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  await page.locator('.roster-row', { hasText: '태인' }).locator('.roster-test').click();
+  await expect(al).toHaveCount(0);
+  await page.reload();                                                           // 이 브라우저에서 이미 띄웠다
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await expect(al).toHaveCount(0);
 });
 
 test('강사 — 명단을 다시 그려도 입력한 아이디와 새 비밀번호는 남는다', async ({ page }) => {
@@ -933,6 +979,34 @@ test('선생님이 대상자로 정하면 로그인하자마자 테스트가 뜨
   await expect(page.locator('#onboard-view')).toBeVisible();          // 교실을 누르지 않아도
   await expect(page.locator('#room-title')).toHaveText('방과후 코딩반');
   await expect(page.locator('#ob-skip')).toBeHidden();
+});
+
+/* 2026-10-20 사람이 정함 — 문제지 하·중·상, 기록은 남고, 학생은 난이도도 점수도 못 본다 */
+test('지정한 문제지(상)로 출제되고, 화면에 난이도가 없고, 기록에는 문제지와 답만', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = []; });
+  await asStudent(page, [{ id: 'r1', name: '1학년 3반', onboard_due: '2026-10-19T00:00:00Z', onboard_set: 'high' }]);
+  const ob = page.locator('#onboard-view');
+  await expect(ob).toBeVisible();
+  await expect(page.locator('#ob-code')).toContainText('짜장');              // 상 문제지 첫 문항
+  for (let i = 0; i < 10; i++) {
+    await expect(ob).not.toContainText(/문제지|난이도|레벨|맞았|틀렸|정답/);
+    if (await page.locator('#ob-input').count()) { await page.locator('#ob-input').fill('1'); await page.locator('#ob-input').press('Enter'); }
+    else await page.locator('#ob-options button').first().click();
+  }
+  await expect(ob).not.toContainText(/문제지|난이도|레벨|점수|\/10/);
+  await page.locator('#ob-done').click();
+  const evs = await page.evaluate(() => window.__evs);
+  expect(evs[0].set).toBe('high');
+  expect(evs[0].answers.map(a => a.q)).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'h9', 'h10']);
+  expect(Object.keys(evs[0]).sort()).toEqual(['answers', 'set', 'skipped', 't', 'type', 'v']);   // 점수·레벨 칸 없음
+});
+
+test('지정 없는 첫 입장은 중 문제지', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = []; });
+  await asStudent(page, [{ id: 'r1', name: '1학년 3반', onboard_set: 'low' }]);   // 지정(due) 없이 남은 문제지는 쓰지 않는다
+  await page.locator('.room-tile').first().click();
+  await page.locator('#ob-skip').click();
+  expect((await page.evaluate(() => window.__evs))[0].set).toBe('mid');
 });
 
 test('지정 뒤 이미 테스트를 봤으면 다시 뜨지 않는다', async ({ page }) => {

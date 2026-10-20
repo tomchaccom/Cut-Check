@@ -508,6 +508,36 @@
     return card;
   }
 
+  /* 레벨 테스트 기록 — 날짜 · 문제지 · 맞힌 수 · 문항별 ○/× · 레벨. 선생님 화면에만 (CLAUDE.md 예외 하나).
+   * 기록에는 학생 답만 있다 — 맞음과 레벨은 여기서 core/onboard.js 정답표로 푼다. 건너뛴 기록은 테스트가 아니다 */
+  function levelRecords(d, all) {
+    var OB = CC.onboard;
+    if (!OB || !OB.marks) return;
+    var recs = all.filter(function (e) { return e.type === CC.events.T.S_ONBOARD && !e.skipped; })
+      .sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+    if (!recs.length) return;
+    var sec = el('section', 'd-main d-level');
+    sec.setAttribute('aria-label', '레벨 테스트 기록');
+    sec.appendChild(el('h4', null, '레벨 테스트 기록'));
+    var ul = el('ul', 'lv-list');
+    recs.forEach(function (e) {
+      var mk = OB.marks(e.answers, e.set), n = mk.filter(Boolean).length;
+      var st = OB.stage(e.answers, e.set).stage;
+      var li = el('li', 'lv-rec');
+      li.appendChild(el('span', 'lv-when', e.t ? new Date(e.t).toLocaleDateString('ko') : ''));
+      li.appendChild(el('span', 'lv-set', '문제지 ' + (OB.SET_LABEL[e.set] || OB.SET_LABEL.mid)));
+      li.appendChild(el('span', 'lv-n', n + '/' + mk.length));
+      var ox = el('span', 'lv-ox', mk.map(function (ok) { return ok ? '○' : '×'; }).join(''));
+      ox.setAttribute('role', 'img');
+      ox.setAttribute('aria-label', '문항별 ' + mk.map(function (ok, i) { return (i + 1) + '번 ' + (ok ? '맞음' : '틀림'); }).join(', '));
+      li.appendChild(ox);
+      li.appendChild(el('span', 'lv-stage', st ? '레벨 ' + OB.LABEL[st] : ''));
+      ul.appendChild(li);
+    });
+    sec.appendChild(ul);
+    d.appendChild(sec);
+  }
+
   /* focusSection — 알림에서 열 때 이름 붙은 곳('compass' | 'tutor')으로 바로 내려가 거기에 초점을 둔다 */
   function openDetail(s, mid, focusSection) {
     var all = eventsOf(s);
@@ -719,6 +749,7 @@
     if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
     main.appendChild(dl);
     d.appendChild(main);
+    levelRecords(d, all);
 
     var side = el('section', 'd-tutor');
     side.setAttribute('aria-label', '튜터 대화 · 짚을 거리');
@@ -869,6 +900,26 @@
     cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active());
     $('#alert-list').innerHTML = ''; $('#moments-empty').hidden = false; alCount();   /* 다른 교실의 알림을 끌고 오지 않는다 */
   };
+  /* 재테스트 — 쌓인 할 일이라 첫 화면에도 띄운다. 학생·마지막 테스트당 이 브라우저에서 한 번 (CC.seen + 이 화면의 기억).
+   * 교실은 서버에만 있고 지정도 서버에서만 되니 로컬 모드에는 없다 */
+  var retestShown = {};
+  function retestAlerts() {
+    if (!serverOn()) return;
+    var waiting = function (s) { var r = (C.roster || []).filter(function (x) { return x.id === s.id; })[0]; return !!(r && r.levelWait); };
+    CC.alerts.retest(C.students, Date.now(), waiting).forEach(function (a) {
+      var k = 'retest.' + a.key;
+      if (retestShown[k] || (CC.seen && CC.seen.has(k))) return;
+      retestShown[k] = true;
+      if (CC.seen) CC.seen.mark(k);
+      showAlert(a);
+    });
+  }
+  /* 다시 지정하면 그 학생의 재테스트 알림은 내린다 */
+  CC._dropRetest = function (sid) {
+    document.querySelectorAll('#alert-list li[data-kind="retest"]').forEach(function (li) { if (li.dataset.sid === String(sid)) li.remove(); });
+    if (!document.querySelector('#alert-list li')) $('#moments-empty').hidden = false;
+    alCount();
+  };
   CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], alertOpt()); };
 
   /* 오른쪽 알림 — 이름표 · 사실 문장 · 시각. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다.
@@ -901,6 +952,8 @@
     var tag = CC.alerts.TAGS[a.tag] ? a.tag : 'look';
     var li = el('li', 'al-item new');
     li.dataset.tag = tag;
+    li.dataset.kind = a.kind;
+    li.dataset.sid = a.id;
     var b = el('button', 'al-it');
     b.type = 'button';
     var unread = el('span', 'sr-only', '새 알림, ');   /* 굵기는 눈에만 보인다 — 화면 낭독기에는 말로 */
@@ -1116,6 +1169,7 @@
     var nowSnap = CC.alerts.snap(C.students, alertOpt());
     CC.alerts.diff(lastSnap, nowSnap).forEach(showAlert);
     lastSnap = nowSnap;
+    retestAlerts();
     renderFolders();
   }
 

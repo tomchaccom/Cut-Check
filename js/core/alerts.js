@@ -11,8 +11,9 @@
   'use strict';
 
   var TAGS = { praise: '칭찬 타이밍', look: '살펴볼 것', info: '레벨 테스트' };
-  var TAG_OF = { finish: 'praise', redefine: 'praise', fixed: 'praise', hardcode: 'look', 'tutor-many': 'look', level: 'info', cancel: 'praise', design: 'look', code: 'look' };
+  var TAG_OF = { finish: 'praise', redefine: 'praise', fixed: 'praise', hardcode: 'look', 'tutor-many': 'look', level: 'info', retest: 'info', cancel: 'praise', design: 'look', code: 'look' };
   var TUTOR_MANY = 5;   /* 한 미션에서 튜터에게 이만큼 물으면 알린다 */
+  var RETEST_DAYS = 60; /* 마지막 레벨 테스트 뒤 이만큼 지나면 다시 볼 때라고 알린다 (2026-10-20 사람이 정함 "2개월") */
 
   /* snap 의 opt (모두 선택)
    *   finishedOf(s) -> [미션 DB id]   서버 모드 — 키·mid 가 DB id
@@ -89,6 +90,18 @@
     return out;
   }
 
+  /* 재테스트 — 시각으로 생기는 일이라 diff(새로 생긴 일)가 아니라 '쌓인 할 일' 이다.
+   * 그래서 첫 화면 기준선 규칙을 따르지 않고, 화면이 학생·마지막 테스트(key)당 한 번만 띄운다.
+   * 건너뛴 기록은 테스트가 아니다. waiting(s) 가 참이면(선생님이 이미 다시 지정함) 알리지 않는다 */
+  function retest(students, now, waiting) {
+    return (students || []).filter(function (s) {
+      var o = s && s.onboard;
+      return o && !o.skipped && o.t && now - o.t >= RETEST_DAYS * 864e5 && !(waiting && waiting(s));
+    }).map(function (s) {
+      return { id: s.id, name: s.name, kind: 'retest', tag: TAG_OF.retest, mid: '', dbId: null, key: s.id + ':' + s.onboard.t };
+    });
+  }
+
   function say(a) {
     /* 로컬 모드 학생 이름은 '나' — 나+가 는 '내가' */
     var who = a.name === '나' ? '내가' : a.name + CC.particle(a.name, '이/가');
@@ -105,10 +118,11 @@
         if (c.length !== 2) return who + ' 최근 미션에서 네 방향이 고르게 보여요. 어느 쪽이 더 보였는지 골라 주세요.';   /* 넷이 같으면 둘로 좁힐 근거가 없다 */
         return who + ' 최근 미션에서 ' + c[0] + CC.particle(c[0], '과/와') + ' ' + CC.josa(c[1], '이/가') + ' 같이 두드러져요. 어느 쪽이 더 보였는지 골라 주세요.';
       }
+      case 'retest': return a.name + '의 레벨 테스트가 두 달 지났어요. 다시 지정할까요?';
       case 'design': return who + ' 설계도를 냈어요.';
     }
     return who + ' 코드 결과를 판정했어요.';
   }
 
-  CC.alerts = { snap: snap, diff: diff, say: say, TAGS: TAGS, TUTOR_MANY: TUTOR_MANY };
+  CC.alerts = { snap: snap, diff: diff, say: say, retest: retest, TAGS: TAGS, TUTOR_MANY: TUTOR_MANY, RETEST_DAYS: RETEST_DAYS };
 })(window.CC = window.CC || {});

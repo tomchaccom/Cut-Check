@@ -4,21 +4,22 @@
  * 맞았는지·결과는 보여 주지 않는다 — 해석은 교사 화면이 core/onboard.js 로 한다.
  * 첫 입장 때는 건너뛸 수 있다(건너뛴 학생은 분포에서 빠진다).
  * 선생님이 대상자로 정한 학생(forced)은 건너뛸 수 없다.
+ * 문제지(set: low/mid/high)는 선생님이 고른다. 어느 문제지인지는 화면에 쓰지 않는다 — 기록에만 남긴다.
  */
 (function (CC) {
   'use strict';
 
   var $ = function (s) { return document.querySelector(s); };
-  var Q = CC.onboard.QUESTIONS;
-
   /* classroomId 교실에 진단 기록을 남기고 done() 을 부른다 */
-  function open(classroomId, done, forced) {
+  function open(classroomId, done, forced, set) {
+    if (!Object.prototype.hasOwnProperty.call(CC.onboard.SETS, set)) set = 'mid';
+    var Q = CC.onboard.SETS[set];
     var picks = {};
     var i = 0;
 
     function finish(skipped) {
       var answers = skipped ? [] : Q.map(function (q) { return { q: q.id, pick: picks[q.id] }; });
-      CC.sb.pushEvent(classroomId, null, CC.events.make(CC.events.T.S_ONBOARD, { answers: answers, skipped: skipped }));
+      CC.sb.pushEvent(classroomId, null, CC.events.make(CC.events.T.S_ONBOARD, { answers: answers, skipped: skipped, set: set }));
       $('#onboard-view').hidden = true;
       done();
     }

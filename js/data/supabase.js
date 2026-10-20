@@ -150,12 +150,13 @@
         return sb.from('classrooms').select('*').eq('teacher_id', uid)
           .then(function (tRes) {
             if (tRes.data && tRes.data.length) return tRes.data;
-            return sb.from('enrollments').select('classroom_id, onboard_due, classrooms(*)').eq('student_id', uid)
+            return sb.from('enrollments').select('classroom_id, onboard_due, onboard_set, classrooms(*)').eq('student_id', uid)
               .then(function (sRes) {
                 /* onboard_due: 선생님이 레벨 테스트 대상으로 정한 시각 (없으면 null) */
                 return (sRes.data || []).filter(function (e) { return e.classrooms; }).map(function (e) {
                   var r = {}; for (var k in e.classrooms) r[k] = e.classrooms[k];
                   r.onboard_due = e.onboard_due;
+                  r.onboard_set = e.onboard_set;   /* 지정한 문제지 — 문제를 고르는 데만 쓰고 화면에 쓰지 않는다 */
                   return r;
                 });
               });
@@ -200,21 +201,22 @@
     getClassroomStudents: function (classroomId) {
       if (!sb) return Promise.resolve([]);
       return sb.from('enrollments')
-        .select('student_id, onboard_due, profiles(id, name, login_id)')
+        .select('student_id, onboard_due, onboard_set, profiles(id, name, login_id)')
         .eq('classroom_id', classroomId)
         .then(function (r) {
           return (r.data || []).filter(function (e) { return e.profiles; }).map(function (e) {
             var p = {}; for (var k in e.profiles) p[k] = e.profiles[k];
             p.onboard_due = e.onboard_due;
+            p.onboard_set = e.onboard_set;
             return p;
           });
         });
     },
 
-    /* 레벨 테스트 대상 지정 · 풀기 — 시각은 서버가 찍는다 (assign_onboard) */
-    assignOnboard: function (classroomId, studentId, assign) {
+    /* 레벨 테스트 대상 지정 · 풀기 — 시각은 서버가 찍는다 (assign_onboard2). set = 문제지 low/mid/high */
+    assignOnboard: function (classroomId, studentId, assign, set) {
       if (!sb) return Promise.reject(new Error('Supabase 미설정'));
-      return sb.rpc('assign_onboard', { cid: classroomId, sid: studentId, assign: !!assign })
+      return sb.rpc('assign_onboard2', { cid: classroomId, sid: studentId, assign: !!assign, qset: set || 'mid' })
         .then(function (r) { if (r.error) throw r.error; return r.data; });
     },
 

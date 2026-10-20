@@ -74,6 +74,18 @@ delete CC.onboard;
 d = CC.alerts.diff(CC.alerts.snap([S('태인')], OPT([])), CC.alerts.snap([S('태인', lv)], OPT([])));
 t('level — CC.onboard 없으면 레벨 문장 생략', CC.alerts.say(d[0]) === '태인이 레벨 테스트를 마쳤어요.');
 
+// retest — 60일, 학생·마지막 테스트당 키 하나, 지정하면 없다
+const DAY = 864e5, NOW = 100 * DAY;
+const ob = t0 => ({ onboard: { stage: 'combine', skipped: false, t: t0 } });
+t('RETEST_DAYS 60', CC.alerts.RETEST_DAYS === 60);
+t('retest — 59일은 아직', CC.alerts.retest([S('태인', ob(NOW - 59 * DAY))], NOW).length === 0);
+let r = CC.alerts.retest([S('태인', ob(NOW - 60 * DAY))], NOW);
+t('retest — 60일이면 info, 정해진 문장', r.length === 1 && r[0].tag === 'info' && r[0].kind === 'retest' && CC.alerts.say(r[0]) === '태인의 레벨 테스트가 두 달 지났어요. 다시 지정할까요?');
+t('retest — 키는 학생·마지막 테스트', r[0].key === 'a:' + (NOW - 60 * DAY));
+t('retest — 다시 지정했으면(waiting) 없다', CC.alerts.retest([S('태인', ob(0))], NOW, () => true).length === 0);
+t('retest — 건너뛴 기록·기록 없음은 없다', CC.alerts.retest([S('태인', { onboard: { stage: null, skipped: true, t: 0 } }), S('가은')], NOW).length === 0);
+t('retest — 순서·소요 시간·점수 칸이 없다', Object.keys(r[0]).sort().join() === 'dbId,id,key,kind,mid,name,tag');
+
 // design / code (옛 알림 — 기록을 못 읽을 때)
 const a = CC.alerts.snap([S('나')]), b = CC.alerts.snap([S('나', { sCodeJudges: [{}] })]), c = CC.alerts.snap([S('나', { sDesignCount: 1 })]);
 t('code · design 유지', kinds(CC.alerts.diff(a, b)) === 'code' && CC.alerts.say(CC.alerts.diff(a, b)[0]) === '내가 코드 결과를 판정했어요.' &&

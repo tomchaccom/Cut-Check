@@ -940,7 +940,7 @@
       if (viewedRoom !== asked) return;
       var ats = onboardAts(evs);
       var forced = CC.onboard.pending(r.onboard_due, ats);   /* 선생님이 정했으면 건너뛸 수 없다 */
-      if (ats.length && !forced) showMissions(); else CC.onboardView.open(r.id, showMissions, forced);
+      if (ats.length && !forced) showMissions(); else CC.onboardView.open(r.id, showMissions, forced, forced ? r.onboard_set : 'mid');   /* 지정 없는 첫 입장은 중 */
     }, showMissions);  /* 확인이 안 되면 막지 않는다 — 진단 때문에 수업이 멈추면 안 된다 */
   }
   if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });

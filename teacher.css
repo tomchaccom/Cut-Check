@@ -275,6 +275,15 @@ details.more[open] > summary { margin-bottom: 16px; }
 .roster-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
 .roster-row .name { font-size:15px; font-weight:600; }
 .pill.roster-remove { min-height:36px; padding:0 14px; font-size:14px; border-color:var(--line-strong); }
+.roster-set { font: inherit; font-size: 14px; min-height: 44px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--paper); color: var(--ink); }
+.pill.roster-test { min-height: 44px; }
+
+/* 학생 서랍 — 레벨 테스트 기록 (선생님 화면만) */
+.lv-list { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.lv-rec { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; font-variant-numeric: tabular-nums; }
+.lv-when, .lv-set { color: var(--ink-2); }
+.lv-n, .lv-stage { font-weight: 600; }
+.lv-ox { letter-spacing: 0.15em; overflow-wrap: anywhere; }
 
 /* 학생 계정 만들기 — 이름 · 아이디 · 비밀번호, 만든 뒤 한 번만 보여 준다 */
 .ns-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; margin-top: 14px; }
