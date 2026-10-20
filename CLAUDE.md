@@ -1,4 +1,6 @@
-# Cut & Check — 작업 규칙
+# KOMPAS — 작업 규칙
+
+(예전 이름 Cut & Check. 이름·아이콘의 뜻은 [docs/superpowers/specs/brand.md](docs/superpowers/specs/brand.md))
 
 이 저장소에 기능을 추가하는 사람(그리고 AI)이 먼저 읽는 문서다.
 설계 철학 전문은 [docs/philosophy.md](docs/philosophy.md) 에 있다. 여기는 **작업 규칙**이다.

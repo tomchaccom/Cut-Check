@@ -380,22 +380,31 @@ details.more[open] > summary { margin-bottom: 16px; }
 #ad-main .panel { margin-top: 16px; }
 
 /* 나침반 카드 — 회색·검정만 (브랜드 색 미정). 서랍 안, 기록 위 */
-.compass-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 10px 0; display: grid; gap: 10px; }
+.compass-card { border: 2px solid var(--line-strong); border-radius: 16px; padding: 20px 24px; margin: 12px 0; display: grid; gap: 12px; }
+/* 넓은 화면 — 왼쪽 그림·근거, 오른쪽 보내기. 한 줄로 길게 늘이지 않는다 */
+@media (min-width: 900px) {
+  .compass-card { grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); column-gap: 32px; align-items: start; }
+  .compass-card > h4 { grid-column: 1 / -1; }
+  .compass-card > .compass-top, .compass-card > .was, .compass-card > .compass-ai { grid-column: 1; }
+  .compass-card > .compass-form, .compass-card > .compass-sent { grid-column: 2; }
+  .compass-card > .compass-form { grid-row: 2 / span 3; border-left: 1px solid var(--line); padding-left: 24px; }
+}
 .compass-card h4 { margin: 0; }
 .compass-top { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
-.compass-fig svg { width: 120px; height: 120px; display: block; }
+.compass-card .compass-fig svg { width: 180px; height: 180px; display: block; }
 .compass-dirs { display: grid; gap: 6px; flex: 1; min-width: 220px; }
-.compass-dir { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: 13px; }
+.compass-dir { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 15px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.compass-dir:last-child { border-bottom: 0; }
 .compass-dir .dn { font-weight: 700; min-width: 5.5em; }
 .compass-dir .lv { font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.compass-dir .ev { color: var(--ink-3); font-size: 12.5px; flex-basis: 100%; padding-left: 1em; }
-.compass-ai { font-size: 13px; color: var(--ink-2); margin: 0; }
+.compass-dir .ev { color: var(--ink-2); font-size: 14px; flex-basis: 100%; }
+.compass-ai { font-size: 14px; color: var(--ink-2); margin: 0; padding: 10px 12px; background: var(--paper-2, rgba(127,127,127,.08)); border-radius: 10px; }
 .compass-form { display: grid; gap: 6px; }
-.compass-form label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.compass-form label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .compass-form select, .compass-form textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); min-height: 44px; }
 .compass-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .compass-card .pill { min-height: 44px; padding: 0 16px; cursor: pointer; }
-.compass-msg { font-size: 12.5px; color: var(--ink-3); margin: 0; min-height: 1em; }
+.compass-msg { font-size: 14px; color: var(--ink-3); margin: 0; min-height: 1em; }
 .compass-sent { display: flex; gap: 8px; align-items: baseline; }
 .compass-sent-note { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .student-tile .tag.wait { font-size: 11px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; margin-top: 4px; }

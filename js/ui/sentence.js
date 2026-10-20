@@ -188,13 +188,15 @@
       var h = el('h2', 'step-title', '내 나침반');
       box.appendChild(h);
       box.appendChild(el('p', 'muted', '선생님이 남긴 말이에요.'));
+      var says = el('div', 'compass-says');   /* 오른쪽 — 방위 이름과 선생님 말. 바늘이 없으면 말만 넓게 */
       if (c.needle_deg != null && dir) {
         var wrap = el('div', 'compass-fig');
         wrap.innerHTML = CC.compass.svg(null, c.needle_deg);
-        wrap.appendChild(el('strong', 'compass-dir', CC.compass.DIRS[dir]));
         box.appendChild(wrap);
-      }
-      if (c.teacher_note) box.appendChild(el('p', 'compass-note', c.teacher_note));
+        says.appendChild(el('strong', 'compass-dir', CC.compass.DIRS[dir]));
+      } else says.classList.add('wide');
+      if (c.teacher_note) says.appendChild(el('p', 'compass-note', c.teacher_note));
+      box.appendChild(says);
       box.hidden = false;
     }, function () {});
   }
