@@ -123,8 +123,8 @@ test('강사 홈 — 학생은 가나다순 폴더, 말 걸 순간은 사실만'
   const names = await t.locator('.student-tile .name').allInnerTexts();
   expect(names.length).toBeGreaterThan(0);
   expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'ko')));   // 가나다순만
-  await expect(t.locator('#moments')).toContainText('설계도를 냈어요', { timeout: 5000 });
-  await expect(t.locator('#moments')).not.toContainText(/잘했|훌륭|칭찬/);
+  await expect(t.locator('#alerts')).toContainText('설계도를 냈어요', { timeout: 5000 });
+  await expect(t.locator('#alert-list .al-say')).not.toContainText(/잘했|훌륭|칭찬/);   // 문장은 사실만 — '칭찬 타이밍'은 이름표다
   await expect(t.locator('details.more')).toBeAttached();                       // 분석 패널은 접혀서 남는다
 });
 
@@ -1991,4 +1991,170 @@ test('학생 — 로컬 모드는 나침반을 부르지 않고 카드도 없다
   await seedMission(page);
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
   await expect(page.locator('#compass-mine')).toBeHidden();
+});
+
+/* ── 선생님 화면 틀 (2026-10-20 시안) — 왼쪽 사이드바 · 한 열 본문 · 오른쪽 알림 ── */
+test('선생님 틀 — 왼쪽에 교실과 메뉴, 고른 교실 아래 학생·미션·학생 추가, 아래 관리자·설계 의도·로그아웃', async ({ page }) => {
+  await asTeacher(page);
+  const side = page.locator('#side');
+  await expect(side).toHaveAttribute('aria-label', '교실과 메뉴');
+  await expect(side.locator('#classroom-cards .room-tile')).toHaveCount(2);
+  await side.locator('.room-tile', { hasText: '태인한결' }).click();
+  const tabs = side.locator('.main-tab[data-dtab]');
+  await expect(tabs).toHaveText(['학생', '미션', '학생 추가']);
+  const room = await side.locator('.room-tile', { hasText: '태인한결' }).boundingBox();
+  const next = await side.locator('.room-tile', { hasText: '방과후' }).boundingBox();
+  const t0 = await tabs.first().boundingBox();
+  expect(t0.y).toBeGreaterThan(room.y);                   // 고른 교실 바로 아래
+  expect(t0.y).toBeLessThan(next.y);
+  await expect(side.locator('#t-admin')).toBeVisible();
+  await expect(side.locator('#notes-toggle')).toBeVisible();
+  await expect(side.locator('#tour-replay')).toBeVisible();
+  await expect(side.locator('#t-logout')).toContainText('김선생');
+  await expect(page.locator('#dashboard')).not.toContainText('말 걸 순간');   // 본문에서는 없앴다 — 오른쪽 알림으로
+  await expect(page.locator('#alerts')).toBeVisible();
+  await expect(page.locator('#alerts #alert-list')).toBeAttached();
+  await expect(page.locator('#alerts #moments-empty')).toBeVisible();
+
+  await side.getByRole('button', { name: '새 교실 만들기' }).click();
+  await expect(page.locator('#new-room-name')).toBeVisible();
+  await expect(page.locator('#dashboard')).toBeHidden();
+  await expect(page.locator('#alerts')).toBeHidden();      // 새 교실 화면에는 오른쪽 패널이 없다
+  await side.locator('.room-tile', { hasText: '방과후' }).click();
+  await expect(page.locator('#dashboard')).toBeVisible();
+  await expect(page.locator('#dash-title')).toHaveText('방과후');
+  await side.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  await expect(page.locator('#dtab-invite')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+});
+
+test('선생님 틀 — 접으면 72px 아이콘 줄, 새로고침해도 접힌 채, Tab 으로 메뉴 전부 · 포커스가 보인다', async ({ page }) => {
+  await asTeacher(page);
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  const tg = page.locator('#side-toggle');
+  await expect(tg).toHaveAttribute('aria-expanded', 'true');
+  await expect(tg).toHaveAttribute('aria-controls', 'side');
+  await tg.click();
+  await expect(tg).toHaveAttribute('aria-expanded', 'false');
+  await expect.poll(async () => Math.round((await page.locator('#side').boundingBox()).width)).toBe(72);
+  await page.reload();
+  await expect(page.locator('#side-toggle')).toHaveAttribute('aria-expanded', 'false');
+  expect(Math.round((await page.locator('#side').boundingBox()).width)).toBe(72);
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  const side = page.locator('#side');
+  for (const name of ['학생', '미션', '학생 추가', '새 교실 만들기', '관리자', '사용법 보기', '설계 의도']) {
+    await expect(side.getByRole(name === '관리자' ? 'link' : 'button', { name, exact: true })).toBeVisible();   // 글자는 숨어도 이름은 남는다
+  }
+  await page.locator('#side-toggle').focus();
+  const seen = [];
+  for (let i = 0; i < 14; i++) {
+    await page.keyboard.press('Tab');
+    seen.push(await page.evaluate(() => {
+      const a = document.activeElement;
+      if (!a.closest('#side')) return null;
+      const r = a.getBoundingClientRect(), cs = getComputedStyle(a);
+      return { id: a.id || a.dataset.dtab || a.textContent.trim(), w: r.width, outline: cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2 };
+    }));
+  }
+  const ids = seen.filter(Boolean).map(s => s.id);
+  for (const want of ['dtab-students', 'dtab-missions', 'dtab-invite', 't-admin', 'tour-replay', 'notes-toggle', 't-logout']) expect(ids).toContain(want);
+  expect(ids.filter(x => /태인한결|방과후/.test(x))).toHaveLength(2);
+  for (const s of seen.filter(Boolean)) { expect(s.outline).toBe(true); expect(s.w).toBeLessThanOrEqual(72); }
+
+  await page.locator('#side-toggle').click();               // 다시 펼치면 264px
+  await expect.poll(async () => Math.round((await page.locator('#side').boundingBox()).width)).toBe(264);
+});
+
+const alEv = (sid, name, e) => ({ student_id: sid, created_at: new Date().toISOString(), profiles: { name }, event: Object.assign({ v: 1, t: Date.now() }, e) });
+test('선생님 알림 — 이름표 · 문장 · 시각, 누르면 학생 상세, 읽으면 보통 글씨, 고르기, 폴링 두 번에도 한 번', async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await expect(page.locator('#alerts h2')).toHaveText('알림');
+  await expect(page.locator('#alerts')).toContainText('점수가 아니라 타이밍이에요. 말은 선생님이 해 주세요.');
+  await expect(page.locator('#alert-list li')).toHaveCount(0);   // 연 뒤에 생긴 것만
+  await page.evaluate((add) => { window.__evs.push(...add); }, [
+    alEv('s1', '태인', { type: 's-redefine', mid: 'mx' }),
+    ...[1, 2, 3, 4, 5].map(i => alEv('s1', '태인', { type: 's-tutor', mid: 'mx', q: 'q' + i, a: 'a' })),
+    alEv('s3', '한결', { type: 's-onboard', answers: [], skipped: false })
+  ]);
+  const items = page.locator('#alert-list li');
+  await expect(items).toHaveCount(3, { timeout: 8000 });
+  await expect(page.locator('.toast').first()).toBeVisible();     // 토스트는 그대로
+  const tags = (await items.locator('.al-tag').allInnerTexts()).sort();
+  expect(tags).toEqual(['레벨 테스트', '살펴볼 것', '칭찬 타이밍']);
+  const praise = items.filter({ hasText: '칭찬 타이밍' });
+  await expect(praise).toContainText('태인이 성공 조건을 스스로 바꿨어요.');
+  await expect(praise.locator('time')).toHaveText('방금');
+  await expect(page.locator('#alerts')).not.toContainText(/잘했|훌륭/);
+
+  await page.waitForTimeout(10500);                                 // 5초 폴링 두 번
+  await expect(items).toHaveCount(3);
+
+  for (const [tag, n] of [['praise', 1], ['look', 1], ['all', 3]]) {
+    await page.locator(`.al-filter[data-tag="${tag}"]`).click();
+    await expect(page.locator(`.al-filter[data-tag="${tag}"]`)).toHaveAttribute('aria-pressed', 'true');
+    await expect(items.filter({ visible: true })).toHaveCount(n);
+  }
+  const say = praise.locator('.al-say');
+  expect(Number(await say.evaluate(e => getComputedStyle(e).fontWeight))).toBeGreaterThanOrEqual(600);
+  await praise.locator('button').click();
+  await expect(page.locator('#detail')).toBeVisible();
+  await expect(page.locator('#detail')).toContainText('태인');
+  await page.keyboard.press('Escape');
+  expect(Number(await say.evaluate(e => getComputedStyle(e).fontWeight))).toBeLessThan(600);
+
+  const at = page.locator('#alerts-toggle');                        // 접으면 노란 손잡이, 새로고침해도 접힌 채
+  await expect(at).toHaveAttribute('aria-expanded', 'true');
+  await at.click();
+  await expect(page.locator('#alert-list')).toBeHidden();
+  await expect(page.getByRole('button', { name: '알림 펼치기' })).toBeVisible();
+  await page.reload();
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('#alert-list')).toBeHidden();
+  await page.getByRole('button', { name: '알림 펼치기' }).click();
+  await expect(page.locator('#alert-list')).toBeAttached();
+  await expect(page.locator('#alerts-toggle')).toBeVisible();
+});
+
+test('선생님 틀 — 390 폭: ☰ 로 사이드바, 아래 알림 막대는 전체 화면 알림, 가로 스크롤 없음', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  const side = page.locator('#side');
+  await expect(side).toBeHidden();
+  const open = page.locator('#side-open');
+  await expect(open).toBeVisible();
+  expect((await open.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  await open.click();
+  await expect(side).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(side).toBeHidden();
+  await expect(open).toBeFocused();
+  await open.click();
+  await side.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(side).toBeHidden();                                  // 교실을 고르면 닫힌다
+  await expect(page.locator('#alerts')).toBeHidden();
+  const bar = page.locator('#alerts-bar');
+  await expect(bar).toBeVisible();
+  await expect(bar).toContainText('알림');
+  await page.evaluate((e) => { window.__evs.push(e); }, alEv('s1', '태인', { type: 's-redefine', mid: 'mx' }));
+  await expect(bar).toContainText('칭찬 타이밍 1개', { timeout: 8000 });
+  await bar.click();
+  const al = page.locator('#alerts');
+  await expect(al).toBeVisible();
+  const box = await al.boundingBox();
+  expect(Math.round(box.width)).toBe(390);
+  await expect(al.locator('#alert-list li')).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  await al.locator('#alert-list li button').click();                // 누르면 알림 화면을 닫고 학생 상세
+  await expect(al).toBeHidden();
+  await expect(page.locator('#detail')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await open.click();
+  await page.locator('#side-scrim').click({ position: { x: 380, y: 400 } });
+  await expect(side).toBeHidden();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
 });

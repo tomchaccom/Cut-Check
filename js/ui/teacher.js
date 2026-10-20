@@ -745,9 +745,28 @@
       }
     };
   }
-  CC._resetAlerts = function () { cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); };
+  CC._resetAlerts = function () {
+    cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active());
+    $('#alert-list').innerHTML = ''; $('#moments-empty').hidden = false; alCount();   /* 다른 교실의 알림을 끌고 오지 않는다 */
+  };
   CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], alertOpt()); };
-  /* 말 걸 순간 — 시각 · 학생 이름 · 사실 문장. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다 */
+
+  /* 오른쪽 알림 — 이름표 · 사실 문장 · 시각. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다.
+   * 굵게 = 아직 안 누름. 읽음은 이 화면을 연 동안만 기억한다 (서버에 저장하지 않는다) */
+  var alFilter = 'all';
+  function ago(t) {
+    var m = Math.floor((Date.now() - t) / 60000);
+    return m < 1 ? '방금' : m < 60 ? m + '분 전' : hm(t);
+  }
+  function alFilt(li) { li.hidden = alFilter !== 'all' && li.dataset.tag !== alFilter; }
+  /* 휴대폰 막대에만 이름표별 개수 — 순위가 아니라 쌓인 할 일의 양 (스펙 "하지 않는 것") */
+  function alCount() {
+    var n = {};
+    document.querySelectorAll('#alert-list li.new').forEach(function (li) { n[li.dataset.tag] = (n[li.dataset.tag] || 0) + 1; });
+    var t = ['praise', 'look', 'info'].filter(function (k) { return n[k]; })
+      .map(function (k) { return CC.alerts.TAGS[k] + ' ' + n[k] + '개'; }).join(' · ');
+    $('#alerts-count').textContent = t || '새 알림이 없어요';
+  }
   function showAlert(a) {
     var text = CC.alerts.say(a);
     var host = $('#toasts');
@@ -758,25 +777,123 @@
     }
     fresh[a.id] = true;
     var list = $('#alert-list');
-    if (list) {
-      var li = el('li', 'mo');
-      li.appendChild(el('span', 'tm', hm(Date.now())));
-      var body = el('span');
-      var who = el('button', 'who', a.name);
-      who.type = 'button';
-      who.addEventListener('click', function () {
-        var s = C.students.filter(function (x) { return x.id === a.id; })[0];
-        if (s) openDetail(s);
-      });
-      body.appendChild(who);
-      body.appendChild(el('span', 'sep', ' · '));
-      body.appendChild(document.createTextNode(text));
-      li.appendChild(body);
-      list.insertBefore(li, list.firstChild);
-      while (list.children.length > 10) list.removeChild(list.lastChild);
-      $('#moments-empty').hidden = true;
-    }
+    if (!list) return;
+    var tag = CC.alerts.TAGS[a.tag] ? a.tag : 'look';
+    var li = el('li', 'al-item new');
+    li.dataset.tag = tag;
+    var b = el('button', 'al-it');
+    b.type = 'button';
+    b.appendChild(el('span', 'al-tag ' + tag, CC.alerts.TAGS[tag]));
+    b.appendChild(el('span', 'al-say', text));
+    var at = Date.now(), tm = el('time', 'al-tm', ago(at));
+    tm.dataset.at = at;
+    tm.dateTime = new Date(at).toISOString();
+    b.appendChild(tm);
+    b.addEventListener('click', function () {
+      li.classList.remove('new');
+      alCount();
+      shell.alertsFull(false);
+      var s = C.students.filter(function (x) { return x.id === a.id; })[0];
+      if (s) openDetail(s, a.mid || undefined);
+    });
+    li.appendChild(b);
+    list.insertBefore(li, list.firstChild);
+    while (list.children.length > 30) list.removeChild(list.lastChild);
+    alFilt(li);
+    $('#moments-empty').hidden = true;
+    alCount();
   }
+  setInterval(function () {
+    document.querySelectorAll('#alert-list time[data-at]').forEach(function (t) { t.textContent = ago(+t.dataset.at); });
+  }, 30000);
+  document.querySelectorAll('.al-filter').forEach(function (f) {
+    f.addEventListener('click', function () {
+      alFilter = f.dataset.tag;
+      document.querySelectorAll('.al-filter').forEach(function (x) { x.setAttribute('aria-pressed', x === f ? 'true' : 'false'); });
+      document.querySelectorAll('#alert-list li').forEach(alFilt);
+    });
+  });
+
+  /* ── 화면 틀 — 왼쪽 사이드바 · 본문 · 오른쪽 알림 (2026-10-20 시안) ──
+   * 넓은 화면: 사이드바 264 ↔ 72px 아이콘 줄, 알림은 접으면 노란 손잡이. 접힘은 이 브라우저에 기억한다.
+   * 휴대폰(≤760): 사이드바는 ☰ 로 여는 서랍, 알림은 아래 노란 막대 → 전체 화면.
+   * view: room(교실 대시보드) · new(새 교실 만들기) · pick(교실 고르기 전). 알림은 room 에서만 */
+  var shell = (function () {
+    var phone = window.matchMedia('(max-width: 760px)');
+    var side = $('#side'), sT = $('#side-toggle'), sOpen = $('#side-open'), scrim = $('#side-scrim');
+    var al = $('#alerts'), aT = $('#alerts-toggle'), handle = $('#alerts-handle'), bar = $('#alerts-bar');
+    var view = serverOn() ? 'pick' : 'room', full = false, drawerOn = false;
+    var alOpen = CC.prefs.get('alerts', window.innerWidth > 1100);   /* 기억이 없으면 좁은 화면은 접힌 채로 연다 */
+    var folded = CC.prefs.get('side', false);
+
+    function paintSide() {
+      var p = phone.matches;
+      side.classList.toggle('folded', folded && !p);
+      document.body.classList.toggle('side-open', p && drawerOn);
+      scrim.hidden = !(p && drawerOn);
+      sOpen.setAttribute('aria-expanded', p && drawerOn ? 'true' : 'false');
+      sT.setAttribute('aria-expanded', p ? (drawerOn ? 'true' : 'false') : (folded ? 'false' : 'true'));
+      sT.setAttribute('aria-label', p ? '메뉴 닫기' : folded ? '메뉴 펼치기' : '메뉴 접기');
+      sT.firstChild.textContent = p ? '×' : folded ? '›' : '‹';
+    }
+    function paintAlerts() {
+      var p = phone.matches, room = view === 'room';
+      al.hidden = !room || (p ? !full : !alOpen);
+      handle.hidden = !room || p || alOpen;
+      bar.hidden = !room || !p || full;
+      document.body.classList.toggle('alerts-full', room && p && full);
+      aT.setAttribute('aria-expanded', al.hidden ? 'false' : 'true');
+      aT.setAttribute('aria-label', p ? '알림 닫기' : '알림 접기');
+      aT.firstChild.textContent = p ? '×' : '›';
+      bar.setAttribute('aria-expanded', p && full ? 'true' : 'false');
+    }
+    function drawer(on) {
+      if (drawerOn === on) return;
+      drawerOn = on;
+      paintSide();
+      if (on) (side.querySelector('.room-tile[aria-current="true"]') || sT).focus();
+      else if (phone.matches) sOpen.focus();
+    }
+    sT.addEventListener('click', function () {
+      if (phone.matches) return drawer(false);
+      folded = !folded;
+      CC.prefs.set('side', folded);
+      paintSide();
+    });
+    sOpen.addEventListener('click', function () { drawer(true); });
+    scrim.addEventListener('click', function () { drawer(false); });
+    aT.addEventListener('click', function () {
+      if (phone.matches) { full = false; paintAlerts(); bar.focus(); return; }
+      alOpen = false;
+      CC.prefs.set('alerts', false);
+      paintAlerts();
+      handle.focus();
+    });
+    handle.addEventListener('click', function () { alOpen = true; CC.prefs.set('alerts', true); paintAlerts(); aT.focus(); });
+    bar.addEventListener('click', function () { full = true; paintAlerts(); aT.focus(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (drawerOn) drawer(false);
+      if (full) { full = false; paintAlerts(); bar.focus(); }
+    });
+    /* 사이드바 안에서 무엇을 고르면(교실·보기) 휴대폰 서랍은 닫는다 */
+    side.addEventListener('click', function (e) { if (e.target.closest('.room-tile, .main-tab, .room-new')) drawer(false); });
+    (phone.addEventListener ? phone.addEventListener.bind(phone, 'change') : phone.addListener.bind(phone))(function () {
+      drawerOn = false; full = false; paintSide(); paintAlerts();
+    });
+
+    function setView(v) {
+      view = v;
+      $('#dashboard').hidden = v !== 'room';
+      $('#new-room').hidden = v !== 'new';
+      $('#pick-room').hidden = v !== 'pick';
+      paintAlerts();
+    }
+    paintSide();
+    setView(view);
+    return { view: setView, alertsFull: function (on) { if (full !== on) { full = on; paintAlerts(); } } };
+  })();
+  CC._shellView = shell.view;
 
   /* ── 학생 폴더 — 가나다순만. 진도·속도로 줄 세우지 않는다 (CLAUDE.md) ── */
   function renderFolders() {
