@@ -30,7 +30,7 @@ const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make
       for (const scheme of ['light','dark']) {
         const ctx = await b.newContext({ viewport: { width: w, height: 900 }, colorScheme: scheme });
         /* 실제 교실 DB 에 붙지 않게 로컬 모드로 돌린다 (robust.js 와 같은 이유) */
-        await ctx.route('**/supabase-js@2/**', r => r.abort());
+        await ctx.route('**/supabase-js@*/**', r => r.abort());
         const p = await ctx.newPage();
         const errs = [];
         p.on('pageerror', e => errs.push(e.message));

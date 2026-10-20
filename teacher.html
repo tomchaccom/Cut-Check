@@ -15,77 +15,88 @@
 </head>
 <body>
 
-<div class="page wide">
+<div class="shell">
 
-  <header class="topbar">
-    <div class="brand">
-      <span class="mark icon"><img src="favicon.svg" alt=""></span>
-      <div><b>KOMPAS</b><small>선생님 화면</small></div>
-    </div>
-    <div class="toptools">
-      <span class="tbtn" id="t-username" style="cursor:default" hidden></span>
-      <a class="tbtn" id="t-admin" href="admin.html" hidden>관리자</a>
-      <button class="tbtn" id="tour-replay" type="button" data-tour="replay">사용법 보기</button>
-      <button class="tbtn" id="notes-toggle" aria-pressed="false" aria-label="설계 의도 보기">설계 의도</button>
-      <button class="tbtn" id="t-logout" hidden aria-label="로그아웃">로그아웃</button>
-    </div>
+  <!-- 휴대폰 머리 — ☰ 와 지금 교실 -->
+  <header class="m-bar">
+    <button type="button" class="iconbtn" id="side-open" aria-controls="side" aria-expanded="false" aria-label="메뉴 열기">☰</button>
+    <b class="m-room" id="m-room">KOMPAS</b>
   </header>
 
-  <!-- 교실 선택 -->
-  <section id="classroom-selector" data-tour="rooms">
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:14px">내 교실</h2>
-    <div class="icon-grid" id="classroom-cards"></div>
-    <div id="classroom-empty" class="empty-msg" hidden>아직 교실이 없어요. 아래에서 새 교실을 만드세요.</div>
-    <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
-      <input type="text" id="new-room-name" placeholder="새 교실 이름 (예: 2학년 3반)" style="flex:1;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);min-height:44px">
-      <button class="btn primary" id="new-room-btn">만들기</button>
+  <!-- 왼쪽 — 교실과 메뉴. 접으면 72px 아이콘 줄 -->
+  <nav class="side" id="side" aria-label="교실과 메뉴">
+    <div class="side-top">
+      <span class="brand"><img class="mark" src="favicon.svg" alt=""><b class="lbl">KOMPAS</b></span>
+      <button type="button" class="iconbtn" id="side-toggle" aria-controls="side" aria-expanded="true" aria-label="메뉴 접기"><span aria-hidden="true">‹</span></button>
     </div>
-    <div id="new-room-msg" style="margin-top:8px;font-size:13px"></div>
-  </section>
+    <section id="classroom-selector" data-tour="rooms">
+      <h2 class="side-head lbl">내 교실</h2>
+      <div class="room-list" id="classroom-cards"></div>
+      <p id="classroom-empty" class="side-note lbl" hidden>아직 교실이 없어요.</p>
+      <button type="button" class="room-new" id="new-room-open" title="새 교실 만들기"><span class="ini" aria-hidden="true">+</span><span class="lbl">새 교실 만들기</span></button>
+    </section>
+    <!-- 고른 교실의 보기 — 서버 모드는 고른 교실 바로 아래로 옮겨 붙는다 -->
+    <ul class="room-nav" id="room-nav" aria-label="보기" hidden>
+      <li><button type="button" class="main-tab active" data-dtab="dtab-students" aria-current="page" title="학생"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="lbl">학생</span></button></li>
+      <li><button type="button" class="main-tab" data-dtab="dtab-missions" title="미션"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg><span class="lbl">미션</span></button></li>
+      <li><button type="button" class="main-tab" data-dtab="dtab-invite" data-tour="invite" title="학생 추가"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg><span class="lbl">학생 추가</span></button></li>
+    </ul>
+    <div class="side-bottom">
+      <a class="navl" id="t-admin" href="admin.html" title="관리자" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span class="lbl">관리자</span></a>
+      <button type="button" class="navl" id="tour-replay" data-tour="replay" title="사용법 보기"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="lbl">사용법 보기</span></button>
+      <button type="button" class="navl" id="notes-toggle" aria-pressed="false" title="설계 의도"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span class="lbl">설계 의도</span></button>
+      <button type="button" class="navl" id="t-logout" title="로그아웃" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg><span class="lbl">로그아웃<span id="t-username"></span></span></button>
+    </div>
+  </nav>
+  <div class="side-scrim" id="side-scrim" hidden></div>
 
-  <hr style="border:none;border-top:1px solid var(--line);margin:24px 0" id="dash-divider" hidden>
+  <main class="shell-main" id="main">
+
+  <!-- 교실을 아직 고르지 않았을 때 -->
+  <p class="pick-room" id="pick-room" hidden>메뉴에서 교실을 골라 주세요.</p>
+
+  <!-- 새 교실 만들기 — 오른쪽 알림 없음 -->
+  <section class="new-room" id="new-room" hidden aria-labelledby="new-room-h">
+    <h1 class="big-title" id="new-room-h">새 교실 만들기</h1>
+    <p class="lead">교실을 만들면 학생 계정을 추가하고 미션을 낼 수 있어요.</p>
+    <label class="nr-lab" for="new-room-name">교실 이름</label>
+    <div class="nr-row">
+      <input type="text" id="new-room-name" placeholder="예: 2학년 3반">
+      <button class="btn primary" id="new-room-btn">교실 만들기</button>
+    </div>
+    <div id="new-room-msg" role="status"></div>
+  </section>
 
   <!-- 교실 대시보드 -->
   <div id="dashboard" hidden>
-    <div class="t-top">
-      <nav class="crumb" aria-label="위치"><span>내 교실</span><span class="sep" aria-hidden="true">/</span><span id="crumb-room">이 브라우저</span><span class="role-tag">강사</span></nav>
-      <div class="t-top-r">
-        <span class="room-code" id="room-code-wrap" hidden>교실 코드 <b id="room-code"></b></span>
-        <button type="button" class="pill primary" id="go-make" data-tour="make">미션 만들기</button>
-      </div>
-    </div>
-    <h1 class="big-title xl" id="dash-title">이 브라우저</h1>
-    <p class="eyebrow" id="class-label"></p>
-    <button type="button" class="pill" id="tutor-csv" data-tour="tutor-csv">튜터 기록 내려받기</button>
-    <button type="button" class="pill" id="recap-class">수업에서 짚을 거리</button>
-    <div class="recap-out" id="recap-class-out" aria-live="polite"></div>
-
-    <!-- 탭 -->
-    <nav class="main-tabs step-tabs" aria-label="보기">
-      <button type="button" class="main-tab active" data-dtab="dtab-students">학생</button>
-      <button type="button" class="main-tab" data-dtab="dtab-missions">미션</button>
-      <button type="button" class="main-tab" data-dtab="dtab-invite" data-tour="invite">학생 추가</button>
+    <header class="t-head">
+      <h1 class="big-title" id="dash-title">이 브라우저</h1>
+      <span class="room-code" id="room-code-wrap" hidden>교실 코드 <b id="room-code"></b></span>
+      <p class="eyebrow" id="class-label"></p>
+      <button type="button" class="pill primary" id="go-make" data-tour="make">미션 만들기</button>
+    </header>
+    <nav class="m-tabs" aria-label="보기 (휴대폰)">
+      <button type="button" class="m-tab" data-go="dtab-students" aria-pressed="true">학생</button>
+      <button type="button" class="m-tab" data-go="dtab-missions" aria-pressed="false">미션</button>
+      <button type="button" class="m-tab" data-go="dtab-invite" aria-pressed="false">학생 추가</button>
     </nav>
+    <div class="t-tools">
+      <button type="button" class="pill" id="tutor-csv" data-tour="tutor-csv">튜터 기록 내려받기</button>
+      <button type="button" class="pill" id="recap-class">수업에서 짚을 거리</button>
+    </div>
+    <div class="recap-out" id="recap-class-out" aria-live="polite"></div>
 
     <!-- [학생] -->
     <div class="dtab active" id="dtab-students">
       <div id="toasts" class="toasts" aria-live="polite"></div>
       <div class="livebar" id="livebar"></div>
-      <div class="t-cols">
-        <section aria-label="학생" class="t-main" data-tour="students">
-          <div class="t-sec-hd">
-            <h2>학생 — 가나다순</h2>
-            <p class="legend"><span><i class="lg-dot"></i>새 순간이 있어요</span><span><i class="lg-gray"></i>오늘 아직 기록이 없어요</span></p>
-          </div>
-          <div class="icon-grid student-grid" id="student-folders"></div>
-        </section>
-        <section aria-label="말 걸 순간" class="t-side" id="moments" data-tour="moments">
-          <h2>말 걸 순간</h2>
-          <p class="lead" data-lint-ok>점수가 아니라 타이밍이에요. 격려의 말은 선생님이 해 주세요.</p>
-          <ol id="alert-list" class="alert-list"></ol>
-          <p class="emptyrow" id="moments-empty">화면을 연 뒤에 생긴 일이 여기에 쌓여요.</p>
-        </section>
-      </div>
+      <section aria-label="학생" class="t-main" data-tour="students">
+        <div class="t-sec-hd">
+          <h2>학생 — 가나다순</h2>
+          <p class="legend"><span><i class="lg-dot"></i>새 순간이 있어요</span><span><i class="lg-gray"></i>오늘 아직 기록이 없어요</span></p>
+        </div>
+        <div class="icon-grid student-grid" id="student-folders"></div>
+      </section>
       <details class="more">
         <summary>더 보기 — 분석</summary>
         <div class="tiles" id="tiles"></div>
@@ -107,37 +118,86 @@
     <!-- [미션 관리] -->
     <div class="dtab" id="dtab-missions">
       <section class="panel">
-        <div class="hd"><div><h2>미션 만들기</h2><p class="lead">수업 내용과 핵심을 입력하면 미션이 생성됩니다.</p></div></div>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
-          <div>
-            <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:4px">오늘 수업에서 뭘 배웠나요?</label>
-            <textarea id="gen-lesson" rows="2" placeholder="예: 파이썬 리스트와 for 반복문" style="width:100%;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);resize:vertical;font-family:inherit"></textarea>
-          </div>
-          <div>
-            <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:4px">핵심은?</label>
-            <textarea id="gen-key" rows="2" placeholder="예: 중복 데이터를 구분하는 법" style="width:100%;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);resize:vertical;font-family:inherit"></textarea>
-          </div>
-          <div id="gen-spread" style="font-size:13px;color:var(--ink-3)"></div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <select id="gen-diff" style="padding:8px 12px;border:1px solid var(--line-strong);border-radius:10px;font-size:14px;background:var(--surface);color:var(--ink)">
-              <option value="easy">쉬움</option><option value="medium" selected>보통</option><option value="hard">어려움</option>
-            </select>
-            <button id="gen-btn" class="btn" data-tour="quick">빠른 생성</button>
-            <button id="sg-concept" class="btn primary" data-tour="concept">개념 확인</button>
-            <span class="gen-left" role="status"></span>
-          </div>
+        <div class="hd"><div><h2>미션 만들기</h2><p class="lead">수업 내용으로 학생에게 줄 미션을 만들어요.</p></div></div>
+        <div class="seg" role="tablist" aria-label="미션 만드는 방법">
+          <button type="button" role="tab" id="gt-step" class="seg-b" aria-controls="gp-step" aria-selected="true">단계별로 만들기</button>
+          <button type="button" role="tab" id="gt-quick" class="seg-b" aria-controls="gp-quick" aria-selected="false" tabindex="-1">한 번에 만들기</button>
         </div>
-        <div id="sg" hidden>
-          <label class="sg-lb">개념 <select id="sg-concept-pick" class="sg-in"></select></label>
-          <div id="sg-examples"></div>
-          <button id="sg-more" class="btn" type="button">다른 예시 더 보기</button>
-          <label class="sg-lb">이렇게 바꿔 줬으면 (선택) <textarea id="sg-wish" class="sg-in" rows="2" maxlength="200"></textarea></label>
-          <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>만들기</button><span class="gen-left" role="status"></span><span id="sg-status" role="status"></span></div>
-          <div id="sg-draft"></div>
+
+        <div id="gp-step" role="tabpanel" aria-labelledby="gt-step">
+          <div class="gp-prog"><span id="gp-count" role="status">1 / 4 수업 내용</span><div class="gp-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+
+          <section class="gp-s" data-step="1">
+            <div class="gp-sum" hidden><span class="gp-t">수업 내용</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>오늘 수업에서 무엇을 배웠나요?</h3>
+              <p class="lead">수업 내용과 핵심을 적어 주세요. 개념은 다음 단계에서 같이 확인해요.</p>
+              <div id="gen-fields" class="gp-fields">
+                <div>
+                  <label class="gp-lb" for="gen-lesson">수업 내용</label>
+                  <textarea id="gen-lesson" class="gp-ta" rows="2" placeholder="예: 파이썬 리스트와 for 반복문"></textarea>
+                </div>
+                <div>
+                  <label class="gp-lb" for="gen-key">핵심은?</label>
+                  <textarea id="gen-key" class="gp-ta" rows="2" placeholder="예: 중복 데이터를 구분하는 법"></textarea>
+                </div>
+                <div id="gen-spread" class="gp-spread"></div>
+                <select id="gen-diff" class="gp-sel" aria-label="난이도">
+                  <option value="easy">쉬움</option><option value="medium" selected>보통</option><option value="hard">어려움</option>
+                </select>
+              </div>
+              <div class="gp-act"><button id="sg-concept" class="btn primary" data-tour="concept" type="button">다음: 개념 확인하기</button></div>
+              <p class="gp-quota"><span class="gp-q">여기까지는 횟수를 쓰지 않아요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+
+          <section class="gp-s" data-step="2" hidden>
+            <div class="gp-sum" hidden><span class="gp-t">개념 확인</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>어떤 개념으로 만들까요?</h3>
+              <p class="lead">수업 내용에서 찾은 개념이에요. 다르면 바꿔 주세요.</p>
+              <label class="sg-lb">개념 <select id="sg-concept-pick" class="sg-in"></select></label>
+              <div class="gp-act"><button id="sg-next" class="btn primary" type="button">다음: 이야기 고르기</button></div>
+              <p class="gp-quota"><span class="gp-q">여기까지는 횟수를 쓰지 않아요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+
+          <section class="gp-s" data-step="3" hidden>
+            <div class="gp-sum" hidden><span class="gp-t">이야기 고르기</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>어떤 이야기로 풀어 볼까요?</h3>
+              <p class="lead">마음에 드는 이야기를 하나 골라 주세요.</p>
+              <div id="sg-examples"></div>
+              <button id="sg-more" class="btn" type="button">다른 예시 더 보기</button>
+              <label class="sg-lb">이렇게 바꿔 줬으면 (선택) <textarea id="sg-wish" class="sg-in" rows="2" maxlength="200"></textarea></label>
+              <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>문제 만들기</button></div>
+              <p class="gp-quota"><span class="gp-q">문제 만들기를 누르면 1개를 써요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+
+          <section class="gp-s" data-step="4" hidden>
+            <div class="gp-sum" hidden><span class="gp-t">문제 확인</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>이 문제를 학생에게 낼까요?</h3>
+              <p class="lead">고칠 곳을 고친 뒤 확정해 주세요.</p>
+              <div id="sg-draft"></div>
+              <p class="gp-quota"><span class="gp-q">여기까지는 횟수를 쓰지 않아요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+          <div id="gp-confirm" class="gp-confirm" role="alertdialog" aria-label="확인" hidden><p>만든 문제가 사라져요. 계속할까요?</p><button type="button" id="gp-yes" class="btn primary">계속</button><button type="button" id="gp-no" class="btn o">취소</button></div>
+          <p id="sg-status" role="status"></p>
         </div>
-        <div id="gen-result" style="margin-top:14px"></div>
+
+        <div id="gp-quick" role="tabpanel" aria-labelledby="gt-quick" hidden>
+          <h3>한 번에 만들까요?</h3>
+          <p class="lead">수업 내용과 핵심만 넣으면 초안을 한 번에 만들어요. 확정 전에 고칠 수 있어요.</p>
+          <div id="gp-quick-slot"></div>
+          <div class="gp-act"><button id="gen-btn" class="btn primary" data-tour="quick" type="button">빠른 생성</button></div>
+          <p class="gp-quota"><span class="gp-q">만들기를 누르면 1개를 써요</span> · <span class="gen-left" role="status"></span></p>
+        </div>
+        <div id="gen-result" class="gp-result"></div>
       </section>
-      <h3 style="font-size:16px;font-weight:700;margin:20px 0 10px">생성된 미션</h3>
+      <h3 class="list-h">생성된 미션</h3>
       <div id="mission-list" class="mission-grid"></div>
     </div>
 
@@ -161,14 +221,34 @@
     </div>
   </div>
 
+  <!-- 학생 상세 — 서랍이 아니라 본문 화면. 열리면 위 대시보드가 숨는다 -->
+  <section class="detail" id="detail" hidden aria-live="polite"></section>
+
   <div class="foot">
     <span><b>이 화면에 없는 것</b> 정답률 · 점수 · 완료 순위</span>
     <span><b>있는 것</b> 개입 순서 · 기대값 · 칭찬 타이밍</span>
   </div>
+  </main>
+
+  <!-- 오른쪽 — 알림. 점수가 아니라 타이밍, 말은 선생님이 -->
+  <aside class="alerts" id="alerts" aria-labelledby="alerts-h" data-tour="moments" hidden>
+    <div class="al-head">
+      <h2 id="alerts-h">알림</h2>
+      <button type="button" class="iconbtn" id="alerts-toggle" aria-controls="alerts" aria-expanded="true" aria-label="알림 접기"><span aria-hidden="true">›</span></button>
+    </div>
+    <p class="al-hint" data-lint-ok>점수가 아니라 타이밍이에요. 말은 선생님이 해 주세요.</p>
+    <div class="al-filters" role="group" aria-label="알림 고르기">
+      <button type="button" class="al-filter" data-tag="all" aria-pressed="true">전체</button>
+      <button type="button" class="al-filter" data-tag="praise" aria-pressed="false">칭찬 타이밍</button>
+      <button type="button" class="al-filter" data-tag="look" aria-pressed="false">살펴볼 것</button>
+    </div>
+    <ol id="alert-list" class="alert-list"></ol>
+    <p class="emptyrow" id="moments-empty">화면을 연 뒤에 생긴 일이 여기에 쌓여요.</p>
+  </aside>
+  <button type="button" class="al-handle" id="alerts-handle" aria-controls="alerts" aria-expanded="false" hidden>알림 펼치기</button>
+  <button type="button" class="al-bar" id="alerts-bar" aria-controls="alerts" aria-expanded="false" hidden><b>알림</b> <span id="alerts-count">새 알림이 없어요</span></button>
 </div>
 
-<div class="scrim" id="scrim" hidden></div>
-<section class="detail" id="detail" hidden aria-live="polite"></section>
 
 <script>
 window.CC_SUPABASE = {
@@ -176,7 +256,7 @@ window.CC_SUPABASE = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bWhkc2RhYnVsZ2V2Z21yd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NzUwNDIsImV4cCI6MjEwNjE1MTA0Mn0.mrDM6f9SXGA0YkWAkn5y0nC-nbdFsdyBwOQ1Fhk8FOY'
 };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="js/data/config.js"></script>
 <script src="js/data/supabase.js"></script>
 <script src="js/core/events.js"></script>
@@ -195,6 +275,7 @@ window.CC_SUPABASE = {
 <script src="js/data/api.js"></script>
 <script src="js/data/store.js"></script>
 <script src="js/data/seen.js"></script>
+<script src="js/data/prefs.js"></script>
 <script src="js/core/blocks.js"></script>
 <script src="js/core/pyerr.js"></script>
 <script src="js/ui/pyrun.js"></script>
@@ -212,15 +293,22 @@ window.CC_SUPABASE = {
 
   var selectedRoom = null;
 
-  /* 탭 전환 */
+  /* 탭 전환 — 보기는 사이드바에(.main-tab), 휴대폰은 본문 위 줄(.m-tab)이 같은 버튼을 누른다 */
   document.querySelectorAll('.main-tab[data-dtab]').forEach(function (t) {
     t.addEventListener('click', function () {
+      if (window.CC && CC._closeDetail) CC._closeDetail();   /* 학생 상세가 열려 있으면 먼저 목록으로 */
       document.querySelectorAll('.dtab').forEach(function (d) { d.classList.remove('active'); });
-      document.querySelectorAll('.main-tab[data-dtab]').forEach(function (x) { x.classList.remove('active'); });
+      document.querySelectorAll('.main-tab[data-dtab]').forEach(function (x) { x.classList.remove('active'); x.removeAttribute('aria-current'); });
       t.classList.add('active');
+      t.setAttribute('aria-current', 'page');
+      document.querySelectorAll('.m-tab').forEach(function (m) { m.setAttribute('aria-pressed', m.dataset.go === t.dataset.dtab ? 'true' : 'false'); });
       var panel = $('#' + t.dataset.dtab);
       if (panel) panel.classList.add('active');
+      if (selectedRoom || !CC.sb.active()) CC._shellView('room');   /* 새 교실 화면에서 눌러도 교실로 돌아온다 */
     });
+  });
+  document.querySelectorAll('.m-tab').forEach(function (m) {
+    m.addEventListener('click', function () { document.querySelector('.main-tab[data-dtab="' + m.dataset.go + '"]').click(); });
   });
 
   /* 미션 만들기 — 지금처럼 미션 탭으로 */
@@ -233,11 +321,11 @@ window.CC_SUPABASE = {
   var TOUR_HOME = [{ key: 'rooms', title: '내 교실', text: '교실을 고르면 그 교실 학생들의 기록이 열려요. 새 교실도 여기서 만들어요.' }];
   var TOUR_DASH = [
     { key: 'students', title: '학생 카드', text: '학생마다 지금 어느 단계인지 보여요. 누르면 그 학생이 고르고 고친 기록이 열려요.', before: function () { tab('dtab-students'); } },
-    { key: 'moments', title: '말 걸 순간', text: '말을 걸 만한 순간이 생기면 여기에 쌓여요. 무슨 말을 할지는 선생님이 정해요.' },
+    { key: 'moments', title: '알림', text: '칭찬할 때나 살펴볼 일이 생기면 여기에 쌓여요. 무슨 말을 할지는 선생님이 정해요.' },
     { key: 'tutor-csv', title: '튜터 기록 내려받기', text: '학생들이 파이썬 튜터에게 물은 질문과 답을 CSV 파일로 받아요.' },
     { key: 'make', title: '미션 만들기', text: '오늘 수업 내용으로 학생에게 줄 미션을 만들어요. 누르면 미션 탭이 열려요.' },
-    { key: 'quick', title: '빠른 생성', text: '수업 내용과 핵심만 넣으면 미션 초안을 한 번에 만들어요. 확정 전에 고칠 수 있어요.', before: function () { tab('dtab-missions'); } },
-    { key: 'concept', title: '개념 확인', text: '단계별로 만들어요. 개념을 확인하고, 이야기를 고른 뒤, 문제로 만들어요.', before: function () { tab('dtab-missions'); } },
+    { key: 'quick', title: '빠른 생성', text: '수업 내용과 핵심만 넣으면 미션 초안을 한 번에 만들어요. 확정 전에 고칠 수 있어요.', before: function () { tab('dtab-missions'); CC.genflow.tab('quick', true); } },
+    { key: 'concept', title: '개념 확인', text: '단계별로 만들어요. 개념을 확인하고, 이야기를 고른 뒤, 문제로 만들어요.', before: function () { tab('dtab-missions'); CC.genflow.tab('step', true); CC.genflow.step(1); } },
     { key: 'invite', title: '학생 추가', text: '학생 계정(아이디·비밀번호)을 만들어요. 서버에 연결돼 있을 때 쓸 수 있어요.' }
   ];
   var TOUR_END = [{ key: 'replay', title: '사용법 보기', text: '이 안내는 여기서 언제든 다시 볼 수 있어요.' }];
@@ -254,18 +342,14 @@ window.CC_SUPABASE = {
   style.textContent = '.dtab { display: none; } .dtab.active { display: block; }';
   document.head.appendChild(style);
 
-  /* 설계 의도 토글 */
-  $('#notes-toggle').addEventListener('click', function () {
-    var on = document.body.classList.toggle('notes');
-    this.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  /* 설계 의도 토글은 teacher.js 한 곳 — 여기서도 걸면 두 번 뒤집혀 아무 일도 안 일어난다 */
 
   /* 인증 확인 */
   if (CC.sb && CC.sb.active()) {
     CC.sb.getProfile().then(function (p) {
       if (!p) { window.location.href = 'auth.html'; return; }
       if (p.role !== 'teacher') { window.location.replace('sentence.html'); return; }   /* 학생은 선생님 화면을 열 수 없다 */
-      if ($('#t-username')) { $('#t-username').textContent = p.name + ' 선생님'; $('#t-username').hidden = false; }
+      $('#t-username').textContent = ' (' + p.name + ' 선생님)';
       if ($('#t-logout')) $('#t-logout').hidden = false;
       $('#t-admin').hidden = false;   /* 관리자인지는 admin.html 이 서버에 묻는다 — 아니면 거기서 한 줄로 막힌다 */
       loadClassrooms();
@@ -279,34 +363,50 @@ window.CC_SUPABASE = {
     /* 로컬 모드 — 교실은 서버에만 있다. 서버가 없어도 이 브라우저의 기록으로
      * 대시보드는 열려야 한다 (CLAUDE.md: 서버를 필수로 만들지 않는다). */
     $('#classroom-selector').hidden = true;
-    $('#dashboard').hidden = false;
+    $('#room-nav').hidden = false;
     $('#ns-form').hidden = true;
     $('#ns-local').hidden = false;
   }
 
-  /* 교실 목록 로드 */
+  /* 교실 목록 로드 — 사이드바. 첫 글자 칩 + 이름 + 교실 코드, 고른 교실 바로 아래에 보기(학생·미션·학생 추가) */
   function loadClassrooms() {
     CC.sb.myClassrooms().then(function (rooms) {
       var cards = $('#classroom-cards');
+      $('#side').insertBefore($('#room-nav'), $('.side-bottom'));   /* 목록을 다시 그려도 보기 버튼은 살린다 */
       cards.innerHTML = '';
-      if (!rooms.length) {
-        $('#classroom-empty').hidden = false;
-        return;
-      }
-      $('#classroom-empty').hidden = true;
+      $('#classroom-empty').hidden = !!rooms.length;
       rooms.forEach(function (room) {
-        var card = el('button', 'tile room-tile');
+        var card = el('button', 'room-tile');
         card.type = 'button';
-        card.innerHTML = '<span class="folder" aria-hidden="true"><span class="tab"></span><span class="body"></span></span>';
-        card.appendChild(el('span', 'name', room.name));
-        card.appendChild(el('span', 'meta', '교실 코드 ' + room.code));
+        card.dataset.rid = room.id;
+        card.title = room.name;   /* 접힌 줄에서는 첫 글자만 보인다 */
+        var ini = el('span', 'ini', String(room.name || '?').trim().charAt(0) || '?');
+        ini.setAttribute('aria-hidden', 'true');
+        card.appendChild(ini);
+        var t = el('span', 'lbl');
+        t.appendChild(el('span', 'name', room.name));
+        t.appendChild(el('small', 'meta', '교실 코드 ' + room.code));
+        card.appendChild(t);
         card.addEventListener('click', function () { selectRoom(room); });
         cards.appendChild(card);
       });
-      /* 교실이 하나면 자동 선택 */
-      if (rooms.length === 1) selectRoom(rooms[0]);
+      if (selectedRoom) placeNav();
+      else if (!rooms.length) CC._shellView('new');   /* 교실이 없으면 만들기부터 */
+      if (rooms.length === 1 && !selectedRoom) selectRoom(rooms[0]);   /* 교실이 하나면 자동 선택 */
     });
   }
+  function placeNav() {
+    var nav = $('#room-nav');
+    document.querySelectorAll('.room-tile').forEach(function (c) {
+      var on = selectedRoom && c.dataset.rid === String(selectedRoom.id);
+      if (on) { c.setAttribute('aria-current', 'true'); c.after(nav); } else c.removeAttribute('aria-current');
+    });
+    nav.hidden = !selectedRoom;
+  }
+  $('#new-room-open').addEventListener('click', function () {
+    CC._shellView('new');
+    $('#new-room-name').focus();
+  });
 
   /* 교실 생성 */
   $('#new-room-btn').addEventListener('click', function () {
@@ -323,18 +423,19 @@ window.CC_SUPABASE = {
   function selectRoom(room) {
     selectedRoom = room;
     $('#class-label').textContent = '';
-    $('#crumb-room').textContent = room.name;
     $('#dash-title').textContent = room.name;
     $('#room-code').textContent = room.code;
     $('#room-code-wrap').hidden = false;
     $('#ns-result').innerHTML = '';
     $('#ns-login').value = '';   /* 다른 교실의 아이디 제안이나 입력을 끌고 오지 않는다 */
     $('#ns-msg').textContent = '';
-    $('#dash-divider').hidden = false;
-    $('#dashboard').hidden = false;
+    $('#m-room').textContent = room.name;
+    placeNav();
+    CC._shellView('room');
     CC.tour.auto('teacher-dash', TOUR_DASH, { onEnd: function () { tab('dtab-students'); } });
     loadMissions();
     if (CC._resetAlerts) CC._resetAlerts();
+    CC.genflow.reset();   /* 다른 교실에서 만들던 초안이 이 교실에 저장되지 않게 */
     loadStudents().then(loadStudentEvents);   /* 명단이 있어야 기록 없는 학생도 폴더가 된다 */
     clearInterval(eventTimer);
     eventTimer = setInterval(loadStudentEvents, 5000);
@@ -343,7 +444,9 @@ window.CC_SUPABASE = {
   /* 학생 명단 로드 */
   function loadStudents() {
     if (!selectedRoom || !CC.sb.active()) return Promise.resolve();
-    return CC.sb.getClassroomStudents(selectedRoom.id).then(function (students) {
+    var room = selectedRoom;   /* 교실을 바꾼 뒤 늦게 온 옛 교실 응답은 버린다 — 새 교실의 기준선·명단이 되면 안 된다 */
+    return CC.sb.getClassroomStudents(room.id).then(function (students) {
+      if (room !== selectedRoom) return;
       CC.classroom.roster = students;
       var list = $('#student-list');
       list.innerHTML = '';
@@ -427,7 +530,9 @@ window.CC_SUPABASE = {
   /* 학생 이벤트 로드 → 대시보드에 반영 */
   function loadStudentEvents() {
     if (!selectedRoom || !CC.sb.active()) return;
-    CC.sb.getClassroomEvents(selectedRoom.id).then(function (rows) {
+    var room = selectedRoom;
+    CC.sb.getClassroomEvents(room.id).then(function (rows) {
+      if (room !== selectedRoom) return;
       if (!rows) return; /* 조회 실패 — 이전 상태 유지, 기준선을 새로 잡지 않는다 */
       if (!rows.length && !(CC.classroom.roster || []).length) { if (CC._alertsLoaded) CC._alertsLoaded(); return; }
 
@@ -471,7 +576,7 @@ window.CC_SUPABASE = {
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
       if (typeof CC._renderDashboard === 'function') CC._renderDashboard();
-      if (CC._compassSync) CC._compassSync(selectedRoom.id);
+      if (CC._compassSync) CC._compassSync(room.id);
     });
   }
 
@@ -637,6 +742,7 @@ window.CC_SUPABASE = {
           $('#gen-btn').textContent = '초안 다시 생성';
           $('#gen-result').innerHTML = '<span style="color:var(--ink-3)">수업 내용과 핵심을 수정한 뒤 "초안 다시 생성"을 누르세요.</span>';
           document.querySelector('.main-tab[data-dtab="dtab-missions"]').click();
+          CC.genflow.tab('quick');   /* 수정은 빠른 생성의 일 — 그 탭을 열어 둔다 */
           $('#gen-lesson').focus();
         });
 

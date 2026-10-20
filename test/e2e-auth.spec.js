@@ -5,7 +5,7 @@ const { test, expect } = require('@playwright/test');
 const BASE = process.env.CC_BASE || 'http://localhost:8123';
 
 async function fakeSb(ctx) {
-  await ctx.route('**/supabase-js@2/**', r => r.fulfill({ contentType: 'text/javascript', body:
+  await ctx.route('**/supabase-js@*/**', r => r.fulfill({ contentType: 'text/javascript', body:
     `window.__calls=[];window.supabase={createClient:function(){return{auth:{
       getUser:function(){return Promise.resolve({data:{user:null}})},
       getSession:function(){return Promise.resolve({data:{session:null}})},

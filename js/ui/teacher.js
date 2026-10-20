@@ -405,19 +405,23 @@
     return card;
   }
 
-  function openDetail(s, mid) {
+  /* focusSection — 알림에서 열 때 이름 붙은 곳('compass' | 'tutor')으로 바로 내려가 거기에 초점을 둔다 */
+  function openDetail(s, mid, focusSection) {
     var all = eventsOf(s);
     var ms = mids(all);
     var evs = mid ? all.filter(function (e) { return e.mid === mid; }) : all;
     var v = mid ? (CC.fold.fold(evs, { id: s.id, name: s.name }) || CC.fold.empty(s.id, s.name)) : s;
 
     var d = $('#detail');
+    var opening = d.hidden;
+    if (opening) detailFrom = { y: window.scrollY, id: s.id };   /* 미션 칩을 눌러 다시 그릴 때는 처음 자리를 지킨다 */
+    else if (detailFrom) detailFrom.id = s.id;                     /* 알림으로 다른 학생을 열면 돌아갈 타일은 그 학생 */
     d.innerHTML = '';
-    var close = el('button', 'close', '×');
-    close.type = 'button';
-    close.setAttribute('aria-label', '닫기');
-    close.addEventListener('click', closeDetail);
-    d.appendChild(close);
+    var back = el('button', 'd-back', '← 학생');
+    back.type = 'button';
+    back.id = 'detail-back';
+    back.addEventListener('click', closeDetail);
+    d.appendChild(back);
 
     /* 머리 — 이름과 지금 상태 한 줄. 계정 일은 오른쪽 끝에 작게: 서랍을 연 이유가 아니다 */
     var head = el('header', 'd-head');
@@ -473,7 +477,6 @@
       });
     }
 
-    var cols = el('div', 'd-cols');
     var main = el('section', 'd-main');
     main.setAttribute('aria-label', '기록');
     main.appendChild(el('h4', null, '이 학생이 한 것 — 순서대로'));
@@ -613,24 +616,26 @@
       });
       if (s.wrap) row(dl, '오늘 이 학생이 말할 문장', null, function (dd) { dd.textContent = s.wrap; });
     }
-    /* 미션 하나를 끝냈고 튜터와 말을 나눴을 때만 — 미션이 하나뿐이면 고르지 않아도 그 미션이다 */
-    var rmid = mid || (ms.length === 1 ? ms[0] : null);
-    if (rmid && CC.sb && CC.sb.active() && CC.fold.missionStatus(evs) === 'done' && v.sTutor.length) row(dl, '수업에서 짚을 거리', null, function (dd) {
-      var b = el('button', 'pill recap-go', '튜터 대화에서 뽑기');
-      b.type = 'button';
-      var out = el('div', 'recap-out');
-      out.setAttribute('aria-live', 'polite');
-      recapOn(b, out, function () { return CC.recap.forStudent(s, rmid, eventsOf, missionOf); }, false);
-      dd.appendChild(b);
-      dd.appendChild(out);
-    });
     if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
     main.appendChild(dl);
-    cols.appendChild(main);
+    d.appendChild(main);
 
-    var side = el('section', 'd-side');
-    side.setAttribute('aria-label', '튜터 질문');
-    side.appendChild(el('h4', null, '튜터에게 물은 것' + (v.sTutor.length ? ' (' + v.sTutor.length + '번)' : '')));
+    var side = el('section', 'd-tutor');
+    side.setAttribute('aria-label', '튜터 대화 · 짚을 거리');
+    side.setAttribute('aria-label', '튜터 대화 · 짚을 거리');
+    side.appendChild(el('h4', null, '튜터 대화 · 짚을 거리'));
+    /* 미션 하나를 끝냈고 튜터와 말을 나눴을 때만 — 미션이 하나뿐이면 고르지 않아도 그 미션이다 */
+    var rmid = mid || (ms.length === 1 ? ms[0] : null);
+    if (rmid && CC.sb && CC.sb.active() && CC.fold.missionStatus(evs) === 'done' && v.sTutor.length) {
+      var rb = el('button', 'pill recap-go', '튜터 대화에서 뽑기');
+      rb.type = 'button';
+      var rout = el('div', 'recap-out');
+      rout.setAttribute('aria-live', 'polite');
+      recapOn(rb, rout, function () { return CC.recap.forStudent(s, rmid, eventsOf, missionOf); }, false);
+      side.appendChild(rb);
+      side.appendChild(rout);
+    }
+    side.appendChild(el('h5', null, '튜터에게 물은 것' + (v.sTutor.length ? ' (' + v.sTutor.length + '번)' : '')));
     side.appendChild(el('p', 'lead', '질문과 답을 그대로 보여 드려요.'));
     var qs = el('div', 'd-qs');
     /* 한 번 묻고 한 번 답한 것이 한 묶음. 되물음·답 안 함은 시각 옆 꼬리표로 */
@@ -650,11 +655,16 @@
     });
     if (!v.sTutor.length) qs.appendChild(el('p', 'emptyrow', '아직 없어요.'));
     side.appendChild(qs);
-    cols.appendChild(side);
-    d.appendChild(cols);
+    d.appendChild(side);
 
-    $('#scrim').hidden = false;
+    $('#dashboard').hidden = true;
     d.hidden = false;
+    var target = focusSection && d.querySelector(focusSection === 'compass' ? '.compass-card' : '.d-tutor');
+    if (target) {   /* 이미 열려 있어도 다시 내려간다 */
+      target.tabIndex = -1;
+      target.scrollIntoView({ block: 'start' });
+      target.focus({ preventScroll: true });
+    } else if (opening) { window.scrollTo(0, 0); back.focus(); }
     renderFolders();
   }
 
@@ -671,13 +681,23 @@
     return '“왜 그 순서로 놓았는지 설명해줄래?”';
   }
 
-  function closeDetail() {
-    $('#detail').hidden = true;
-    $('#scrim').hidden = true;
+  /* 목록으로 — 있던 자리(스크롤)와 그 학생 타일로 돌아간다 */
+  var detailFrom = null;
+  function closeDetail(noFocus) {
+    var d = $('#detail');
+    if (d.hidden) return;
+    d.hidden = true;
+    $('#dashboard').hidden = !$('#new-room').hidden || !$('#pick-room').hidden;   /* 교실 화면이 아닌 데서 닫으면 목록을 되살리지 않는다 */
+    if (detailFrom) {
+      window.scrollTo(0, detailFrom.y);
+      var t = document.querySelector('.student-tile[data-id="' + detailFrom.id.replace(/["\\]/g, '') + '"]');
+      if (t && noFocus !== true) t.focus({ preventScroll: true });   /* 교실을 바꿔 닫을 때는 이전 교실의 타일을 건드리지 않는다 */
+      detailFrom = null;
+    }
   }
-  $('#scrim').addEventListener('click', closeDetail);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeDetail();
+    if (e.key !== 'Escape' || e.defaultPrevented) return;   /* 둘러보기가 이미 Esc 를 썼다 */
+    if (!shell.esc()) closeDetail();   /* 맨 위 한 겹만 — 휴대폰 서랍·알림 화면이 열려 있으면 그것부터 */
   });
 
   $('#notes-toggle').addEventListener('click', function () {
@@ -734,9 +754,39 @@
   /* Supabase 모드는 첫 기록을 받기 전까지 기준선을 만들지 않는다 (빈 목록이 기준선이 되면
    * 이미 있던 제출이 전부 새 알림이 된다). 교실을 고를 때마다 다시 시작한다. */
   var alertsLoaded = !(CC.sb && CC.sb.active());
-  CC._resetAlerts = function () { cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); };
-  CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], serverOn() ? finishedOf : null); };
-  /* 말 걸 순간 — 시각 · 학생 이름 · 사실 문장. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다 */
+  /* 알림 재료 — 서버 모드는 DB id 로 끝낸 미션을 센다. 미션 이름은 학생 기록 안의 id 로 찾는다 */
+  function alertOpt() {
+    var on = serverOn();
+    return {
+      server: on, eventsOf: eventsOf, missionOf: missionOf, finishedOf: on ? finishedOf : null,
+      missionName: function (mid) {
+        var m = missionOf(mid);
+        return m && m.title ? m.title : '';
+      }
+    };
+  }
+  CC._resetAlerts = function () {
+    cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active());
+    $('#alert-list').innerHTML = ''; $('#moments-empty').hidden = false; alCount();   /* 다른 교실의 알림을 끌고 오지 않는다 */
+  };
+  CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], alertOpt()); };
+
+  /* 오른쪽 알림 — 이름표 · 사실 문장 · 시각. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다.
+   * 굵게 = 아직 안 누름. 읽음은 이 화면을 연 동안만 기억한다 (서버에 저장하지 않는다) */
+  var alFilter = 'all';
+  function ago(t) {
+    var m = Math.floor((Date.now() - t) / 60000);
+    return m < 1 ? '방금' : m < 60 ? m + '분 전' : hm(t);
+  }
+  function alFilt(li) { li.hidden = alFilter !== 'all' && li.dataset.tag !== alFilter; }
+  /* 휴대폰 막대에만 이름표별 개수 — 순위가 아니라 쌓인 할 일의 양 (스펙 "하지 않는 것") */
+  function alCount() {
+    var n = {};
+    document.querySelectorAll('#alert-list li.new').forEach(function (li) { n[li.dataset.tag] = (n[li.dataset.tag] || 0) + 1; });
+    var t = ['praise', 'look', 'info'].filter(function (k) { return n[k]; })
+      .map(function (k) { return CC.alerts.TAGS[k] + ' ' + n[k] + '개'; }).join(' · ');
+    $('#alerts-count').textContent = t || '새 알림이 없어요';
+  }
   function showAlert(a) {
     var text = CC.alerts.say(a);
     var host = $('#toasts');
@@ -747,25 +797,150 @@
     }
     fresh[a.id] = true;
     var list = $('#alert-list');
-    if (list) {
-      var li = el('li', 'mo');
-      li.appendChild(el('span', 'tm', hm(Date.now())));
-      var body = el('span');
-      var who = el('button', 'who', a.name);
-      who.type = 'button';
-      who.addEventListener('click', function () {
-        var s = C.students.filter(function (x) { return x.id === a.id; })[0];
-        if (s) openDetail(s);
-      });
-      body.appendChild(who);
-      body.appendChild(el('span', 'sep', ' · '));
-      body.appendChild(document.createTextNode(text));
-      li.appendChild(body);
-      list.insertBefore(li, list.firstChild);
-      while (list.children.length > 10) list.removeChild(list.lastChild);
-      $('#moments-empty').hidden = true;
+    if (!list) return;
+    var tag = CC.alerts.TAGS[a.tag] ? a.tag : 'look';
+    var li = el('li', 'al-item new');
+    li.dataset.tag = tag;
+    var b = el('button', 'al-it');
+    b.type = 'button';
+    var unread = el('span', 'sr-only', '새 알림, ');   /* 굵기는 눈에만 보인다 — 화면 낭독기에는 말로 */
+    b.appendChild(unread);
+    b.appendChild(el('span', 'al-tag ' + tag, CC.alerts.TAGS[tag]));
+    b.appendChild(el('span', 'al-say', text));
+    var at = Date.now(), tm = el('time', 'al-tm', ago(at));
+    tm.dataset.at = at;
+    tm.dateTime = new Date(at).toISOString();
+    b.appendChild(tm);
+    b.addEventListener('click', function () {
+      li.classList.remove('new');
+      unread.remove();
+      alCount();
+      shell.alertsFull(false);
+      var s = C.students.filter(function (x) { return x.id === a.id; })[0];
+      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined, a.kind === 'finish' ? 'compass' : a.kind === 'tutor-many' ? 'tutor' : undefined);
+    });
+    li.appendChild(b);
+    list.insertBefore(li, list.firstChild);
+    while (list.children.length > 30) {   /* 넘치면 읽은 것 중 가장 오래된 것부터 — 안 읽은 알림을 먼저 버리지 않는다 */
+      var read = list.querySelectorAll('li:not(.new)');
+      list.removeChild(read.length ? read[read.length - 1] : list.lastChild);
     }
+    alFilt(li);
+    $('#moments-empty').hidden = true;
+    alCount();
   }
+  setInterval(function () {
+    document.querySelectorAll('#alert-list time[data-at]').forEach(function (t) { t.textContent = ago(+t.dataset.at); });
+  }, 30000);
+  document.querySelectorAll('.al-filter').forEach(function (f) {
+    f.addEventListener('click', function () {
+      alFilter = f.dataset.tag;
+      document.querySelectorAll('.al-filter').forEach(function (x) { x.setAttribute('aria-pressed', x === f ? 'true' : 'false'); });
+      document.querySelectorAll('#alert-list li').forEach(alFilt);
+    });
+  });
+
+  /* ── 화면 틀 — 왼쪽 사이드바 · 본문 · 오른쪽 알림 (2026-10-20 시안) ──
+   * 넓은 화면: 사이드바 264 ↔ 72px 아이콘 줄, 알림은 접으면 노란 손잡이. 접힘은 이 브라우저에 기억한다.
+   * 휴대폰(≤760): 사이드바는 ☰ 로 여는 서랍, 알림은 아래 노란 막대 → 전체 화면.
+   * view: room(교실 대시보드) · new(새 교실 만들기) · pick(교실 고르기 전). 알림은 room 에서만 */
+  var shell = (function () {
+    var phone = window.matchMedia('(max-width: 760px)');
+    var side = $('#side'), sT = $('#side-toggle'), sOpen = $('#side-open'), scrim = $('#side-scrim');
+    var al = $('#alerts'), aT = $('#alerts-toggle'), handle = $('#alerts-handle'), bar = $('#alerts-bar');
+    var view = serverOn() ? 'pick' : 'room', full = false, drawerOn = false;
+    var alOpen = CC.prefs.get('alerts', window.innerWidth > 1100);   /* 기억이 없으면 좁은 화면은 접힌 채로 연다 */
+    var folded = CC.prefs.get('side', false);
+
+    function paintSide() {
+      var p = phone.matches;
+      side.classList.toggle('folded', folded && !p);
+      document.body.classList.toggle('side-open', p && drawerOn);
+      scrim.hidden = !(p && drawerOn);
+      sOpen.setAttribute('aria-expanded', p && drawerOn ? 'true' : 'false');
+      sT.setAttribute('aria-expanded', p ? (drawerOn ? 'true' : 'false') : (folded ? 'false' : 'true'));
+      sT.setAttribute('aria-label', p ? '메뉴 닫기' : folded ? '메뉴 펼치기' : '메뉴 접기');
+      sT.firstChild.textContent = p ? '×' : folded ? '›' : '‹';
+      if (parts) isolate();
+    }
+    function paintAlerts() {
+      var p = phone.matches, room = view === 'room';
+      al.hidden = !room || (p ? !full : !alOpen);
+      handle.hidden = !room || p || alOpen;
+      bar.hidden = !room || !p || full;
+      document.body.classList.toggle('alerts-full', room && p && full);
+      aT.setAttribute('aria-expanded', al.hidden ? 'false' : 'true');
+      aT.setAttribute('aria-label', p ? '알림 닫기' : '알림 접기');
+      aT.firstChild.textContent = p ? '×' : '›';
+      bar.setAttribute('aria-expanded', p && full ? 'true' : 'false');
+      isolate();
+    }
+    /* 휴대폰 서랍·알림 전체 화면이 열려 있는 동안 나머지는 inert — Tab·낭독기가 뒤로 새지 않게 */
+    var parts = [$('.m-bar'), side, $('#main'), al, bar, handle];
+    function isolate() {
+      var p = phone.matches, top = p && drawerOn ? side : p && full && view === 'room' ? al : null;
+      parts.forEach(function (x) { x.inert = !!top && x !== top; });
+    }
+    function drawer(on) {
+      if (drawerOn === on) return;
+      drawerOn = on;
+      paintSide();
+      if (on) (side.querySelector('.room-tile[aria-current="true"]') || sT).focus();
+      else if (phone.matches) sOpen.focus();
+    }
+    sT.addEventListener('click', function () {
+      if (phone.matches) return drawer(false);
+      folded = !folded;
+      CC.prefs.set('side', folded);
+      paintSide();
+    });
+    sOpen.addEventListener('click', function () { drawer(true); });
+    scrim.addEventListener('click', function () { drawer(false); });
+    aT.addEventListener('click', function () {
+      if (phone.matches) { full = false; paintAlerts(); bar.focus(); return; }
+      alOpen = false;
+      CC.prefs.set('alerts', false);
+      paintAlerts();
+      handle.focus();
+    });
+    handle.addEventListener('click', function () { alOpen = true; CC.prefs.set('alerts', true); paintAlerts(); aT.focus(); });
+    bar.addEventListener('click', function () { full = true; paintAlerts(); aT.focus(); });
+    /* inert 는 뒤를 막을 뿐, 마지막 버튼 다음 Tab 은 주소창으로 나간다 — 열린 겹 안에서 돈다 */
+    document.addEventListener('keydown', function (e) {
+      var top = phone.matches && (drawerOn ? side : full ? al : null);
+      if (e.key !== 'Tab' || !top) return;
+      var f = Array.prototype.filter.call(top.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+        function (x) { return !x.disabled && x.getClientRects().length; });
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1], a = document.activeElement;
+      if (!top.contains(a) || (e.shiftKey ? a === first : a === last)) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+    });
+    /* Esc — 열린 겹 하나를 닫았으면 true (학생 상세는 그다음) */
+    function esc() {
+      if (drawerOn) { drawer(false); return true; }
+      if (full) { full = false; paintAlerts(); bar.focus(); return true; }
+      if (!phone.matches && alOpen && window.innerWidth <= 1100) { aT.click(); return true; }   /* 중간 폭에서는 알림이 본문 위에 겹친다 */
+      return false;
+    }
+    /* 사이드바 안에서 무엇을 고르면(교실·보기) 휴대폰 서랍은 닫는다 */
+    side.addEventListener('click', function (e) { if (e.target.closest('.room-tile, .main-tab, .room-new, #tour-replay, #notes-toggle')) drawer(false); });
+    (phone.addEventListener ? phone.addEventListener.bind(phone, 'change') : phone.addListener.bind(phone))(function () {
+      drawerOn = false; full = false; paintSide(); paintAlerts();
+    });
+
+    function setView(v) {
+      view = v; full = false;
+      closeDetail(true);   /* 교실을 바꾸면 이전 교실의 학생 상세는 닫는다 */
+      $('#dashboard').hidden = v !== 'room';
+      $('#new-room').hidden = v !== 'new';
+      $('#pick-room').hidden = v !== 'pick';
+      paintAlerts();
+    }
+    paintSide();
+    setView(view);
+    return { view: setView, esc: esc, alertsFull: function (on) { if (full !== on) { full = on; paintAlerts(); } } };
+  })();
+  CC._shellView = shell.view;
 
   /* ── 학생 폴더 — 가나다순만. 진도·속도로 줄 세우지 않는다 (CLAUDE.md) ── */
   function renderFolders() {
@@ -775,6 +950,7 @@
     var today = new Date(); today.setHours(0, 0, 0, 0);
     C.students.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ko'); }).forEach(function (s) {
       var t = el('button', 'tile student-tile');
+      t.dataset.id = s.id;
       t.type = 'button';
       var lastAt = Date.now() - (s.idleSec || 0) * 1000;
       var f = el('span', 'folder' + (s.noRecord || lastAt < today.getTime() ? ' gray' : ''));
@@ -837,7 +1013,7 @@
     }
 
     if (!alertsLoaded) return;
-    var nowSnap = CC.alerts.snap(C.students, serverOn() ? finishedOf : null);
+    var nowSnap = CC.alerts.snap(C.students, alertOpt());
     CC.alerts.diff(lastSnap, nowSnap).forEach(showAlert);
     lastSnap = nowSnap;
     renderFolders();

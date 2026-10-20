@@ -44,6 +44,10 @@
 학생 문장은 AI 가 쓰지 않는다 — 학생이 미션을 마치면 선생님에게 알림이 가고, 한마디는 선생님이 쓴다.
 네 방향이 비슷하면(벡터 길이 1 미만) 학생에게 바늘을 보이지 않는다. 설계: `docs/superpowers/specs/2026-10-20-compass-design.md`.
 
+**알림은 타이밍만.** 선생님 화면 오른쪽 알림(`js/core/alerts.js`)은 세 이름표 — 칭찬 타이밍 · 살펴볼 것 · 레벨 테스트.
+학생·미션당 종류별 한 번, 화면을 처음 열 때 있던 일은 알리지 않는다. 문장은 사실만 쓰고 칭찬 낱말을 넣지 않는다
+(말은 선생님이 한다). 순서 번호 · 소요 시간 · 반 평균을 붙이지 않는다. "튜터에게 많이 물었어요" 기준은 `TUTOR_MANY`(5) 하나.
+
 ---
 
 ## 화면 문구 규칙
@@ -121,6 +125,7 @@ js/data/   바깥 세계. 여기만 localStorage 와 fetch 를 안다
   config.js     apiBase 가 비면 로컬, 있으면 서버
   api.js        local / http 어댑터
   store.js      오프라인 우선 기록 + 발신함
+  prefs.js      이 브라우저의 보기 편의(사이드바 접힘 · 고른 탭) — 기록이 아니다
 
 js/ui/     화면. DOM 만 만진다
   app.js  teacher.js  abstract.js  review.js  make.js  classroom.js  sentence.js  admin.js
@@ -175,6 +180,7 @@ node test/engine.test.js     # 반례가 실제로 깨지는지, 에러가 몇 �
 node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
 node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
+node test/alerts.test.js     # 교사 알림 — 종류별 한 번 · 첫 화면 기준선 · 사실 문장
 node test/smoke.js           # 9개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG

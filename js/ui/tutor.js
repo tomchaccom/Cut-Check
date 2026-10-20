@@ -18,6 +18,9 @@
   var history = [];    /* 이 미션의 {q, a}. 서버는 앞 3개만 받으므로 뒤 3개를 보낸다 */
   var busy = false;
   var view = 'chat';   /* chat | list | read */
+  var on = false;      /* 4단계인가 */
+  var narrow = window.matchMedia('(max-width: 1099px)');
+  var phoneOpen = false;   /* 휴대폰에서 전체 화면으로 열려 있나 */
 
   function $(s) { return document.querySelector(s); }
   function el(tag, cls, txt) {
@@ -58,7 +61,7 @@
       $('#tutor-title').textContent = '파이썬 문법 물어보기';
       draw(history);
       if (busy) typing();
-      $('#tutor-q').focus();
+      if (expanded()) $('#tutor-q').focus();
     }
   }
 
@@ -123,16 +126,44 @@
         if (at !== mid) return;
         history.push({ q: q, a: r.answer });
         $('#tutor-live').textContent = r.answer;
-        if (view === 'chat') { draw(history); $('#tutor-q').focus(); }
+        if (view === 'chat') { draw(history); if ($('#tutor').contains(document.activeElement)) $('#tutor-q').focus(); }
       });
+  }
+
+  /* 펼침: 넓은 화면은 접힘을 이 브라우저가 기억하고, 휴대폰은 열 때마다 닫힌 채로 시작한다 */
+  function expanded() { return on && (narrow.matches ? phoneOpen : !CC.prefs.get('tutor', false)); }
+  function setOpen(v) {
+    if (narrow.matches) phoneOpen = v; else CC.prefs.set('tutor', !v);
+    sync();
+  }
+  function sync() {
+    var box = $('#tutor'), open = expanded(), full = narrow.matches && open;
+    box.hidden = !open;
+    /* 사용법 안내는 지금 보이는 쪽(펼친 사이드바 · 손잡이/막대)을 가리킨다 */
+    box.removeAttribute('data-tour'); $('#tutor-open').removeAttribute('data-tour');
+    (open ? box : $('#tutor-open')).setAttribute('data-tour', 'tutor');
+    $('#tutor-open').hidden = !on || open;
+    $('#tutor-open').textContent = narrow.matches ? '튜터에게 묻기' : '튜터';
+    $('#tutor-close').setAttribute('aria-expanded', open ? 'true' : 'false');
+    /* 전체 화면일 때는 뒤 화면을 막는다 — 모달처럼 */
+    for (var n = box; n.parentNode && n !== document.body; n = n.parentNode) {
+      [].forEach.call(n.parentNode.children, function (k) {
+        if (k === n || k.tagName === 'SCRIPT') return;
+        if (full) k.setAttribute('inert', ''); else k.removeAttribute('inert');
+      });
+    }
+    document.body.classList.toggle('tutor-full', full);
   }
 
   CC.tutor = {
     /* o: { rec, context(), mine(cb) 이 미션의 내 이벤트, past(cb) 내 이벤트 전부 } */
     init: function (o) {
       opt = o;
-      $('#tutor-open').addEventListener('click', function () { $('#tutor').showModal(); show('chat'); });
-      $('#tutor-close').addEventListener('click', function () { $('#tutor').close(); });
+      $('#tutor-open').addEventListener('click', function () { setOpen(true); show('chat'); });
+      $('#tutor-close').addEventListener('click', function () { setOpen(false); $('#tutor-open').focus(); });
+      $('#tutor').addEventListener('keydown', function (e) { if (e.key === 'Escape' && phoneOpen) $('#tutor-close').click(); });
+      if (narrow.addEventListener) narrow.addEventListener('change', function () { phoneOpen = false; sync(); });
+      sync();
       $('#tutor-past').addEventListener('click', openList);
       $('#tutor-back').addEventListener('click', function () { if (view === 'read') openList(); else show('chat'); });
       $('#tutor-form').addEventListener('submit', send);
@@ -157,9 +188,11 @@
         if (view === 'chat') draw(history);
       });
     },
-    visible: function (on) {
-      $('#tutor-open').hidden = !on;
-      if (!on && $('#tutor').open) $('#tutor').close();
+    visible: function (v) {
+      var was = on;
+      on = v; if (!v) phoneOpen = false; sync();
+      /* 4단계에 막 들어왔을 때 입력창이 접힌 아래에 있지 않게 — 필요한 만큼만 내린다 */
+      if (v && !was && expanded() && !narrow.matches) setTimeout(function () { $('#tutor-send').scrollIntoView({ block: 'nearest' }); }, 0);
     }
   };
 })(window.CC = window.CC || {});

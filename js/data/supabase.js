@@ -19,7 +19,7 @@
 
   /* 서버 함수 부르기 — 지금 세션의 토큰을 붙인다. 생성·계정 함수는 로그인한 강사만 받는다.
    * 실패면 Error(서버가 준 문장) + err.status · err.body(응답 그대로 — 403 의 left 등), 422 면 err.reasons 에 걸린 이유. */
-  function api(path, body) {
+  function api(path, body, signal) {
     if (!sb) return Promise.reject(new Error('Supabase 미설정'));
     return sb.auth.getSession().then(function (res) {
       var token = res.data && res.data.session && res.data.session.access_token;
@@ -27,7 +27,8 @@
       return fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal: signal
       });
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {

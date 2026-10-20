@@ -8,42 +8,70 @@
     if (text != null) e.textContent = text;
     return e;
   }
+  /* 칸 하나 — data-l 은 휴대폰 카드에서 칸 이름으로 보인다 */
+  function td(label, v) { var c = el('td', null, String(v == null ? '' : v)); c.setAttribute('data-l', label); return c; }
   var NOT_ADMIN = '관리자만 볼 수 있어요.';
   var KIND = { step: '단계별', quick: '빠른' };
+  var SAVED = '저장했어요.';
 
-  function admin(body) { return CC.sb.api('/api/admin', body); }
+  /* 응답이 안 오면 줄이 영영 잠기니 15초에서 끊는다(abort + 경주 — api 를 바꾼 가짜가 signal 을 몰라도 푼다) */
+  function admin(body) {
+    var ac = typeof AbortController === 'function' ? new AbortController() : null, timer;
+    var hang = new Promise(function (_, no) {
+      timer = setTimeout(function () { if (ac) ac.abort(); no(new Error('응답이 없어요. 다시 해 주세요.')); }, CC.adminTimeout || 15000);
+    });
+    return Promise.race([CC.sb.api('/api/admin', body, ac && ac.signal), hang]).then(
+      function (r) { clearTimeout(timer); return r; },
+      function (e) { clearTimeout(timer); throw e.name === 'AbortError' ? new Error('응답이 없어요. 다시 해 주세요.') : e; });
+  }
   function note(t) { $('#ad-note').textContent = t; }
   function stop(e) { $('#ad-main').hidden = true; note(e && e.status === 403 ? NOT_ADMIN : (e && e.message) || '잠시 뒤에 다시 해 주세요.'); }
+  /* 저장했다는 말은 3초만 — 오래 남으면 다음 변경의 결과와 헷갈린다 */
+  function flash(m) { m.textContent = SAVED; setTimeout(function () { if (m.textContent === SAVED) m.textContent = ''; }, 3000); }
 
   /* 빈칸은 0 이 아니라 null 로 — 서버가 400 으로 돌려보낸다(빈칸이 한도 0 이 되면 안 된다) */
   function num(input) { return input.value.trim() === '' ? null : Number(input.value); }
 
-  function row(t) {
-    var tr = el('tr');
-    [t.name, t.email, t.used, t.left].forEach(function (v) { tr.appendChild(el('td', null, String(v == null ? '' : v))); });
+  /* 남은 칸 — '다 씀'(한도를 다 썼다)과 '꺼짐'(관리자가 껐다)을 글자로 가른다 */
+  function leftText(t) { return t.disabled ? '꺼짐' : t.left === 0 ? '0 · 다 씀' : String(t.left == null ? '' : t.left); }
+
+  function row(t, saved, focus) {
+    var tr = el('tr'); tr.setAttribute('data-id', t.id);
+    var who = t.name + ' (' + t.email + ')';   /* 같은 이름의 강사도 이메일로 가른다 */
+    tr.appendChild(td('이름', t.name)); tr.appendChild(td('이메일', t.email));
+    tr.appendChild(td('쓴', t.used)); tr.appendChild(td('남은', leftText(t)));
     var q = el('input', 'ad-in'); q.type = 'number'; q.min = '0'; q.max = '1000'; q.step = '1'; q.value = t.quota;
-    q.setAttribute('aria-label', t.name + ' 한도');
+    q.setAttribute('aria-label', who + ' 한도');
     var off = el('input'); off.type = 'checkbox'; off.checked = !!t.disabled;
-    off.setAttribute('aria-label', t.name + ' 생성 끄기');
-    var msg = el('td', 'ad-msg'); msg.setAttribute('role', 'status');
-    function save(body) {
-      msg.textContent = '저장 중이에요.';
-      admin(body).then(function (n) { if (tr.parentNode) tr.parentNode.replaceChild(row(n), tr); })   /* 저장 사이 표를 다시 그렸으면 떨어진 행 */
-        .catch(function (e) { q.value = t.quota; off.checked = !!t.disabled; msg.textContent = e.message; });
+    off.setAttribute('aria-label', who + ' 생성 끄기');
+    var msg = el('span', 'ad-msg'); msg.setAttribute('role', 'status');
+    if (saved) flash(msg);
+    function lock(on) { q.disabled = off.disabled = on; tr.setAttribute('data-busy', on ? '1' : ''); }
+    function save(body, which) {
+      lock(true);   /* 저장 중에는 이 줄을 잠근다 — 늦게 온 옛 답이 새 값을 덮지 못하게 */
+      msg.className = 'ad-msg'; msg.textContent = '저장 중이에요.';
+      admin(body).then(function (n) { if (tr.parentNode) var nr = row(n, true, which); tr.parentNode.replaceChild(nr, tr); nr.focusBack(); })   /* 저장 사이 표를 다시 그렸으면 떨어진 행 */
+        .catch(function (e) { lock(false); q.value = t.quota; off.checked = !!t.disabled; msg.className = 'ad-msg err'; msg.textContent = e.message; (which === 'off' ? off : q).focus(); });
     }
-    q.addEventListener('change', function () { save({ action: 'set_quota', id: t.id, quota: num(q) }); });
-    off.addEventListener('change', function () { save({ action: 'set_disabled', id: t.id, disabled: off.checked }); });
-    var a = el('td'), b = el('td');
-    a.appendChild(q); b.appendChild(off);
-    tr.appendChild(a); tr.appendChild(b); tr.appendChild(msg);
+    q.addEventListener('change', function () { save({ action: 'set_quota', id: t.id, quota: num(q) }, 'q'); });
+    off.addEventListener('change', function () { save({ action: 'set_disabled', id: t.id, disabled: off.checked }, 'off'); });
+    var a = td('한도'), lab = el('label', 'ad-off');
+    a.appendChild(q); lab.appendChild(off);
+    var b = td('생성 끄기'); b.appendChild(lab);
+    tr.appendChild(a); tr.appendChild(b);
+    var st = td('상태'); st.appendChild(msg); tr.appendChild(st);
+    tr.focusBack = function () { (focus === 'off' ? off : q).focus(); };   /* 줄이 자리 잡은 뒤에 부른다 */
     return tr;
   }
 
   function teachers() {
     return admin({ action: 'list' }).then(function (r) {
       var body = $('#ad-teachers tbody');
+      /* 저장 중인 줄은 건드리지 않는다 — 그 줄의 답이 곧 자기 자리를 고친다 */
+      var busy = {};
+      Array.prototype.forEach.call(body.querySelectorAll('tr[data-busy="1"]'), function (tr) { busy[tr.getAttribute('data-id')] = tr; });
       body.textContent = '';
-      (r.teachers || []).forEach(function (t) { body.appendChild(row(t)); });
+      (r.teachers || []).forEach(function (t) { var keep = busy[t.id]; body.appendChild(keep || row(t)); });
       $('#ad-default').value = r.default_quota;
     });
   }
@@ -61,31 +89,69 @@
 
   function log() {
     return admin({ action: 'log' }).then(function (r) {
-      var body = $('#ad-log tbody');
+      var body = $('#ad-log tbody'), rows = r.log || [];
       body.textContent = '';
-      (r.log || []).forEach(function (x) {
+      $('#ad-log').hidden = !rows.length;
+      $('#ad-log-empty').hidden = !!rows.length;
+      var cols = ['시각', '강사', '수업 내용', '개념', '종류', '재요청'];
+      rows.forEach(function (x) {
         var tr = el('tr');
-        [when(x.at), x.teacher, x.lesson, label(x.concept), KIND[x.kind] || x.kind, x.retries].forEach(function (v) {
-          tr.appendChild(el('td', null, String(v == null ? '' : v)));
-        });
+        [when(x.at), x.teacher, x.lesson, label(x.concept), KIND[x.kind] || x.kind, x.retries].forEach(function (v, i) { tr.appendChild(td(cols[i], v)); });
         body.appendChild(tr);
       });
     });
   }
 
   $('#ad-default').addEventListener('change', function () {
-    var m = $('#ad-default-msg');
-    m.textContent = '저장 중이에요.';
-    admin({ action: 'set_default', quota: num($('#ad-default')) }).then(function (r) {
-      m.textContent = '바꿨어요.';
-      $('#ad-default').value = r.default_quota;
-      return teachers();   /* 행이 아직 없는 강사의 한도도 기본값을 따른다 */
-    }).catch(function (e) { m.textContent = e.message; });
+    var m = $('#ad-default-msg'), inp = $('#ad-default');
+    inp.disabled = true;
+    m.className = 'ad-msg'; m.textContent = '저장 중이에요.';
+    admin({ action: 'set_default', quota: num(inp) }).then(function (r) {
+      inp.value = r.default_quota;
+      flash(m);
+      /* 행이 아직 없는 강사의 한도도 기본값을 따른다. 목록만 실패해도 기본값은 저장된 것 */
+      return teachers().catch(function (e) { note('기본 한도는 저장했어요. 목록을 다시 불러오지 못했어요. ' + e.message); });
+    }, function (e) { m.className = 'ad-msg err'; m.textContent = e.message; })
+      .then(function () { inp.disabled = false; });
   });
+
+  /* 사이드바 — 선생님 화면과 같은 접기·서랍. 접힘은 이 브라우저만 기억한다 */
+  (function () {
+    var phone = window.matchMedia('(max-width: 760px)');
+    var side = $('#side'), sT = $('#side-toggle'), sOpen = $('#side-open'), scrim = $('#side-scrim');
+    var folded = CC.prefs.get('side', false), drawer = false;
+    function paint() {
+      var p = phone.matches;
+      side.classList.toggle('folded', folded && !p);
+      document.body.classList.toggle('side-open', p && drawer);
+      scrim.hidden = !(p && drawer);
+      sOpen.setAttribute('aria-expanded', p && drawer ? 'true' : 'false');
+      sT.setAttribute('aria-expanded', p ? (drawer ? 'true' : 'false') : (folded ? 'false' : 'true'));
+      sT.setAttribute('aria-label', p ? '메뉴 닫기' : folded ? '메뉴 펼치기' : '메뉴 접기');
+      sT.firstChild.textContent = p ? '×' : folded ? '›' : '‹';
+    }
+    sT.addEventListener('click', function () {
+      if (phone.matches) drawer = false; else { folded = !folded; CC.prefs.set('side', folded); }
+      paint(); if (phone.matches) sOpen.focus();
+    });
+    sOpen.addEventListener('click', function () { drawer = true; paint(); sT.focus(); });
+    scrim.addEventListener('click', function () { drawer = false; paint(); sOpen.focus(); });
+    if (phone.addEventListener) phone.addEventListener('change', function () { drawer = false; paint(); });
+    paint();
+  })();
+
+  function needLogin() {
+    var n = $('#ad-note');
+    n.textContent = '로그인이 필요해요. ';
+    var a = el('a', null, '로그인'); a.href = 'auth.html';
+    n.appendChild(a);
+  }
 
   if (!CC.sb || !CC.sb.active()) { note('관리자 화면은 서버가 있어야 열려요.'); return; }
   CC.sb.getProfile().then(function (p) {
-    if (!p) { window.location.href = 'auth.html'; return; }
+    if (!p) { needLogin(); return; }   /* 조용히 옮기지 않는다 — 왜 여기 왔는지 읽고 누르게 */
+    $('#ad-logout').hidden = false;
+    $('#ad-logout').addEventListener('click', function () { CC.sb.signOut().then(function () { window.location.href = 'auth.html'; }); });
     return Promise.all([teachers(), log()]).then(function () { note(''); $('#ad-main').hidden = false; });
   }).catch(stop);
 })(window.CC = window.CC || {});
