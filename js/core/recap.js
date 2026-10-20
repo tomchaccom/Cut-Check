@@ -45,7 +45,7 @@
     });
     var truncated = ids.length > MAX;
     if (truncated) {
-      ids.sort(function (a, b) { return latest[b] - latest[a]; });
+      ids.sort(function (a, b) { return latest[b] - latest[a] || (a < b ? -1 : a > b ? 1 : 0); });   /* 같은 시각이면 id 순 — 늘 같은 40명 */
       ids = ids.slice(0, MAX);
       rows = rows.filter(function (r) { return ids.indexOf(r.s.id) !== -1; });
     }

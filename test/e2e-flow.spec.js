@@ -1360,7 +1360,7 @@ test('강사 반 전체 — 많은 순, N명 · 펼치면 이름, 두 번 눌러
 test('강사 반 전체 — 튜터 대화가 없으면 요청 없이 한 줄', async ({ page }) => {
   const calls = await asRecapTeacher(page, null, ok([]));
   await page.locator('#recap-class').click();
-  await expect(page.locator('#recap-class-out')).toHaveText('튜터 대화가 아직 없어요.');
+  await expect(page.locator('#recap-class-out')).toHaveText('튜터와 대화하고 끝낸 미션이 아직 없어요.');
   expect(calls.length).toBe(0);
 });
 
@@ -1369,4 +1369,19 @@ test('강사 반 전체 — 서버가 실패하면 다시 누르라는 한 줄',
   await page.locator('#recap-class').click();
   await expect(page.locator('#recap-class-out')).toHaveText('지금은 뽑지 못했어요. 잠시 뒤 다시 눌러 주세요.');
   await expect(page.locator('#recap-class')).toBeEnabled();
+});
+
+test('강사 서랍 — 끝낸 미션이 하나뿐이면 고르지 않아도 수업에서 짚을 거리', async ({ page }) => {
+  await asRecapTeacher(page, RECAP_EVS.slice(0, 3), ok([]));
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  await expect(page.locator('#detail .row', { hasText: '수업에서 짚을 거리' })).toBeVisible();
+});
+
+test('강사 반 전체 — 빈 결과는 캐시하지 않아 다시 누르면 서버를 다시 부른다', async ({ page }) => {
+  const calls = await asRecapTeacher(page, RECAP_EVS, ok([]));
+  await page.locator('#recap-class').click();
+  await expect(page.locator('#recap-class-out')).toContainText('짚을 거리가 나오지 않았어요');
+  await page.locator('#recap-class').click();
+  await expect(page.locator('#recap-class-out')).toContainText('짚을 거리가 나오지 않았어요');
+  expect(calls.length).toBe(2);
 });

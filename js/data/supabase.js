@@ -53,9 +53,19 @@
     recap: function (body, key) {
       try { var hit = localStorage.getItem(key); if (hit) return Promise.resolve(JSON.parse(hit)); } catch (e) { /* 막히면 서버로 */ }
       return CC.sb.api('/api/tutor-recap', body).then(function (j) {
+        if (!(j && Array.isArray(j.items) && j.items.length)) return j;   /* 빈 결과·이상한 모양은 캐시하지 않는다 — 다시 누르면 다시 묻는다 */
         try { localStorage.setItem(key, JSON.stringify(j)); } catch (e) { /* 저장 못 해도 결과는 보인다 */ }
         return j;
       });
+    },
+
+    /* 공용 PC — 로그아웃할 때 학생 질문이 담긴 recap 캐시를 모두 지운다 */
+    clearRecap: function () {
+      try {
+        var ks = [];
+        for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf('recap:') === 0) ks.push(k); }
+        ks.forEach(function (k) { localStorage.removeItem(k); });
+      } catch (e) { /* 막혀 있으면 지울 것도 없다 */ }
     },
 
     /* ── 인증 ────────────────────────────────── */

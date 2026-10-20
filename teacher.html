@@ -240,6 +240,7 @@ window.CC_SUPABASE = {
       loadClassrooms();
     });
     $('#t-logout').addEventListener('click', function () {
+      CC.sb.clearRecap();
       CC.sb.signOut().then(function () { window.location.href = 'auth.html'; });
     });
   } else {

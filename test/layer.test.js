@@ -306,6 +306,10 @@ t('fixedList 새 꼴은 null', CC.cards.fixedList({ kind: 'code' }) === null);
   const big = run(many, evs);
   t('recap: 41명 → 40명, truncated', big.body.students.length === 40 && big.truncated === true);
   t('recap: 가장 오래된 한 명이 잘린다', big.body.students.every(x => big.names[x.who] !== 'n1'));
+  const tie = [], tevs = [];
+  for (let i = 41; i >= 1; i--) { tie.push({ id: 'x' + i, name: 'n' + i }); mk(i, true, 1).forEach(e => { e.t = e.type === 's-wrap' ? 100 : e.t; tevs.push(e); }); }
+  const t1 = run(tie, tevs), t2 = run(tie.slice().reverse(), tevs);
+  t('recap: 마무리 시각이 같아도 입력 순서와 무관하게 같은 40명', JSON.stringify(Object.keys(t1.names).map(k => t1.names[k]).sort()) === JSON.stringify(Object.keys(t2.names).map(k => t2.names[k]).sort()));
   const e1 = mk(1, true, 2);
   t('recap: 같은 입력 같은 key, s-tutor 추가하면 다른 key', run([s1], e1).key === r.key && run([s1], e1.concat([ev('x1', 's-tutor', { question: 'q', answer: 'a', t: 999 })])).key !== r.key);
   const two = e1.concat([ev('x1', 's-tutor', { question: 'z', answer: 'z', mid: 'm2', t: 20 }), ev('x1', 's-wrap', { text: 'w', mid: 'm2', t: 30 })]);

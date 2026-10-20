@@ -190,6 +190,12 @@ r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
 t('부분 재답이 백틱 예시 한 줄을 남겨도 재판정 통과면 답한다', len(llm.calls) == 4 and not r['refused'] and r['retried']
   and '`' in r['answer'], r)
 
+llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼요.'}, {**HARD, 'cut': '결과가 3이면 print(3) 하면 돼요.'},
+           {'kind': 'answer', 'answer': '개수는 len 으로 세요.'}, OK)
+r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
+t('cut 이 답 전체와 같으면 부분 삭제 대신 why 로 고쳐 쓰기', '아래 문제를 고쳐 다시 답한다' in llm.calls[2][-1]['content']
+  and '빼고' not in llm.calls[2][-1]['content'], llm.calls[2][-1])
+
 r = ask('점심 뭐 먹어?', CTX, fake({'kind': 'off_topic', 'answer': ''}))
 t('범위 밖', r['answer'] == REFUSE['off_topic'] and r['refused'], r)
 

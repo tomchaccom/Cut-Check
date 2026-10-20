@@ -75,6 +75,7 @@ function launchOpts() {
   const t = await ctx.newPage();
   t.on('pageerror', e => errs.push('T: ' + e.message));
   await t.goto(BASE + '/teacher.html'); await t.waitForTimeout(400);
+  await t.evaluate(() => { CC.sb.active = () => true; });   // 로컬 모드는 recap 버튼을 숨긴다 — 서버가 있는 척하고 서랍을 연다
   await t.locator('#livebar .tbtn').first().click(); await t.waitForTimeout(300);
   const pwned = await t.evaluate(() => !!window.__pwned);
   const imgs = await t.locator('.detail img').count();

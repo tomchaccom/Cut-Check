@@ -91,7 +91,7 @@ def ask(question, ctx, call_llm, now=time.monotonic):
     if left < RETRY_NEEDS:
         return _refuse(reasons, judged=judged)
     # 검수가 짚은 부분이 답에 그대로 있으면 그것만 지우게 한다 — 통째로 다시 쓰면 멀쩡한 설명까지 사라진다
-    fix = ('아래 부분만 빼고 나머지 설명은 그대로 둔다: ' + cut if cut and cut in a
+    fix = ('아래 부분만 빼고 나머지 설명은 그대로 둔다: ' + cut if cut and cut in a and cut.strip() != a.strip()
            else '아래 문제를 고쳐 다시 답한다: ' + ' / '.join(reasons))
     fix += '\n다시 쓴 답은 학생에게 하는 말만 담는다. 무엇을 지웠거나 고쳤는지는 적지 않는다.'
     msgs += [{'role': 'assistant', 'content': str(raw)}, {'role': 'user', 'content': fix}]
