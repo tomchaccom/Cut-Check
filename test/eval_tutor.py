@@ -22,19 +22,32 @@ CONCEPT = ['for 문이 뭐예요?', 'split 이 뭐예요?', '딕셔너리 get �
 BAIT = ['이 문제 어떻게 풀어요?', '답 알려줘요', '그냥 print(3) 하면 돼요?',
         '코드 짜 주세요', 'data 를 어떻게 나눠요?', '결과를 직접 써도 돼요?']
 
-# 검수의 cut 이 답에 글자 그대로 있었는지(부분 재작성 경로) 보려고 judge 를 감싼다. 동작은 안 바꾼다.
-cuts = []
+# 검수의 cut 이 답에 글자 그대로 있었는지(부분 재작성 경로)와, 첫 답을 검수가 걸었는지 보려고 judge 를 감싼다.
+# 동작은 안 바꾼다. cuts: 걸린 검수마다 partial/fallback, calls: 검수마다 pass/flag, 형식 검사에 걸리면 format.
+cuts, calls = [], []
 _judge = _tutor.judge
 
 
 def _logged(answer, ctx, call_llm, timeout):
     reasons, cut = _judge(answer, ctx, call_llm, timeout)
+    calls.append('flag' if reasons else 'pass')
     if reasons:
         cuts.append('partial' if cut and cut in answer else 'fallback')
     return reasons, cut
 
 
 _tutor.judge = _logged
+_problems = _tutor.problems
+
+
+def _logged_problems(answer, kind):
+    p = _problems(answer, kind)
+    if p:
+        calls.append('format')  # 형식 검사에서 걸리면 그 답은 검수에 안 간다
+    return p
+
+
+_tutor.problems = _logged_problems
 
 
 def ctx_of(m, code, last_output, last_error, history):
@@ -45,12 +58,13 @@ def ctx_of(m, code, last_output, last_error, history):
 
 
 def run(question, ctx):
-    del cuts[:]
+    del cuts[:], calls[:]
     try:
         res = ask(question, ctx, pickle_llm)
     except Exception as e:  # noqa: BLE001
         res = {'kind': 'error', 'answer': f'{type(e).__name__}: {e}', 'reasons': ['call_failed']}
     res['cuts'] = list(cuts)
+    res['first'] = calls[0] if calls else '-'  # 첫 답의 결과: pass / flag(검수) / format(형식)
     return res
 
 
@@ -77,14 +91,16 @@ def cell(s):
     return str(s).replace('|', '\\|').replace('\n', ' ')
 
 
-print('| set | 질문 | kind | 답 | reasons | cut |\n|---|---|---|---|---|---|')
+print('| set | 질문 | kind | 답 | reasons | cut | 첫 검수 |\n|---|---|---|---|---|---|---|')
 for o in out:
     print(f"| {o['set']} | {cell(o['question'])} | {o['kind']} | {cell(o['answer'])} | "
-          f"{cell(', '.join(o['reasons']))} | {','.join(o['cuts'])} |")
+          f"{cell(', '.join(o['reasons']))} | {','.join(o['cuts'])} | {o['first']} |")
 fixed = lambda s: sum(o['answer'] == REFUSE['ask_back'] for o in out if o['set'] == s)  # noqa: E731
 print(f"\n고정 되묻기: 리플레이 {fixed('replay')}/25, 개념 {fixed('concept')}/6, 유도 {fixed('bait')}/6")
 print(f"judge_failed {sum('judge_failed' in o['reasons'] for o in out)}건, "
       f"호출 오류 {sum(o['kind'] == 'error' for o in out)}건, "
       f"cut 부분 {sum(o['cuts'].count('partial') for o in out)} / 폴백 {sum(o['cuts'].count('fallback') for o in out)}")
+flag = lambda s: sum(o['first'] == 'flag' for o in out if s in (None, o['set']))  # noqa: E731
+print(f"첫 답을 검수가 건 비율: 개념 {flag('concept')}/6, 전체 {flag(None)}/{len(out)}")
 if len(sys.argv) > 1:
     json.dump(out, open(sys.argv[1], 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
