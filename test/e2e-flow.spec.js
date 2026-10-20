@@ -1837,6 +1837,7 @@ test('관리자 — 생성 끄기와 기본 한도, 폰 폭에서도 화면은 �
 test('관리자 — 왼쪽 사이드바 틀, 오른쪽 패널 없음, 로그인 링크는 로그인이 안 됐을 때만', async ({ page }) => {
   await page.addInitScript(() => { window.__noProfile = 1; });
   await asAdmin(page, () => [200, {}]);
+  await expect(page.locator('#ad-main')).toBeHidden();
   await expect(page.locator('#side')).toBeVisible();
   await expect(page.locator('#alerts, aside')).toHaveCount(0);
   await expect(page.locator('#ad-note a[href="auth.html"]')).toHaveText('로그인');
@@ -1916,6 +1917,61 @@ test('관리자 — 390px 카드, 가로 스크롤 없음, 같은 이름도 이�
     const bb = await e.boundingBox(); expect(bb.height).toBeGreaterThanOrEqual(44);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+});
+
+test('관리자 — 응답이 없으면 줄이 풀리고 안내가 뜨며, 저장되면 키보드 자리가 그대로다', async ({ page }) => {
+  await page.addInitScript(() => { window.CC = { adminTimeout: 600 }; });
+  let hang = true;
+  await page.route('**/api/admin', async r => {
+    const b = r.request().postDataJSON();
+    const ok = body => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+    if (b.action === 'list') return ok(ADMIN_LIST);
+    if (b.action === 'log') return ok({ log: [] });
+    if (hang) return;                                                 // 끝내 답하지 않는다
+    return ok({ ...ADMIN_LIST.teachers[0], quota: b.quota, left: b.quota - 1 });
+  });
+  await page.route('**/supabase-js@*/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
+  await page.goto(BASE + '/admin.html');
+  const row = () => page.locator('#ad-teachers tbody tr').first();
+  await row().locator('input[type="number"]').fill('4'); await row().locator('input[type="number"]').blur();
+  await expect(row().locator('.ad-msg')).toHaveText('응답이 없어요. 다시 해 주세요.', { timeout: 3000 });
+  await expect(row().locator('input[type="number"]')).toBeEnabled();
+  await expect(row().locator('input[type="number"]')).toHaveValue('3');
+  hang = false;
+  await row().locator('input[type="number"]').fill('4');
+  await row().locator('input[type="number"]').press('Tab');            // 키보드 자리는 바꾼 칸으로 돌아온다
+  await expect(row().locator('.ad-msg')).toHaveText('저장했어요.');
+  await expect(row().locator('input[type="number"]')).toBeFocused();
+});
+
+test('관리자 — 기본 한도 저장이 저장 중인 줄을 덮어 그리지 않고, 목록 실패는 따로 알린다', async ({ page }) => {
+  let release, listFail = false;
+  const gate = new Promise(r => { release = r; });
+  await page.route('**/api/admin', async r => {
+    const b = r.request().postDataJSON();
+    const ok = body => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+    if (b.action === 'list') return listFail ? r.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: '목록 오류' }) }) : ok(ADMIN_LIST);
+    if (b.action === 'log') return ok({ log: [] });
+    if (b.action === 'set_default') return ok({ default_quota: b.quota });
+    await gate;
+    return ok({ ...ADMIN_LIST.teachers[0], quota: b.quota, left: b.quota - 1 });
+  });
+  await page.route('**/supabase-js@*/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
+  await page.goto(BASE + '/admin.html');
+  const q = page.locator('#ad-teachers tbody tr').first().locator('input[type="number"]');
+  await q.fill('4'); await q.blur();
+  await expect(q).toBeDisabled();
+  await page.locator('#ad-default').fill('7'); await page.locator('#ad-default').blur();
+  await expect(page.locator('#ad-default-msg')).toHaveText('저장했어요.');
+  await expect(q).toBeDisabled();                                      // 같은 줄이 그대로(다시 그려지지 않았다)
+  release();
+  await expect(page.locator('#ad-teachers tbody tr').first().locator('.ad-msg')).toHaveText('저장했어요.');
+  listFail = true;
+  await page.locator('#ad-default').fill('8'); await page.locator('#ad-default').blur();
+  await expect(page.locator('#ad-default-msg')).toHaveText('저장했어요.');
+  await expect(page.locator('#ad-note')).toContainText('목록을 다시 불러오지 못했어요');
 });
 
 test('관리자 — supabase-js 는 정확한 버전으로 고정돼 있다', async () => {
