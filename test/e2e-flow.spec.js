@@ -584,6 +584,45 @@ test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ p
   expect(w.width).toBeLessThan(560);                 // 줄은 글자 폭만큼
 });
 
+/* 2026-10-20 "설계도 디자인이 좀 깨져" — 390 폭에서 긴 카드 이름이면 번호 · 이름 · ▲▼✕ 가
+ * 저마다 다른 줄로 흩어졌고, 버튼은 26px 이었다. 한 줄은 같이 다니고, 넘치지 않고, 겹치지 않는다 */
+test('설계도 — 390 폭 긴 카드 이름에서도 번호와 버튼이 이름과 같은 줄', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await local(page.context());
+  const long = ['쉼표 뒤에 붙은 앞뒤 공백을 하나도 남기지 않고 모두 없애기', '같은 이름이 두 번 이상 나오면 한 번만 남기고 나머지는 지우기', '개수 세기'];
+  await page.goto(BASE + '/sentence.html');
+  await page.evaluate(long => {
+    const m = JSON.parse(JSON.stringify(window.CC.SENTENCE_MISSIONS[0]));
+    m.id = 'ai-e2e'; m.cards = long.map(label => ({ label }));
+    localStorage.setItem('cutcheck.generated', JSON.stringify([m]));
+    window.CC.store.clear();
+  }, long);
+  await page.reload();
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  for (const l of long) await page.locator('.card-pick', { hasText: l }).click();
+  const r = await page.evaluate(() => {
+    const L = document.querySelector('#design-list');
+    const rows = [...L.querySelectorAll('.design-item')].map(li => {
+      const box = e => e.getBoundingClientRect();
+      const num = box(li.querySelector('.num')), label = box(li.querySelector('.label')), btns = [...li.querySelectorAll('.moves button')].map(box);
+      return { top: box(li).top, bottom: box(li).bottom,
+        sameLine: btns.every(b => b.top < label.bottom && b.bottom > label.top) && num.top < label.bottom && num.bottom > label.top,
+        smallest: Math.min.apply(null, btns.map(b => Math.min(b.width, b.height))) };
+    });
+    return { page: document.documentElement.scrollWidth - innerWidth, list: L.scrollWidth - L.clientWidth, rows };
+  });
+  expect(r.page).toBeLessThanOrEqual(0);
+  expect(r.list).toBeLessThanOrEqual(0);
+  r.rows.forEach((row, i) => {
+    expect(row.sameLine).toBe(true);
+    expect(row.smallest).toBeGreaterThanOrEqual(44);
+    if (i) expect(row.top).toBeGreaterThanOrEqual(r.rows[i - 1].bottom);   // 줄끼리 겹치지 않는다
+  });
+});
+
 /* 강사 — 교실은 폴더, 명단의 학생은 기록이 없어도 폴더, 교실에서 빼기 (2026-10-17 사람 요청) */
 const FAKE_TEACHER = `(function(CC){var P=function(v){return Promise.resolve(v)};
 var roster=[{id:'s1',name:'태인',login_id:'m9676u-1'},{id:'s2',name:'가은'},{id:'s3',name:'한결',login_id:'m9676u-2'}];

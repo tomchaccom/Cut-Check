@@ -341,8 +341,8 @@
   function renderCodeStep() {
     /* 설계도 표시 */
     if ($('#design-define')) $('#design-define').textContent = '성공: ' + state.defineChoice;
-    $('#design-side').innerHTML = picked().map(function (c) {
-      return '<li class="design-item">' + esc(CC.cards.text(c)) + '</li>';
+    $('#design-side').innerHTML = picked().map(function (c, i) {
+      return '<li class="design-item"><span class="num">' + (i + 1) + '.</span><span>' + esc(CC.cards.text(c)) + '</span></li>';
     }).join('');
     $('#step4-req').textContent = M ? M.brief : '';
     $('#step4-situation').textContent = (M && M.situation) || '';
