@@ -217,6 +217,20 @@
         .then(function (r) { if (r.error) throw r.error; return r.data; });
     },
 
+    /* 나침반 — 선생님: 서버(api/compass.py)에 list · analyze · send 를 부탁한다.
+     * 학생: 선생님이 보낸 것만(바늘·방위·한마디) compass_mine 으로 받는다. 없으면 null */
+    compass: function (action, body) {
+      var o = { action: action };
+      for (var k in (body || {})) o[k] = body[k];
+      return CC.sb.api('/api/compass', o);
+    },
+
+    compassMine: function (missionDbId) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return sb.rpc('compass_mine', { mid: missionDbId })
+        .then(function (r) { if (r.error) throw r.error; return (r.data && r.data[0]) || null; });
+    },
+
     /* 학생 계정 만들기 · 비밀번호 다시 만들기 — 서버(api/create-student.py)가 service 키로 한다.
      * 브라우저는 선생님 토큰만 넘긴다. password 를 비우면 서버가 만든다. → { loginId, password } */
     createStudent: function (classroomId, s) {

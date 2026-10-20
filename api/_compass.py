@@ -60,9 +60,13 @@ def _of(events, *types):
     return [e for e in events if isinstance(e, dict) and e.get('type') in types]
 
 
+def _dicts(v):
+    return [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []
+
+
 def hard_kinds(events, mission):
     """facts.js 의 nocounter · error · hardcode 만 — 반례를 돌렸는지, 돌린 결과가 외운 것인지."""
-    inputs = (mission or {}).get('inputs') or []
+    inputs = _dicts((mission or {}).get('inputs') if isinstance(mission, dict) else None)
     if not inputs:
         return []
     first = inputs[0]
@@ -77,7 +81,7 @@ def hard_kinds(events, mission):
         out.append('nocounter')
     if not probe or not codes or probe.get('sig') != sig(codes[-1].get('code')):
         return out
-    outs = probe.get('outs') or []
+    outs = _dicts(probe.get('outs'))
     if any(o.get('error') for o in outs):
         out.append('error')
     elif counter:
@@ -136,7 +140,7 @@ def facts(events, mission):
     if any(c.get('error') and any(sig(d.get('code')) != sig(c.get('code')) for d in codes[i + 1:])
            for i, c in enumerate(codes)):
         add('S', 'fixed-error', '에러가 난 뒤 코드를 고쳐 다시 실행했다')
-    counter = next((x for x in reversed((mission or {}).get('inputs') or []) if x.get('counter')), None)
+    counter = next((x for x in reversed(_dicts((mission or {}).get('inputs') if isinstance(mission, dict) else None)) if x.get('counter')), None)
     ran = [c for c in codes if counter and c.get('dataId') == counter.get('v')]
     hk = hard_kinds(events, mission)
     if ran and not ran[-1].get('error') and 'error' not in hk and 'hardcode' not in hk:
@@ -244,6 +248,7 @@ def read(events, mission, call_llm=mini_llm, t0=None, now=time.monotonic):
         if data is not None and isinstance(data.get('levels'), dict):
             r = vet(data, fs, ts)
             r['needle_deg'], r['strongest'] = needle(r['levels'], r['evidence'])
+            r['facts'] = fs
             return r
         print('[compass] 형식 오류', attempt, file=sys.stderr)
         if t0 + DEADLINE - now() < RETRY_NEEDS:

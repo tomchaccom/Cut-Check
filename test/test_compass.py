@@ -150,5 +150,12 @@ py = [sorted(C.hard_kinds(e, m)) for e, m in cases]
 t('hardcode/error 사실이 JS 와 같다', js == py, (js, py))
 t('JS 가 hardcode 를 실제로 잡는 사례 포함', ['hardcode'] in js and ['error'] in js)
 
+junk = [{'type': 's-code', 'code': 'x', 'dataId': FIRST}, {'type': 's-probe', 'sig': C.sig('x'), 'outs': [1, None, 'a', {'dataId': FIRST, 'output': '1'}]}]
+try:
+    ok = C.hard_kinds(junk, {'inputs': [None, 3, {'v': FIRST}, {'v': COUNTER, 'counter': True}]}) is not None and C.facts(junk, {'inputs': [None, 'x']}) is not None
+except Exception as e:
+    ok = repr(e)
+t('학생이 보낸 쓰레기(dict 아닌 outs·inputs)에도 안 죽는다', ok is True, ok)
+
 print('\nFAIL ' + str(fail) if fail else '\nOK')
 sys.exit(1 if fail else 0)
