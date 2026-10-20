@@ -4,7 +4,7 @@
 
 LLM 호출은 call_llm(messages, schema, timeout) 로 주입받는다. 테스트는 가짜를 넣는다.
 시간: 전체 26초(vercel 한도 30초). 답 10초, 판정 5초, 재요청은 남은 시간 10초 이상일 때 한 번.
-재답도 판정한다 — 형식 검사·백틱 없음을 통과한 뒤 남은 시간이 판정 5초 이상일 때만. 못 하면 고정 되묻기.
+재답도 판정한다 — 형식 검사를 통과한 뒤 남은 시간이 판정 5초 이상일 때만. 못 하면 고정 되묻기.
 now() 는 시작·재요청 전·재판정 전 세 번 부른다.
 """
 import json
@@ -40,6 +40,8 @@ SCHEMA = {
 SYSTEM = '\n'.join([
     '당신은 중학교 1학년의 파이썬 튜터다. 학생은 아래 미션과 자기가 정한 목표를 향해 코드를 짜는 중이다.',
     '학생이 막힌 곳을 스스로 이해하도록 개념과 학생 코드의 위치를 설명한다.',
+    '에러를 물으면 몇 번째 줄에서 무슨 일이 났는지 사실을 말한다. 원인의 결론은 학생이 찾게 둔다.',
+    '설계 카드와 코드가 다르게 가면 "설계 2번 카드랑 지금 코드가 같은 일을 하나요?"처럼 되묻는다.',
     f'형식: 존댓말("~요"), 칭찬 없이, {MAX}자 이내. 학생을 "너"라고 부르지 않는다.',
     '예시는 백틱 한 줄 하나까지. 함수·문법 이름은 백틱 없이 쓴다.',
     '바로 답하기 어려우면 kind 를 ask_back 으로 하고, 학생이 다음에 확인할 것 하나를 물음표로 끝나는 80자 이하 한 문장으로 묻는다.',
@@ -96,7 +98,7 @@ def ask(question, ctx, call_llm, now=time.monotonic):
     except Exception:  # noqa: BLE001 — 재답 실패로 502 를 내지 않는다. 첫 답은 이미 막혔다
         return _refuse(reasons + ['retry_failed'], retried=True, judged=judged)
     k2, a2 = d2.get('kind'), str(d2.get('answer') or '').strip()
-    if k2 not in ('answer', 'ask_back') or problems(a2, k2) or '`' in a2:
+    if k2 not in ('answer', 'ask_back') or problems(a2, k2):
         return _refuse(reasons, retried=True, judged=judged)
     left = BUDGET - (now() - t0)
     if left < JUDGE_T:

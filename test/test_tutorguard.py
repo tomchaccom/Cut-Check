@@ -131,9 +131,9 @@ r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
 t('재답 시간 = min(10, 남은-6)', llm.timeouts[:3] == [10, 5, 10], llm.timeouts)
 t('재답 판정할 시간 없음 → ask_back', len(llm.calls) == 3 and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
 
-llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '`d[m] += 1` 쓰세요.'})
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '`d[m] += 1` 쓰세요.'}, LEAK)
 r = ask('코드 줘', CTX, llm)
-t('재답에 코드 → ask_back', r['kind'] == 'ask_back' and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+t('재답 코드를 재판정이 막음 → ask_back', r['kind'] == 'ask_back' and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
 
 llm = fake({'kind': 'answer', 'answer': '문자열은 따옴표로 감싼 글자예요.'}, '판정 아님')
 r = ask('문자열이 뭐고', CTX, llm)
@@ -149,9 +149,9 @@ r = ask('모르겠어요', CTX, llm)
 t('유출된 되묻기 → 재요청 → 재답', len(llm.calls) == 4 and r['retried'] and r['kind'] == 'ask_back' and r['answer'].startswith('지금 print'), r)
 
 llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를 세는 변수를 둘 건가요?'}, LEAK,
-           {'kind': 'ask_back', 'answer': "`name = '김밥,떡볶이'` 처럼 넣었나요?"})
+           {'kind': 'ask_back', 'answer': "`name = '김밥,떡볶이'` 처럼 넣었나요?"}, LEAK)
 r = ask('모르겠어요', CTX, llm)
-t('재답 되묻기에 백틱 → ask_back 고정 문장', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+t('재답 되묻기를 재판정이 막음 → ask_back 고정 문장', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
 
 clock = iter([0, 14, 18])
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, OK)
@@ -182,6 +182,13 @@ t('cut 이 답에 없으면 why 로 고쳐 쓰기', '아래 문제를 고쳐 다
 llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼요.'}, HARD, {'kind': 'answer', 'answer': '결과가 3이면 그대로 출력해요.'}, HARD)
 r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
 t('재답도 걸리면 고정 되묻기', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+
+llm = fake({'kind': 'answer', 'answer': "split 은 기준 글자로 잘라요. 예: `'a,b'.split(',')` 결과가 3이면 print(3) 하면 돼요."},
+           {**HARD, 'cut': '결과가 3이면 print(3) 하면 돼요.'},
+           {'kind': 'answer', 'answer': "split 은 기준 글자로 잘라요. 예: `'a,b'.split(',')`"}, OK)
+r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
+t('부분 재답이 백틱 예시 한 줄을 남겨도 재판정 통과면 답한다', len(llm.calls) == 4 and not r['refused'] and r['retried']
+  and '`' in r['answer'], r)
 
 r = ask('점심 뭐 먹어?', CTX, fake({'kind': 'off_topic', 'answer': ''}))
 t('범위 밖', r['answer'] == REFUSE['off_topic'] and r['refused'], r)
