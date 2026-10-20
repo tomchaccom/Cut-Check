@@ -109,14 +109,20 @@ def _run(body, db, uid, llm, t0):
         if not old:
             raise Fail(409, '먼저 읽은 뒤에 보낼 수 있어요.')
         d = body.get('dir')
-        saved = db.rows('PATCH', 'compass?' + key, {'teacher_dir': d, 'teacher_note': note, 'sent_at': _now(), 'updated_at': _now()},
-                        'return=representation')
+        if d is not None:  # 상쇄 중이면 겹친 후보 안에서만 고른다 — 이 행의 옛 선택은 빼고 계산
+            c0 = _compass.cumulative([{**r, 'teacher_dir': None} if r.get('mission_id') == mis else r for r in _student_rows(db, room, stu)])
+            if c0['cancel'] and d not in c0['candidates']:
+                raise Fail(400, '겹친 방향 가운데서 골라 주세요.')
+        change = {'teacher_note': note, 'sent_at': _now(), 'updated_at': _now()}
+        if 'dir' in body:
+            change['teacher_dir'] = d  # dir 키가 없으면 저장된 선택을 건드리지 않는다. 명시적 null 은 지운다
+        saved = db.rows('PATCH', 'compass?' + key, change, 'return=representation')
         if not saved:
             raise Fail(409, '나침반 기록을 찾지 못했어요. 다시 읽어 주세요.')
         allrows = _student_rows(db, room, stu)
         cum = _compass.cumulative(allrows)
         if not cum['cancel'] and cum['needle_deg'] is not None and allrows:
-            # 상쇄가 아닐 때만 학생 바늘을 바꾼다. 상쇄인데 고르지 않았으면 직전에 보낸 상태가 남는다. (최신 행 = 가장 최근 분석된 미션)
+            # 상쇄가 아닐 때만 학생 바늘을 바꾼다. 상쇄인데 고르지 않았으면 직전에 보낸 상태가 남는다. (최신 행 = 가장 최근에 마친 미션, done_at 기준)
             view = {k: cum[k] for k in ('needle_deg', 'dir', 'length')}
             view['sent_at'] = saved[0].get('sent_at')
             db.rows('PATCH', 'compass?student_id=eq.' + q(stu) + '&mission_id=eq.' + q(allrows[0]['mission_id']),
@@ -125,26 +131,28 @@ def _run(body, db, uid, llm, t0):
     if old and old[0].get('checks') and body.get('force') is not True:
         return _row(old[0])
     # ponytail: 두 탭이 동시에 analyze 하면 LLM 을 두 번 부르고 마지막 upsert 가 이긴다. 필요하면 먼저 claim 행을 insert 한다
-    events = [r.get('event') for r in db.rows('GET', 'student_events?select=event&' + key
-                                              + '&classroom_id=eq.' + q(room) + '&order=created_at')]
+    evrows = db.rows('GET', 'student_events?select=event,created_at&' + key
+                                              + '&classroom_id=eq.' + q(room) + '&order=created_at')
+    events = [r.get('event') for r in evrows]
     if not any(isinstance(e, dict) and e.get('type') == 's-code-judge' for e in events):
         raise Fail(409, '아직 미션을 마치지 않았어요.')
     r = _compass.read(events, ms[0].get('data'), **({'call_llm': llm} if llm else {}), t0=t0)
     # facts 는 1차 열(not null)이라 빈 목록. levels·evidence·needle 은 2차에서 쓰지 않는다. merge-duplicates 라 보낸 한마디·시각은 그대로 남는다
+    done = next((r.get('created_at') for r in evrows if isinstance(r.get('event'), dict) and r['event'].get('type') == 's-code-judge'), None)
     new = {'student_id': stu, 'mission_id': mis, 'classroom_id': room, 'checks': r['checks'], 'tutor_dirs': r['tutor_dirs'],
-           'facts': [], 'updated_at': _now()}
+           'facts': [], 'done_at': done, 'updated_at': _now()}  # done_at = 미션을 마친 때 — 누적 순서의 기준
     saved = db.rows('POST', 'compass?on_conflict=student_id,mission_id', new, 'resolution=merge-duplicates,return=representation')
     return _row(saved[0])
 
 
 def _student_rows(db, room, stu):
     """그 학생의 나침반 행, 최신순(분석된 순서). 1차 행(checks 없음)도 섞여 있다 — cumulative 가 건너뛴다."""
-    return db.rows('GET', f'compass?select={COLS}&classroom_id=eq.' + q(room) + '&student_id=eq.' + q(stu) + '&order=created_at.desc')
+    return db.rows('GET', f'compass?select={COLS}&classroom_id=eq.' + q(room) + '&student_id=eq.' + q(stu) + '&order=done_at.desc.nullslast,created_at.desc')
 
 
 def _cumulative(db, room, stu):
     rows = _student_rows(db, room, stu)
-    used = [r for r in rows if _compass.score(r.get('checks')) is not None][:len(_compass.WEIGHTS)]
+    used = _compass.window(rows)
     return {'cumulative': _compass.cumulative(rows),
             'rows': [{**_row(r), 'score': _compass.score(r.get('checks'))} for r in used]}
 

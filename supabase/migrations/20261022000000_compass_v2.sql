@@ -4,9 +4,12 @@
 alter table compass add column if not exists checks jsonb;
 alter table compass add column if not exists tutor_dirs jsonb;
 alter table compass add column if not exists student_view jsonb;  -- { needle_deg, dir, length, sent_at } 학생에게 보낸 누적 바늘. send 때 서버가 최신 행에 쓴다
+alter table compass add column if not exists done_at timestamptz;  -- 학생이 미션을 마친 때(첫 s-code-judge). "최근 미션" 순서는 분석 시각이 아니라 이것이다
+update compass set done_at = created_at where done_at is null;      -- 1차 행은 만든 시각으로 대신한다
 alter table compass alter column levels drop not null;
 alter table compass alter column evidence drop not null;
 
+-- 여러 교실에 속한 학생은 가장 최근에 마친 미션의 교실 바늘이 보인다(교실별 나침반은 따로 두지 않는다).
 -- 학생의 누적 나침반: student_view 가 있는 행 중 가장 최근 것 하나. 0행이면 "선생님이 곧 방향을 알려 주실 거예요."
 -- checks · 점수 · 근거 인용 · AI 문장은 이 함수가 주지 않는다.
 create or replace function public.compass_mine_v2()
@@ -15,7 +18,7 @@ returns table (needle_deg real, dir text, length real, sent_at timestamptz) as $
          (c.student_view->>'length')::real, (c.student_view->>'sent_at')::timestamptz
     from compass c
    where c.student_id = auth.uid() and c.student_view is not null
-   order by c.created_at desc
+   order by c.done_at desc nulls last, c.created_at desc
    limit 1;
 $$ language sql stable security definer set search_path = public, pg_temp;
 

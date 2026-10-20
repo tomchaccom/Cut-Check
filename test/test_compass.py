@@ -66,21 +66,24 @@ def near(a, b):
     return a is not None and abs(a - b) < 0.01
 
 
+SAME = [code('print(2)', FIRST, '2'), code('print(2)', COUNTER, '2')]
+SOK = [code('print(1)', FIRST, '1'), code('print(1)', COUNTER, '7')]
 # 코드 8항목 — 반드시 예/아니오가 갈리는 기록으로
 cc = C.code_checks(EVS, MISSION)
 t('N1 골랐다 바꾼 것 포함', cc['N1']['ok'] and C.code_checks([EVS[0]], MISSION)['N1']['ok'] is False, cc['N1'])
+t('N1 good → trap 으로 바꾸면 아니오', not C.code_checks([{'type': 's-define', 'choice': GOOD}, {'type': 's-redefine', 'to': TRAP}], MISSION)['N1']['ok'])
 t('N1 처음부터 trap 아닌 것', C.code_checks([{'type': 's-define', 'choice': GOOD}], MISSION)['N1']['ok'])
 t('E1 설계 카드', cc['E1']['ok'] and not C.code_checks([], MISSION)['E1']['ok'])
 t('E1 s-method 도 설계', C.code_checks([{'type': 's-method', 'cards': ['a']}], MISSION)['E1']['ok'])
 t('E3 에러 뒤 설계 안 고침 → 아니오', not cc['E3']['ok'], cc['E3'])
 t('E3 에러 뒤 s-remethod → 예', C.code_checks([code('x(', FIRST, '', 'E'), {'type': 's-remethod', 'toCards': ['b']}], MISSION)['E3']['ok'])
+t('E3 반례가 깨진 뒤(같은 출력) s-remethod → 예', C.code_checks(SAME + [{'type': 's-remethod', 'toCards': ['b']}], MISSION)['E3']['ok'])
+t('E3 반례가 안 깨졌으면 아니오', not C.code_checks(SOK + [{'type': 's-remethod', 'toCards': ['b']}], MISSION)['E3']['ok'])
 t('E3 에러 전 설계만이면 아니오', not C.code_checks([{'type': 's-design'}, code('x(', FIRST, '', 'E')], MISSION)['E3']['ok'])
 t('S1 에러 없는 실행', cc['S1']['ok'] and not C.code_checks([code('x(', FIRST, '', 'E')], MISSION)['S1']['ok'])
 t('S2 에러 뒤 고쳐 다시 → 예', cc['S2']['ok'])
 t('S2 에러 뒤 그대로 → 아니오', not C.code_checks([code('x(', FIRST, '', 'E'), code('x(', FIRST, '', 'E')], MISSION)['S2']['ok'])
 t('S2 에러 한 번도 없으면 예', C.code_checks([code('print(1)', FIRST, '1')], MISSION)['S2']['ok'])
-SAME = [code('print(2)', FIRST, '2'), code('print(2)', COUNTER, '2')]
-SOK = [code('print(1)', FIRST, '1'), code('print(1)', COUNTER, '7')]
 t('S3 같은 코드·다른 결과 → 예', C.code_checks(SOK, MISSION)['S3']['ok'])
 PRB = {'type': 's-probe', 'sig': C.sig('print(2)'), 'outs': [{'dataId': FIRST, 'output': '2'}, {'dataId': COUNTER, 'output': '2'}], 'uses': []}
 t('S3 hardcode 신호 → 아니오', not C.code_checks(SAME + [PRB], MISSION)['S3']['ok'])
@@ -106,6 +109,7 @@ t('튜터 분류 개수', td == {'N': 1, 'E': 0, 'S': 0, 'W': 0}, td)
 for k, q in (('N2', 'print(99)'), ('N3', '개수가 달라도 되는 거 맞나요 없는 말'), ('E2', '지어낸 설계 이유'), ('W2', '지어낸 근거')):
     ai, _ = C.vet({'items': {**good_items, k: {'ok': True, 'quote': q}}}, EV2)
     t(k + ' quote 가 기록에 없으면 아니오 · quote 비움', ai[k] == {'ok': False, 'quote': ''}, ai[k])
+t('W2 quote 가 마무리 문장(s-wrap)에만 있으면 아니오', not C.vet({'items': {'W2': {'ok': True, 'quote': '마무리 말'}}}, [{'type': 's-code-judge', 'basis': '다른 말'}, {'type': 's-wrap', 'text': '마무리 말'}])[0]['W2']['ok'])
 t('quote 를 다른 항목의 기록에서 찾아도 아니오', not C.vet({'items': {**good_items, 'N3': {'ok': True, 'quote': 'print(2)'}}}, EV2)[0]['N3']['ok'])
 t('ok=false 면 quote 가 있어도 아니오', not C.vet({'items': {**good_items, 'N2': {'ok': False, 'quote': 'print(2)'}}}, EV2)[0]['N2']['ok'])
 t('"." 같은 quote 는 아니오', not C.vet({'items': {'W2': {'ok': True, 'quote': '.'}}}, [{'type': 's-code-judge', 'basis': '.'}])[0]['W2']['ok'])
@@ -171,6 +175,11 @@ c = C.cumulative([row(e=2, w=2, td='E'), row(w=3)])
 t('선택을 넣으면 상쇄가 되는 경우도 선택 방위의 정중앙', c['dir'] == 'E' and c['needle_deg'] == 90 and c['length'] == C.MIN_LEN, c)
 c = C.cumulative([row(n=3, td='N'), row(n=3, s=3)])
 t('선택이 있고 상쇄가 아니면 보통 계산(단위벡터 × 3 로 대체)', not c['cancel'] and c['dir'] == 'N' and near(c['needle_deg'], 0) and c['length'] > C.MIN_LEN, c)
+c = C.cumulative([row(e=3, w=3), row(n=3, s=3, td='S')])
+t('옛 선택은 새 상쇄를 풀지 못한다 → E/W', c['cancel'] and c['candidates'] == ['E', 'W'] and c['dir'] is None, c)
+c = C.cumulative([row(n=3, s=3), row(n=3, s=3, td='S')])
+t('최신 행에 선택이 없으면 옛 선택도 소용없다', c['cancel'], c)
+t('window 는 cumulative 가 쓰는 5개', len(C.window([{'levels': {}}] + [row(n=1)] * 7)) == 5)
 t('선택된 행 + 같은 기록 = 항상 같은 답', C.cumulative([row(n=2, e=3, td='W'), row(s=1)]) == C.cumulative([row(n=2, e=3, td='W'), row(s=1)]))
 t('잘못된 teacher_dir 은 무시', C.cumulative([row(n=3, s=3, td='X')])['cancel'])
 

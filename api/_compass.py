@@ -71,10 +71,7 @@ def hard_kinds(events, mission):
     if not inputs:
         return []
     first = inputs[0]
-    counter = None
-    for x in inputs:
-        if x.get('counter'):
-            counter = x
+    counter = _counter(mission)
     codes, out = _of(events, 's-code'), []
     probes = _of(events, 's-probe')
     probe = probes[-1] if probes else None
@@ -97,7 +94,8 @@ def hard_kinds(events, mission):
     return out
 
 
-def _first_counter(mission):
+def _counter(mission):
+    """마지막 counter 입력 — 미션은 마지막 입력을 반례로 둔다."""
     return next((x for x in reversed(_dicts((mission or {}).get('inputs') if isinstance(mission, dict) else None)) if x.get('counter')), None)
 
 
@@ -109,15 +107,12 @@ def code_checks(events, mission):
     """코드가 판정하는 8칸 {id: {ok, quote}}. 코드 항목의 quote 는 비어 있다."""
     events = [e for e in events if isinstance(e, dict)]
     codes = _of(events, 's-code')
-    counter = _first_counter(mission)
+    counter = _counter(mission)
     cv = counter.get('v') if counter else None
-    err_at = next((i for i, e in enumerate(events) if e.get('type') == 's-code' and e.get('error')), None)
-    # N1 — 고른 것 중 하나라도 함정이 아니면 예(골랐다가 바꾼 것 포함)
+    # N1 — 마지막 선택이 함정이 아니면 예(처음에 함정이었다가 바꿨어도 예, 반대로 함정으로 바꾸면 아니오)
     trap = {o.get('v'): o.get('trap') for o in ((mission or {}).get('define') or {}).get('options') or [] if isinstance(o, dict)}
     seq = [e.get('choice') if e['type'] == 's-define' else e.get('to') for e in _of(events, 's-define', 's-redefine')]
-    n1 = any(isinstance(c, str) and not trap.get(c) for c in seq)
-    # E3 — 에러가 난 실행 뒤에 설계·방법을 다시 냈다
-    e3 = err_at is not None and any(e.get('type') in ('s-design', 's-method', 's-remethod') for e in events[err_at + 1:])
+    n1 = bool(seq) and isinstance(seq[-1], str) and not trap.get(seq[-1])  # 마지막으로 고른 것 — 골랐다가 바꾼 것은 바꾼 뒤 기준
     # S2 — 에러가 한 번도 없었으면 예. 있었다면 그 뒤에 다른 코드로 다시 돌렸다
     s2 = not any(c.get('error') for c in codes) or any(
         c.get('error') and any(sig(d.get('code')) != sig(c.get('code')) for d in codes[i + 1:]) for i, c in enumerate(codes))
@@ -126,30 +121,34 @@ def code_checks(events, mission):
     hk = hard_kinds(events, mission)
     s3 = bool(ran) and not ran[-1].get('error') and 'hardcode' not in hk and 'error' not in hk and any(
         c.get('dataId') != cv and sig(c.get('code')) == sig(ran[-1].get('code')) for c in codes)
-    # W3 — 반례가 깨진 뒤(에러, 또는 같은 코드의 다른 자료 출력과 같음) 코드나 성공 조건을 고쳤다
-    w3 = False
+    # 깨진 반례 실행 — 에러, 또는 같은 코드의 다른 자료 출력과 같음. W3 와 E3 이 같이 쓴다
+    w3, broke_at = False, []
     for r in ran:
         at = next(i for i, e in enumerate(events) if e is r)
         same = [c for c in codes if c.get('dataId') != cv and sig(c.get('code')) == sig(r.get('code'))]
-        broke = bool(r.get('error')) or any(str(c.get('output') or '').strip() == str(r.get('output') or '').strip() for c in same)
-        later = events[at + 1:]
-        if broke and (any(e.get('type') == 's-redefine' for e in later) or
-                      any(e.get('type') == 's-code' and sig(e.get('code')) != sig(r.get('code')) for e in later)):
-            w3 = True
+        if r.get('error') or any(str(c.get('output') or '').strip() == str(r.get('output') or '').strip() for c in same):
+            broke_at.append(at)
+            later = events[at + 1:]
+            if any(e.get('type') == 's-redefine' for e in later) or \
+                    any(e.get('type') == 's-code' and sig(e.get('code')) != sig(r.get('code')) for e in later):
+                w3 = True
+    # E3 — 에러가 난 실행, 또는 깨진 반례 뒤에 설계·방법을 다시 냈다
+    trig = [i for i, e in enumerate(events) if e.get('type') == 's-code' and e.get('error')] + broke_at
+    e3 = bool(trig) and any(e.get('type') in ('s-design', 's-method', 's-remethod') for e in events[min(trig) + 1:])
     return {'N1': _item(n1), 'E1': _item(_of(events, 's-design', 's-method')), 'E3': _item(e3),
             'S1': _item(any(not c.get('error') and _txt(c.get('code')) for c in codes)), 'S2': _item(s2), 'S3': _item(s3),
             'W1': _item(bool(ran)), 'W3': _item(w3)}
 
 
 def corpora(events):
-    """AI 항목이 quote 를 찾을 곳. N2 코드 · N3 튜터 질문 · E2 설계 이유 · W2 판정 근거(마무리 문장 포함)."""
+    """AI 항목이 quote 를 찾을 곳. N2 코드 · N3 튜터 질문 · E2 설계 이유 · W2 판정 근거."""
     events = [e for e in events if isinstance(e, dict)]
     judges = _of(events, 's-code-judge')
     return {
         'N2': [_txt(e.get('code')) for e in _of(events, 's-code')],
         'N3': [_txt(e.get('question')) for e in _of(events, 's-tutor')],
         'E2': [_txt(e.get('reason')) for e in _of(events, 's-design', 's-method', 's-remethod')],
-        'W2': [_txt(e.get('basis')) for e in judges] + [_txt(e.get('text')) for e in _of(events, 's-wrap')],
+        'W2': [_txt(e.get('basis')) for e in judges],
     }
 
 
@@ -201,19 +200,23 @@ def _view(x, y):
     return {'needle_deg': deg, 'dir': _sector(deg), 'length': MIN_LEN + (MAX_LEN - MIN_LEN) * min(mag, FULL) / FULL}
 
 
+def window(rows_newest_first):
+    """누적에 들어가는 행 — checks 가 있는(2차) 최신 5개. cumulative 와 강사 화면의 12칸 표가 같은 행을 본다."""
+    used = []
+    for r in rows_newest_first if isinstance(rows_newest_first, list) else []:
+        if isinstance(r, dict) and score(r.get('checks')) is not None:
+            used.append(r)
+        if len(used) == len(WEIGHTS):
+            break
+    return used
+
+
 def cumulative(rows_newest_first):
     """최근 5개 미션 가중 평균 바늘. 행은 최신순 dict({checks, teacher_dir}). checks 없는 1차 행은 건너뛴다(없는 자료).
     x = E−W, y = N−S. teacher_dir 이 있는 미션은 그 방향 단위벡터 × 3(= 한 방향 만점) 으로 그 미션의 벡터를 바꾼다.
-    크기 < CANCEL 이면 자동으로 정하지 않는다(cancel=True, candidates). 선택 없이 계산한 벡터(raw)가 상쇄이거나
-    선택을 넣은 벡터가 상쇄이면 — 창 안의 선생님 선택 가운데 가장 최근 것이 답이다: 방향은 그 방위의 정중앙, 길이는 최소 길이."""
-    used = []
-    for r in rows_newest_first if isinstance(rows_newest_first, list) else []:
-        r = r if isinstance(r, dict) else {}
-        s = score(r.get('checks'))
-        if s is not None:
-            used.append((s, r.get('teacher_dir') if r.get('teacher_dir') in tuple(DIRS) else None))
-        if len(used) == len(WEIGHTS):
-            break
+    크기 < CANCEL 이면 자동으로 정하지 않는다(cancel=True, candidates). 그 상쇄를 푸는 것은 가장 최근 미션 행의
+    선택뿐이다 — 정중앙, 최소 길이. 옛 미션의 선택은 새 상쇄를 풀지 못한다(위 단위벡터 대체로만 반영)."""
+    used = [(score(r['checks']), r.get('teacher_dir') if r.get('teacher_dir') in tuple(DIRS) else None) for r in window(rows_newest_first)]
     out = {'needle_deg': None, 'dir': None, 'length': None, 'cancel': False, 'candidates': [], 'n': len(used)}
     if not used:
         return out
@@ -230,7 +233,7 @@ def cumulative(rows_newest_first):
     if math.hypot(*raw) >= CANCEL and math.hypot(*rep) >= CANCEL:
         out.update(_view(*rep))
         return out
-    pick = next((td for _, td in used if td), None)
+    pick = used[0][1]
     if pick:
         out.update({'needle_deg': DIRS.index(pick) * 90, 'dir': pick, 'length': MIN_LEN})
         return out

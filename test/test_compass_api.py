@@ -55,11 +55,17 @@ def fake(role='teacher', room=True, enrolled=True, mission=True, events=EVENTS, 
         if '/rest/v1/missions' in url:
             return 200, [{'data': MISSION}] if mission else []
         if '/rest/v1/student_events' in url:
-            return 200, [{'event': e} for e in events]
+            return 200, [{'event': e, 'created_at': '2026-10-20T00:00:%02dZ' % i} for i, e in enumerate(events)]
         if method == 'GET' and '/rest/v1/compass' in url:
             if 'mission_id=eq.' in url:
                 return 200, [state['row']] if state['row'] else []
-            return 200, state['rows']  # 학생 전체 행 — 최신순으로 미리 넣어 둔다
+            rs = list(state['rows'])
+            if 'order=done_at.desc' in url:   # 서버가 요청한 정렬을 흉내 낸다 — done_at 이 없으면 뒤로
+                rs.sort(key=lambda r: r.get('created_at', ''), reverse=True)
+                rs.sort(key=lambda r: r.get('done_at') or '', reverse=True)
+            elif 'order=created_at.desc' in url:
+                rs.sort(key=lambda r: r.get('created_at', ''), reverse=True)
+            return 200, rs
         if method in ('POST', 'PATCH') and '/rest/v1/compass' in url:
             if method == 'PATCH':
                 mid = url.split('mission_id=eq.')[1].split('&')[0]
@@ -171,19 +177,45 @@ t('학생 열에 checks·점수가 없다', not {'checks', 'levels', 'score', 'q
 # 상쇄 — R4: dir 없이 보내면 한마디만, student_view 그대로
 a_row, b_row = mrow(MIS, n=3, s=3), mrow(M2, n=3, s=3)
 prev = {'needle_deg': 90, 'dir': 'E', 'length': 0.5, 'sent_at': '2026-10-19T00:00:00Z'}
-b_row['student_view'] = dict(prev)
-http, calls, state = fake(row=a_row, rows=[b_row, a_row])
+a_row['student_view'] = dict(prev)
+http, calls, state = fake(row=a_row, rows=[a_row, b_row])
 st, out = api.handle(body('send', note='둘 다 보였어요'), 'tok', ENV, http, llm_of([]))
 t('상쇄 + dir 없음 → 한마디만 저장(200) · 후보 반환', st == 200 and out['teacher_note'] == '둘 다 보였어요' and out['cumulative']['cancel']
   and out['cumulative']['candidates'] == ['N', 'S'], (st, out))
-t('상쇄 + dir 없음 → student_view 안 바뀜 · 쓰기는 PATCH 1번', b_row['student_view'] == prev and len(writes(calls)) == 1, (b_row, writes(calls)))
+t('상쇄 + dir 없음 → student_view 안 바뀜 · 쓰기는 PATCH 1번', a_row['student_view'] == prev and len(writes(calls)) == 1, (b_row, writes(calls)))
 st, out = api.handle(body('send', dir='S', note='구현이 더 보였어요'), 'tok', ENV, http, llm_of([]))
 t('상쇄 + dir=S → 그 미션 행에 teacher_dir · 누적이 S 정중앙 · 학생에게 간다',
   st == 200 and a_row['teacher_dir'] == 'S' and not out['cumulative']['cancel'] and out['cumulative']['needle_deg'] == 180
-  and b_row['student_view']['dir'] == 'S' and b_row['student_view']['needle_deg'] == 180, (st, out, b_row))
+  and a_row['student_view']['dir'] == 'S' and a_row['student_view']['needle_deg'] == 180, (st, out, b_row))
 st, out2 = api.handle(body('send', dir='S', note='구현이 더 보였어요'), 'tok', ENV, http, llm_of([]))
 t('같은 선택을 다시 보내도 같은 누적', out2['cumulative'] == out['cumulative'])
-t('dir 없이 다시 보내면 선택을 지운다(덮어쓰기)', api.handle(body('send', note='x'), 'tok', ENV, http, llm_of([]))[1]['cumulative']['cancel'])
+st, o3 = api.handle(body('send', note='말만 고침'), 'tok', ENV, http, llm_of([]))
+t('dir 키 없이 다시 보내면 저장된 선택이 남는다', a_row['teacher_dir'] == 'S' and not o3['cumulative']['cancel'] and o3['cumulative']['dir'] == 'S', (a_row, o3))
+st, o3 = api.handle(body('send', dir=None, note='선택 취소'), 'tok', ENV, http, llm_of([]))
+t('dir 를 null 로 명시하면 지운다', a_row['teacher_dir'] is None and o3['cumulative']['cancel'], (a_row, o3))
+st, o3 = api.handle(body('send', dir='E', note='후보 밖'), 'tok', ENV, http, llm_of([]))
+t('상쇄 중 후보 밖 방향은 400 · 쓰기 없음', st == 400 and a_row['teacher_dir'] is None, (st, o3, a_row))
+
+# 마친 순서가 분석 순서와 다르다 — 누적과 student_view 는 마친 순서를 따른다
+early = mrow(MIS, n=1, done_at='2026-10-20T01:00:00Z', created_at='2026-10-20T09:00:00Z')   # 먼저 마쳤지만 나중에 분석
+late = mrow(M2, s=3, done_at='2026-10-20T05:00:00Z', created_at='2026-10-20T08:00:00Z')     # 나중에 마쳤지만 먼저 분석
+http, calls, state = fake(row=early, rows=[early, late])
+st, out = api.handle(body('send', note='순서'), 'tok', ENV, http, llm_of([]))
+t('student_view 는 가장 늦게 마친 미션 행에 · 누적은 그 미션이 가장 세다', 'student_view' in late and 'student_view' not in early and out['cumulative']['dir'] == 'S', (late, early, out))
+t('학생 행은 done_at 으로 정렬해 읽는다', any('order=done_at.desc.nullslast' in c[1] for c in calls if c[0] == 'GET' and 'compass?' in c[1]))
+http, calls, state = fake(events=EVENTS)
+api.handle(body('analyze'), 'tok', ENV, http, llm_of([]))
+t('analyze 가 done_at 에 첫 s-code-judge 의 시각을 저장', writes(calls)[0][2]['done_at'] == '2026-10-20T00:00:02Z', writes(calls)[0][2])
+http, calls, state = fake(events=[JUDGE] + EVENTS[:2] + [JUDGE])
+api.handle(body('analyze'), 'tok', ENV, http, llm_of([]))
+t('judge 가 여럿이면 첫 번째', writes(calls)[0][2]['done_at'] == '2026-10-20T00:00:00Z', writes(calls)[0][2])
+
+# 옛 선택은 새 상쇄를 풀지 못한다 — 선생님이 다시 알림을 받고 후보를 본다
+old_pick = mrow(MIS, n=3, s=3, teacher_dir='S')
+newc = mrow(M2, e=3, w=3)
+http, calls, state = fake(row=old_pick, rows=[newc, old_pick])
+st, out = api.handle(body('send', note='x'), 'tok', ENV, http, llm_of([]))
+t('새 상쇄는 옛 선택이 풀지 않는다(E/W 후보)', st == 200 and out['cumulative']['cancel'] and out['cumulative']['candidates'] == ['E', 'W'] and 'student_view' not in newc, (st, out))
 
 # 1차 행뿐인 학생에게 send — 바늘이 없으니 student_view 를 안 쓴다
 v1 = {'student_id': STU, 'mission_id': MIS, 'levels': {'N': 1}}
@@ -221,7 +253,7 @@ st, out = api.handle({'action': 'cumulative', 'classroomId': ROOM, 'studentId': 
 t('cumulative 200 · 1차 행은 건너뜀 · 5개만', st == 200 and len(out['rows']) == 5 and out['cumulative']['n'] == 5 and out['rows'][0]['missionId'] == uid('a'), (st, out))
 t('cumulative 행에 checks 와 score(근거 인용 포함)', out['rows'][0]['score'] == {'N': 0, 'E': 3, 'S': 0, 'W': 0} and 'quote' in out['rows'][0]['checks']['E1'])
 t('cumulative 는 쓰기 0 · LLM 0', not writes(calls))
-t('cumulative 의 order=created_at.desc', any('order=created_at.desc' in c[1] for c in calls))
+t('cumulative 는 마친 순서로 읽는다', any('order=done_at.desc.nullslast,created_at.desc' in c[1] for c in calls))
 for kw, why in (({'room': False}, '남의 교실'), ({'enrolled': False}, '수강 안 한 학생')):
     http, calls, _ = fake(**{('room' if 'room' in kw else 'enrolled'): False})
     st, out = api.handle({'action': 'cumulative', 'classroomId': ROOM, 'studentId': STU}, 'tok', ENV, http, llm_of([]))
@@ -229,6 +261,20 @@ for kw, why in (({'room': False}, '남의 교실'), ({'enrolled': False}, '수�
 http, _, _ = fake(role='student')
 t('cumulative 학생 토큰 403', api.handle({'action': 'cumulative', 'classroomId': ROOM, 'studentId': STU}, 'tok', ENV, http, llm_of([]))[0] == 403)
 t('cumulative studentId 없으면 400', api.handle({'action': 'cumulative', 'classroomId': ROOM}, 'tok', ENV, fake()[0], llm_of([]))[0] == 400)
+
+# cumulative 의 12칸 표는 누적이 쓴 행과 같다
+t('rows 는 _compass.window 와 같은 행', [r['missionId'] for r in api.handle({'action': 'cumulative', 'classroomId': ROOM, 'studentId': STU}, 'tok', ENV, fake(rows=rows7)[0], llm_of([]))[1]['rows']]
+  == [r['mission_id'] for r in api._compass.window(rows7)])
+
+# 학생 RPC 는 선생님 열을 주지 않는다 — 마이그레이션 문장으로 지킨다
+import re
+MIG = open(os.path.join(ROOT, 'supabase/migrations/20261022000000_compass_v2.sql'), encoding='utf-8').read()
+for fn, cols in (('compass_mine_v2', ['needle_deg', 'dir', 'length', 'sent_at']), ('compass_note', ['teacher_note', 'sent_at'])):
+    m = re.search(r'function public\.' + fn + r'\([^)]*\)\s*returns table \(([^)]*)\) as \$\$(.*?)\$\$', MIG, re.S)
+    got = [c.split()[0] for c in m.group(1).split(',')]
+    t(fn + ' 반환 열은 허용된 것뿐', got == cols, got)
+    t(fn + ' 본문은 checks·tutor_dirs·evidence·levels 를 읽지 않는다', not re.search(r'checks|tutor_dirs|evidence|levels|facts', m.group(2)), m.group(2))
+    t(fn + ' anon 실행 권한을 거둔다', 'revoke execute on function public.' + fn in MIG)
 
 # list
 http, calls, state = fake(row=mrow(MIS, n=3), rows=[mrow(MIS, n=3)])
