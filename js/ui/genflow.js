@@ -36,12 +36,51 @@
   }
   function spent(e) { if (e && e.status === 403 && e.body && e.body.left === 0) quota(0); }
 
+  /* 4단계 — 지금 단계만 펼치고, 끝난 단계는 한 줄 요약 + 고치기. reached 는 상태가 남아 있는 가장 먼 단계 */
+  var NAMES = ['수업 내용', '개념 확인', '이야기 고르기', '문제 확인'];
+  var cur = 1, reached = 1;
+  function sums() {
+    var c = CM.concept(st.concept), x = st.examples[st.pick];
+    return [$('#gen-lesson').value.trim(), c ? c.label : '', x ? x.title : '', st.d ? st.d.title : ''];
+  }
+  function paint() {
+    var v = sums();
+    [].forEach.call(document.querySelectorAll('.gp-s'), function (li, i) {
+      var k = i + 1;
+      li.hidden = k > reached && k !== cur;
+      li.querySelector('.gp-body').hidden = k !== cur;
+      li.querySelector('.gp-sum').hidden = k === cur;
+      li.querySelector('.gp-v').textContent = v[i];
+      li.querySelector('.gp-fix').textContent = k < cur ? '고치기' : '보기';
+    });
+    $('#gp-count').textContent = cur + ' / 4 ' + NAMES[cur - 1];
+    [].forEach.call(document.querySelectorAll('.gp-bar i'), function (b, i) { b.classList.toggle('on', i < cur); });
+  }
+  function go(n) { cur = n; if (n > reached) reached = n; paint(); }
+  /* 앞 단계의 입력이 바뀌면 그 뒤 상태는 버린다(초안 포함) — 옛 초안이 새 개념 옆에 남지 않게 */
+  function drop(n) {
+    reached = n; bgen++; sgen++; st.d = null;
+    $('#sg-draft').textContent = '';
+  }
+  function tab(name, noSave) {
+    var q = name === 'quick';
+    $('#gt-step').setAttribute('aria-selected', q ? 'false' : 'true');
+    $('#gt-quick').setAttribute('aria-selected', q ? 'true' : 'false');
+    $('#gt-step').tabIndex = q ? -1 : 0; $('#gt-quick').tabIndex = q ? 0 : -1;
+    $('#gp-step').hidden = q; $('#gp-quick').hidden = !q;
+    /* 수업 내용·핵심·난이도는 두 방식이 같이 쓴다 — 칸을 복제하지 않고 보이는 쪽으로 옮긴다(값이 그대로 따라온다) */
+    var f = $('#gen-fields');
+    if (q) $('#gp-quick-slot').appendChild(f); else $('.gp-s[data-step="1"] .gp-act').parentNode.insertBefore(f, $('.gp-s[data-step="1"] .gp-act'));
+    if (!noSave && CC.prefs) CC.prefs.set('genTab', name);
+  }
+
   function pick(i) {
     st.pick = i;
     [].forEach.call(document.querySelectorAll('.sg-ex'), function (b, k) {
       b.setAttribute('aria-pressed', k === i ? 'true' : 'false');
     });
     $('#sg-build').disabled = i < 0 || !!st.spent;
+    paint();
   }
 
   function show(list) {
@@ -263,6 +302,7 @@
       .concat([{ v: '', trap: 'hardcode' }]));
     var box = $('#sg-draft');
     box.textContent = '';
+    go(4);
     var root = el('div', 'draft');
     var hd = el('div', 'draft-hd');
     hd.appendChild(el('span', null, '초안 — 고친 뒤 확정하세요'));
@@ -362,8 +402,7 @@
     $('#sg-save').disabled = true;
     sgen++;
     CC.sb.saveMission(room.id, m).then(function () {
-      st.d = null;
-      $('#sg-draft').textContent = '';
+      drop(1); go(1);
       say('미션이 등록되었어요.');
       st.opts.saved();
     }).catch(function (e) { $('#sg-save').disabled = false; fail(e); });
@@ -371,16 +410,16 @@
 
   function concept() {
     var lesson = $('#gen-lesson').value.trim(), key = $('#gen-key').value.trim();
-    /* #sg 는 아직 숨어 있다 — 빠른 생성과 같은 자리(#gen-result)에 말한다. 빠른 생성 초안은 지우지 않는다 */
+    /* 1단계에서는 빠른 생성과 같은 자리(#gen-result)에 말한다. 빠른 생성 초안은 지우지 않는다 */
     var res = $('#gen-result'), NO_LESSON = '수업 내용을 입력해주세요.';
     if (!lesson) { res.textContent = NO_LESSON; return; }
     if (res.textContent === NO_LESSON) res.textContent = '';
     boot();
-    $('#sg').hidden = false;
     say('개념을 확인하는 중이에요.');
     call({ action: 'concept', lesson: lesson, keyPoint: key }).then(function (r) {
       st.concept = r.concept;
       $('#sg-concept-pick').value = r.concept;
+      drop(1); go(2);
       return load(false);
     }).catch(fail);
   }
@@ -388,6 +427,8 @@
   CC.genflow = {
     state: st,
     quota: quota,
+    tab: tab,
+    step: go,
     spent: spent,
     /* 화면을 연 강사에게 한 번 — 차감 없음. 못 받아도 생성은 그대로(서버가 다시 거른다) */
     refresh: function () {
@@ -403,7 +444,22 @@
       $('#sg-concept').addEventListener('click', concept);
       $('#sg-more').addEventListener('click', function () { load(true); });
       $('#sg-build').addEventListener('click', function () { if (st.pick >= 0) make([], RETRIES); });
-      sel.addEventListener('change', function () { st.concept = sel.value; load(false); });
+      sel.addEventListener('change', function () { st.concept = sel.value; drop(2); paint(); load(false); });
+      $('#sg-next').addEventListener('click', function () { go(3); });
+      [].forEach.call(document.querySelectorAll('.gp-fix'), function (b) {
+        b.addEventListener('click', function () { go(+b.closest('.gp-s').dataset.step); });
+      });
+      var tabs = [$('#gt-step'), $('#gt-quick')];
+      tabs.forEach(function (t, i) {
+        t.addEventListener('click', function () { tab(i ? 'quick' : 'step'); });
+        t.addEventListener('keydown', function (e) {
+          var n = e.key === 'ArrowRight' || e.key === 'ArrowLeft' ? (i + 1) % 2 : e.key === 'Home' ? 0 : e.key === 'End' ? 1 : -1;
+          if (n < 0) return;
+          e.preventDefault(); tab(n ? 'quick' : 'step'); tabs[n].focus();
+        });
+      });
+      tab(CC.prefs && CC.prefs.get('genTab', 'step') === 'quick' ? 'quick' : 'step', true);
+      paint();
     }
   };
 })(window.CC = window.CC || {});

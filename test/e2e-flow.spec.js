@@ -64,6 +64,7 @@ test('교사 화면에서 초안을 만들 수 있다 (LLM 고정 응답)', asyn
   }));
   await page.goto(BASE + '/teacher.html');
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gt-quick').click();
   const gen = page.locator('#gen-btn');
   await page.locator('#gen-lesson').fill('리스트와 반복문');
   await page.locator('#gen-key').fill('같은 값이 여러 번 나올 때');
@@ -929,6 +930,7 @@ test('교사 초안에 고정 목록이 보이고 고칠 수 있다', async ({ c
   await page.route('**/api/generate-mission', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(draft) }));
   await page.goto(BASE + '/teacher.html');
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gt-quick').click();
   await page.locator('#gen-lesson').fill('집합');
   await page.locator('#gen-key').fill('모두 되는 시간');
   await page.locator('#gen-btn').click();
@@ -1027,6 +1029,7 @@ test('강사 모드 — 빠른 생성은 CC.sb.api 로 부른다', async ({ page
   await page.evaluate(() => { const f = CC.sb.api; window.__api = []; CC.sb.api = (p, b) => { window.__api.push(p); return f(p, b); }; });
   await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gt-quick').click();
   await page.locator('#gen-lesson').fill('리스트와 반복문');
   await page.locator('#gen-key').fill('같은 값이 여러 번 나올 때');
   await page.locator('#gen-btn').click();
@@ -1055,6 +1058,7 @@ test('강사 단계별 생성 — 개념을 확인하고 예시를 고른다', a
   await page.locator('#sg-concept').click();
   await expect(page.locator('#sg-concept-pick')).toHaveValue('for');
   await expect(page.locator('#sg-concept-pick option')).toHaveCount(8);
+  await page.locator('#sg-next').click();
   await expect(page.locator('.sg-ex')).toHaveCount(4);
   await expect(page.locator('.sg-ex').first().locator('span')).toHaveText(['a제목1', 'a상황1이에요.', '→ a이유1']);
   await expect(page.locator('#sg-build')).toBeDisabled();
@@ -1067,6 +1071,7 @@ test('강사 단계별 생성 — 개념을 확인하고 예시를 고른다', a
   await page.locator('.sg-ex').nth(1).click();
   await expect(page.locator('.sg-ex').nth(1)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#sg-build')).toBeEnabled();
+  await page.locator('.gp-s[data-step="2"] .gp-fix').click();
   await page.locator('#sg-concept-pick').selectOption('while');
   await expect(page.locator('#sg-build')).toBeDisabled();            // 개념을 바꾸면 예시를 새로 받고 고름은 비운다
   expect(reqs.filter(b => b.action === 'examples').pop().concept).toBe('while');
@@ -1085,8 +1090,10 @@ test('강사 단계별 생성 — 개념을 빨리 바꾸면 늦게 온 옛 응�
   await page.locator('#gen-lesson').fill('반복문');
   await page.locator('#sg-concept').click();
   await expect(page.locator('.sg-ex')).toContainText('for-예시');
+  await page.locator('#sg-next').click();
   await page.locator('.sg-ex').click();
   await expect(page.locator('#sg-build')).toBeEnabled();
+  await page.locator('.gp-s[data-step="2"] .gp-fix').click();
   await page.locator('#sg-concept-pick').selectOption('while');   // 느린 응답
   await expect(page.locator('#sg-build')).toBeDisabled();          // 요청 중에 옛 고름이 남지 않는다
   await page.locator('#sg-concept-pick').selectOption('if');
@@ -1136,7 +1143,9 @@ async function sgBuild(page, solutions, solveCode, before, quota = { left: 3, di
   await page.locator('#gen-lesson').fill('리스트와 반복문');
   await page.locator('#gen-key').fill('하나씩 꺼내 보기');
   if (before) await before();
+  await page.locator('#gt-step').click();
   await page.locator('#sg-concept').click();
+  await page.locator('#sg-next').click();
   await page.locator('.sg-ex').first().click();
   await page.locator('#sg-wish').fill('운동회 이야기였으면');
   await page.locator('#sg-build').click();
@@ -1384,7 +1393,7 @@ test('수업 내용 없이 개념 확인을 누르면 보이는 자리에 말한
   await page.locator('#sg-concept').click();
   await expect(page.locator('#gen-result')).toHaveText('수업 내용을 입력해주세요.');
   await expect(page.locator('#gen-result')).toBeVisible();
-  await expect(page.locator('#sg')).toBeHidden();
+  await expect(page.locator('#gp-count')).toHaveText('1 / 4 수업 내용');   // 1단계에 머문다
 });
 
 test('기록을 읽기 전에 지정 풀기를 눌러도 다시 지정되지 않는다', async ({ page }) => {
@@ -1413,6 +1422,7 @@ test('수정을 눌렀다가 단계별로 확정하면, 다음 빠른 생성은 
   await expect(page.locator('.sg-answer')).toHaveText(['2300', '300', '0'], { timeout: 60000 });
   await page.locator('#sg-save').click();
   await expect.poll(() => page.evaluate(() => (window.__saved || []).length)).toBe(1);
+  await page.locator('#gt-quick').click();
   await page.locator('#gen-key').fill('하나씩 꺼내 보기');
   await page.locator('#gen-btn').click();
   await page.locator('#confirm-mission').click();
@@ -1584,6 +1594,7 @@ test('남은 생성 — 처음 수를 보이고, 만들기가 성공하면 줄�
   expect(builds[1].ticket).toBe('tk-1');                     // 검사에 걸린 재요청은 첫 응답의 ticket
   expect(builds[0].lesson).toBe('리스트와 반복문');           // 관리자 기록에 수업 내용이 남게
   await expect(page.locator('.gen-left').first()).toHaveText('남은 생성 2개');
+  await page.locator('.gp-s[data-step="3"] .gp-fix').click();
   await page.locator('#sg-build').click();                   // 다시 누른 "만들기" 는 새 미션 — ticket 없이
   await expect.poll(() => builds.length).toBe(3);
   expect('ticket' in builds[2]).toBe(false);
@@ -1603,7 +1614,7 @@ test('자동 재요청이 실패해도 이미 만든 초안은 걸린 이유와 
 
 test('남은 생성 — 열면 서버가 준 수, 403 left 0 이면 두 버튼이 꺼지고 문장', async ({ page }) => {
   const builds = await sgBuild(page, [SG_FOR], null, async () => {
-    await expect(page.locator('.gen-left')).toHaveText(['남은 생성 3개', '남은 생성 3개']);
+    await expect(page.locator('.gen-left')).toHaveText(Array(5).fill('남은 생성 3개'));
   }, { left: 3, disabled: false, out: true });
   await expect.poll(() => builds.length).toBe(1);
   await expect(page.locator('#gen-btn')).toBeDisabled();
@@ -1621,6 +1632,7 @@ test('남은 생성 — 빠른 생성도 left 로 갱신하고, 0 이 되면 꺼
   await asTeacher(page);
   await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gt-quick').click();
   await expect(page.locator('.gen-left').first()).toHaveText('남은 생성 1개');
   await expect(page.locator('#t-admin')).toBeVisible();       // 로그인한 강사에게만 관리자 화면 링크
   await page.locator('#gen-lesson').fill('리스트와 반복문');
@@ -1640,6 +1652,7 @@ test('남은 생성 — 빠른 생성이 403 left 0 이면 두 버튼이 꺼진�
   await asTeacher(page);
   await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await page.locator('#gt-quick').click();
   await page.locator('#gen-lesson').fill('리스트와 반복문');
   await page.locator('#gen-key').fill('같은 값이 여러 번 나올 때');
   await page.locator('#gen-btn').click();
@@ -2256,4 +2269,86 @@ test('학생 상세 — 알림 항목으로 열면 그 미션 칩이 골라져 �
   const on = page.locator('#detail .mf[aria-pressed="true"]');
   await expect(on).toHaveCount(1);
   await expect(on).not.toContainText('모든 미션');
+});
+
+/* 미션 만들기 — 탭 둘과 4단계 (2026-10-20) */
+async function missionTab(page, quota) {
+  await page.route('**/api/mission-steps', async r => {
+    const b = r.request().postDataJSON();
+    if (b.action === 'quota') return r.fulfill({ contentType: 'application/json', body: JSON.stringify(quota || { left: 3, disabled: false }) });
+    if (b.action === 'concept') return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ concept: 'for', label: '반복문 for', by: 'keyword' }) });
+    return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ examples: [{ title: '영수증', situation: '영수증을 모아요.', why: '하나씩 더해요' }] }) });
+  });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+}
+
+test('미션 만들기 — 탭 둘(화살표 키 · 기억)과 단계별 4단계, 끝난 단계는 한 줄로 접히고 고치기로 돌아간다', async ({ page }) => {
+  await missionTab(page);
+  const tabs = page.locator('#dtab-missions [role=tablist] [role=tab]');
+  await expect(tabs).toHaveText(['단계별로 만들기', '한 번에 만들기']);
+  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#gp-step')).toBeVisible();
+  await expect(page.locator('#gp-quick')).toBeHidden();
+  await tabs.first().focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await expect(tabs.nth(1)).toBeFocused();
+  await expect(page.locator('#gp-quick')).toBeVisible();
+  await expect(page.locator('#gen-btn')).toBeVisible();
+  await expect(page.locator('#gp-quick .gp-quota')).toContainText('만들기를 누르면 1개를 써요');
+  await page.keyboard.press('Home');
+  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('End');
+  await page.reload();
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');    // 마지막에 고른 탭을 기억한다
+  await tabs.first().click();
+  await expect(page.locator('#gp-count')).toHaveText('1 / 4 수업 내용');
+  await expect(page.locator('.gp-bar i.on')).toHaveCount(1);
+  await expect(page.locator('#gp-step .gp-s:visible')).toHaveCount(1);
+  await expect(page.locator('.gp-s[data-step="1"] .gp-quota')).toContainText('여기까지는 횟수를 쓰지 않아요');
+  await expect(page.locator('.gp-s[data-step="1"] .gen-left')).toHaveText('남은 생성 3개');
+  await page.locator('#gen-lesson').fill('리스트와 반복문');
+  await page.locator('#sg-concept').click();
+  await expect(page.locator('#gp-count')).toHaveText('2 / 4 개념 확인');
+  await expect(page.locator('.gp-s[data-step="1"] .gp-sum')).toContainText('리스트와 반복문');
+  await expect(page.locator('#gen-lesson')).toBeHidden();
+  await page.locator('#sg-next').click();
+  await expect(page.locator('#gp-count')).toHaveText('3 / 4 이야기 고르기');
+  await expect(page.locator('.gp-bar i.on')).toHaveCount(3);
+  await expect(page.locator('.gp-s[data-step="3"] .gp-quota')).toContainText('문제 만들기를 누르면 1개를 써요');
+  await expect(page.locator('#sg-build')).toHaveText('문제 만들기');
+  await page.locator('.gp-s[data-step="1"] .gp-fix').click();
+  await expect(page.locator('#gp-count')).toHaveText('1 / 4 수업 내용');
+  await expect(page.locator('#gen-lesson')).toHaveValue('리스트와 반복문');
+});
+
+test('미션 만들기 — 남은 0개면 안 보이는 탭의 버튼까지 꺼진다', async ({ page }) => {
+  await missionTab(page, { left: 0, disabled: false });
+  await expect(page.locator('#gen-btn')).toBeDisabled();
+  await expect(page.locator('#sg-build')).toBeDisabled();
+  await expect(page.locator('#gp-quick')).toBeHidden();
+  await expect(page.locator('#dtab-missions .panel [style]')).toHaveCount(0);   // 인라인 style 없이 CSS 로
+});
+
+test('학생 상세 — 폰 폭: 서랍을 열고 Esc 는 서랍만, 한 번 더 누르면 상세가 닫힌다', async ({ page }) => {
+  test.setTimeout(60000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('#side-open').click();
+  await page.locator('#side .room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  await expect(page.locator('#detail')).toBeVisible();
+  await page.locator('#side-open').click();
+  await expect(page.locator('#side')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#side')).toBeHidden();
+  await expect(page.locator('#detail')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#detail')).toBeHidden();
 });

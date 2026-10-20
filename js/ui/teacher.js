@@ -414,6 +414,7 @@
     var d = $('#detail');
     var opening = d.hidden;
     if (opening) detailFrom = { y: window.scrollY, id: s.id };   /* 미션 칩을 눌러 다시 그릴 때는 처음 자리를 지킨다 */
+    else if (detailFrom) detailFrom.id = s.id;                     /* 알림으로 다른 학생을 열면 돌아갈 타일은 그 학생 */
     d.innerHTML = '';
     var back = el('button', 'd-back', '← 학생');
     back.type = 'button';
@@ -679,7 +680,7 @@
     var d = $('#detail');
     if (d.hidden) return;
     d.hidden = true;
-    $('#dashboard').hidden = false;
+    $('#dashboard').hidden = !$('#new-room').hidden || !$('#pick-room').hidden;   /* 교실 화면이 아닌 데서 닫으면 목록을 되살리지 않는다 */
     if (detailFrom) {
       window.scrollTo(0, detailFrom.y);
       var t = document.querySelector('.student-tile[data-id="' + detailFrom.id.replace(/["\\]/g, '') + '"]');

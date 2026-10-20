@@ -118,37 +118,85 @@
     <!-- [미션 관리] -->
     <div class="dtab" id="dtab-missions">
       <section class="panel">
-        <div class="hd"><div><h2>미션 만들기</h2><p class="lead">수업 내용과 핵심을 입력하면 미션이 생성됩니다.</p></div></div>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
-          <div>
-            <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:4px">오늘 수업에서 뭘 배웠나요?</label>
-            <textarea id="gen-lesson" rows="2" placeholder="예: 파이썬 리스트와 for 반복문" style="width:100%;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);resize:vertical;font-family:inherit"></textarea>
-          </div>
-          <div>
-            <label style="font-size:13px;font-weight:600;color:var(--ink-2);display:block;margin-bottom:4px">핵심은?</label>
-            <textarea id="gen-key" rows="2" placeholder="예: 중복 데이터를 구분하는 법" style="width:100%;padding:10px 14px;border:1px solid var(--line-strong);border-radius:10px;font-size:15px;background:var(--surface);color:var(--ink);resize:vertical;font-family:inherit"></textarea>
-          </div>
-          <div id="gen-spread" style="font-size:13px;color:var(--ink-3)"></div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <select id="gen-diff" style="padding:8px 12px;border:1px solid var(--line-strong);border-radius:10px;font-size:14px;background:var(--surface);color:var(--ink)">
-              <option value="easy">쉬움</option><option value="medium" selected>보통</option><option value="hard">어려움</option>
-            </select>
-            <button id="gen-btn" class="btn" data-tour="quick">빠른 생성</button>
-            <button id="sg-concept" class="btn primary" data-tour="concept">개념 확인</button>
-            <span class="gen-left" role="status"></span>
-          </div>
+        <div class="hd"><div><h2>미션 만들기</h2><p class="lead">수업 내용으로 학생에게 줄 미션을 만들어요.</p></div></div>
+        <div class="seg" role="tablist" aria-label="미션 만드는 방법">
+          <button type="button" role="tab" id="gt-step" class="seg-b" aria-controls="gp-step" aria-selected="true">단계별로 만들기</button>
+          <button type="button" role="tab" id="gt-quick" class="seg-b" aria-controls="gp-quick" aria-selected="false" tabindex="-1">한 번에 만들기</button>
         </div>
-        <div id="sg" hidden>
-          <label class="sg-lb">개념 <select id="sg-concept-pick" class="sg-in"></select></label>
-          <div id="sg-examples"></div>
-          <button id="sg-more" class="btn" type="button">다른 예시 더 보기</button>
-          <label class="sg-lb">이렇게 바꿔 줬으면 (선택) <textarea id="sg-wish" class="sg-in" rows="2" maxlength="200"></textarea></label>
-          <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>만들기</button><span class="gen-left" role="status"></span><span id="sg-status" role="status"></span></div>
-          <div id="sg-draft"></div>
+
+        <div id="gp-step" role="tabpanel" aria-labelledby="gt-step">
+          <div class="gp-prog"><span id="gp-count" role="status">1 / 4 수업 내용</span><div class="gp-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+
+          <section class="gp-s" data-step="1">
+            <div class="gp-sum" hidden><span class="gp-t">수업 내용</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>오늘 수업에서 무엇을 배웠나요?</h3>
+              <p class="lead">수업 내용과 핵심을 적어 주세요. 개념은 다음 단계에서 같이 확인해요.</p>
+              <div id="gen-fields" class="gp-fields">
+                <div>
+                  <label class="gp-lb" for="gen-lesson">수업 내용</label>
+                  <textarea id="gen-lesson" class="gp-ta" rows="2" placeholder="예: 파이썬 리스트와 for 반복문"></textarea>
+                </div>
+                <div>
+                  <label class="gp-lb" for="gen-key">핵심은?</label>
+                  <textarea id="gen-key" class="gp-ta" rows="2" placeholder="예: 중복 데이터를 구분하는 법"></textarea>
+                </div>
+                <div id="gen-spread" class="gp-spread"></div>
+                <select id="gen-diff" class="gp-sel" aria-label="난이도">
+                  <option value="easy">쉬움</option><option value="medium" selected>보통</option><option value="hard">어려움</option>
+                </select>
+              </div>
+              <div class="gp-act"><button id="sg-concept" class="btn primary" data-tour="concept" type="button">다음: 개념 확인하기</button></div>
+              <p class="gp-quota"><span class="gp-q">여기까지는 횟수를 쓰지 않아요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+
+          <section class="gp-s" data-step="2" hidden>
+            <div class="gp-sum" hidden><span class="gp-t">개념 확인</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>어떤 개념으로 만들까요?</h3>
+              <p class="lead">수업 내용에서 찾은 개념이에요. 다르면 바꿔 주세요.</p>
+              <label class="sg-lb">개념 <select id="sg-concept-pick" class="sg-in"></select></label>
+              <div class="gp-act"><button id="sg-next" class="btn primary" type="button">다음: 이야기 고르기</button></div>
+              <p class="gp-quota"><span class="gp-q">여기까지는 횟수를 쓰지 않아요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+
+          <section class="gp-s" data-step="3" hidden>
+            <div class="gp-sum" hidden><span class="gp-t">이야기 고르기</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>어떤 이야기로 풀어 볼까요?</h3>
+              <p class="lead">마음에 드는 이야기를 하나 골라 주세요.</p>
+              <div id="sg-examples"></div>
+              <button id="sg-more" class="btn" type="button">다른 예시 더 보기</button>
+              <label class="sg-lb">이렇게 바꿔 줬으면 (선택) <textarea id="sg-wish" class="sg-in" rows="2" maxlength="200"></textarea></label>
+              <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>문제 만들기</button></div>
+              <p class="gp-quota"><span class="gp-q">문제 만들기를 누르면 1개를 써요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+
+          <section class="gp-s" data-step="4" hidden>
+            <div class="gp-sum" hidden><span class="gp-t">문제 확인</span><span class="gp-v"></span><button type="button" class="gp-fix btn o">고치기</button></div>
+            <div class="gp-body">
+              <h3>이 문제를 학생에게 낼까요?</h3>
+              <p class="lead">고칠 곳을 고친 뒤 확정해 주세요.</p>
+              <div id="sg-draft"></div>
+              <p class="gp-quota"><span class="gp-q">여기까지는 횟수를 쓰지 않아요</span> · <span class="gen-left" role="status"></span></p>
+            </div>
+          </section>
+          <p id="sg-status" role="status"></p>
         </div>
-        <div id="gen-result" style="margin-top:14px"></div>
+
+        <div id="gp-quick" role="tabpanel" aria-labelledby="gt-quick" hidden>
+          <h3>한 번에 만들까요?</h3>
+          <p class="lead">수업 내용과 핵심만 넣으면 초안을 한 번에 만들어요. 확정 전에 고칠 수 있어요.</p>
+          <div id="gp-quick-slot"></div>
+          <div class="gp-act"><button id="gen-btn" class="btn primary" data-tour="quick" type="button">빠른 생성</button></div>
+          <p class="gp-quota"><span class="gp-q">만들기를 누르면 1개를 써요</span> · <span class="gen-left" role="status"></span></p>
+        </div>
+        <div id="gen-result" class="gp-result"></div>
       </section>
-      <h3 style="font-size:16px;font-weight:700;margin:20px 0 10px">생성된 미션</h3>
+      <h3 class="list-h">생성된 미션</h3>
       <div id="mission-list" class="mission-grid"></div>
     </div>
 
@@ -275,8 +323,8 @@ window.CC_SUPABASE = {
     { key: 'moments', title: '알림', text: '칭찬할 때나 살펴볼 일이 생기면 여기에 쌓여요. 무슨 말을 할지는 선생님이 정해요.' },
     { key: 'tutor-csv', title: '튜터 기록 내려받기', text: '학생들이 파이썬 튜터에게 물은 질문과 답을 CSV 파일로 받아요.' },
     { key: 'make', title: '미션 만들기', text: '오늘 수업 내용으로 학생에게 줄 미션을 만들어요. 누르면 미션 탭이 열려요.' },
-    { key: 'quick', title: '빠른 생성', text: '수업 내용과 핵심만 넣으면 미션 초안을 한 번에 만들어요. 확정 전에 고칠 수 있어요.', before: function () { tab('dtab-missions'); } },
-    { key: 'concept', title: '개념 확인', text: '단계별로 만들어요. 개념을 확인하고, 이야기를 고른 뒤, 문제로 만들어요.', before: function () { tab('dtab-missions'); } },
+    { key: 'quick', title: '빠른 생성', text: '수업 내용과 핵심만 넣으면 미션 초안을 한 번에 만들어요. 확정 전에 고칠 수 있어요.', before: function () { tab('dtab-missions'); CC.genflow.tab('quick', true); } },
+    { key: 'concept', title: '개념 확인', text: '단계별로 만들어요. 개념을 확인하고, 이야기를 고른 뒤, 문제로 만들어요.', before: function () { tab('dtab-missions'); CC.genflow.tab('step', true); CC.genflow.step(1); } },
     { key: 'invite', title: '학생 추가', text: '학생 계정(아이디·비밀번호)을 만들어요. 서버에 연결돼 있을 때 쓸 수 있어요.' }
   ];
   var TOUR_END = [{ key: 'replay', title: '사용법 보기', text: '이 안내는 여기서 언제든 다시 볼 수 있어요.' }];
@@ -688,6 +736,7 @@ window.CC_SUPABASE = {
           $('#gen-btn').textContent = '초안 다시 생성';
           $('#gen-result').innerHTML = '<span style="color:var(--ink-3)">수업 내용과 핵심을 수정한 뒤 "초안 다시 생성"을 누르세요.</span>';
           document.querySelector('.main-tab[data-dtab="dtab-missions"]').click();
+          CC.genflow.tab('quick');   /* 수정은 빠른 생성의 일 — 그 탭을 열어 둔다 */
           $('#gen-lesson').focus();
         });
 

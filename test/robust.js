@@ -165,13 +165,14 @@ api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'applica
   await g.locator('.main-tab[data-dtab="dtab-missions"]').click();
   await g.locator('#gen-lesson').fill('반복문');
   await g.locator('#sg-concept').click();
+  await g.locator('#sg-next').click();
   await g.locator('.sg-ex').first().click();
   await g.locator('#sg-wish').fill('WISH-' + EVIL);
   await g.locator('#sg-build').click();
   await g.locator('.sg-answer').first().filter({ hasText: '3' }).waitFor({ timeout: 60000 });
   await g.locator('#sg-save').click();
   await g.waitForFunction(() => window.__saved, null, { timeout: 5000 });
-  const gs = await g.evaluate(() => ({ pwned: !!window.__pwned, imgs: document.querySelectorAll('#sg img').length, saved: JSON.parse(window.__saved) }));
+  const gs = await g.evaluate(() => ({ pwned: !!window.__pwned, imgs: document.querySelectorAll('#gp-step img').length, saved: JSON.parse(window.__saved) }));
   const wishBad = gs.pwned || gs.imgs > 0 || 'wish' in gs.saved || 'solution' in gs.saved || gs.saved.title.indexOf('WISH-') !== 0;
   console.log('강사 바람(#sg-wish)은 학생 미션에 키로 실리지 않고, AI 글은 글자로만 보임:', wishBad ? '✗ ' + JSON.stringify({ pwned: gs.pwned, imgs: gs.imgs, keys: Object.keys(gs.saved) }) : '✓');
 
