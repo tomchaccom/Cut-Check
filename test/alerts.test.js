@@ -45,6 +45,14 @@ d = CC.alerts.diff(CC.alerts.snap([S('나')], Object.assign({}, hc, { eventsOf: 
 t('hardcode — look, 한 번', kinds(d) === 'hardcode' && d[0].tag === 'look' &&
   CC.alerts.say(d[0]) === '나 — 새로 온 자료에서도 첫 자료와 결과가 같아요. 하드코딩일 수 있어요.' &&
   CC.alerts.diff(CC.alerts.snap([S('나')], hc), CC.alerts.snap([S('나')], hc)).length === 0);
+{ // 사실이 사라졌다 다시 생겨도(facts.of 가 probe 사실을 숨기는 경우) 다시 알리지 않는다
+  let on = true; CC.facts = { of: () => on ? [{ kind: 'hardcode' }] : [] };
+  const a = CC.alerts.snap([S('나')], Object.assign({}, hc, { eventsOf: () => [] }));
+  const b = CC.alerts.snap([S('나')], hc); const n1 = CC.alerts.diff(a, b);
+  on = false; const c = CC.alerts.snap([S('나')], hc); const n2 = CC.alerts.diff(b, c);
+  on = true; const e = CC.alerts.snap([S('나')], hc); const n3 = CC.alerts.diff(c, e);
+  t('hardcode — 나타났다 사라졌다 다시 나타나도 알림은 한 번', n1.length === 1 && n2.length === 0 && n3.length === 0);
+}
 CC.facts = { of: () => [{ kind: 'error' }] };
 t('hardcode 아님 — 다른 사실은 알리지 않는다', CC.alerts.diff(CC.alerts.snap([S('나')], Object.assign({}, hc, { eventsOf: () => [] })), CC.alerts.snap([S('나')], hc)).length === 0);
 delete CC.facts;

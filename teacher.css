@@ -136,7 +136,6 @@ body.notes .note { display: flex; gap: 6px; }
 .detail { background: none; padding: 16px 0 0; }
 .d-back { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px 0 0; margin: 0 0 8px; background: none; border: 0; font: inherit; font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; }
 .d-back:hover { text-decoration: underline; }
-.detail .dsub { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
 .saybox {
   margin-top: 16px;
   background: var(--green-soft);
@@ -295,7 +294,6 @@ details.more[open] > summary { margin-bottom: 16px; }
 .roster-row .cred { flex-basis: 100%; }
 
 /* 단계별 생성 (js/ui/genflow.js) */
-#sg { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
 .sg-lb { font-size: 13px; font-weight: 600; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
 .sg-in { padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 10px; font: inherit; font-size: 14px; background: var(--surface); color: var(--ink); max-width: 100%; }
 #sg-examples { display: grid; gap: 8px; }
@@ -305,7 +303,6 @@ details.more[open] > summary { margin-bottom: 16px; }
 .sg-ex[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .sg-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 #sg-more { align-self: flex-start; }
-#sg-status { font-size: 13px; color: var(--ink-3); }
 .sg-drow { grid-template-columns: 150px minmax(0, 1fr) minmax(0, 120px); }
 .drow.counter .sg-data-val { border-style: dashed; }
 .sg-answer { font-family: var(--mono); font-size: 15px; overflow-wrap: anywhere; }
@@ -487,6 +484,7 @@ body { font-size: 17px; }
   .m-room { font-size: 18px; min-width: 0; overflow-wrap: anywhere; }
   .side { position: fixed; left: 0; top: 0; bottom: 0; height: auto; width: min(300px, 86vw); z-index: 40; transform: translateX(-100%); visibility: hidden; transition: transform .18s, visibility .18s; box-shadow: var(--shadow); }
   body.side-open .side { transform: none; visibility: visible; }
+  body.side-open { overflow: hidden; }
   .side-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 39; }
   .shell-main { padding: 0 16px 120px; }
   .m-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }

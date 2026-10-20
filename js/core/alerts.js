@@ -74,6 +74,7 @@
     Object.keys(next || {}).forEach(function (id) {
       var a = prev[id] || { design: 0, judged: 0, keys: {} };
       var b = next[id];
+      Object.keys(a.keys).forEach(function (k) { if (!(k in b.keys)) b.keys[k] = a.keys[k]; });   /* 알린 키는 사라져도 남긴다 — hardcode 는 사실이 숨었다 돌아올 수 있다 */
       if (b.design > a.design) out.push({ id: id, name: b.name, kind: 'design', tag: TAG_OF.design });
       Object.keys(b.keys).forEach(function (k) {
         if (k in a.keys) return;

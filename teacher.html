@@ -435,6 +435,7 @@ window.CC_SUPABASE = {
     CC.tour.auto('teacher-dash', TOUR_DASH, { onEnd: function () { tab('dtab-students'); } });
     loadMissions();
     if (CC._resetAlerts) CC._resetAlerts();
+    CC.genflow.reset();   /* 다른 교실에서 만들던 초안이 이 교실에 저장되지 않게 */
     loadStudents().then(loadStudentEvents);   /* 명단이 있어야 기록 없는 학생도 폴더가 된다 */
     clearInterval(eventTimer);
     eventTimer = setInterval(loadStudentEvents, 5000);
@@ -443,7 +444,9 @@ window.CC_SUPABASE = {
   /* 학생 명단 로드 */
   function loadStudents() {
     if (!selectedRoom || !CC.sb.active()) return Promise.resolve();
-    return CC.sb.getClassroomStudents(selectedRoom.id).then(function (students) {
+    var room = selectedRoom;   /* 교실을 바꾼 뒤 늦게 온 옛 교실 응답은 버린다 — 새 교실의 기준선·명단이 되면 안 된다 */
+    return CC.sb.getClassroomStudents(room.id).then(function (students) {
+      if (room !== selectedRoom) return;
       CC.classroom.roster = students;
       var list = $('#student-list');
       list.innerHTML = '';
@@ -527,7 +530,9 @@ window.CC_SUPABASE = {
   /* 학생 이벤트 로드 → 대시보드에 반영 */
   function loadStudentEvents() {
     if (!selectedRoom || !CC.sb.active()) return;
-    CC.sb.getClassroomEvents(selectedRoom.id).then(function (rows) {
+    var room = selectedRoom;
+    CC.sb.getClassroomEvents(room.id).then(function (rows) {
+      if (room !== selectedRoom) return;
       if (!rows) return; /* 조회 실패 — 이전 상태 유지, 기준선을 새로 잡지 않는다 */
       if (!rows.length && !(CC.classroom.roster || []).length) { if (CC._alertsLoaded) CC._alertsLoaded(); return; }
 
@@ -571,7 +576,7 @@ window.CC_SUPABASE = {
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
       if (typeof CC._renderDashboard === 'function') CC._renderDashboard();
-      if (CC._compassSync) CC._compassSync(selectedRoom.id);
+      if (CC._compassSync) CC._compassSync(room.id);
     });
   }
 

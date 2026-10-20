@@ -405,7 +405,8 @@
     return card;
   }
 
-  function openDetail(s, mid) {
+  /* focusSection — 알림에서 열 때 이름 붙은 곳('compass' | 'tutor')으로 바로 내려가 거기에 초점을 둔다 */
+  function openDetail(s, mid, focusSection) {
     var all = eventsOf(s);
     var ms = mids(all);
     var evs = mid ? all.filter(function (e) { return e.mid === mid; }) : all;
@@ -621,6 +622,7 @@
 
     var side = el('section', 'd-tutor');
     side.setAttribute('aria-label', '튜터 대화 · 짚을 거리');
+    side.setAttribute('aria-label', '튜터 대화 · 짚을 거리');
     side.appendChild(el('h4', null, '튜터 대화 · 짚을 거리'));
     /* 미션 하나를 끝냈고 튜터와 말을 나눴을 때만 — 미션이 하나뿐이면 고르지 않아도 그 미션이다 */
     var rmid = mid || (ms.length === 1 ? ms[0] : null);
@@ -657,7 +659,12 @@
 
     $('#dashboard').hidden = true;
     d.hidden = false;
-    if (opening) { window.scrollTo(0, 0); back.focus(); }
+    var target = focusSection && d.querySelector(focusSection === 'compass' ? '.compass-card' : '.d-tutor');
+    if (target) {   /* 이미 열려 있어도 다시 내려간다 */
+      target.tabIndex = -1;
+      target.scrollIntoView({ block: 'start' });
+      target.focus({ preventScroll: true });
+    } else if (opening) { window.scrollTo(0, 0); back.focus(); }
     renderFolders();
   }
 
@@ -676,7 +683,7 @@
 
   /* 목록으로 — 있던 자리(스크롤)와 그 학생 타일로 돌아간다 */
   var detailFrom = null;
-  function closeDetail() {
+  function closeDetail(noFocus) {
     var d = $('#detail');
     if (d.hidden) return;
     d.hidden = true;
@@ -684,12 +691,12 @@
     if (detailFrom) {
       window.scrollTo(0, detailFrom.y);
       var t = document.querySelector('.student-tile[data-id="' + detailFrom.id.replace(/["\\]/g, '') + '"]');
-      if (t) t.focus({ preventScroll: true });
+      if (t && noFocus !== true) t.focus({ preventScroll: true });   /* 교실을 바꿔 닫을 때는 이전 교실의 타일을 건드리지 않는다 */
       detailFrom = null;
     }
   }
   document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Escape') return;
+    if (e.key !== 'Escape' || e.defaultPrevented) return;   /* 둘러보기가 이미 Esc 를 썼다 */
     if (!shell.esc()) closeDetail();   /* 맨 위 한 겹만 — 휴대폰 서랍·알림 화면이 열려 있으면 그것부터 */
   });
 
@@ -810,7 +817,7 @@
       alCount();
       shell.alertsFull(false);
       var s = C.students.filter(function (x) { return x.id === a.id; })[0];
-      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined);
+      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined, a.kind === 'finish' ? 'compass' : a.kind === 'tutor-many' ? 'tutor' : undefined);
     });
     li.appendChild(b);
     list.insertBefore(li, list.firstChild);
@@ -912,17 +919,18 @@
     function esc() {
       if (drawerOn) { drawer(false); return true; }
       if (full) { full = false; paintAlerts(); bar.focus(); return true; }
+      if (!phone.matches && alOpen && window.innerWidth <= 1100) { aT.click(); return true; }   /* 중간 폭에서는 알림이 본문 위에 겹친다 */
       return false;
     }
     /* 사이드바 안에서 무엇을 고르면(교실·보기) 휴대폰 서랍은 닫는다 */
-    side.addEventListener('click', function (e) { if (e.target.closest('.room-tile, .main-tab, .room-new')) drawer(false); });
+    side.addEventListener('click', function (e) { if (e.target.closest('.room-tile, .main-tab, .room-new, #tour-replay, #notes-toggle')) drawer(false); });
     (phone.addEventListener ? phone.addEventListener.bind(phone, 'change') : phone.addListener.bind(phone))(function () {
       drawerOn = false; full = false; paintSide(); paintAlerts();
     });
 
     function setView(v) {
-      view = v;
-      closeDetail();   /* 교실을 바꾸면 이전 교실의 학생 상세는 닫는다 */
+      view = v; full = false;
+      closeDetail(true);   /* 교실을 바꾸면 이전 교실의 학생 상세는 닫는다 */
       $('#dashboard').hidden = v !== 'room';
       $('#new-room').hidden = v !== 'new';
       $('#pick-room').hidden = v !== 'pick';

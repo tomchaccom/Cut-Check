@@ -448,6 +448,14 @@
     quota: quota,
     tab: tab,
     step: go,
+    /* 교실을 바꾸면 단계별 만들기는 처음부터 — 옛 교실에서 만든 초안이 새 교실에 저장되지 않게. 늦게 올 응답도 버린다.
+       수업 내용 칸과 남은 횟수는 교실이 아니라 강사의 것이라 그대로 둔다 */
+    reset: function () {
+      gen++; bgen++; sgen++;
+      st.concept = null; st.examples = []; st.seen = []; st.res = null;
+      busy(false); drop(1); $('#sg-concept-pick').selectedIndex = 0; $('#gp-confirm').hidden = true;
+      show([]); say(''); go(1);
+    },
     spent: spent,
     /* 화면을 연 강사에게 한 번 — 차감 없음. 못 받아도 생성은 그대로(서버가 다시 거른다) */
     refresh: function () {

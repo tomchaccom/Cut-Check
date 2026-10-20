@@ -2627,3 +2627,102 @@ test('미션 만들기 — 만든 문제는 고치기로 돌아가도 남고, �
   await page.locator('#gp-yes').click();
   await expect(page.locator('#sg-title')).toHaveCount(0);
 });
+
+/* 최종 검토 보정 (2026-10-20) */
+test('교실을 바꾼 뒤 늦게 온 옛 교실 응답은 새 교실에 알림을 쏟지 않는다', async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  const late = [alEv('s1', '태인', { type: 's-redefine', mid: 'mx' }), alEv('s3', '한결', { type: 's-onboard', answers: [], skipped: false })];
+  await page.evaluate(late => {   // r1 의 다음 폴링은 붙들어 둔다 — r2 는 바로 빈 기록
+    window.CC.sb.getClassroomEvents = rid => rid === 'r1'
+      ? new Promise(res => { window.__hung = true; window.__rel = () => res(late); })
+      : Promise.resolve([]);
+  }, late);
+  await expect.poll(() => page.evaluate(() => !!window.__hung), { timeout: 8000 }).toBe(true);
+  await page.locator('#side .room-tile', { hasText: '방과후' }).click();
+  await expect(page.locator('#dash-title')).toHaveText('방과후');
+  await page.waitForTimeout(800);                                   // r2 의 첫 응답이 기준선을 잡는다
+  await page.evaluate(() => window.__rel());
+  await page.waitForTimeout(800);
+  await expect(page.locator('#alert-list li')).toHaveCount(0);
+  await expect(page.locator('.toast')).toHaveCount(0);
+});
+
+async function alertLands(page, evs, sel) {
+  const calls = await compassTeacher(page, [], b => b.action === 'list' ? { json: { rows: [cRow('M1')] } } : { status: 500, json: { error: 'x' } });
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await page.evaluate(e => { window.__evs.push(...e); }, evs);
+  await expect(page.locator('#alert-list li.new')).toHaveCount(1, { timeout: 8000 });
+  return calls;
+}
+const focused = (page, sel) => page.evaluate(s => document.activeElement === document.querySelector(s) && document.querySelector(s).getBoundingClientRect().top < innerHeight, sel);
+
+test('알림을 누르면 그 알림이 말한 곳에 내려앉는다 — 마침은 나침반, 튜터는 대화 (이미 열려 있어도)', async ({ page }) => {
+  test.setTimeout(60000);
+  await alertLands(page, [judgeEv('M1', 'mx')]);
+  await page.locator('.student-tile', { hasText: '태인' }).click();                     // 상세가 이미 열려 있다
+  await page.locator('#detail .d-back').focus();
+  await page.locator('#alert-list li button').click();
+  expect(await focused(page, '#detail .compass-card')).toBe(true);
+});
+
+test('알림을 누르면 튜터 대화에 내려앉는다', async ({ page }) => {
+  test.setTimeout(60000);
+  await alertLands(page, [...[1, 2, 3, 4, 5].map(i => alEv('s1', '태인', { type: 's-tutor', mid: 'mx', q: 'q' + i, a: 'a' }))]);
+  await page.locator('#alert-list li button').click();
+  expect(await focused(page, '#detail .d-tutor')).toBe(true);
+});
+
+test('휴대폰 — 알림 화면에서 마침 알림을 누르면 나침반에 내려앉는다', async ({ page }) => {
+  test.setTimeout(60000);
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.addInitScript(() => { window.__evs = []; });
+  await page.route('**/api/compass', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ rows: [cRow('M1')] }) }));
+  await asTeacher(page);
+  await page.locator('#side-open').click();
+  await page.locator('#side .room-tile', { hasText: '태인한결' }).click();
+  await page.evaluate(e => { window.__evs.push(e); }, judgeEv('M1', 'mx'));
+  await expect(page.locator('#alerts-bar')).toContainText('칭찬 타이밍 1개', { timeout: 8000 });
+  await page.locator('#alerts-bar').click();
+  await page.locator('#alert-list li button').click();
+  await expect(page.locator('#alerts')).toBeHidden();
+  expect(await focused(page, '#detail .compass-card')).toBe(true);
+});
+
+test('Esc — 중간 폭에서 겹친 알림을 닫는다', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 800 });
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('#alerts-handle').click();
+  await expect(page.locator('#alerts')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#alerts')).toBeHidden();
+  await expect(page.locator('#alerts-handle')).toBeFocused();
+});
+
+test('폰 — 서랍의 사용법 보기를 누르면 서랍이 닫히고, 서랍이 열린 동안 본문은 스크롤되지 않는다', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('#side-open').click();
+  expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).toBe('hidden');
+  await page.locator('#notes-toggle').click();
+  await expect(page.locator('#side')).toBeHidden();
+});
+
+test('교실을 바꾸면 단계별 만들기는 처음부터 — 옛 교실의 초안이 새 교실에 저장되지 않는다', async ({ page }) => {
+  test.setTimeout(120000);
+  await sgBuild(page, [SG_FOR]);
+  await expect(page.locator('.sg-answer')).toHaveText(['2300', '300', '0'], { timeout: 90000 });
+  await page.locator('#side .room-tile', { hasText: '방과후' }).click();
+  await expect(page.locator('#dash-title')).toHaveText('방과후');
+  await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
+  await expect(page.locator('#sg-title')).toHaveCount(0);
+  await expect(page.locator('#gp-count')).toHaveText('1 / 4 수업 내용');
+  await expect(page.locator('.sg-ex')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__saved || [])).toEqual([]);
+});
