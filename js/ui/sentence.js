@@ -171,6 +171,31 @@
     $('#wrap-done').hidden = true;
 
     showStep(1);
+    showCompass();
+  }
+
+  /* 선생님이 보낸 나침반 — 바늘과 한마디만. 단계·AI 메모는 서버가 주지 않고, 와도 그리지 않는다 */
+  function showCompass() {
+    var box = $('#compass-mine');
+    box.hidden = true;
+    box.innerHTML = '';
+    if (!CC.sb || !CC.sb.active() || !currentMissionDbId) return;
+    var db = currentMissionDbId;
+    CC.sb.compassMine(db).then(function (c) {
+      if (!c || db !== currentMissionDbId) return;
+      var dir = c.teacher_dir || CC.compass.dirOf(c.needle_deg);
+      var h = el('h2', 'step-title', '내 나침반');
+      box.appendChild(h);
+      box.appendChild(el('p', 'muted', '선생님이 남긴 말이에요.'));
+      if (c.needle_deg != null && dir) {
+        var wrap = el('div', 'compass-fig');
+        wrap.innerHTML = CC.compass.svg(null, c.needle_deg);
+        wrap.appendChild(el('strong', 'compass-dir', CC.compass.DIRS[dir]));
+        box.appendChild(wrap);
+      }
+      if (c.teacher_note) box.appendChild(el('p', 'compass-note', c.teacher_note));
+      box.hidden = false;
+    }, function () {});
   }
 
   /* ── 사용법 안내 — 단계마다 처음 그 화면을 열 때 한 번. 무엇을 하는 곳인지만 말한다 ── */

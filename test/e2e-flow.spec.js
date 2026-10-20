@@ -487,7 +487,8 @@ CC.sb={active:function(){return true},getProfile:function(){return P({role:'stud
 myClassrooms:function(){return P(window.__rooms||[{id:'r1',name:'1학년 3반'},{id:'r2',name:'방과후 코딩반'}])},
 getMissions:function(rid){return P(rid==='r1'?[{id:'db1',data:m('ai-a','푼 미션')},{id:'db2',data:m('ai-b','하던 미션')},{id:'db3',data:m('ai-c','안 한 미션')}]:[])},
 getMyEvents:function(){return P(window.__evs||[{type:'s-onboard',answers:[],skipped:true,_missionDbId:null},{type:'s-define',_missionDbId:'db1'},{type:'s-wrap',text:'끝',_missionDbId:'db1'},{type:'s-define',_missionDbId:'db2'}])},
-pushEvent:function(rid,mid,ev){(window.__pushed=window.__pushed||[]).push([rid,mid]);(window.__evs=window.__evs||[]).push(ev);return P(null)},signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
+pushEvent:function(rid,mid,ev){(window.__pushed=window.__pushed||[]).push([rid,mid]);(window.__evs=window.__evs||[]).push(ev);return P(null)},compassMine:function(id){window.__cm=(window.__cm||[]);window.__cm.push(id);var c=window.__compass;return c==='throw'?Promise.reject(new Error('x')):P(c||null)},
+signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
 })(window.CC=window.CC||{});`;
 
 async function asStudent(page, rooms) {
@@ -1934,4 +1935,60 @@ test('강사 — list 가 실패하면 폴링마다 다시 부르지 않고 다�
   await page.locator('#detail .compass-reread').click();
   await expect(page.locator('#detail .compass-send')).toBeVisible();
   expect(calls.length).toBe(2);
+});
+
+/* 나침반 — 학생 카드 (2026-10-20). 선생님이 보낸 뒤에만, 바늘과 한마디만 */
+async function studentCompass(page, row) {
+  const errs = []; page.on('pageerror', e => errs.push(e.message));
+  await page.addInitScript(r => { window.__compass = r; }, row);
+  await asStudent(page);
+  await page.locator('.room-tile').first().click();
+  await page.locator('.mission-file').first().click();
+  return errs;
+}
+
+test('학생 — 보낸 나침반은 바늘 · 방위 이름 · 선생님 문장 그대로, 단계 숫자는 없다', async ({ page }) => {
+  const errs = await studentCompass(page, { needle_deg: 18.4, teacher_dir: 'N', teacher_note: '첫 줄\n둘째 줄 <b>x</b>', sent_at: 't',
+    levels: { N: 3, E: 2, S: 0, W: 1 }, ai_note: 'AI메모' });
+  const card = page.locator('#compass-mine');
+  await expect(card).toBeVisible();
+  await expect(card.locator('h2')).toHaveText('내 나침반');
+  await expect(card.locator('svg .compass-needle')).toHaveAttribute('transform', /rotate\(18\.4/);
+  await expect(card.locator('svg .compass-poly')).toHaveCount(0);
+  await expect(card.locator('svg')).toHaveAttribute('aria-label', '북쪽 · 이해');
+  await expect(card.locator('.compass-dir')).toHaveText('북쪽 · 이해');
+  await expect(card.locator('.compass-note')).toHaveText('첫 줄\n둘째 줄 <b>x</b>');
+  expect(await card.locator('.compass-note').evaluate(e => getComputedStyle(e).whiteSpace)).toBe('pre-wrap');
+  const html = await page.content();
+  for (const w of ['AI메모', '3단계', 'levels', 'ai_note']) expect(html).not.toContain(w);
+  expect(errs).toEqual([]);
+});
+
+test('학생 — 방향 없이 보낸 나침반은 한마디만', async ({ page }) => {
+  await studentCompass(page, { needle_deg: null, teacher_dir: null, teacher_note: '수고했어요.', sent_at: 't' });
+  const card = page.locator('#compass-mine');
+  await expect(card.locator('.compass-note')).toHaveText('수고했어요.');
+  await expect(card.locator('svg')).toHaveCount(0);
+  await expect(card.locator('.compass-dir')).toHaveCount(0);
+});
+
+test('학생 — 아직 안 보냈거나 호출이 실패하면 카드가 없다', async ({ page }) => {
+  const errs = await studentCompass(page, 'throw');
+  await expect(page.locator('#step1')).toBeVisible();
+  await expect(page.locator('#compass-mine')).toBeHidden();
+  expect(errs).toEqual([]);
+});
+
+test('학생 — 아직 안 보냈으면(null) 카드가 없다', async ({ page }) => {
+  await studentCompass(page, null);
+  await expect(page.locator('#step1')).toBeVisible();
+  await expect(page.locator('#compass-mine')).toBeHidden();
+  expect(await page.evaluate(() => window.__cm)).toEqual(['db1']);
+});
+
+test('학생 — 로컬 모드는 나침반을 부르지 않고 카드도 없다', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await expect(page.locator('#compass-mine')).toBeHidden();
 });
