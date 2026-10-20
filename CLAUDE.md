@@ -175,6 +175,7 @@ node test/engine.test.js     # 반례가 실제로 깨지는지, 에러가 몇 �
 node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
 node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
+node test/alerts.test.js     # 교사 알림 — 종류별 한 번 · 첫 화면 기준선 · 사실 문장
 node test/smoke.js           # 9개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG

@@ -734,8 +734,19 @@
   /* Supabase 모드는 첫 기록을 받기 전까지 기준선을 만들지 않는다 (빈 목록이 기준선이 되면
    * 이미 있던 제출이 전부 새 알림이 된다). 교실을 고를 때마다 다시 시작한다. */
   var alertsLoaded = !(CC.sb && CC.sb.active());
+  /* 알림 재료 — 서버 모드는 DB id 로 끝낸 미션을 센다. 미션 이름은 학생 기록 안의 id 로 찾는다 */
+  function alertOpt() {
+    var on = serverOn();
+    return {
+      server: on, eventsOf: eventsOf, missionOf: missionOf, finishedOf: on ? finishedOf : null,
+      missionName: function (mid, s) {
+        var m = missionOf(on && s ? clientMid(s, mid) : mid);
+        return m && m.title ? m.title : '';
+      }
+    };
+  }
   CC._resetAlerts = function () { cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); };
-  CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], serverOn() ? finishedOf : null); };
+  CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], alertOpt()); };
   /* 말 걸 순간 — 시각 · 학생 이름 · 사실 문장. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다 */
   function showAlert(a) {
     var text = CC.alerts.say(a);
@@ -837,7 +848,7 @@
     }
 
     if (!alertsLoaded) return;
-    var nowSnap = CC.alerts.snap(C.students, serverOn() ? finishedOf : null);
+    var nowSnap = CC.alerts.snap(C.students, alertOpt());
     CC.alerts.diff(lastSnap, nowSnap).forEach(showAlert);
     lastSnap = nowSnap;
     renderFolders();

@@ -7,19 +7,19 @@ function t(name, cond) { console.log((cond ? '  ok  ' : '  FAIL') + ' ' + name);
 
 const S = (id, name, ms) => ({ id, name, sDesignCount: 0, sCodeJudges: [], ms });
 const fin = s => s.ms;
-const first = CC.alerts.snap([S('a', '민지', ['m1'])], fin);
-t('첫 snap 에 있던 것은 알리지 않는다', CC.alerts.diff(null, first).length === 0 && CC.alerts.diff(first, CC.alerts.snap([S('a', '민지', ['m1'])], fin)).length === 0);
-const s1 = CC.alerts.snap([S('a', '민지', ['m1', 'm2'])], fin);
+const first = CC.alerts.snap([S('a', '민지', ['m1'])], { finishedOf: fin });
+t('첫 snap 에 있던 것은 알리지 않는다', CC.alerts.diff(null, first).length === 0 && CC.alerts.diff(first, CC.alerts.snap([S('a', '민지', ['m1'])], { finishedOf: fin })).length === 0);
+const s1 = CC.alerts.snap([S('a', '민지', ['m1', 'm2'])], { finishedOf: fin });
 const d1 = CC.alerts.diff(first, s1);
 t('다른 미션은 finish 한 번 더', d1.length === 1 && d1[0].kind === 'finish' && d1[0].mid === 'm2' && d1[0].id === 'a');
-const again = CC.alerts.snap([Object.assign(S('a', '민지', ['m1', 'm2']), { sCodeJudges: [{}, {}] })], fin);
+const again = CC.alerts.snap([Object.assign(S('a', '민지', ['m1', 'm2']), { sCodeJudges: [{}, {}] })], { finishedOf: fin });
 t('finish once — 같은 미션을 다시 판정해도 알리지 않고 code 알림도 없다', CC.alerts.diff(s1, again).length === 0);
 t('로컬(finishedOf 없음)은 예전 그대로 code', (() => {
   const a = CC.alerts.snap([S('a', '나', [])]), b = CC.alerts.snap([Object.assign(S('a', '나', []), { sCodeJudges: [{}] })]);
   const d = CC.alerts.diff(a, b); return d.length === 1 && d[0].kind === 'code' && CC.alerts.say(d[0]) === '내가 코드 결과를 판정했어요.';
 })());
-t('say finish — 조사', CC.alerts.say({ kind: 'finish', name: '민지' }) === '민지가 미션을 마쳤어요. 나침반을 확인하고 한마디 적어 주세요.' &&
-  CC.alerts.say({ kind: 'finish', name: '한결' }).indexOf('한결이 ') === 0);
+t('say finish — 조사', CC.alerts.say({ kind: 'finish', name: '민지', compass: true }) === '민지가 미션을 마쳤어요. 나침반을 보고 한마디 적어 주세요.' &&
+  CC.alerts.say({ kind: 'finish', name: '한결', compass: true }).indexOf('한결이 ') === 0);
 
 const none = CC.compass.svg(null, null);
 t('svg(null,null) 은 바늘도 다각형도 없다', none.indexOf('<svg') === 0 && none.indexOf('rotate(') < 0 && none.indexOf('<polygon') < 0 && none.indexOf('아직 방향이 뚜렷하지 않아요') > 0);
