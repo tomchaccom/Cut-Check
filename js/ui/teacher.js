@@ -254,7 +254,7 @@
   /* ── 나침반 — 서버 모드에서만. 미션을 마친(첫 s-code-judge) 학생·미션마다 카드 하나.
    * 값(단계)과 AI 멘트는 선생님만 본다. 학생에게는 선생님이 고른 방위와 쓴 문장만 간다.
    * 단계로 정렬·평균·순위를 만들지 않는다 — 명단에는 "한마디 기다림" 꼬리표 하나뿐 */
-  var cRoom = null, cRows = null, cTried = {}, cDraw = {}, cSyncing = false, cListFail = false, cSeq = 0;
+  var cRoom = null, cRows = null, cTried = {}, cDraw = {}, cSyncing = false, cListFail = false, cListFailAt = 0, cSeq = 0;
   var COMPASS_FAIL = '지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.';
   var serverOn = function () { return !!(CC.sb && CC.sb.active()); };
   var ckey = function (sid, mid) { return sid + ':' + mid; };
@@ -280,6 +280,7 @@
   CC._compassSync = function (roomId) {
     if (!serverOn() || !roomId || !CC.sb.compass) return;
     if (cRoom !== roomId) { cRoom = roomId; cRows = null; cTried = {}; cDraw = {}; cListFail = false; }
+    if (cListFail && Date.now() - cListFailAt > 60000) cListFail = false;   /* 한 번 끊겼다고 수업 내내 멈추지 않게 — 1분 뒤 다시 */
     if (cListFail || cSyncing || !C.students.some(function (st) { return finishedOf(st).length; })) return;   /* 끝낸 미션이 없으면 서버에 물을 것도 없다 */
     cSyncing = true;
     var done = function () { cSyncing = false; };
@@ -289,7 +290,7 @@
       cListFail = false;
       ((j && j.rows) || []).forEach(function (r) { cRows[ckey(r.studentId, r.missionId)] = r; });
     });
-    loaded.catch(function () { cListFail = true; Object.keys(cDraw).forEach(function (k) { cDraw[k](); }); }).then(function () {
+    loaded.catch(function () { cListFail = true; cListFailAt = Date.now(); Object.keys(cDraw).forEach(function (k) { cDraw[k](); }); }).then(function () {
       if (!cRows || cRoom !== roomId) return;
       renderFolders();
       Object.keys(cDraw).forEach(function (k) { cDraw[k](); });   /* 열려 있는 카드가 "읽고 있어요" 에 머물지 않게 */
@@ -385,7 +386,8 @@
           .then(function (r) { cRows[k] = r; draw(); renderFolders(); },
             function () { msg.textContent = '지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.'; send.disabled = false; });
       });
-      re.addEventListener('click', function () { analyze(st, dbId, true); });
+      if (cTried[k] === 'run') re.disabled = true;   /* 읽는 중에 또 누르면 AI 를 두 번 부른다 */
+      re.addEventListener('click', function () { if (cTried[k] === 'run') return; re.disabled = true; analyze(st, dbId, true); });
       acts.appendChild(send); acts.appendChild(re);
       [l1, sel, l2, ta].forEach(function (x) { form.appendChild(x); });
       form.appendChild(acts);

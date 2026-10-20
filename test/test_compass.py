@@ -165,5 +165,13 @@ jd = json.loads(subprocess.run(['node', '-e', "global.window={};require(process.
 pd = [None if d is None else C._sector(d) for d in DEGS]
 t('부채꼴 이름이 JS 와 같다', jd == pd, (jd, pd))
 
+# 앞의 REST 호출로 시간이 다 갔으면 LLM 을 부르지 않고 깔끔히 실패한다 (0초짜리 호출 금지)
+called = []
+try:
+    C.read([], {}, call_llm=lambda *a: called.append(a), t0=0, now=lambda: 23)
+    t('시간 없음 → GenerateError', False)
+except GenerateError:
+    t('시간 없음 → LLM 안 부르고 GenerateError', not called, called)
+
 print('\nFAIL ' + str(fail) if fail else '\nOK')
 sys.exit(1 if fail else 0)

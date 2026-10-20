@@ -243,6 +243,8 @@ def read(events, mission, call_llm=mini_llm, t0=None, now=time.monotonic):
     messages = [{'role': 'system', 'content': SYSTEM},
                 {'role': 'user', 'content': json.dumps(body, ensure_ascii=False)}]
     for attempt in (1, 2):
+        if t0 + DEADLINE - now() < RETRY_NEEDS:  # 앞의 REST 호출이 느려 남은 시간이 없으면 0초짜리 호출 대신 깔끔한 실패
+            break
         raw = call_llm(messages, SCHEMA, min(CALL_CAP, t0 + DEADLINE - now()))
         data = _json(raw)
         if data is not None and isinstance(data.get('levels'), dict):

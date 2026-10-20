@@ -101,7 +101,9 @@ def _run(body, db, uid, llm, t0):
         if not old:
             raise Fail(409, '먼저 읽은 뒤에 보낼 수 있어요.')
         # 저장된 분석에서 바늘을 다시 계산한다 — 이미 덮어쓴 값에서 시작하면 방위를 바꿀 때 원래 바늘을 잃는다
-        deg = _compass.override(_compass.needle(old[0].get('levels') or {}, old[0].get('evidence') or {})[0], body.get('dir'))
+        # 고르지 않음 = 학생에게 방향을 보내지 않는다 (한마디만). 강사 화면 라벨이 "학생에게 보일 방향" 이라 AI 바늘을 몰래 보내면 안 된다
+        deg = None if body.get('dir') is None else _compass.override(
+            _compass.needle(old[0].get('levels') or {}, old[0].get('evidence') or {})[0], body.get('dir'))
         change = {'needle_deg': deg, 'teacher_dir': body.get('dir'), 'teacher_note': note, 'sent_at': _now(), 'updated_at': _now()}
         saved = db.rows('PATCH', 'compass?' + key, change, 'return=representation')
         if not saved:

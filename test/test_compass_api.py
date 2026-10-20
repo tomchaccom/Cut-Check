@@ -132,7 +132,7 @@ t('send dir=E 면 90', st == 200 and out['needle_deg'] == 90 and out['teacher_di
 t('send 는 PATCH 한 번 · 키 두 개로 한 행만', len(w) == 1 and w[0][0] == 'PATCH' and 'student_id=eq.' + STU in w[0][1] and 'mission_id=eq.' + MIS in w[0][1], w)
 http, calls, state = fake(row=dict(SAVED))
 st, out = api.handle(body('send', dir=None, note='ok'), 'tok', ENV, http, llm_of([]))
-t('send dir=None 이면 바늘 그대로', st == 200 and abs(out['needle_deg'] - 18.4) < 0.1 and out['teacher_dir'] is None, out)
+t('send dir=None 이면 바늘 없이 한마디만', st == 200 and out['needle_deg'] is None and out['teacher_dir'] is None, out)
 st, out = api.handle(body('send', dir='S', note='다시'), 'tok', ENV, http, llm_of([]))
 t('다시 보내면 덮어쓴다', st == 200 and out['teacher_dir'] == 'S' and out['teacher_note'] == '다시' and len(writes(calls)) == 2, out)
 http, calls, _ = fake()
@@ -143,7 +143,7 @@ t('읽기 전에는 send 409', st == 409 and not writes(calls), (st, out))
 http, calls, state = fake(row=dict(SAVED))
 send = lambda **kw: api.handle(body('send', note='x', **kw), 'tok', ENV, http, llm_of([]))[1]
 t('E → N 이면 18.4 로 돌아온다', send(dir='E')['needle_deg'] == 90 and abs(send(dir='N')['needle_deg'] - 18.4) < 0.1)
-t('E → None 이면 18.4 로 돌아온다', send(dir='E')['needle_deg'] == 90 and abs(send(dir=None)['needle_deg'] - 18.4) < 0.1)
+t('E → None 이면 바늘을 거둔다 · 다시 N 이면 18.4', send(dir='E')['needle_deg'] == 90 and send(dir=None)['needle_deg'] is None and abs(send(dir='N')['needle_deg'] - 18.4) < 0.1)
 st, out = api.handle(body('send', dir='X', note='x'), 'tok', ENV, fake(row=dict(SAVED))[0], llm_of([]))
 t('잘못된 dir 은 형식 오류 문장', st == 400 and out['error'] == api.BAD[1]['error'], out)
 _h = fake(row=dict(SAVED))[0]
