@@ -175,6 +175,7 @@ uv run --with-requirements requirements.txt python test/test_pipeline_parity.py 
 uv run --with-requirements requirements.txt python test/test_generate.py         # LLM 을 가짜로 끼워 재요청·칸별 폴백 흐름
 uv run --with-requirements requirements.txt python test/test_accounts.py         # 학생 계정 만들기 — 남의 교실·중복 아이디·키 노출
 uv run --with-requirements requirements.txt python test/test_steps.py            # 단계별 생성 — 개념 낱말 규칙·예시 거르기·초안 검사·재요청·강사만
+uv run --with-requirements requirements.txt python test/test_tutor_recap.py      # 수업에서 짚을 거리 — 항목 검사·인용 대조·상한·재요청·강사만
 ```
 
 8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.
