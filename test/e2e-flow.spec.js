@@ -2089,7 +2089,9 @@ test('강사 — 나침반 카드: 누적 바늘 · 12칸 체크리스트 · 근
     if (b.action === 'send') { sent.push(b); return { json: cRow('M1', { teacher_note: b.note, sent_at: '2026-10-20T00:00:00Z' }) }; }
     return { status: 500, json: { error: 'x' } };
   });
-  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const tile = page.locator('.student-tile', { hasText: '태인' });
+  await expect(tile.locator('.tag.wait')).toHaveText('한마디 기다림');
+  await tile.click();
   const card = page.locator('#detail .compass-card');
   await expect(card).toHaveCount(1);
   await expect(card.locator('svg .compass-needle')).toHaveAttribute('transform', /rotate\(18\.4/);
@@ -2116,6 +2118,9 @@ test('강사 — 나침반 카드: 누적 바늘 · 12칸 체크리스트 · 근
   await card.locator('.compass-send').click();
   await expect(card.locator('.compass-sent')).toContainText('보냈어요');
   await expect(card.locator('.compass-sent-note')).toHaveText('설계를 고친 게 좋았어요.');
+  await page.locator('#detail-back').click();
+  await expect(tile.locator('.tag.wait')).toHaveCount(0);   // 보낸 뒤 명단 꼬리표가 사라진다
+  await tile.click();
   expect(sent).toEqual([{ classroomId: 'r1', studentId: 's1', missionId: 'M1', note: '설계를 고친 게 좋았어요.', action: 'send' }]);   // 안 지워졌으면 dir 를 싣지 않는다
   await card.getByLabel('한마디 — 학생에게 그대로 보여요.').fill('고쳐 다시 보내요.');   // 고쳐 다시 보낼 수 있다
   await card.locator('.compass-send').click();
@@ -2148,6 +2153,7 @@ test('강사 — 짧은 바늘은 고르게, 지워지면 바늘 없이 후보�
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0].missionId).toBe('M1');
   expect('dir' in sent[0]).toBe(false);
+  await expect(forms.nth(0).locator('.compass-sent')).toBeVisible();   // 첫 보내기의 다시 그리기가 끝난 뒤에 둘째 칸을 쓴다
   await expect(card.locator('.compass-cand', { hasText: '북쪽' })).toHaveAttribute('aria-pressed', 'true');   // 고른 것이 남아 있다
   await card.locator('.compass-form').nth(1).locator('textarea').fill('이번 미션 한마디');
   await card.locator('.compass-form').nth(1).locator('.compass-send').click();
@@ -2157,6 +2163,36 @@ test('강사 — 짧은 바늘은 고르게, 지워지면 바늘 없이 후보�
   await expect(card.locator('svg .compass-needle')).toHaveCount(1);   // 다시 계산해 바늘이 돌아온다
   await expect(card.locator('.compass-cand')).toHaveCount(0);
   await expect(card.locator('.compass-line')).toHaveText('북쪽으로 가고 있어요 · 고르게 가고 있어요');
+});
+
+test('강사 — 쓰던 한마디는 다시 그려도 남고, 후보가 바뀌면 옛 선택은 실리지 않는다', async ({ page }) => {
+  let mode = 'NS'; const sent = [];
+  const calls = await compassTeacher(page, [judgeEv('M1', 'mx'), judgeEv('M2', 'my')], b => {
+    if (b.action === 'list') return { json: { rows: [cRow('M1'), cRow('M2')] } };
+    if (b.action === 'cumulative') return { json: cumOf([cRow('M2'), cRow('M1')], { needle_deg: null, dir: null, length: null, cancel: true, candidates: mode === 'NS' ? ['N', 'S'] : ['E', 'W'] }) };
+    if (b.action === 'send') { sent.push(b); return { json: cRow(b.missionId, { teacher_note: b.note, sent_at: 'x' }) }; }
+    return { status: 500, json: { error: 'x' } };
+  });
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const card = page.locator('#detail .compass-card');
+  const forms = card.locator('.compass-form');
+  await expect(forms).toHaveCount(2);
+  await card.locator('.compass-cand', { hasText: '북쪽' }).click();
+  await forms.nth(1).locator('textarea').fill('쓰던 중인 말');
+  await forms.nth(0).locator('textarea').fill('다른 칸');
+  await forms.nth(0).locator('.compass-send').click();               // 한 칸을 보내면 카드 전체가 다시 그려진다
+  await expect(forms.nth(0).locator('.compass-sent')).toBeVisible();
+  await expect(forms.nth(1).locator('textarea')).toHaveValue('쓰던 중인 말');
+  mode = 'EW';
+  await page.locator('#detail-back').click();                          // 다시 열면 누적을 새로 받는다
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  await expect(card.locator('.compass-cand')).toHaveText(['◧ 동쪽 · 설계', '◇ 서쪽 · 검증']);
+  await expect(card.locator('.compass-form').nth(1).locator('textarea')).toHaveValue('쓰던 중인 말');   // 초안은 세션 동안 남는다
+  await card.locator('.compass-form').nth(1).locator('.compass-send').click();
+  await expect.poll(() => sent.length).toBe(2);
+  expect(sent[1].missionId).toBe('M2');
+  expect('dir' in sent[1]).toBe(false);                                // 옛 선택(북)은 후보에 없으니 싣지 않는다
+  await expect(card.locator('.compass-form').nth(1).locator('textarea')).toHaveValue('쓰던 중인 말');   // 보낸 뒤엔 보낸 말(= 같은 말)
 });
 
 test('강사 — 바늘이 지워지면 칭찬 타이밍 알림 한 번, 열 때 이미 지워져 있던 것은 알리지 않는다', async ({ page }) => {
@@ -2237,6 +2273,7 @@ test('강사 — list 가 실패하면 폴링마다 다시 부르지 않고 다�
   ok = true;
   await page.locator('#detail .compass-reread').first().click();
   await expect(page.locator('#detail .compass-send')).toBeVisible();
+  expect(calls.filter(c => c.action === 'list')).toHaveLength(2);   // 다시 읽기는 목록을 딱 한 번 더 부른다
 });
 
 /* 나침반 2차 — 학생. "내 기록" 탭에 누적 나침반 하나, 미션 카드에는 선생님 한마디만 */

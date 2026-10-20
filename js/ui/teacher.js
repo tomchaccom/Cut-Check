@@ -256,7 +256,7 @@
    * 점수로 정렬·평균·순위를 만들지 않는다 — 명단에는 "한마디 기다림" 꼬리표 하나뿐.
    * 바늘이 서로 지워지면(cancel) 기계가 고르지 않는다 — 겹친 후보만 버튼으로 두고 선생님이 고른다 */
   var cRoom = null, cRows = null, cTried = {}, cDraw = {}, cSyncing = false, cListFail = false, cListFailAt = 0, cSeq = 0;
-  var cCum = {}, cCumFail = {}, cPick = {}, cInit = false;
+  var cCum = {}, cCumFail = {}, cPick = {}, cInit = false, cDraft = {}, cSending = {};   /* cDraft — 쓰던 한마디(학생·미션별), 다시 그려도 지키고 보내면 지운다 */
   var COMPASS_FAIL = '지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.';
   var CHECKS = [
     ['N', 'N1', '함정이 아닌 성공 조건을 골랐어요'], ['N', 'N2', '성공 조건을 코드로 직접 옮겼어요'], ['N', 'N3', '튜터에게 이해한 것을 설명하고 물었어요'],
@@ -290,12 +290,13 @@
   }
 
   /* 누적 바늘을 서버에서 받는다. silent — 화면을 처음 열 때 이미 있던 일이라 알리지 않는다 */
-  function refreshCum(st, silent) {
+  function refreshCum(st, silent, quiet) {
     var roomId = cRoom;
     return CC.sb.compass('cumulative', { classroomId: roomId, studentId: st.id }).then(function (j) {
       if (cRoom !== roomId) return;
       cCum[st.id] = j;
       delete cCumFail[st.id];
+      if (cPick[st.id] && (!j.cumulative || (j.cumulative.candidates || []).indexOf(cPick[st.id]) < 0)) delete cPick[st.id];   /* 후보가 바뀌었으면 옛 선택은 서버가 400 으로 거절한다 */
       if (silent && lastSnap && lastSnap[st.id]) {   /* 기준선에 넣어 둔다 — 새 알림으로 쏟아지지 않게 */
         var ns = CC.alerts.snap([st], alertOpt())[st.id];
         Object.keys(ns.keys).forEach(function (k) { if (!(k in lastSnap[st.id].keys)) lastSnap[st.id].keys[k] = ns.keys[k]; });
@@ -303,14 +304,14 @@
     }, function () { if (!cCum[st.id]) cCumFail[st.id] = true; }).then(function () {
       if (cRoom !== roomId) return;
       if (cDraw[st.id]) cDraw[st.id]();
-      renderFolders();
+      if (!quiet) renderFolders();
     });
   }
 
   /* 학생 화면을 열 때 이미 끝났는데 행이 없는 것 — 알림 없이 하나씩 차례로 읽어 둔다 */
   CC._compassSync = function (roomId) {
     if (!serverOn() || !roomId || !CC.sb.compass) return;
-    if (cRoom !== roomId) { cRoom = roomId; cRows = null; cTried = {}; cDraw = {}; cListFail = false; cCum = {}; cCumFail = {}; cPick = {}; cInit = false; }
+    if (cRoom !== roomId) { cRoom = roomId; cRows = null; cTried = {}; cDraw = {}; cListFail = false; cCum = {}; cCumFail = {}; cPick = {}; cInit = false; cDraft = {}; cSending = {}; }
     if (cListFail && Date.now() - cListFailAt > 60000) cListFail = false;   /* 한 번 끊겼다고 수업 내내 멈추지 않게 — 1분 뒤 다시 */
     var fin = C.students.filter(function (st) { return finishedOf(st).length; });
     if (!fin.length && !cRows) { cInit = true; return; }   /* 끝낸 미션이 없으면 서버에 물을 것도 없고, 이후 일은 모두 새 일이다 */
@@ -333,14 +334,14 @@
           var r = cRows[ckey(st.id, m)];
           if ((!r || !r.checks) && !cTried[ckey(st.id, m)]) todo.push([st, m]);   /* 1차 행(checks 없음)도 다시 읽는다 */
         });
-        if (!cInit) chain = chain.then(function () { return cRoom === roomId ? refreshCum(st, true) : null; });
+        if (!cInit) chain = chain.then(function () { return cRoom === roomId ? refreshCum(st, true, true) : null; });
       });
       var next = function () {
         var it = todo.shift();
         if (!it || cRoom !== roomId) return;
         return analyze(it[0], it[1], false).then(next);
       };
-      return chain.then(next).then(function () { if (cRoom === roomId) cInit = true; });
+      return chain.then(function () { renderFolders(); }).then(next).then(function () { if (cRoom === roomId) cInit = true; });
     }).then(done, done);
   };
 
@@ -401,6 +402,7 @@
             bs.appendChild(b);
           });
           pick.appendChild(bs);
+          if (rows[0]) pick.appendChild(el('p', 'compass-msg', '고른 방향은 가장 최근 미션(' + nameOf(rows[0].missionId, clientMid(st, rows[0].missionId)) + ')의 한마디와 함께 보내져요. 학생 화면은 지난번 보낸 방향 그대로예요.'));
           top.appendChild(pick);
         } else {
           var fig = el('div', 'compass-fig');
@@ -450,7 +452,7 @@
       /* 미션별 한마디 — 학생에게 그대로 간다 */
       finishedOf(st).forEach(function (dbId, i) {
         var cm = clientMid(st, dbId);
-        if (mid && cm !== mid) return;
+        if (mid && cm !== mid && !(cu && cu.cancel && rows[0] && rows[0].missionId === dbId)) return;   /* 지워졌을 땐 고른 방향이 실릴 가장 최근 미션 칸을 늘 둔다 */
         var k = ckey(st.id, dbId), row = cRows && cRows[k];
         var form = el('div', 'compass-form');
         form.appendChild(el('h5', null, '한마디 · ' + nameOf(dbId, cm)));
@@ -467,23 +469,24 @@
         var tid = 'cp-note-' + n + '-' + i;
         var l2 = el('label', null, '한마디 — 학생에게 그대로 보여요.'); l2.htmlFor = tid;
         var ta = el('textarea'); ta.id = tid; ta.rows = 3; ta.maxLength = 300;
-        ta.value = row.sent_at ? (row.teacher_note || '') : '';
+        ta.value = k in cDraft ? cDraft[k] : row.sent_at ? (row.teacher_note || '') : '';
+        ta.addEventListener('input', function () { cDraft[k] = ta.value; });
         var msg = el('p', 'compass-msg'); msg.setAttribute('aria-live', 'polite');
         var acts = el('div', 'compass-acts');
-        var send = el('button', 'pill compass-send', '보내기'); send.type = 'button';
+        var send = el('button', 'pill compass-send', '보내기'); send.type = 'button'; send.disabled = !!cSending[k];
         var re = el('button', 'pill compass-reread', '다시 읽기'); re.type = 'button';
         send.addEventListener('click', function () {
           if (!ta.value.trim()) { msg.textContent = '한마디를 적어 주세요.'; return; }
           var body = { classroomId: cRoom, studentId: st.id, missionId: dbId, note: ta.value };
           /* 고른 방향은 가장 최근 미션 행에만 싣는다 — 서버는 그 행의 선택으로 누적을 다시 계산한다 */
-          if (cu && cu.cancel && cPick[st.id] && rows[0] && rows[0].missionId === dbId) body.dir = cPick[st.id];
-          send.disabled = true;
+          if (cu && cu.cancel && rows[0] && rows[0].missionId === dbId && (cu.candidates || []).indexOf(cPick[st.id]) >= 0) body.dir = cPick[st.id];
+          send.disabled = true; cSending[k] = true;
           CC.sb.compass('send', body).then(function (r) {
-            cRows[k] = r;
+            cRows[k] = r; delete cDraft[k];
             if (body.dir) delete cPick[st.id];
             return refreshCum(st, false);
           }, function () { msg.textContent = '지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.'; send.disabled = false; })
-            .then(function () { if (!send.disabled) return; draw(); renderFolders(); });
+            .then(function () { delete cSending[k]; draw(); renderFolders(); });
         });
         if (cTried[k] === 'run') re.disabled = true;   /* 읽는 중에 또 누르면 AI 를 두 번 부른다 */
         re.addEventListener('click', function () { if (cTried[k] === 'run') return; re.disabled = true; analyze(st, dbId, true); });

@@ -207,12 +207,12 @@
       box.innerHTML = '';
       box.appendChild(el('h2', 'step-title', '내 나침반'));
       var says = el('div', 'compass-says');
-      var dir = c && c.needle_deg != null ? CC.compass.dirOf(c.needle_deg) : null;
+      var dir = c && c.needle_deg != null ? (c.dir || CC.compass.dirOf(c.needle_deg)) : null;
       if (dir) {
         var wrap = el('div', 'compass-fig');
         wrap.innerHTML = CC.compass.svg(c.needle_deg, c.length);
         box.appendChild(wrap);
-        says.appendChild(el('strong', 'compass-dir', CC.compass.line(c.dir || dir)));
+        says.appendChild(el('strong', 'compass-dir', CC.compass.line(dir)));
         if (CC.compass.even(c.length)) says.appendChild(el('p', 'compass-even', '고르게 가고 있어요'));
       } else {
         says.classList.add('wide');
