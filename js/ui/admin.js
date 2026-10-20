@@ -28,7 +28,7 @@
     var msg = el('td', 'ad-msg'); msg.setAttribute('role', 'status');
     function save(body) {
       msg.textContent = '저장 중이에요.';
-      admin(body).then(function (n) { tr.parentNode.replaceChild(row(n), tr); })
+      admin(body).then(function (n) { if (tr.parentNode) tr.parentNode.replaceChild(row(n), tr); })   /* 저장 사이 표를 다시 그렸으면 떨어진 행 */
         .catch(function (e) { q.value = t.quota; off.checked = !!t.disabled; msg.textContent = e.message; });
     }
     q.addEventListener('change', function () { save({ action: 'set_quota', id: t.id, quota: num(q) }); });
@@ -48,6 +48,12 @@
     });
   }
 
+  /* 개념 id → 이름. 모르는 id(빠른 생성의 옛 값 등)는 그대로 */
+  function label(id) {
+    var c = CC.codemission && CC.codemission.concept(id);
+    return c ? c.label : id;
+  }
+
   function when(at) {
     var d = new Date(at);
     return isNaN(d) ? String(at || '') : d.toLocaleString('ko-KR');
@@ -59,7 +65,7 @@
       body.textContent = '';
       (r.log || []).forEach(function (x) {
         var tr = el('tr');
-        [when(x.at), x.teacher, x.lesson, x.concept, KIND[x.kind] || x.kind, x.retries].forEach(function (v) {
+        [when(x.at), x.teacher, x.lesson, label(x.concept), KIND[x.kind] || x.kind, x.retries].forEach(function (v) {
           tr.appendChild(el('td', null, String(v == null ? '' : v)));
         });
         body.appendChild(tr);

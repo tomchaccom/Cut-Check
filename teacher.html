@@ -21,6 +21,7 @@
     </div>
     <div class="toptools">
       <span class="tbtn" id="t-username" style="cursor:default" hidden></span>
+      <a class="tbtn" id="t-admin" href="admin.html" hidden>관리자</a>
       <button class="tbtn" id="notes-toggle" aria-pressed="false" aria-label="설계 의도 보기">설계 의도</button>
       <button class="tbtn" id="t-logout" hidden aria-label="로그아웃">로그아웃</button>
     </div>
@@ -127,7 +128,7 @@
           <div id="sg-examples"></div>
           <button id="sg-more" class="btn" type="button">다른 예시 더 보기</button>
           <label class="sg-lb">이렇게 바꿔 줬으면 (선택) <textarea id="sg-wish" class="sg-in" rows="2" maxlength="200"></textarea></label>
-          <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>만들기</button><span class="gen-left"></span><span id="sg-status" role="status"></span></div>
+          <div class="sg-row"><button id="sg-build" class="btn primary" type="button" disabled>만들기</button><span class="gen-left" role="status"></span><span id="sg-status" role="status"></span></div>
           <div id="sg-draft"></div>
         </div>
         <div id="gen-result" style="margin-top:14px"></div>
@@ -238,6 +239,7 @@ window.CC_SUPABASE = {
       if (p.role !== 'teacher') { window.location.replace('sentence.html'); return; }   /* 학생은 선생님 화면을 열 수 없다 */
       if ($('#t-username')) { $('#t-username').textContent = p.name + ' 선생님'; $('#t-username').hidden = false; }
       if ($('#t-logout')) $('#t-logout').hidden = false;
+      $('#t-admin').hidden = false;   /* 관리자인지는 admin.html 이 서버에 묻는다 — 아니면 거기서 한 줄로 막힌다 */
       loadClassrooms();
       CC.genflow.refresh();
     });
@@ -650,7 +652,7 @@ window.CC_SUPABASE = {
       });
     }))
     .then(function (m) {
-      btn.disabled = false; btn.textContent = '빠른 생성';
+      btn.disabled = !!CC.genflow.state.spent; btn.textContent = '빠른 생성';   /* 그사이 만들기가 한도를 다 썼으면 꺼진 채로 */
       CC.genflow.quota(m.left); delete m.left;   /* 남은 수는 화면에만 — 미션에 섞여 저장되지 않게 */
 
       /* ── 초안 편집 폼 ── */
@@ -797,7 +799,7 @@ window.CC_SUPABASE = {
     })
     .catch(function (err) {
       result.innerHTML = '<span style="color:var(--coral)">' + esc(err.message) + '</span>';
-      btn.disabled = false; btn.textContent = '빠른 생성';
+      btn.disabled = !!CC.genflow.state.spent; btn.textContent = '빠른 생성';   /* 그사이 만들기가 한도를 다 썼으면 꺼진 채로 */
       CC.genflow.spent(err);
     });
   });

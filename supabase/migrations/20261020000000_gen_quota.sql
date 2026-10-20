@@ -58,11 +58,14 @@ returns void as $$
   update gen_quota set used = greatest(0, used - 1), updated_at = now() where teacher_id = tid;
 $$ language sql security definer set search_path = public, pg_temp;
 
--- 재요청: 그 ticket 이 이 강사의 것이고 재요청 < 2 일 때만 차감 없이 +1.
+-- 재요청: 그 ticket 이 이 강사의 것이고 재요청 < 2 이고 생성 끄기가 아닐 때만 차감 없이 +1.
+-- 끄기를 보지 않으면 꺼진 강사가 끄기 전에 받은 ticket 으로 재요청을 계속 탈 수 있다.
 create or replace function public.gen_retry(tid uuid, ticket uuid)
 returns boolean as $$
 begin
-  update gen_log set retries = retries + 1 where id = ticket and teacher_id = tid and retries < 2;
+  update gen_log set retries = retries + 1
+   where id = ticket and teacher_id = tid and retries < 2
+     and exists (select 1 from gen_quota q where q.teacher_id = tid and not q.disabled);
   return found;
 end;
 $$ language plpgsql security definer set search_path = public, pg_temp;

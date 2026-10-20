@@ -1428,6 +1428,7 @@ test('남은 생성 — 빠른 생성도 left 로 갱신하고, 0 이 되면 꺼
   await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
   await expect(page.locator('.gen-left').first()).toHaveText('남은 생성 1개');
+  await expect(page.locator('#t-admin')).toBeVisible();       // 로그인한 강사에게만 관리자 화면 링크
   await page.locator('#gen-lesson').fill('리스트와 반복문');
   await page.locator('#gen-key').fill('같은 값이 여러 번 나올 때');
   await page.locator('#gen-btn').click();
@@ -1463,6 +1464,7 @@ test('남은 생성 — 로컬 모드에서는 묻지도 보이지도 않는다'
   await page.waitForTimeout(300);
   expect(asked).toHaveLength(0);
   for (const t of await page.locator('.gen-left').allTextContents()) expect(t).toBe('');
+  await expect(page.locator('#t-admin')).toBeHidden();
   await expect(page.locator('#gen-btn')).toBeEnabled();
 });
 
@@ -1520,6 +1522,8 @@ test('관리자 — 강사 표, 한도를 바꾸면 그 줄만 갱신, 범위 �
   await expect(log).toHaveCount(2);
   await expect(log.nth(0)).toContainText(EVIL);                 // 강사가 쓴 수업 내용은 글자로만
   await expect(log.nth(0)).toContainText('단계별');
+  await expect(log.nth(0).locator('td').nth(3)).toHaveText('반복문 for');   // 아는 개념은 이름으로
+  await expect(log.nth(1).locator('td').nth(3)).toHaveText('list');         // 모르는 id 는 그대로
   await expect(log.nth(1)).toContainText('빠른');
   expect(await page.evaluate(() => window.__pwned)).toBeUndefined();
   await expect(page.locator('#ad-log img')).toHaveCount(0);

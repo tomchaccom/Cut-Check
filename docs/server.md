@@ -268,3 +268,17 @@ POST /api/mission-steps         Authorization: Bearer <선생님 access token>
 4. Vercel 환경변수 `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` 가 있어야
    `mission-steps` 와 `generate-mission` 이 돈다(없으면 502).
 
+#### 생성 한도 — `20261020000000_gen_quota.sql`
+
+`build` 와 빠른 생성은 AI 를 부르기 전에 DB 함수 `gen_reserve` 로 1을 예약한다. 함수가 없으면 예약이 실패하고,
+**모든 생성이 502** 다. 일부러 이렇게 막아 뒀다(fail-closed) — 예약 RPC 가 안 될 때 그냥 통과시키면
+DB 장애 한 번에 비용 한도가 통째로 풀린다. 그래서 순서가 중요하다.
+
+1. `supabase/migrations/20261020000000_gen_quota.sql` 을 운영 DB 에 적용한다 (`supabase db push` 또는 SQL 편집기).
+2. 적용됐는지 본다: SQL 편집기에서 `select * from gen_left('<강사 uuid>');` 가 `quota · used · disabled` 한 줄을 돌려준다
+   (행이 없는 강사는 기본값 3 · 0 · false).
+3. Vercel 환경변수 `ADMIN_EMAILS` 를 넣는다 — **필수.** 이미 가입한 선생님 계정의 이메일만, 쉼표로 구분한다.
+   값은 저장소·문서·커밋 어디에도 적지 않는다. 비워 두면 관리자 화면(`admin.html`)을 아무도 못 쓰고,
+   그러면 누구의 기본 한도 3개도 늘릴 수 없다 — 첫 수업 날 강사가 3개를 다 쓰면 거기서 멈춘다.
+4. 그다음 코드를 배포한다 (Vercel). 코드가 먼저 나가면 1 이 끝날 때까지 모든 생성이 502 다.
+

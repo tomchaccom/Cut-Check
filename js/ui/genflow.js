@@ -125,8 +125,8 @@
       wish: $('#sg-wish').value.trim(), problems: probs, lesson: $('#gen-lesson').value.trim() };
     if (ticket) body.ticket = ticket;
     return call(body).then(function (r) {
-      quota(r && r.left);                 /* 늦게 온 응답이어도 쓴 횟수는 쓴 것이다 */
-      if (my !== bgen) return;
+      if (my !== bgen) return;            /* 늦게 온 옛 응답의 left 는 더 최근 응답의 수를 되돌릴 수 있다 — 버린다 */
+      quota(r && r.left);
       var d = r && r.draft;
       if (!d || !Array.isArray(d.inputs) || !d.inputs.length || typeof d.solution !== 'string') throw new Error('초안을 받지 못했어요. 다시 만들어 주세요.');
       d.inputs.forEach(function (x) { x.v = oneLine(x.v); });
