@@ -109,6 +109,10 @@ broken(U, '반례가 첫 자료와 결과가 같음', setp(['counter', 'text'], 
 broken(U, 'axis=sep 인데 쉼표만 있음', setp(['counter'], {'name': 'x', 'text': '밥,우유', 'axis': 'sep'}), 'counter')
 broken(U, 'axis=invisible 인데 공백 없음', setp(['counter'], {'name': 'x', 'text': '밥,우유', 'axis': 'invisible'}), 'counter')
 broken(U, 'axis=empty 인데 결과가 있음', setp(['counter'], {'name': 'x', 'text': '밥', 'axis': 'empty'}), 'counter')
+m = copy.deepcopy(GOOD[U]); m['counter'] = {'name': '3반 신청', 'text': '밥', 'axis': 'boundary'}
+t('axis=boundary 반례(항목 하나)는 통과', not check(U, m), check(U, m))
+broken(U, '모르는 축은 걸린다', setp(['counter'], {'name': 'x', 'text': '국,밥,우유,밥,떡', 'axis': 'edge'}), 'counter')
+t('스키마 설명이 경계값을 말한다', '경계값' in json.dumps(DRAFTS[U].model_json_schema(), ensure_ascii=False))
 broken(U, '자료 항목에 플레이스홀더', setp(['data', 0, 'items'], ['항목1', '항목2', '항목3']), 'data')
 broken(U, '자료 항목 안에 쉼표', setp(['data', 0, 'items'], ['밥,국', '우유', '김치']), 'data')
 broken(U, '자료가 2개가 아님', lambda m: m['data'].pop(), 'data')
