@@ -2195,6 +2195,30 @@ test('강사 — 쓰던 한마디는 다시 그려도 남고, 후보가 바뀌�
   await expect(card.locator('.compass-form').nth(1).locator('textarea')).toHaveValue('쓰던 중인 말');   // 보낸 뒤엔 보낸 말(= 같은 말)
 });
 
+test('강사 — 보내기가 실패하면 안내가 남고, 버튼은 다시 눌리고, 쓴 말은 그대로다', async ({ page }) => {
+  let fail = true; const sent = [];
+  await compassTeacher(page, [judgeEv('M1', 'mx')], b => {
+    if (b.action === 'list') return { json: { rows: [cRow('M1')] } };
+    if (b.action === 'cumulative') return { json: cumOf([cRow('M1')]) };
+    if (b.action === 'send') { sent.push(b); return fail ? { status: 502, json: { error: 'x' } } : { json: cRow('M1', { teacher_note: b.note, sent_at: 'x' }) }; }
+    return { status: 500, json: { error: 'x' } };
+  });
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const card = page.locator('#detail .compass-card');
+  await card.locator('textarea').fill('꼭 전하고 싶은 말');
+  await card.locator('.compass-send').click();
+  await expect(card.locator('.compass-msg')).toHaveText('지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+  await page.waitForTimeout(300);                                   // 뒤따르는 다시 그리기를 지나도
+  await expect(card.locator('.compass-msg')).toHaveText('지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+  await expect(card.locator('.compass-send')).toBeEnabled();
+  await expect(card.locator('textarea')).toHaveValue('꼭 전하고 싶은 말');
+  fail = false;
+  await card.locator('.compass-send').click();
+  await expect(card.locator('.compass-sent-note')).toHaveText('꼭 전하고 싶은 말');
+  await expect(card.locator('.compass-msg')).toHaveText('');
+  expect(sent).toHaveLength(2);
+});
+
 test('강사 — 바늘이 지워지면 칭찬 타이밍 알림 한 번, 열 때 이미 지워져 있던 것은 알리지 않는다', async ({ page }) => {
   test.setTimeout(60000);
   let two = false;
