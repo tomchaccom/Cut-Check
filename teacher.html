@@ -172,6 +172,9 @@
     </div>
   </div>
 
+  <!-- 학생 상세 — 서랍이 아니라 본문 화면. 열리면 위 대시보드가 숨는다 -->
+  <section class="detail" id="detail" hidden aria-live="polite"></section>
+
   <div class="foot">
     <span><b>이 화면에 없는 것</b> 정답률 · 점수 · 완료 순위</span>
     <span><b>있는 것</b> 개입 순서 · 기대값 · 칭찬 타이밍</span>
@@ -197,8 +200,6 @@
   <button type="button" class="al-bar" id="alerts-bar" aria-controls="alerts" aria-expanded="false" hidden><b>알림</b> <span id="alerts-count">새 알림이 없어요</span></button>
 </div>
 
-<div class="scrim" id="scrim" hidden></div>
-<section class="detail" id="detail" hidden aria-live="polite"></section>
 
 <script>
 window.CC_SUPABASE = {
@@ -246,6 +247,7 @@ window.CC_SUPABASE = {
   /* 탭 전환 — 보기는 사이드바에(.main-tab), 휴대폰은 본문 위 줄(.m-tab)이 같은 버튼을 누른다 */
   document.querySelectorAll('.main-tab[data-dtab]').forEach(function (t) {
     t.addEventListener('click', function () {
+      if (window.CC && CC._closeDetail) CC._closeDetail();   /* 학생 상세가 열려 있으면 먼저 목록으로 */
       document.querySelectorAll('.dtab').forEach(function (d) { d.classList.remove('active'); });
       document.querySelectorAll('.main-tab[data-dtab]').forEach(function (x) { x.classList.remove('active'); x.removeAttribute('aria-current'); });
       t.classList.add('active');

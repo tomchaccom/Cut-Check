@@ -412,12 +412,14 @@
     var v = mid ? (CC.fold.fold(evs, { id: s.id, name: s.name }) || CC.fold.empty(s.id, s.name)) : s;
 
     var d = $('#detail');
+    var opening = d.hidden;
+    if (opening) detailFrom = { y: window.scrollY, id: s.id };   /* 미션 칩을 눌러 다시 그릴 때는 처음 자리를 지킨다 */
     d.innerHTML = '';
-    var close = el('button', 'close', '×');
-    close.type = 'button';
-    close.setAttribute('aria-label', '닫기');
-    close.addEventListener('click', closeDetail);
-    d.appendChild(close);
+    var back = el('button', 'd-back', '← 학생');
+    back.type = 'button';
+    back.id = 'detail-back';
+    back.addEventListener('click', closeDetail);
+    d.appendChild(back);
 
     /* 머리 — 이름과 지금 상태 한 줄. 계정 일은 오른쪽 끝에 작게: 서랍을 연 이유가 아니다 */
     var head = el('header', 'd-head');
@@ -473,7 +475,6 @@
       });
     }
 
-    var cols = el('div', 'd-cols');
     var main = el('section', 'd-main');
     main.setAttribute('aria-label', '기록');
     main.appendChild(el('h4', null, '이 학생이 한 것 — 순서대로'));
@@ -613,24 +614,25 @@
       });
       if (s.wrap) row(dl, '오늘 이 학생이 말할 문장', null, function (dd) { dd.textContent = s.wrap; });
     }
-    /* 미션 하나를 끝냈고 튜터와 말을 나눴을 때만 — 미션이 하나뿐이면 고르지 않아도 그 미션이다 */
-    var rmid = mid || (ms.length === 1 ? ms[0] : null);
-    if (rmid && CC.sb && CC.sb.active() && CC.fold.missionStatus(evs) === 'done' && v.sTutor.length) row(dl, '수업에서 짚을 거리', null, function (dd) {
-      var b = el('button', 'pill recap-go', '튜터 대화에서 뽑기');
-      b.type = 'button';
-      var out = el('div', 'recap-out');
-      out.setAttribute('aria-live', 'polite');
-      recapOn(b, out, function () { return CC.recap.forStudent(s, rmid, eventsOf, missionOf); }, false);
-      dd.appendChild(b);
-      dd.appendChild(out);
-    });
     if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
     main.appendChild(dl);
-    cols.appendChild(main);
+    d.appendChild(main);
 
-    var side = el('section', 'd-side');
-    side.setAttribute('aria-label', '튜터 질문');
-    side.appendChild(el('h4', null, '튜터에게 물은 것' + (v.sTutor.length ? ' (' + v.sTutor.length + '번)' : '')));
+    var side = el('section', 'd-tutor');
+    side.setAttribute('aria-label', '튜터 대화 · 짚을 거리');
+    side.appendChild(el('h4', null, '튜터 대화 · 짚을 거리'));
+    /* 미션 하나를 끝냈고 튜터와 말을 나눴을 때만 — 미션이 하나뿐이면 고르지 않아도 그 미션이다 */
+    var rmid = mid || (ms.length === 1 ? ms[0] : null);
+    if (rmid && CC.sb && CC.sb.active() && CC.fold.missionStatus(evs) === 'done' && v.sTutor.length) {
+      var rb = el('button', 'pill recap-go', '튜터 대화에서 뽑기');
+      rb.type = 'button';
+      var rout = el('div', 'recap-out');
+      rout.setAttribute('aria-live', 'polite');
+      recapOn(rb, rout, function () { return CC.recap.forStudent(s, rmid, eventsOf, missionOf); }, false);
+      side.appendChild(rb);
+      side.appendChild(rout);
+    }
+    side.appendChild(el('h5', null, '튜터에게 물은 것' + (v.sTutor.length ? ' (' + v.sTutor.length + '번)' : '')));
     side.appendChild(el('p', 'lead', '질문과 답을 그대로 보여 드려요.'));
     var qs = el('div', 'd-qs');
     /* 한 번 묻고 한 번 답한 것이 한 묶음. 되물음·답 안 함은 시각 옆 꼬리표로 */
@@ -650,11 +652,11 @@
     });
     if (!v.sTutor.length) qs.appendChild(el('p', 'emptyrow', '아직 없어요.'));
     side.appendChild(qs);
-    cols.appendChild(side);
-    d.appendChild(cols);
+    d.appendChild(side);
 
-    $('#scrim').hidden = false;
+    $('#dashboard').hidden = true;
     d.hidden = false;
+    if (opening) { window.scrollTo(0, 0); back.focus(); }
     renderFolders();
   }
 
@@ -671,11 +673,20 @@
     return '“왜 그 순서로 놓았는지 설명해줄래?”';
   }
 
+  /* 목록으로 — 있던 자리(스크롤)와 그 학생 타일로 돌아간다 */
+  var detailFrom = null;
   function closeDetail() {
-    $('#detail').hidden = true;
-    $('#scrim').hidden = true;
+    var d = $('#detail');
+    if (d.hidden) return;
+    d.hidden = true;
+    $('#dashboard').hidden = false;
+    if (detailFrom) {
+      window.scrollTo(0, detailFrom.y);
+      var t = document.querySelector('.student-tile[data-id="' + detailFrom.id.replace(/["\\]/g, '') + '"]');
+      if (t) t.focus({ preventScroll: true });
+      detailFrom = null;
+    }
   }
-  $('#scrim').addEventListener('click', closeDetail);
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (!shell.esc()) closeDetail();   /* 맨 위 한 겹만 — 휴대폰 서랍·알림 화면이 열려 있으면 그것부터 */
@@ -798,7 +809,7 @@
       alCount();
       shell.alertsFull(false);
       var s = C.students.filter(function (x) { return x.id === a.id; })[0];
-      if (s) openDetail(s, a.mid || undefined);
+      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined);
     });
     li.appendChild(b);
     list.insertBefore(li, list.firstChild);
@@ -910,6 +921,7 @@
 
     function setView(v) {
       view = v;
+      closeDetail();   /* 교실을 바꾸면 이전 교실의 학생 상세는 닫는다 */
       $('#dashboard').hidden = v !== 'room';
       $('#new-room').hidden = v !== 'new';
       $('#pick-room').hidden = v !== 'pick';
@@ -929,6 +941,7 @@
     var today = new Date(); today.setHours(0, 0, 0, 0);
     C.students.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ko'); }).forEach(function (s) {
       var t = el('button', 'tile student-tile');
+      t.dataset.id = s.id;
       t.type = 'button';
       var lastAt = Date.now() - (s.idleSec || 0) * 1000;
       var f = el('span', 'folder' + (s.noRecord || lastAt < today.getTime() ? ' gray' : ''));

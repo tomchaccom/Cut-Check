@@ -684,16 +684,16 @@ test('강사 — 1440 폭에서 학생 서랍은 넓고 옆으로 넘치지 않�
   const d = page.locator('#detail');
   await expect(d).toBeVisible();
   const box = await d.boundingBox();
-  expect(box.width).toBeGreaterThan(1200);
-  expect(box.width).toBeLessThanOrEqual(1320);
+  expect(box.width).toBeGreaterThan(700);                    // 본문 자리 — 서랍 폭이 아니다
   const o = await d.evaluate(el => ({ sw: el.scrollWidth, cw: el.clientWidth, page: document.documentElement.scrollWidth - innerWidth }));
   expect(o.sw).toBeLessThanOrEqual(o.cw);
   expect(o.page).toBeLessThanOrEqual(0);
   const ask = await d.locator('.saybox').boundingBox();
   const rows = await d.locator('.d-rows').boundingBox();
   expect(ask.y).toBeLessThan(rows.y);
-  const side = await d.locator('.d-side').boundingBox();
-  expect(side.x).toBeGreaterThan(rows.x + rows.width - 1);   // 튜터 대화는 기록 옆 단
+  const tut = await d.locator('.d-tutor').boundingBox();
+  expect(tut.y).toBeGreaterThan(rows.y + rows.height - 1);   // 튜터 대화는 기록 아래 칸
+  expect(rows.width).toBeLessThanOrEqual(760);
 });
 
 async function asTeacher(page, role) {
@@ -1507,7 +1507,7 @@ test('강사 서랍 — 끝낸 미션에만 수업에서 짚을 거리, 누르�
   await d.locator('.mf').nth(2).click();                              // mb — 끝내지 않음
   await expect(d).not.toContainText('수업에서 짚을 거리');
   await d.locator('.mf').nth(1).click();                              // ma — 끝냄
-  const row = d.locator('.row', { hasText: '수업에서 짚을 거리' });
+  const row = d.locator('.d-tutor');
   await row.getByRole('button', { name: '튜터 대화에서 뽑기' }).click();
   const items = row.locator('.recap-item');
   await expect(items).toHaveCount(2);
@@ -1562,7 +1562,7 @@ test('강사 반 전체 — 서버가 실패하면 다시 누르라는 한 줄',
 test('강사 서랍 — 끝낸 미션이 하나뿐이면 고르지 않아도 수업에서 짚을 거리', async ({ page }) => {
   await asRecapTeacher(page, RECAP_EVS.slice(0, 3), ok([]));
   await page.locator('.student-tile', { hasText: '태인' }).click();
-  await expect(page.locator('#detail .row', { hasText: '수업에서 짚을 거리' })).toBeVisible();
+  await expect(page.locator('#detail .d-tutor .recap-go')).toBeVisible();
 });
 
 test('강사 반 전체 — 빈 결과는 캐시하지 않아 다시 누르면 서버를 다시 부른다', async ({ page }) => {
@@ -1915,6 +1915,9 @@ test('강사 — 열 때 끝난 미션은 알림 없이 하나씩 차례로 읽�
   await expect(cards).toHaveCount(3);
   await expect(cards.nth(2)).toContainText('지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.');
   await expect(cards.nth(2).locator('.compass-reread')).toBeVisible();
+  const cw = (await cards.first().boundingBox()).width, dw = (await page.locator('#detail').boundingBox()).width;
+  expect(cw).toBeGreaterThan(dw - 4);                          // 나침반 카드는 본문 폭 전체
+  await page.locator('#detail-back').click();
   await expect(tile.locator('.tag.wait')).toBeVisible();   // 실패해도 표시는 남는다
 });
 
@@ -2204,4 +2207,53 @@ test('선생님 알림 — 30개를 넘기면 읽은 것부터 버리고 안 읽
   await page.evaluate((add) => { window.__evs.push(...add); }, Array.from({ length: 29 }, (_, i) => alEv('s1', '태인', { type: 's-redefine', mid: 'm' + i })));
   await expect(page.locator('#alert-list li.new')).toHaveCount(30, { timeout: 8000 });
   await expect(items).toHaveCount(30);
+});
+
+test('학생 상세 — 본문 화면: 목록은 숨고, ← 학생 · Esc 로 돌아오면 스크롤과 타일 포커스가 남는다', async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await page.evaluate(() => { document.body.style.minHeight = '3000px'; window.scrollTo(0, 240); });
+  const tile = page.locator('.student-tile', { hasText: '태인' });
+  await tile.click();
+  const d = page.locator('#detail');
+  await expect(d).toBeVisible();
+  await expect(page.locator('#scrim')).toHaveCount(0);
+  await expect(page.locator('#student-folders')).toBeHidden();
+  await expect(page.locator('#alerts')).toBeVisible();                       // 알림은 상세에서도 곁에
+  await expect(d.locator('#detail-back')).toHaveText('← 학생');
+  expect(await d.evaluate(el => getComputedStyle(el).position)).not.toBe('fixed');
+  const order = await d.evaluate(el => ['.d-head', '.saybox', '.d-main', '.d-tutor'].map(q => (el.querySelector(q) || {}).offsetTop));
+  expect(order.every(n => typeof n === 'number')).toBe(true);
+  expect([...order].sort((a, b) => a - b)).toEqual(order);
+  await expect(d.locator('.d-tutor')).toContainText('튜터 대화 · 짚을 거리');
+  await d.locator('#detail-back').click();
+  await expect(d).toBeHidden();
+  await expect(page.locator('#student-folders')).toBeVisible();
+  expect(await page.evaluate(() => Math.round(scrollY))).toBe(240);
+  await expect(tile).toBeFocused();
+  await tile.click();
+  await page.keyboard.press('Escape');
+  await expect(d).toBeHidden();
+  await expect(tile).toBeFocused();
+});
+
+test('학생 상세 — 알림 항목으로 열면 그 미션 칩이 골라져 있다', async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await page.evaluate((add) => { window.__evs.push(...add); }, [
+    alEv('s1', '태인', { type: 's-define', mid: 'my', choice: 'x' }),
+    alEv('s1', '태인', { type: 's-redefine', mid: 'mx' })
+  ]);
+  const praise = page.locator('#alert-list li', { hasText: '칭찬 타이밍' });
+  await expect(praise).toHaveCount(1, { timeout: 8000 });
+  await praise.locator('button').click();
+  const on = page.locator('#detail .mf[aria-pressed="true"]');
+  await expect(on).toHaveCount(1);
+  await expect(on).not.toContainText('모든 미션');
 });

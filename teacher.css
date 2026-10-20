@@ -132,30 +132,10 @@ body.notes .note { display: flex; gap: 6px; }
 .risk .who { font-size: 12.5px; color: var(--ink-2); margin-top: 7px; line-height: 1.6; }
 .risk .who span { background: var(--surface); border-radius: 7px; padding: 2px 8px; margin-right: 4px; display: inline-block; }
 
-/* ── 학생 상세 시트 ──────────────────────────────── */
-.scrim { position: fixed; inset: 0; background: rgba(26,23,20,.4); z-index: 19; }
-.detail {
-  position: fixed;
-  inset: auto 0 0 0;
-  background: var(--surface);
-  border-radius: 18px 18px 0 0;
-  box-shadow: 0 -6px 32px rgba(26,23,20,.18);
-  padding: 20px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  max-height: 76vh;
-  overflow-y: auto;
-  z-index: 20;
-}
-.detail .close {
-  position: absolute; top: 16px; right: 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  width: 44px; height: 44px;
-  font-size: 18px;
-  color: var(--ink-2);
-  cursor: pointer;
-}
+/* ── 학생 상세 — 본문 화면 (서랍이 아니다) ─────────── */
+.detail { background: none; padding: 16px 0 0; }
+.d-back { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px 0 0; margin: 0 0 8px; background: none; border: 0; font: inherit; font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.d-back:hover { text-decoration: underline; }
 .detail .dsub { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
 .saybox {
   margin-top: 16px;
@@ -217,14 +197,10 @@ details.more { margin-top: 48px; border-top: 1px solid var(--line-strong); paddi
 details.more > summary { cursor: pointer; font-size: 15px; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
 details.more[open] > summary { margin-bottom: 16px; }
 
-/* ── 학생 한 명 (TeacherStudent.dc.html) ──────────────
- * 교사가 움직이는 순서로 위에서 아래: 지금 상태 → 먼저 물어볼 것 → 시간순 기록 | 튜터 대화.
- * 서랍은 넓게(넓은 화면에서 1320px), 글줄은 72ch 안에서 — 넓어진 자리는 두 단으로 쓴다. */
-.detail { max-width: 1320px; margin: 0 auto; }
-@media (min-width: 721px) {
-  .detail { max-height: 90vh; padding: 28px 40px 40px; }
-}
-.d-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; padding-right: 56px; }
+/* ── 학생 한 명 ──────────────────────────────────────
+ * 교사가 움직이는 순서로 위에서 아래: 지금 상태 → 먼저 물어볼 것 → 미션 → 나침반(본문 폭 전체)
+ * → 시간순 기록(760px) → 튜터 대화 · 짚을 거리(760px). */
+.d-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; }
 .d-who { min-width: 0; }
 .detail .big-title { font-size: clamp(32px, 4vw, 48px); margin: 0; }
 .detail .dsub { font-size: 16px; color: var(--ink-2); margin-top: 6px; }
@@ -235,11 +211,11 @@ details.more[open] > summary { margin-bottom: 16px; }
 .mf { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: none; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
 .mf[aria-pressed="true"] { border: 2px solid var(--ink); font-weight: 600; }
 .mf .st { font-size: 12px; color: var(--ink-2); font-weight: 400; }
-.d-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 28px; }
-@media (min-width: 1000px) { .d-cols { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 48px; } }
-.d-main, .d-side { min-width: 0; }
-.d-cols h4 { margin: 0; font-size: 17px; font-weight: 700; }
-.d-cols .lead { margin: 4px 0 12px; font-size: 13px; color: var(--ink-2); }
+.d-main, .d-tutor { min-width: 0; max-width: 760px; margin-top: 32px; }
+.d-main h4, .d-tutor h4 { margin: 0; font-size: 17px; font-weight: 700; }
+.d-tutor h5 { margin: 20px 0 0; font-size: 15px; font-weight: 700; }
+.d-tutor .recap-go { margin-top: 12px; }
+.d-main .lead, .d-tutor .lead { margin: 4px 0 12px; font-size: 13px; color: var(--ink-2); }
 .d-rows, .d-qs { margin: 0; border-top: 1px solid var(--line-strong); }
 .d-rows .row { display: grid; grid-template-columns: 48px 104px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.6; }
 .d-rows .row.moment { box-shadow: inset 4px 0 0 var(--folder); margin-left: -16px; padding-left: 16px; }   /* 선만 바깥 여백에 — 칸 정렬은 그대로 */
@@ -268,7 +244,6 @@ details.more[open] > summary { margin-bottom: 16px; }
 .d-qs .who { font-size: 12px; font-weight: 600; color: var(--ink-3); padding-top: 2px; }
 .d-qs .q .why { margin: 6px 0 0 44px; font-size: 12px; color: var(--ink-3); }
 @media (max-width: 600px) {
-  .d-head { padding-right: 52px; }
   .d-rows .row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .d-rows .row.moment { margin-left: -12px; padding-left: 12px; }
 }
