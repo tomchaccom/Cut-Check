@@ -113,6 +113,12 @@ test('학생이 설계도를 내면 교사 화면에 알림이 뜬다', async ({
   await expect(t.locator('.toast')).toHaveCount(0);     // 새로고침해도 쏟아지지 않는다
 });
 
+/* 알림에 칭찬 문장이 없다 — 힌트 줄까지 본다. '칭찬'은 이름표·고르기 칩에서만 허용 */
+async function noPraise(p) {
+  await expect(p.locator('#alerts')).not.toContainText(/잘했|훌륭|최고/);
+  expect(await p.evaluate(() => { const c = document.querySelector('#alerts').cloneNode(true); c.querySelectorAll('.al-tag, .al-filter').forEach(n => n.remove()); return c.textContent; })).not.toMatch(/칭찬/);
+}
+
 test('강사 홈 — 학생은 가나다순 폴더, 말 걸 순간은 사실만', async ({ context, page }) => {
   test.setTimeout(120000);
   await local(context);
@@ -124,7 +130,7 @@ test('강사 홈 — 학생은 가나다순 폴더, 말 걸 순간은 사실만'
   expect(names.length).toBeGreaterThan(0);
   expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'ko')));   // 가나다순만
   await expect(t.locator('#alerts')).toContainText('설계도를 냈어요', { timeout: 5000 });
-  await expect(t.locator('#alert-list .al-say')).not.toContainText(/잘했|훌륭|칭찬/);   // 문장은 사실만 — '칭찬 타이밍'은 이름표다
+  await noPraise(t);
   await expect(t.locator('details.more')).toBeAttached();                       // 분석 패널은 접혀서 남는다
 });
 
@@ -2002,6 +2008,7 @@ test('선생님 틀 — 왼쪽에 교실과 메뉴, 고른 교실 아래 학생�
   await side.locator('.room-tile', { hasText: '태인한결' }).click();
   const tabs = side.locator('.main-tab[data-dtab]');
   await expect(tabs).toHaveText(['학생', '미션', '학생 추가']);
+  await expect(tabs.first()).toHaveAttribute('aria-current', 'page');   // 처음부터 지금 보기를 밝힌다
   const room = await side.locator('.room-tile', { hasText: '태인한결' }).boundingBox();
   const next = await side.locator('.room-tile', { hasText: '방과후' }).boundingBox();
   const t0 = await tabs.first().boundingBox();
@@ -2043,7 +2050,9 @@ test('선생님 틀 — 접으면 72px 아이콘 줄, 새로고침해도 접힌 
   await page.locator('.room-tile', { hasText: '태인한결' }).click();
   const side = page.locator('#side');
   for (const name of ['학생', '미션', '학생 추가', '새 교실 만들기', '관리자', '사용법 보기', '설계 의도']) {
-    await expect(side.getByRole(name === '관리자' ? 'link' : 'button', { name, exact: true })).toBeVisible();   // 글자는 숨어도 이름은 남는다
+    const it = side.getByRole(name === '관리자' ? 'link' : 'button', { name, exact: true });
+    await expect(it).toBeVisible();                                  // 글자는 숨어도 이름은 남는다
+    await expect(it).toHaveAttribute('title', name);                 // 마우스를 올리면 이름이 뜬다
   }
   await page.locator('#side-toggle').focus();
   const seen = [];
@@ -2088,7 +2097,8 @@ test('선생님 알림 — 이름표 · 문장 · 시각, 누르면 학생 상�
   const praise = items.filter({ hasText: '칭찬 타이밍' });
   await expect(praise).toContainText('태인이 성공 조건을 스스로 바꿨어요.');
   await expect(praise.locator('time')).toHaveText('방금');
-  await expect(page.locator('#alerts')).not.toContainText(/잘했|훌륭/);
+  await noPraise(page);
+  await expect(praise.locator('button')).toContainText('새 알림');              // 안 읽음은 낭독기에도
 
   await page.waitForTimeout(10500);                                 // 5초 폴링 두 번
   await expect(items).toHaveCount(3);
@@ -2101,6 +2111,7 @@ test('선생님 알림 — 이름표 · 문장 · 시각, 누르면 학생 상�
   const say = praise.locator('.al-say');
   expect(Number(await say.evaluate(e => getComputedStyle(e).fontWeight))).toBeGreaterThanOrEqual(600);
   await praise.locator('button').click();
+  await expect(praise.locator('button')).not.toContainText('새 알림');
   await expect(page.locator('#detail')).toBeVisible();
   await expect(page.locator('#detail')).toContainText('태인');
   await page.keyboard.press('Escape');
@@ -2130,6 +2141,13 @@ test('선생님 틀 — 390 폭: ☰ 로 사이드바, 아래 알림 막대는 �
   expect((await open.boundingBox()).height).toBeGreaterThanOrEqual(44);
   await open.click();
   await expect(side).toBeVisible();
+  const inside = async (sel, n) => {                                // 열린 겹 밖으로 Tab 이 새지 않는다
+    for (let i = 0; i < n; i++) {
+      await page.keyboard.press('Tab');
+      expect(await page.evaluate(s => !!document.activeElement.closest(s), sel)).toBe(true);
+    }
+  };
+  await inside('#side', 12);
   await page.keyboard.press('Escape');
   await expect(side).toBeHidden();
   await expect(open).toBeFocused();
@@ -2149,12 +2167,41 @@ test('선생님 틀 — 390 폭: ☰ 로 사이드바, 아래 알림 막대는 �
   expect(Math.round(box.width)).toBe(390);
   await expect(al.locator('#alert-list li')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  await inside('#alerts', 8);
+  await page.keyboard.press('Escape');                              // Esc 로 닫으면 막대로 돌아온다
+  await expect(al).toBeHidden();
+  await expect(bar).toBeFocused();
+  await bar.click();
   await al.locator('#alert-list li button').click();                // 누르면 알림 화면을 닫고 학생 상세
   await expect(al).toBeHidden();
   await expect(page.locator('#detail')).toBeVisible();
+  await page.evaluate(() => document.querySelector('#side-open').click());   // 상세 위에 서랍을 열면 Esc 는 서랍부터
+  await expect(side).toBeVisible();
   await page.keyboard.press('Escape');
+  await expect(side).toBeHidden();
+  await expect(page.locator('#detail')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#detail')).toBeHidden();
   await open.click();
   await page.locator('#side-scrim').click({ position: { x: 380, y: 400 } });
   await expect(side).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+});
+
+test('선생님 알림 — 30개를 넘기면 읽은 것부터 버리고 안 읽은 알림은 남긴다', async ({ page }) => {
+  test.setTimeout(60000);
+  await page.addInitScript(() => { window.__evs = []; });
+  await asTeacher(page);
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  const items = page.locator('#alert-list li');
+  await page.evaluate((e) => { window.__evs.push(e); }, alEv('s1', '태인', { type: 's-redefine', mid: 'm-old' }));
+  await expect(items).toHaveCount(1, { timeout: 8000 });
+  await page.evaluate((e) => { window.__evs.push(e); }, alEv('s1', '태인', { type: 's-redefine', mid: 'm-read' }));
+  await expect(items).toHaveCount(2, { timeout: 8000 });
+  await items.first().locator('button').click();                    // 새것을 읽고, 가장 오래된 것은 안 읽은 채로
+  await page.keyboard.press('Escape');
+  await page.evaluate((add) => { window.__evs.push(...add); }, Array.from({ length: 29 }, (_, i) => alEv('s1', '태인', { type: 's-redefine', mid: 'm' + i })));
+  await expect(page.locator('#alert-list li.new')).toHaveCount(30, { timeout: 8000 });
+  await expect(items).toHaveCount(30);
 });

@@ -677,7 +677,8 @@
   }
   $('#scrim').addEventListener('click', closeDetail);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeDetail();
+    if (e.key !== 'Escape') return;
+    if (!shell.esc()) closeDetail();   /* 맨 위 한 겹만 — 휴대폰 서랍·알림 화면이 열려 있으면 그것부터 */
   });
 
   $('#notes-toggle').addEventListener('click', function () {
@@ -783,6 +784,8 @@
     li.dataset.tag = tag;
     var b = el('button', 'al-it');
     b.type = 'button';
+    var unread = el('span', 'sr-only', '새 알림, ');   /* 굵기는 눈에만 보인다 — 화면 낭독기에는 말로 */
+    b.appendChild(unread);
     b.appendChild(el('span', 'al-tag ' + tag, CC.alerts.TAGS[tag]));
     b.appendChild(el('span', 'al-say', text));
     var at = Date.now(), tm = el('time', 'al-tm', ago(at));
@@ -791,6 +794,7 @@
     b.appendChild(tm);
     b.addEventListener('click', function () {
       li.classList.remove('new');
+      unread.remove();
       alCount();
       shell.alertsFull(false);
       var s = C.students.filter(function (x) { return x.id === a.id; })[0];
@@ -798,7 +802,10 @@
     });
     li.appendChild(b);
     list.insertBefore(li, list.firstChild);
-    while (list.children.length > 30) list.removeChild(list.lastChild);
+    while (list.children.length > 30) {   /* 넘치면 읽은 것 중 가장 오래된 것부터 — 안 읽은 알림을 먼저 버리지 않는다 */
+      var read = list.querySelectorAll('li:not(.new)');
+      list.removeChild(read.length ? read[read.length - 1] : list.lastChild);
+    }
     alFilt(li);
     $('#moments-empty').hidden = true;
     alCount();
@@ -835,6 +842,7 @@
       sT.setAttribute('aria-expanded', p ? (drawerOn ? 'true' : 'false') : (folded ? 'false' : 'true'));
       sT.setAttribute('aria-label', p ? '메뉴 닫기' : folded ? '메뉴 펼치기' : '메뉴 접기');
       sT.firstChild.textContent = p ? '×' : folded ? '›' : '‹';
+      if (parts) isolate();
     }
     function paintAlerts() {
       var p = phone.matches, room = view === 'room';
@@ -846,6 +854,13 @@
       aT.setAttribute('aria-label', p ? '알림 닫기' : '알림 접기');
       aT.firstChild.textContent = p ? '×' : '›';
       bar.setAttribute('aria-expanded', p && full ? 'true' : 'false');
+      isolate();
+    }
+    /* 휴대폰 서랍·알림 전체 화면이 열려 있는 동안 나머지는 inert — Tab·낭독기가 뒤로 새지 않게 */
+    var parts = [$('.m-bar'), side, $('#main'), al, bar, handle];
+    function isolate() {
+      var p = phone.matches, top = p && drawerOn ? side : p && full && view === 'room' ? al : null;
+      parts.forEach(function (x) { x.inert = !!top && x !== top; });
     }
     function drawer(on) {
       if (drawerOn === on) return;
@@ -871,11 +886,22 @@
     });
     handle.addEventListener('click', function () { alOpen = true; CC.prefs.set('alerts', true); paintAlerts(); aT.focus(); });
     bar.addEventListener('click', function () { full = true; paintAlerts(); aT.focus(); });
+    /* inert 는 뒤를 막을 뿐, 마지막 버튼 다음 Tab 은 주소창으로 나간다 — 열린 겹 안에서 돈다 */
     document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape') return;
-      if (drawerOn) drawer(false);
-      if (full) { full = false; paintAlerts(); bar.focus(); }
+      var top = phone.matches && (drawerOn ? side : full ? al : null);
+      if (e.key !== 'Tab' || !top) return;
+      var f = Array.prototype.filter.call(top.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+        function (x) { return !x.disabled && x.getClientRects().length; });
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1], a = document.activeElement;
+      if (!top.contains(a) || (e.shiftKey ? a === first : a === last)) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
     });
+    /* Esc — 열린 겹 하나를 닫았으면 true (학생 상세는 그다음) */
+    function esc() {
+      if (drawerOn) { drawer(false); return true; }
+      if (full) { full = false; paintAlerts(); bar.focus(); return true; }
+      return false;
+    }
     /* 사이드바 안에서 무엇을 고르면(교실·보기) 휴대폰 서랍은 닫는다 */
     side.addEventListener('click', function (e) { if (e.target.closest('.room-tile, .main-tab, .room-new')) drawer(false); });
     (phone.addEventListener ? phone.addEventListener.bind(phone, 'change') : phone.addListener.bind(phone))(function () {
@@ -891,7 +917,7 @@
     }
     paintSide();
     setView(view);
-    return { view: setView, alertsFull: function (on) { if (full !== on) { full = on; paintAlerts(); } } };
+    return { view: setView, esc: esc, alertsFull: function (on) { if (full !== on) { full = on; paintAlerts(); } } };
   })();
   CC._shellView = shell.view;
 

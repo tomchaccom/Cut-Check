@@ -33,19 +33,19 @@
       <h2 class="side-head lbl">내 교실</h2>
       <div class="room-list" id="classroom-cards"></div>
       <p id="classroom-empty" class="side-note lbl" hidden>아직 교실이 없어요.</p>
-      <button type="button" class="room-new" id="new-room-open"><span class="ini" aria-hidden="true">+</span><span class="lbl">새 교실 만들기</span></button>
+      <button type="button" class="room-new" id="new-room-open" title="새 교실 만들기"><span class="ini" aria-hidden="true">+</span><span class="lbl">새 교실 만들기</span></button>
     </section>
     <!-- 고른 교실의 보기 — 서버 모드는 고른 교실 바로 아래로 옮겨 붙는다 -->
     <ul class="room-nav" id="room-nav" aria-label="보기" hidden>
-      <li><button type="button" class="main-tab active" data-dtab="dtab-students"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="lbl">학생</span></button></li>
-      <li><button type="button" class="main-tab" data-dtab="dtab-missions"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg><span class="lbl">미션</span></button></li>
-      <li><button type="button" class="main-tab" data-dtab="dtab-invite" data-tour="invite"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg><span class="lbl">학생 추가</span></button></li>
+      <li><button type="button" class="main-tab active" data-dtab="dtab-students" aria-current="page" title="학생"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="lbl">학생</span></button></li>
+      <li><button type="button" class="main-tab" data-dtab="dtab-missions" title="미션"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg><span class="lbl">미션</span></button></li>
+      <li><button type="button" class="main-tab" data-dtab="dtab-invite" data-tour="invite" title="학생 추가"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg><span class="lbl">학생 추가</span></button></li>
     </ul>
     <div class="side-bottom">
-      <a class="navl" id="t-admin" href="admin.html" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span class="lbl">관리자</span></a>
-      <button type="button" class="navl" id="tour-replay" data-tour="replay"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="lbl">사용법 보기</span></button>
-      <button type="button" class="navl" id="notes-toggle" aria-pressed="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span class="lbl">설계 의도</span></button>
-      <button type="button" class="navl" id="t-logout" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg><span class="lbl">로그아웃<span id="t-username"></span></span></button>
+      <a class="navl" id="t-admin" href="admin.html" title="관리자" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span class="lbl">관리자</span></a>
+      <button type="button" class="navl" id="tour-replay" data-tour="replay" title="사용법 보기"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span class="lbl">사용법 보기</span></button>
+      <button type="button" class="navl" id="notes-toggle" aria-pressed="false" title="설계 의도"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span class="lbl">설계 의도</span></button>
+      <button type="button" class="navl" id="t-logout" title="로그아웃" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg><span class="lbl">로그아웃<span id="t-username"></span></span></button>
     </div>
   </nav>
   <div class="side-scrim" id="side-scrim" hidden></div>
@@ -328,6 +328,7 @@ window.CC_SUPABASE = {
         var card = el('button', 'room-tile');
         card.type = 'button';
         card.dataset.rid = room.id;
+        card.title = room.name;   /* 접힌 줄에서는 첫 글자만 보인다 */
         var ini = el('span', 'ini', String(room.name || '?').trim().charAt(0) || '?');
         ini.setAttribute('aria-hidden', 'true');
         card.appendChild(ini);
