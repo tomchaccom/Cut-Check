@@ -695,18 +695,36 @@ dialog::backdrop {
 .tutor-open { position: fixed; right: 16px; bottom: 16px; z-index: 40; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,.12); cursor: pointer; }
 /* 폰 폭에서는 떠 있지 않고 페이지 끝에 놓인다 — 떠 있으면 04 결과 표 오른쪽 칸(결과 값)을 덮는다 */
 @media (max-width: 600px) { .tutor-open { position: static; display: block; margin: 0 16px 24px auto; } .tutor-open[hidden] { display: none; } }
-.tutor { width: min(420px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 32px)); padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); }
+/* 튜터 — 보통의 채팅 창. 글자 16px · 누를 곳 44px 이상 (WCAG 2.2 AA) */
+.tutor { width: min(480px, calc(100vw - 16px)); height: min(640px, calc(100dvh - 32px)); max-height: none; padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); }
+.tutor[open] { display: flex; flex-direction: column; }
 .tutor::backdrop { background: rgba(0,0,0,.25); }
-.tutor-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-.tutor-head h2 { font-size: 15px; margin: 0; }
-.tutor-head button { border: 0; background: none; font-size: 20px; color: var(--ink-2); cursor: pointer; }
-.tutor-note { margin: 0; padding: 8px 16px; font-size: 12px; color: var(--ink-3); }
-.tutor-log { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px; min-height: 120px; max-height: 320px; overflow-y: auto; }
-.tutor-msg { padding: 8px 12px; border-radius: 10px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.tutor-msg.me { align-self: flex-end; background: var(--green-soft); }
-.tutor-msg.ai { align-self: flex-start; background: var(--surface-2); }
-.tutor-form { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
-.tutor-form textarea { flex: 1; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 8px; font: inherit; font-size: 14px; background: var(--surface); color: var(--ink); resize: none; }
+.tutor-head { display: flex; align-items: center; gap: 4px; padding: 4px 8px 4px 16px; border-bottom: 1px solid var(--line); }
+.tutor-head h2 { flex: 1; min-width: 0; font-size: 17px; margin: 0; overflow-wrap: anywhere; }
+.tutor-head button { min-width: 44px; min-height: 44px; border: 0; border-radius: 8px; background: none; color: var(--ink); cursor: pointer; }
+.tutor-icon { font-size: 24px; line-height: 1; }
+.tutor-text { padding: 0 10px; font: inherit; font-size: 16px; text-decoration: underline; text-underline-offset: 3px; }
+.tutor-head button:hover { background: var(--surface-2); }
+.tutor-head #tutor-back:not([hidden]) { margin-left: -8px; }
+.tutor-note { margin: 0; padding: 8px 16px; font-size: 16px; line-height: 1.5; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.tutor-note[hidden] { display: none; }
+.tutor-log { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow-y: auto; }
+.tutor-row { display: flex; flex-direction: column; gap: 4px; max-width: 85%; }
+.tutor-row.me { align-self: flex-end; align-items: flex-end; }
+.tutor-row.ai { align-self: flex-start; align-items: flex-start; }
+.tutor-who { font-size: 16px; font-weight: 700; color: var(--ink-2); }
+.tutor-msg { padding: 10px 14px; border-radius: 16px; font-size: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.tutor-msg.me { background: var(--green-soft); color: var(--ink); border-bottom-right-radius: 4px; }
+.tutor-msg.ai { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.tutor-row.typing .tutor-msg { color: var(--ink-2); font-style: italic; }
+.tutor-empty { margin: auto; font-size: 16px; color: var(--ink-2); }
+.tutor-past-item { min-height: 44px; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; text-align: left; cursor: pointer; }
+.tutor-past-item:hover { background: var(--surface-2); }
+.tutor-form { display: flex; align-items: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.tutor-form[hidden] { display: none; }
+.tutor-form textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 140px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 10px; font: inherit; font-size: 16px; line-height: 1.5; background: var(--surface); color: var(--ink); resize: none; }
+.tutor-form button { min-height: 44px; font-size: 16px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* 설계 카드 */
 .card-hint { color: var(--ink-2); font-size: 14px; margin: 0 0 10px; }

@@ -181,6 +181,140 @@ test('튜터: 서버가 없으면 쓸 수 없다고만 말하고, 있으면 답�
   expect(evs.filter(e => e.type === 's-tutor').length).toBe(2);
 });
 
+/* 튜터 대화창 — 보통 채팅처럼. 미션마다 대화가 하나, 기록은 s-tutor 이벤트에서 다시 그린다 */
+async function mockTutor(page, calls) {
+  await page.route('**/api/tutor', r => {
+    const body = r.request().postDataJSON();
+    calls.push(body);
+    return r.fulfill({ contentType: 'application/json',
+      body: JSON.stringify({ kind: 'ask_back', answer: '답: ' + body.question + '?', refused: false }) });
+  });
+}
+
+/* 두 번째 미션 — 시험용 미션을 하나 더 복제해 같은 경로로 넣는다 */
+async function seedTwoMissions(page) {
+  await page.goto(BASE + '/sentence.html');
+  await page.evaluate(() => {
+    const a = JSON.parse(JSON.stringify(window.CC.SENTENCE_MISSIONS[0]));
+    a.id = 'ai-e2e'; a.title = '시험용 미션';
+    const b = JSON.parse(JSON.stringify(a)); b.id = 'ai-e2e-b'; b.title = '둘째 미션';
+    localStorage.setItem('cutcheck.generated', JSON.stringify([a, b]));
+    window.CC.store.clear();
+  });
+  await page.reload();
+}
+
+async function toCode(page, id) {
+  await page.locator('.m-btn[data-id="' + id + '"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  await pickCards(page);
+  await page.locator('#go-run').click();
+  await expect(page.locator('#tutor-open')).toBeVisible();
+}
+
+test('튜터 대화창: 내 말은 오른쪽, 튜터 말은 이름표와 왼쪽 — Enter 로 보내고 Shift+Enter 는 줄바꿈', async ({ context, page }) => {
+  await local(context);
+  const calls = [];
+  await mockTutor(page, calls);
+  await seedMission(page);
+  await studentToCode(page);
+  await page.locator('#tutor-open').click();
+  await expect(page.locator('#tutor-q')).toBeFocused();
+  await page.locator('#tutor-q').type('첫 줄');
+  await page.keyboard.press('Shift+Enter');
+  await page.keyboard.type('둘째 줄');
+  expect(calls.length).toBe(0);
+  await expect(page.locator('#tutor-q')).toHaveValue('첫 줄\n둘째 줄');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.tutor-msg.ai')).toHaveText(['답: 첫 줄\n둘째 줄?']);
+  await expect(page.locator('#tutor-q')).toHaveValue('');
+  await expect(page.locator('#tutor-live')).toHaveText('답: 첫 줄\n둘째 줄?');
+
+  // 순서: 나 → 튜터. 튜터 쪽에만 보이는 이름표. 되묻기라도 꼬리표 없이 그냥 튜터의 말
+  const rows = page.locator('#tutor-log .tutor-row');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toHaveClass(/me/);
+  await expect(rows.nth(1)).toHaveClass(/ai/);
+  await expect(rows.nth(1).locator('.tutor-who')).toHaveText('튜터');
+  await expect(page.locator('#tutor')).not.toContainText('되물었어요');
+  const box = await page.locator('#tutor-log').boundingBox();
+  const me = await page.locator('.tutor-msg.me').boundingBox();
+  const ai = await page.locator('.tutor-msg.ai').boundingBox();
+  expect(me.x + me.width).toBeGreaterThan(box.x + box.width - 40);   // 오른쪽에 붙는다
+  expect(ai.x).toBeLessThan(box.x + 40);                               // 왼쪽에 붙는다
+  expect(me.y).toBeLessThan(ai.y);
+});
+
+test('튜터 대화창: 기다리는 동안 답을 쓰는 중이라고 보인다', async ({ context, page }) => {
+  await local(context);
+  let release;
+  const gate = new Promise(r => { release = r; });
+  await page.route('**/api/tutor', async r => { await gate;
+    return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ kind: 'syntax', answer: '나눠요.', refused: false }) }); });
+  await seedMission(page);
+  await studentToCode(page);
+  await page.locator('#tutor-open').click();
+  await page.locator('#tutor-q').fill('split?');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.tutor-row.typing')).toHaveText(/답을 쓰는 중이에요/);
+  await expect(page.locator('#tutor-send')).toBeDisabled();
+  release();
+  await expect(page.locator('.tutor-row.typing')).toHaveCount(0);
+  await expect(page.locator('.tutor-msg.ai')).toHaveText(['나눠요.']);
+});
+
+test('튜터 대화창: 미션마다 대화가 따로고, 새로고침해도 다시 열린다', async ({ context, page }) => {
+  await local(context);
+  const calls = [];
+  await mockTutor(page, calls);
+  await seedTwoMissions(page);
+  await toCode(page, 'ai-e2e');
+  await page.locator('#tutor-open').click();
+  for (const q of ['A1', 'A2', 'A3', 'A4']) {
+    await page.locator('#tutor-q').fill(q);
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.tutor-msg.ai').last()).toHaveText('답: ' + q + '?');
+  }
+  await page.locator('#tutor-close').click();
+
+  // B 미션 — A 의 말은 보이지 않고, 서버에 가는 이전 대화도 B 것만
+  await toCode(page, 'ai-e2e-b');
+  await page.locator('#tutor-open').click();
+  await expect(page.locator('#tutor-log .tutor-row')).toHaveCount(0);
+  await page.locator('#tutor-q').fill('B1');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.tutor-msg.ai')).toHaveText(['답: B1?']);
+  expect(calls[calls.length - 1].history).toEqual([]);
+  await page.locator('#tutor-close').click();
+
+  // 새로고침 뒤 A 를 다시 열면 A 의 대화가 그대로, 서버에는 A 의 마지막 3턴
+  await page.reload();
+  await toCode(page, 'ai-e2e');
+  await page.locator('#tutor-open').click();
+  await expect(page.locator('.tutor-msg.me')).toHaveText(['A1', 'A2', 'A3', 'A4']);
+  await expect(page.locator('#tutor-log')).not.toContainText('B1');
+  await page.locator('#tutor-q').fill('A5');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.tutor-msg.ai').last()).toHaveText('답: A5?');
+  expect(calls[calls.length - 1].history.map(h => h.q)).toEqual(['A2', 'A3', 'A4']);
+
+  // 지난 대화 — 이야기한 미션 목록, 고르면 읽기만 하는 대화
+  await page.locator('#tutor-past').click();
+  await expect(page.locator('#tutor-form')).toBeHidden();
+  await expect(page.locator('.tutor-past-item')).toHaveText(['시험용 미션', '둘째 미션']);
+  await page.locator('.tutor-past-item', { hasText: '둘째 미션' }).click();
+  await expect(page.locator('#tutor-title')).toHaveText('둘째 미션');
+  await expect(page.locator('.tutor-msg.me')).toHaveText(['B1']);
+  await expect(page.locator('#tutor-form')).toBeHidden();
+  await page.locator('#tutor-back').click();
+  await expect(page.locator('.tutor-past-item')).toHaveCount(2);
+  await page.locator('#tutor-back').click();
+  await expect(page.locator('#tutor-form')).toBeVisible();
+  await expect(page.locator('.tutor-msg.me')).toHaveText(['A1', 'A2', 'A3', 'A4', 'A5']);
+});
+
 test('무한루프는 5초 뒤 멈추고 화면은 살아 있다', async ({ context, page }) => {
   test.setTimeout(180000);
   await local(context);
