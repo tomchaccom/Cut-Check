@@ -7,7 +7,7 @@ require('../js/core/onboard.js');
 require('../js/core/hangul.js'); require('../js/core/alerts.js');
 require('../js/core/pyerr.js');
 require('../js/core/csv.js');
-require('../js/core/codemission.js'); require('../js/core/facts.js'); require('../js/core/cards.js');
+require('../js/core/recap.js'); require('../js/core/codemission.js'); require('../js/core/facts.js'); require('../js/core/cards.js');
 const CC = global.window.CC;
 const T = CC.events.T;
 
@@ -283,9 +283,40 @@ const fc = CC.cards.forMission({ kind: 'code', cards: [{ label: '더하기' }, {
 t('cards.forMission: m.cards 가나다순·decoy 유지', fc.length === 2 && fc[0].label === '나누기' && fc[0].decoy === true && fc[1].label === '더하기' && fc[1].decoy === false);
 t('fixedList 새 꼴은 null', CC.cards.fixedList({ kind: 'code' }) === null);
 
+// ── recap: 이벤트 → /api/tutor-recap 본문
+{
+  const R = CC.recap;
+  const ev = (sid, type, o) => Object.assign({ sid, type, mid: 'm1', t: 1 }, o);
+  const mk = (n, wrap, tutors, tBase) => {
+    const sid = 'x' + n, out = [ev(sid, 's-define', { choice: '조건' + n, t: 1 })];
+    for (let i = 0; i < tutors; i++) out.push(ev(sid, 's-tutor', { question: 'q' + i, answer: 'a' + i, refused: i === 1, t: (tBase || 10) + i }));
+    if (wrap) out.push(ev(sid, 's-wrap', { text: 'w', t: (tBase || 10) + 50 + n }));
+    return out;
+  };
+  const mis = () => ({ title: '제목', brief: '브리프' });
+  const run = (studs, evs) => R.build(studs, s => evs.filter(e => e.sid === s.id), mis);
+  const s1 = { id: 'x1', name: '김철수' };
+  const r = run([s1], mk(1, true, 2));
+  t('recap: 끝낸 미션 + 튜터 2번 → 항목 1, pairs 2, who s1', r.body.students.length === 1 && r.body.students[0].pairs.length === 2 && r.body.students[0].who === 's1' && r.body.students[0].define === '조건1' && r.body.students[0].title === '제목');
+  t('recap: names 로만 이름이 돌아오고 body 에는 없다', r.names.s1 === '김철수' && JSON.stringify(r.body).indexOf('김철수') === -1);
+  t('recap: refused 쌍은 refused true', r.body.students[0].pairs[1].refused === true && r.body.students[0].pairs[0].refused === false);
+  t('recap: s-wrap 없으면 빠진다', run([s1], mk(1, false, 2)).body.students.length === 0);
+  const many = [], evs = [];
+  for (let i = 1; i <= 41; i++) { many.push({ id: 'x' + i, name: 'n' + i }); mk(i, true, 1).forEach(e => evs.push(e)); }
+  const big = run(many, evs);
+  t('recap: 41명 → 40명, truncated', big.body.students.length === 40 && big.truncated === true);
+  t('recap: 가장 오래된 한 명이 잘린다', big.body.students.every(x => big.names[x.who] !== 'n1'));
+  const e1 = mk(1, true, 2);
+  t('recap: 같은 입력 같은 key, s-tutor 추가하면 다른 key', run([s1], e1).key === r.key && run([s1], e1.concat([ev('x1', 's-tutor', { question: 'q', answer: 'a', t: 999 })])).key !== r.key);
+  const two = e1.concat([ev('x1', 's-tutor', { question: 'z', answer: 'z', mid: 'm2', t: 20 }), ev('x1', 's-wrap', { text: 'w', mid: 'm2', t: 30 })]);
+  const rt = run([s1], two);
+  t('recap: 한 학생의 두 미션은 같은 기호', rt.body.students.length === 2 && rt.body.students[0].who === rt.body.students[1].who);
+  t('recap: forStudent 는 그 mid 만', R.forStudent(s1, 'm2', s => two, mis).body.students.length === 1);
+}
+
 // ── core 는 브라우저 API 를 모른다
 const fs = require('fs');
-['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js', 'csv.js', 'codemission.js', 'facts.js']
+['events.js', 'fold.js', 'engine.js', 'blocks.js', 'missions.js', 'hangul.js', 'alerts.js', 'llmguard.js', 'asks.js', 'pipeline.js', 'pyerr.js', 'onboard.js', 'csv.js', 'codemission.js', 'facts.js', 'recap.js']
   .forEach(f => {
     const src = fs.readFileSync(__dirname + '/../js/core/' + f, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
