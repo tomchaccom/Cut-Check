@@ -87,7 +87,7 @@ t('list 모양', st == 200 and out['default_quota'] == 3 and set(rows[A]) == {'i
 t('행 있는 강사', rows[A]['quota'] == 5 and rows[A]['used'] == 3 and rows[A]['left'] == 2 and rows[A]['email'] == 'a@example.com', rows.get(A))
 t('행 없는 강사 → used 0 · quota=default', rows[B]['used'] == 0 and rows[B]['quota'] == 3 and rows[B]['left'] == 3, rows.get(B))
 t('한도 < 쓴 횟수 → left 0 (음수 없음)', rows[C]['left'] == 0 and rows[C]['disabled'] is True and rows[C]['email'] == '', rows.get(C))
-t('list 호출 수: 호출 5번 이하 (5 × 3초 ≤ maxDuration 15)', len(h.calls) <= 5, len(h.calls))
+t('list 호출 수: 호출 5번 이하', len(h.calls) <= 5, len(h.calls))
 
 for bad in (1001, -1, '3', True, 2.5, None):
     st, out, h = run({'action': 'set_quota', 'id': A, 'quota': bad})

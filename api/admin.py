@@ -8,7 +8,7 @@
 
 관리자 = 강사이면서 이메일이 환경변수 ADMIN_EMAILS(쉼표 구분, 대소문자·공백 무시)에 있는 사람. 비었으면 아무도 아니다.
 한도 값은 0..1000 정수(bool 제외). 한도를 쓴 횟수보다 낮춰도 left 는 0 — 음수 없음.
-호출 수는 maxDuration 15초 안에: 강사 확인 2 + 일 최대 3(list) · 3(set_*) — 각 호출 최대 TIMEOUT 3초.
+호출 수는 vercel.json maxDuration 30초 안에: 강사 확인 2 + 일 최대 3(list) · 5(set_*, 행이 없을 때) = 7번 × TIMEOUT 3초 = 21초.
 """
 import json
 import os
