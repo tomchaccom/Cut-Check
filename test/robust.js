@@ -175,9 +175,30 @@ api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'applica
   const wishBad = gs.pwned || gs.imgs > 0 || 'wish' in gs.saved || 'solution' in gs.saved || gs.saved.title.indexOf('WISH-') !== 0;
   console.log('강사 바람(#sg-wish)은 학생 미션에 키로 실리지 않고, AI 글은 글자로만 보임:', wishBad ? '✗ ' + JSON.stringify({ pwned: gs.pwned, imgs: gs.imgs, keys: Object.keys(gs.saved) }) : '✓');
 
+  // 선생님이 쓴 나침반 한마디 — 학생에게 그대로 가므로 글자로만 보여야 하고, 선생님 화면에도 글자로만 올라온다
+  const kc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
+  await kc.route('**/supabase-js@2/**', r => r.abort());
+  await kc.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: `(function(CC){var P=function(v){return Promise.resolve(v)};
+var NOTE=${JSON.stringify(EVIL + LONG + ' 🙂👍')};
+CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},
+myClassrooms:function(){return P([{id:'r1',name:'반',code:'AB12CD'}])},getMissions:function(){return P([])},getClassroomStudents:function(){return P([{id:'s1',name:'태인'}])},
+getClassroomEvents:function(){return P([{student_id:'s1',mission_id:'M1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-code-judge',mid:'mx',verdict:'지켰다',basis:'b',v:1,t:Date.now()}}])},
+compass:function(a){if(a==='list')return P({rows:[{studentId:'s1',missionId:'M1',levels:{N:1,E:1,S:1,W:1},evidence:{N:['f1']},facts:[{id:'f1',dir:'N',kind:'define',text:${JSON.stringify(EVIL)}}],ai_note:${JSON.stringify(EVIL)},needle_deg:null,strongest:null,teacher_dir:'N',teacher_note:NOTE,sent_at:'2026-10-20T00:00:00Z'}]});return Promise.reject(new Error('x'))}}
+})(window.CC=window.CC||{});` }));
+  const k = await kc.newPage();
+  k.on('pageerror', e => errs.push('K: ' + e.message));
+  k.on('dialog', async d => { alerted = true; await d.dismiss(); });
+  await k.goto(BASE + '/teacher.html'); await k.waitForTimeout(300);
+  await k.locator('#classroom-cards .room-tile').first().click();
+  await k.locator('.student-tile', { hasText: '태인' }).click();
+  await k.locator('.compass-card').waitFor({ timeout: 5000 });
+  const ks = await k.evaluate(() => ({ pwned: !!window.__pwned, imgs: document.querySelectorAll('#detail img').length, sent: (document.querySelector('.compass-sent-note') || {}).textContent, ta: (document.querySelector('.compass-card textarea') || {}).value, w: document.documentElement.scrollWidth - innerWidth }));
+  const noteBad = ks.pwned || ks.imgs > 0 || alerted || ks.sent !== EVIL + LONG + ' 🙂👍' || ks.ta !== ks.sent || ks.w > 1 || (await k.locator('.compass-card').textContent()).indexOf('<img') < 0;
+  console.log('나침반 한마디가 글자로만 보임:', noteBad ? '✗ ' + JSON.stringify({ pwned: ks.pwned, imgs: ks.imgs, w: ks.w }) : '✓');
+
   console.log(errs.length ? '✗ JS 에러: ' + errs.join(' | ') : '✓ JS 에러 없음');
   await b.close();
-  const failed = recapBad || !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad || wishBad || factBad;
+  const failed = recapBad || !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad || wishBad || factBad || noteBad;
   console.log(failed ? '\n안전성 검사 실패' : '\n안전성 검사 전부 통과');
   process.exit(failed ? 1 : 0);
 })();

@@ -183,6 +183,7 @@ window.CC_SUPABASE = {
 <script src="js/core/csv.js"></script>
 <script src="js/core/hangul.js"></script>
 <script src="js/core/alerts.js"></script>
+<script src="js/core/compass.js"></script>
 <script src="js/core/pipeline.js"></script>
 <script src="js/core/codemission.js"></script>
 <script src="js/core/facts.js"></script>
@@ -431,6 +432,7 @@ window.CC_SUPABASE = {
       var evs = rows.map(function (r) {
         var ev = r.event || {};
         ev.sid = r.student_id;
+        ev._missionDbId = r.mission_id;   /* 나침반 — 학생·미션 단위 알림과 카드 */
         ev.t = ev.t || new Date(r.created_at).getTime();
         return ev;
       });
@@ -466,6 +468,7 @@ window.CC_SUPABASE = {
 
       /* 대시보드 다시 그리기 — teacher.js의 기존 함수 호출 */
       if (typeof CC._renderDashboard === 'function') CC._renderDashboard();
+      if (CC._compassSync) CC._compassSync(selectedRoom.id);
     });
   }
 
