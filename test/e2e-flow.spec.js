@@ -1548,3 +1548,80 @@ test('관리자 — 생성 끄기와 기본 한도, 폰 폭에서도 화면은 �
   const o = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   expect(o).toBeLessThanOrEqual(0);
 });
+
+/* ── 사용법 안내 (js/ui/tour.js) ──
+ * 자동화 브라우저에서는 자동 시작이 꺼져 있다 — 다른 테스트가 안내에 가려 멈추지 않게.
+ * 여기서만 window.__tour = 1 로 켠다. */
+async function tourOn(context) {
+  await local(context);
+  await context.addInitScript(() => { window.__tour = 1; });
+}
+const tour = page => page.locator('.tour-box[role="dialog"]');
+
+test('사용법 안내 — 처음 한 번만 뜨고, 다시 열지 않는다', async ({ context, page }) => {
+  await tourOn(context);
+  await page.goto(BASE + '/sentence.html');
+  await expect(tour(page)).toBeVisible();
+  await expect(tour(page)).toHaveAttribute('aria-modal', 'true');
+  await expect(page.locator('#tour-count')).toHaveText('1 / 3');   // 01 단계에 보이는 것만: 단계·받은 요청·사용법 보기
+  await expect(page.locator('#tour-title')).toHaveText('단계');
+  await expect(page.locator('.tour-btn[data-a="next"]')).toBeFocused();
+  await page.locator('.tour-btn[data-a="next"]').click();
+  await expect(page.locator('#tour-title')).toHaveText('받은 요청');
+  await page.locator('.tour-btn[data-a="prev"]').click();
+  await expect(page.locator('#tour-title')).toHaveText('단계');
+  await page.locator('.tour-btn[data-a="skip"]').click();
+  await expect(page.locator('.tour')).toHaveCount(0);              // 닫히면 아무것도 가리지 않는다
+  await page.reload();
+  await page.waitForTimeout(300);
+  await expect(page.locator('.tour')).toHaveCount(0);
+});
+
+test('사용법 안내 — 다시 보기 버튼, Tab 은 안에서 돌고 Esc 로 닫으면 버튼으로 돌아온다', async ({ context, page }) => {
+  await local(context);   // 자동 시작 없음
+  await page.setViewportSize({ width: 400, height: 800 });
+  await page.goto(BASE + '/sentence.html');
+  await page.waitForTimeout(300);
+  await expect(page.locator('.tour')).toHaveCount(0);
+  await page.locator('#tour-replay').click();
+  await expect(tour(page)).toBeVisible();
+  for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement.closest('.tour-box'))).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.tour')).toHaveCount(0);
+  await expect(page.locator('#tour-replay')).toBeFocused();
+});
+
+test('사용법 안내 — 없거나 숨은 곳은 건너뛴다', async ({ context, page }) => {
+  await local(context);
+  await page.goto(BASE + '/sentence.html');
+  await page.evaluate(() => document.querySelector('[data-tour="brief"]').removeAttribute('data-tour'));
+  await page.locator('#tour-replay').click();
+  await expect(page.locator('#tour-count')).toHaveText('1 / 2');   // 02~04 단계 것은 숨어 있고, 받은 요청은 없다
+  await page.locator('.tour-btn[data-a="next"]').click();
+  await expect(page.locator('#tour-title')).toHaveText('사용법 보기');
+  await expect(page.locator('.tour-btn[data-a="next"]')).toHaveText('닫기');
+  await page.locator('.tour-btn[data-a="next"]').click();
+  await expect(page.locator('.tour')).toHaveCount(0);
+});
+
+test('사용법 안내 — 선생님 화면: 생성 두 방식을 밝히고, 닫으면 원래 탭으로', async ({ context, page }) => {
+  await tourOn(context);
+  await page.goto(BASE + '/teacher.html');
+  await expect(page.locator('#tour-count')).toHaveText('1 / 8');   // 로컬 모드 — 교실 고르기는 없다
+  await expect(page.locator('#tour-title')).toHaveText('학생 카드');
+  const next = page.locator('.tour-btn[data-a="next"]');
+  for (let i = 0; i < 4; i++) await next.click();
+  await expect(page.locator('#tour-title')).toHaveText('빠른 생성');
+  await expect(page.locator('#gen-btn')).toBeVisible();          // 미션 탭을 열어 실제 버튼을 밝힌다
+  await next.click();
+  await expect(page.locator('#tour-title')).toHaveText('개념 확인');
+  await expect(page.locator('#tour-count')).toHaveText('6 / 8');   // 탭을 바꿔 앞 단계가 숨어도 전체 수는 그대로
+  await expect(page.locator('#tour-text')).toContainText('개념을 확인하고, 이야기를 고른 뒤, 문제로');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#dtab-students')).toBeVisible();
+  await page.reload();
+  await page.waitForTimeout(300);
+  await expect(page.locator('.tour')).toHaveCount(0);
+});
