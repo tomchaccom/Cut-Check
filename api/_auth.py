@@ -16,10 +16,11 @@ NO_LINK = 'Supabase 에 연결하지 못했어요. 잠시 뒤 다시 해 주세�
 
 
 class Fail(Exception):
-    def __init__(self, status, msg):
+    def __init__(self, status, msg, extra=None):
         super().__init__(msg)
         self.status = status
         self.msg = msg
+        self.extra = extra or {}  # 응답에 error 와 같이 실을 것 (한도 0 이면 {'left': 0})
 
 
 def bearer(header):
@@ -45,6 +46,11 @@ def urllib_http(method, url, headers, body=None):
 
 def teacher(token, env, http=urllib_http):
     """→ 강사 user id. 아니면 Fail(401 · 403 · 502)."""
+    return whoami(token, env, http)['id']
+
+
+def whoami(token, env, http=urllib_http):
+    """→ {'id', 'email'} — 강사일 때만. 아니면 teacher() 와 같은 Fail."""
     if not token:
         raise Fail(401, '다시 로그인해 주세요.')
     url, anon, service = env.get('SUPABASE_URL'), env.get('SUPABASE_ANON_KEY'), env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -64,7 +70,7 @@ def teacher(token, env, http=urllib_http):
         raise Fail(502, NO_LINK)
     if not rows or rows[0].get('role') != 'teacher':
         raise Fail(403, '선생님 계정만 할 수 있어요.')
-    return me['id']
+    return {'id': me['id'], 'email': me.get('email')}
 
 
 def refuse(token, env, http=urllib_http):
