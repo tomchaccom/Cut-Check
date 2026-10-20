@@ -717,15 +717,18 @@ dialog::backdrop {
 .design-title { font-size: 15px; margin: 0; color: var(--ink); }
 .design-list { list-style: none; padding: 0; margin: 6px 0 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .design-list:empty::before { content: '아직 고른 카드가 없어요.'; display: block; color: var(--ink-3); font-size: 14px; }
-.design-item { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; max-width: 100%; min-height: 38px; padding: 0 6px 0 12px; border-radius: 10px; background: var(--folder); color: var(--on-folder); }
-.design-item .num { font-size: 13px; color: #6B6B6B; }
-.design-item .label { font-size: 14px; font-weight: 600; }
-.design-item select { height: 28px; padding: 0 6px; border: 0; border-radius: 999px; font: inherit; font-size: 13px; background: #FFFFFF; color: #111111; }
-.design-item .card-list { font-family: var(--mono); font-size: 12px; word-break: break-all; }
-.design-item .moves { margin-left: 6px; display: flex; }
-.design-item .moves button { width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--on-folder); font-size: 11px; cursor: pointer; }
+/* 한 줄은 번호 · 이름 · ▲▼✕ 가 같이 다닌다 — 좁은 폭에서 flex-wrap 이면 번호와 버튼이 저마다 다른 줄로 흩어졌다.
+   줄바꿈은 이름 안에서만. 버튼은 44px, 글자는 16px (WCAG 2.2 AA) */
+.design-item { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 48px; padding: 2px 2px 2px 12px; border-radius: 10px; background: var(--folder); color: var(--on-folder); font-size: 16px; word-break: keep-all; overflow-wrap: anywhere; }
+.design-item .num { flex: none; color: #555555; }
+.design-item .label { min-width: 0; font-weight: 600; line-height: 1.4; }
+.design-item select { flex: none; height: 44px; padding: 0 8px; border: 0; border-radius: 999px; font: inherit; font-size: 16px; background: #FFFFFF; color: #111111; }
+.design-item .card-list { min-width: 0; font-family: var(--mono); font-size: 14px; word-break: break-all; }
+.design-item .moves { flex: none; display: flex; }
+.design-item .moves button { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--on-folder); font-size: 14px; cursor: pointer; }
 .design-item .moves button:hover:not(:disabled) { background: rgba(0,0,0,.08); }
 .design-item .moves button:disabled { opacity: .35; cursor: default; }
+.design-item :focus-visible { outline-color: var(--on-folder); outline-offset: -3px; }   /* 어두운 테마의 노란 테두리는 노란 카드 위에서 안 보인다 */
 
 /* 성공 조건 — 받은 요청을 붙잡고 묻는다 */
 .define-brief { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); text-align: right; }
@@ -830,8 +833,8 @@ dialog::backdrop {
 .split-main-head { display:flex; justify-content:flex-end; margin-bottom:8px; }
 .split-main-head .tutor-open { position:static; padding:8px 14px; box-shadow:none; margin:0; }
 .split-main-head .tutor-open[hidden] { display:none; }
-.design-side { list-style:decimal inside; padding:0; margin:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
-.design-side .design-item { display:list-item; padding:8px 12px; font-size:14px; font-weight:600; }
+.design-side { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.design-side .design-item { display:flex; align-items:baseline; gap:6px; padding:8px 12px; font-weight:600; line-height:1.4; }   /* 번호는 sentence.js 가 붙인다 — 긴 줄이 번호 밑으로 파고들지 않게 */
 @media (min-width: 1100px) { .code-split { grid-template-columns:minmax(0,2fr) minmax(0,3fr); gap:40px; } }   /* 넓은 화면에서는 코드 쪽에 자리를 더 — 설계 줄은 글자 폭만큼이라 반이 남는다 */
 @media (max-width: 720px) { .code-split { grid-template-columns:1fr; } }
 
