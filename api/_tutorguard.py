@@ -58,7 +58,12 @@ def problems(answer, kind='answer', ctx=None):
     # 문법 예시는 1~2줄까지 준다(2026-10-21 사람이 정함). `d = {}; d['a'] = 1` 도 두 줄로 센다 — 전엔 `;` 하나로 막혀
     # 문법 질문이 고정 되묻기로 떨어졌다 (2026-10-20 리플레이 #11)
     # 한글이 따옴표·주석 밖에 있으면 자리표시 꼴, 따옴표 안(`d['사과'] = 1`)이나 # 주석에만 있으면 예시 줄이다
-    code = [x for x in segs if re.search(r'[(=:\[]', x) and not re.search(r'[가-힣]', _bare(x))]
+    # 생김새는 늘 한 줄이다 — 한글 식별자로 쓴 여러 줄 블록(`개수 = {}` / `개수[메뉴] = …`)은 코드 줄로 센다
+    code = [x for x in segs if re.search(r'[(=:\[]', x)
+            and (not re.search(r'[가-힣]', _bare(x)) or len(_stmts(x)) > 1)]
+    # 문자열 안에 숨긴 코드는 줄 수·학생 변수 검사를 빠져나간다 (`exec('data.split(\",\")')`)
+    if any(re.search(r'\b(exec|eval)\s*\(', x) for x in segs):
+        out.append('코드 예시에 exec·eval — 문자열 속 코드는 검사를 빠져나간다')
     if sum(len(_stmts(x)) for x in code) > 2:
         out.append('코드 예시가 합쳐 세 줄 이상 — 두 줄까지만')
     elif any(len(_stmts(x)) > 2 for x in segs):
