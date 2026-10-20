@@ -25,7 +25,7 @@
   function svg(levels, deg) {
     var hasNeedle = deg != null && !isNaN(deg);
     var name = hasNeedle ? DIRS[dirOf(deg)] : NONE;
-    var o = '<svg class="compass-svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="' + name + '">';
+    var o = '<svg class="compass-svg" viewBox="-12 -12 144 144" width="144" height="144" role="img" aria-label="' + name + '">';
     [1, 2, 3].forEach(function (n) {
       o += '<circle cx="60" cy="60" r="' + (R * n / 3) + '" fill="none" stroke="#bbb" stroke-width="0.8"/>';
     });
@@ -37,11 +37,11 @@
     }
     if (hasNeedle) {
       o += '<g class="compass-needle" transform="rotate(' + Number(deg) + ' 60 60)">' +
-        '<polygon points="60,10 55,60 65,60" fill="#111"/><polygon points="55,60 65,60 60,84" fill="#999"/></g>';
+        '<polygon points="60,10 55,60 65,60" fill="currentColor"/><polygon points="55,60 65,60 60,84" fill="currentColor" fill-opacity="0.4"/></g>';
     }
-    o += '<circle cx="60" cy="60" r="2.5" fill="#111"/>';
-    [['N', '북', 60, 9], ['E', '동', 114, 63], ['S', '남', 60, 119], ['W', '서', 6, 63]].forEach(function (t) {
-      o += '<text x="' + t[2] + '" y="' + t[3] + '" font-size="9" text-anchor="middle" fill="#666">' + t[1] + '</text>';
+    o += '<circle cx="60" cy="60" r="2.5" fill="currentColor"/>';
+    [['N', '북', 60, 2], ['E', '동', 124, 64], ['S', '남', 60, 128], ['W', '서', -4, 64]].forEach(function (t) {
+      o += '<text x="' + t[2] + '" y="' + t[3] + '" font-size="12" text-anchor="middle" fill="currentColor" fill-opacity="0.75" aria-hidden="true">' + t[1] + '</text>';
     });
     return o + '</svg>';
   }

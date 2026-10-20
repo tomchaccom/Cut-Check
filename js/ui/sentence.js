@@ -183,6 +183,7 @@
     var db = currentMissionDbId;
     CC.sb.compassMine(db).then(function (c) {
       if (!c || db !== currentMissionDbId) return;
+      box.innerHTML = '';   /* A → B → A 로 빨리 바꾸면 A 응답이 둘 온다 — 두 번 그리지 않게 */
       var dir = c.teacher_dir || CC.compass.dirOf(c.needle_deg);
       var h = el('h2', 'step-title', '내 나침반');
       box.appendChild(h);

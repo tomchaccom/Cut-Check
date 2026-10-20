@@ -875,7 +875,7 @@ dialog::backdrop {
 }
 
 /* 나침반 — 선생님이 보낸 뒤에만 나온다. 회색·검정 (브랜드 색 미정) */
-.compass-mine { border: 1px solid #bbb; border-radius: 12px; padding: 16px; margin: 0 0 16px; max-width: 560px; }
+.compass-mine { border: 1px solid var(--line-strong); border-radius: 12px; padding: 16px; margin: 0 0 16px; max-width: 560px; }
 .compass-mine .step-title { margin: 0 0 4px; }
 .compass-fig { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
 .compass-note { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; }
