@@ -79,7 +79,9 @@ def _run(body, db, uid, llm, t0):
     if a == 'send':
         d, note = body.get('dir'), body.get('note')
         note = note.strip() if isinstance(note, str) else ''
-        if (d is not None and d not in tuple(_compass.DIRS)) or not 1 <= len(note) <= NOTE_MAX:
+        if d is not None and d not in tuple(_compass.DIRS):
+            raise Fail(400, BAD[1]['error'])
+        if not 1 <= len(note) <= NOTE_MAX:
             raise Fail(400, f'한마디는 1자 이상 {NOTE_MAX}자 이하로 적어 주세요.')
     if a != 'list':
         stu, mis = _id(body, 'studentId'), _id(body, 'missionId')
@@ -98,11 +100,16 @@ def _run(body, db, uid, llm, t0):
     if a == 'send':
         if not old:
             raise Fail(409, '먼저 읽은 뒤에 보낼 수 있어요.')
-        deg = _compass.override(old[0].get('needle_deg'), body.get('dir'))
+        # 저장된 분석에서 바늘을 다시 계산한다 — 이미 덮어쓴 값에서 시작하면 방위를 바꿀 때 원래 바늘을 잃는다
+        deg = _compass.override(_compass.needle(old[0].get('levels') or {}, old[0].get('evidence') or {})[0], body.get('dir'))
         change = {'needle_deg': deg, 'teacher_dir': body.get('dir'), 'teacher_note': note, 'sent_at': _now(), 'updated_at': _now()}
-        return _row(db.rows('PATCH', 'compass?' + key, change, 'return=representation')[0])
+        saved = db.rows('PATCH', 'compass?' + key, change, 'return=representation')
+        if not saved:
+            raise Fail(409, '나침반 기록을 찾지 못했어요. 다시 읽어 주세요.')
+        return _row(saved[0])
     if old and body.get('force') is not True:
         return _row(old[0])
+    # ponytail: 두 탭이 동시에 analyze 하면 LLM 을 두 번 부르고 마지막 upsert 가 이긴다. 필요하면 먼저 claim 행을 insert 한다
     events = [r.get('event') for r in db.rows('GET', 'student_events?select=event&' + key
                                               + '&classroom_id=eq.' + q(room) + '&order=created_at')]
     if not any(isinstance(e, dict) and e.get('type') == 's-code-judge' for e in events):

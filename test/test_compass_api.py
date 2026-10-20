@@ -123,7 +123,7 @@ st, out = api.handle(body('analyze'), 'tok', ENV, http, llm_of(box))
 t('judge 없으면 409', st == 409 and out['error'] == '아직 미션을 마치지 않았어요.' and not box and not writes(calls), (st, out))
 
 # send: 방위를 고르면 바늘을 덮는다
-SAVED = {'student_id': STU, 'mission_id': MIS, 'needle_deg': 18.4, 'strongest': 'N', 'levels': {}, 'evidence': {}, 'facts': []}
+SAVED = {'student_id': STU, 'mission_id': MIS, 'needle_deg': 18.4, 'strongest': 'N', 'levels': {'N': 3, 'E': 1, 'S': 0, 'W': 0}, 'evidence': {}, 'facts': []}
 http, calls, state = fake(row=dict(SAVED))
 st, out = api.handle(body('send', dir='E', note='이유까지 적었네'), 'tok', ENV, http, llm_of([]))
 w = writes(calls)
@@ -132,12 +132,23 @@ t('send dir=E 면 90', st == 200 and out['needle_deg'] == 90 and out['teacher_di
 t('send 는 PATCH 한 번 · 키 두 개로 한 행만', len(w) == 1 and w[0][0] == 'PATCH' and 'student_id=eq.' + STU in w[0][1] and 'mission_id=eq.' + MIS in w[0][1], w)
 http, calls, state = fake(row=dict(SAVED))
 st, out = api.handle(body('send', dir=None, note='ok'), 'tok', ENV, http, llm_of([]))
-t('send dir=None 이면 바늘 그대로', st == 200 and out['needle_deg'] == 18.4 and out['teacher_dir'] is None, out)
+t('send dir=None 이면 바늘 그대로', st == 200 and abs(out['needle_deg'] - 18.4) < 0.1 and out['teacher_dir'] is None, out)
 st, out = api.handle(body('send', dir='S', note='다시'), 'tok', ENV, http, llm_of([]))
 t('다시 보내면 덮어쓴다', st == 200 and out['teacher_dir'] == 'S' and out['teacher_note'] == '다시' and len(writes(calls)) == 2, out)
 http, calls, _ = fake()
 st, out = api.handle(body('send', dir='E', note='x'), 'tok', ENV, http, llm_of([]))
 t('읽기 전에는 send 409', st == 409 and not writes(calls), (st, out))
+
+# 방위를 바꿔 보내도 원래 바늘을 잃지 않는다
+http, calls, state = fake(row=dict(SAVED))
+send = lambda **kw: api.handle(body('send', note='x', **kw), 'tok', ENV, http, llm_of([]))[1]
+t('E → N 이면 18.4 로 돌아온다', send(dir='E')['needle_deg'] == 90 and abs(send(dir='N')['needle_deg'] - 18.4) < 0.1)
+t('E → None 이면 18.4 로 돌아온다', send(dir='E')['needle_deg'] == 90 and abs(send(dir=None)['needle_deg'] - 18.4) < 0.1)
+st, out = api.handle(body('send', dir='X', note='x'), 'tok', ENV, fake(row=dict(SAVED))[0], llm_of([]))
+t('잘못된 dir 은 형식 오류 문장', st == 400 and out['error'] == api.BAD[1]['error'], out)
+_h = fake(row=dict(SAVED))[0]
+st, out = api.handle(body('send', dir='E', note='x'), 'tok', ENV, lambda m, u, h, b=None: (200, []) if m == 'PATCH' else _h(m, u, h, b), llm_of([]))
+t('PATCH 가 빈 배열이면 409', st == 409 and '다시 읽어' in out['error'], (st, out))
 
 # send 검증
 for bad in ('', '   ', 'x' * 301, 5, None, ['a']):
