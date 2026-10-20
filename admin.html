@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut &amp; Check · 관리자 화면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sentence.css">
+<link rel="stylesheet" href="teacher.css">
+</head>
+<body>
+
+<div class="page wide">
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">C&amp;C</span>
+      <div><b>Cut &amp; Check</b><small>관리자 화면</small></div>
+    </div>
+    <div class="toptools"><a class="tbtn" href="teacher.html">선생님 화면</a></div>
+  </header>
+
+  <p class="lead" id="ad-note" role="status">불러오는 중이에요.</p>
+
+  <!-- 서버가 관리자라고 답할 때만 채운다. 강사는 서버가 준 순서(이름순) 그대로 — 쓴 횟수로 줄 세우지 않는다 -->
+  <div id="ad-main" hidden>
+    <section class="panel">
+      <div class="hd"><div><h2>강사별 생성 한도</h2><p class="lead">미션 1개 만들기 = 1개. 한도를 바꾸면 바로 저장돼요.</p></div></div>
+      <label class="ad-default">새 강사 기본 한도 <input type="number" id="ad-default" class="ad-in" min="0" max="1000" step="1"> <span class="ad-msg" id="ad-default-msg" role="status"></span></label>
+      <div class="ad-scroll"><table class="ad-table" id="ad-teachers">
+        <thead><tr><th>이름</th><th>이메일</th><th>쓴</th><th>남은</th><th>한도</th><th>생성 끄기</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+    <section class="panel">
+      <div class="hd"><div><h2>최근 생성 기록</h2><p class="lead">성공한 생성만 남아요. 최근 50건.</p></div></div>
+      <div class="ad-scroll"><table class="ad-table" id="ad-log">
+        <thead><tr><th>시각</th><th>강사</th><th>수업 내용</th><th>개념</th><th>종류</th><th>재요청</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+  </div>
+</div>
+
+<script>
+window.CC_SUPABASE = {
+  url: 'https://btmhdsdabulgevgmrwyq.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bWhkc2RhYnVsZ2V2Z21yd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1NzUwNDIsImV4cCI6MjEwNjE1MTA0Mn0.mrDM6f9SXGA0YkWAkn5y0nC-nbdFsdyBwOQ1Fhk8FOY'
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/data/supabase.js"></script>
+<script src="js/core/codemission.js"></script>
+<script src="js/ui/admin.js"></script>
+</body>
+</html>

@@ -1,8 +1,10 @@
-"""AI 튜터 흐름: 답 생성 → 형식 검사 → LLM 유출 판정 → (걸리면) 1회 재요청 → 되묻기 고정 문장.
+"""AI 튜터 흐름: 답 생성 → 형식 검사 → LLM 검수(유출·하드코딩) → (걸리면) 걸린 부분만 빼고 1회 재요청 → 되묻기 고정 문장.
+
+답 쓰는 프롬프트는 역할과 형식만 준다. 무엇을 말하면 안 되는지는 검수(_tutorjudge.py)가 맡는다.
 
 LLM 호출은 call_llm(messages, schema, timeout) 로 주입받는다. 테스트는 가짜를 넣는다.
 시간: 전체 26초(vercel 한도 30초). 답 10초, 판정 5초, 재요청은 남은 시간 10초 이상일 때 한 번.
-재답도 판정한다 — 형식 검사·백틱 없음을 통과한 뒤 남은 시간이 판정 5초 이상일 때만. 못 하면 고정 되묻기.
+재답도 판정한다 — 형식 검사를 통과한 뒤 남은 시간이 판정 5초 이상일 때만. 못 하면 고정 되묻기.
 now() 는 시작·재요청 전·재판정 전 세 번 부른다.
 """
 import json
@@ -36,17 +38,15 @@ SCHEMA = {
 }
 
 SYSTEM = '\n'.join([
-    '당신은 중학교 1학년의 파이썬 튜터다. 학생은 풀 방법을 스스로 정했고 그걸 코드로 옮기는 중이다.',
-    '개념 설명, 학생 코드에서 틀린 위치 짚기, 미션과 다른 자료로 든 사용법 한 줄 예시까지 해 준다.',
-    '이 미션을 푸는 방법, 풀이 단계의 순서(~한 뒤 ~), 이 자료로 동작하는 코드는 말하지 않는다. 풀이를 물으면 확인할 것 하나를 되묻는다.',
-    '예시 값은 미션 자료·학생 변수에 없는 것으로 쓴다(예: "a,b,c", 다른 이름). 학생의 data 같은 변수에 쓰는 코드는 쓰지 않는다.',
-    '요청의 핵심 동작을 한 줄로 해내는 관용구(예: 세기의 `c[x] = c.get(x, 0) + 1`, "없으면 0, 있으면 +1")는 다른 자료로도 쓰지 않는다. 개념(키→값, get 이 돌려주는 것)만 설명한다.',
-    '입력의 자료와 설계는 학생 상황을 이해하라고 주는 것이지 답에 쓰라는 게 아니다.',
-    '에러는 위치와 사실만 말한다. 원인의 결론은 학생이 찾는다. 예: "6번째 줄에서 숫자로 바꿀 수 없는 글자가 들어왔어요."',
-    '설계와 코드가 다르게 가면 "설계 2번 카드랑 지금 코드가 같은 일을 하나요?" 처럼 되묻는다.',
-    '답하기 어려우면 거절하지 말고 kind 를 ask_back 으로 하고, 학생이 다음에 확인할 것 하나를 물음표로 끝나는 80자 이하 한 문장으로 묻는다.',
-    '예시는 백틱 한 줄 하나까지, 함수·문법 이름에는 백틱을 쓰지 않는다.',
-    f'존댓말("~요"), 칭찬 없이, {MAX}자 이내. 학생을 "너"라고 부르지 않는다. JSON 하나만 응답한다.',
+    '당신은 중학교 1학년의 파이썬 튜터다. 학생은 아래 미션과 자기가 정한 목표를 향해 코드를 짜는 중이다.',
+    '학생이 막힌 곳을 스스로 이해하도록 개념과 학생 코드의 위치를 설명한다.',
+    '개념을 물으면 그 개념이 하는 일을 미션 자료와 다른 값으로 든 예시로 설명한다. 이 미션에 어떻게 쓸지는 학생이 정하게 둔다.',
+    '에러를 물으면 몇 번째 줄에서 무슨 일이 났는지 사실을 말한다. 원인의 결론은 학생이 찾게 둔다.',
+    '설계 카드와 코드가 다르게 가면 "설계 2번 카드랑 지금 코드가 같은 일을 하나요?"처럼 되묻는다.',
+    f'형식: 존댓말("~요"), 칭찬 없이, {MAX}자 이내. 학생을 "너"라고 부르지 않는다.',
+    '예시는 백틱 한 줄 하나까지. 함수·문법 이름은 백틱 없이 쓴다.',
+    '바로 답하기 어려우면 kind 를 ask_back 으로 하고, 학생이 다음에 확인할 것 하나를 물음표로 끝나는 80자 이하 한 문장으로 묻는다.',
+    'JSON 하나만 응답한다.',
 ])
 
 
@@ -54,7 +54,9 @@ def _messages(question, ctx):
     msgs = [{'role': 'system', 'content': SYSTEM}]
     for h in ctx.get('history') or []:
         msgs += [{'role': 'user', 'content': str(h.get('q', ''))}, {'role': 'assistant', 'content': str(h.get('a', ''))}]
-    msgs.append({'role': 'user', 'content': json.dumps({**ctx, 'question': question}, ensure_ascii=False)})
+    shown = {k: v for k, v in ctx.items() if k != 'define'}
+    shown['학생이 정한 목표'] = ctx.get('define', '')
+    msgs.append({'role': 'user', 'content': json.dumps({**shown, 'question': question}, ensure_ascii=False)})
     return msgs
 
 
@@ -77,10 +79,10 @@ def ask(question, ctx, call_llm, now=time.monotonic):
     if kind not in ('answer', 'ask_back'):
         return _refuse(['kind 가 없음'])
     reasons = problems(a, kind)
-    judged = False
+    judged, cut = False, ''
     if not reasons:
         try:
-            reasons, judged = judge(a, ctx, call_llm, JUDGE_T), True
+            (reasons, cut), judged = judge(a, ctx, call_llm, JUDGE_T), True
         except Exception:  # noqa: BLE001 — 타임아웃·JSON 아님. 새는 쪽보다 막는 쪽이 안전하다
             return _refuse(['judge_failed'])
         if not reasons:
@@ -88,20 +90,23 @@ def ask(question, ctx, call_llm, now=time.monotonic):
     left = BUDGET - (now() - t0)
     if left < RETRY_NEEDS:
         return _refuse(reasons, judged=judged)
-    msgs += [{'role': 'assistant', 'content': str(raw)},
-             {'role': 'user', 'content': '아래 문제를 고쳐 다시 답한다: ' + ' / '.join(reasons)}]
+    # 검수가 짚은 부분이 답에 그대로 있으면 그것만 지우게 한다 — 통째로 다시 쓰면 멀쩡한 설명까지 사라진다
+    fix = ('아래 부분만 빼고 나머지 설명은 그대로 둔다: ' + cut if cut and cut in a and cut.strip() != a.strip()
+           else '아래 문제를 고쳐 다시 답한다: ' + ' / '.join(reasons))
+    fix += '\n다시 쓴 답은 학생에게 하는 말만 담는다. 무엇을 지웠거나 고쳤는지는 적지 않는다.'
+    msgs += [{'role': 'assistant', 'content': str(raw)}, {'role': 'user', 'content': fix}]
     try:
         d2 = _json(call_llm(msgs, SCHEMA, min(ANSWER_T, left - JUDGE_T - 1))) or {}
     except Exception:  # noqa: BLE001 — 재답 실패로 502 를 내지 않는다. 첫 답은 이미 막혔다
         return _refuse(reasons + ['retry_failed'], retried=True, judged=judged)
     k2, a2 = d2.get('kind'), str(d2.get('answer') or '').strip()
-    if k2 not in ('answer', 'ask_back') or problems(a2, k2) or '`' in a2:
+    if k2 not in ('answer', 'ask_back') or problems(a2, k2):
         return _refuse(reasons, retried=True, judged=judged)
     left = BUDGET - (now() - t0)
     if left < JUDGE_T:
         return _refuse(reasons + ['no_time_to_judge_retry'], retried=True, judged=judged)
     try:
-        again = judge(a2, ctx, call_llm, min(JUDGE_T, left))
+        again, _ = judge(a2, ctx, call_llm, min(JUDGE_T, left))
     except Exception:  # noqa: BLE001
         return _refuse(reasons + ['judge_failed'], retried=True, judged=judged)
     if again:

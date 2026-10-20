@@ -79,8 +79,8 @@ def review(mission, call_llm, timeout):
     return out
 
 
-def make_mission(lesson, key_point, call_llm=pickle_llm, level=None):
-    t0 = time.monotonic()
+def make_mission(lesson, key_point, call_llm=pickle_llm, level=None, t0=None):
+    t0 = t0 or time.monotonic()  # 핸들러가 강사 확인·예약 시간까지 셀 수 있게
     left = lambda: DEADLINE - (time.monotonic() - t0)  # noqa: E731
     m, feedback, rounds, status, reasons = None, None, 0, 'teacher', []
     while True:

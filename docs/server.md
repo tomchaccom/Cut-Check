@@ -222,6 +222,7 @@ POST /api/create-student        Authorization: Bearer <선생님 access token>
 ```
 
 환경변수(Vercel): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. 값은 저장소에 두지 않는다.
+관리자 API(`/api/admin`)는 환경변수 `ADMIN_EMAILS`(쉼표로 구분한 이메일, 대소문자·공백 무시)에 있는 선생님만 쓴다. 비어 있으면 아무도 못 쓴다. 값은 저장소에 두지 않는다.
 서버가 없으면(로컬 모드) 계정은 못 만들지만 수업 흐름은 그대로 돈다.
 
 ### 미션 만들기 API — `api/mission-steps.py` · `api/generate-mission.py`
@@ -232,15 +233,19 @@ POST /api/create-student        Authorization: Bearer <선생님 access token>
 POST /api/mission-steps         Authorization: Bearer <선생님 access token>
   { action: 'concept',  lesson, keyPoint }                                   → { concept, label, by }
   { action: 'examples', concept, seen, difficulty, stages }                  → { examples: [{ title, situation, why }] }
-  { action: 'build',    concept, example, wish, problems, difficulty, stages } → { draft }
+  { action: 'build',    concept, example, wish, problems, difficulty, stages, ticket? } → { draft, ticket, left }
   { action: 'solve',    situation, brief, inputs }                           → { code }
-  401 토큰 없음·무효 / 403 강사 아님 / 400 입력 형식 / 422 규칙 검사 탈락(reasons 포함) / 502 LLM·Supabase 실패·시간 초과
+  { action: 'quota' }                                                        → { left, disabled }
+  401 토큰 없음·무효 / 403 강사 아님·생성 횟수 없음(left: 0) / 400 입력 형식 / 422 규칙 검사 탈락(reasons 포함) / 502 LLM·Supabase 실패·시간 초과
 ```
 
 - **두 함수 모두 Bearer 토큰이 필요하다.** `mission-steps` 와 `generate-mission` 은 같은 확인(`api/_auth.py` 의 `refuse`)을 거친다. 토큰이 없거나 강사가 아니면 LLM 을 부르지 않는다. 로컬 모드(서버 없이 열기)에서는 호출이 로그인 안내로 돌아온다.
+- **`tutor-recap`** (`POST /api/tutor-recap`, 수업에서 짚을 거리) 도 같은 강사 확인을 거친다. 학생 이름은 보내지 않고(`s1`, `s2` …), 돌아온 `quote` 는 입력의 질문과 글자 그대로 같은 것만 남는다. 실패는 502.
 - **서버는 AI 가 쓴 코드를 실행하지 않는다.** `build` 가 돌려주는 모범 답안은 강사 브라우저(Pyodide)가 자료마다 돌려 정답을 얻는다. 로그인은 비용 남용을 막을 뿐 보안 경계가 아니다(이메일로 가입하면 누구나 강사) — 그래서 코드 실행을 서버에 두지 않았다.
 - `solve` 는 모범 답안 없이 문제와 자료만 받아 따로 푼 코드를 돌려준다. 강사 화면이 같은 자료로 돌려 정답과 견준다.
 - `build` 는 응답 시간 예산 55초(`maxDuration` 60초 안)를 강사 확인부터 센다. 규칙에 걸리면 이유를 붙여 재요청하며, 시간이 모자라면 재요청하지 않는다.
+- **생성 한도(강사별).** `build` 1번과 빠른 생성(`generate-mission`) 1번이 각각 1개다. concept · examples · solve 는 세지 않는다. AI 를 부르기 전에 1을 예약하고(`api/_quota.py` → DB 함수 `gen_reserve`), 422 · 502 로 실패하면 돌려준다 — 그래서 성공한 것만 줄어든다. 남은 게 없거나 생성 끄기가 된 강사는 AI 를 부르지 않고 403 `{ error: '생성 횟수를 다 썼어요. 관리자에게 문의해 주세요.', left: 0 }`. 성공 응답에는 남은 수 `left` 가 붙는다.
+  `build` 성공은 기록 행 id 를 `ticket` 으로 준다. 같은 초안을 다시 만들 때 그 `ticket` 을 보내면, 부른 강사의 것이고 재요청 2번 미만일 때만 세지 않고 만들며 같은 `ticket` 을 돌려준다. 아니면 새 미션으로 센다. 예약 RPC 가 시간 초과면 AI 를 부르지 않고 502, 성공 뒤 기록 · 실패 뒤 반환이 안 되면 로그만 남기고 응답은 그대로 보낸다(기록이 안 되면 `ticket` 이 빠진다). 기록 몫(3초)은 55초 안에서 미리 뺀다.
 
 환경변수(Vercel), 둘 다 비워 두면 기본값이다.
 
@@ -262,4 +267,18 @@ POST /api/mission-steps         Authorization: Bearer <선생님 access token>
 3. 그다음 코드를 배포한다 (Vercel). 거꾸로 하면 1~3 사이 모든 교실이 빈 명단이다.
 4. Vercel 환경변수 `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` 가 있어야
    `mission-steps` 와 `generate-mission` 이 돈다(없으면 502).
+
+#### 생성 한도 — `20261020000000_gen_quota.sql`
+
+`build` 와 빠른 생성은 AI 를 부르기 전에 DB 함수 `gen_reserve` 로 1을 예약한다. 함수가 없으면 예약이 실패하고,
+**모든 생성이 502** 다. 일부러 이렇게 막아 뒀다(fail-closed) — 예약 RPC 가 안 될 때 그냥 통과시키면
+DB 장애 한 번에 비용 한도가 통째로 풀린다. 그래서 순서가 중요하다.
+
+1. `supabase/migrations/20261020000000_gen_quota.sql` 을 운영 DB 에 적용한다 (`supabase db push` 또는 SQL 편집기).
+2. 적용됐는지 본다: SQL 편집기에서 `select * from gen_left('<강사 uuid>');` 가 `quota · used · disabled` 한 줄을 돌려준다
+   (행이 없는 강사는 기본값 3 · 0 · false).
+3. Vercel 환경변수 `ADMIN_EMAILS` 를 넣는다 — **필수.** 이미 가입한 선생님 계정의 이메일만, 쉼표로 구분한다.
+   값은 저장소·문서·커밋 어디에도 적지 않는다. 비워 두면 관리자 화면(`admin.html`)을 아무도 못 쓰고,
+   그러면 누구의 기본 한도 3개도 늘릴 수 없다 — 첫 수업 날 강사가 3개를 다 쓰면 거기서 멈춘다.
+4. 그다음 코드를 배포한다 (Vercel). 코드가 먼저 나가면 1 이 끝날 때까지 모든 생성이 502 다.
 

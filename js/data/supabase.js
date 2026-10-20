@@ -18,7 +18,7 @@
   }
 
   /* 서버 함수 부르기 — 지금 세션의 토큰을 붙인다. 생성·계정 함수는 로그인한 강사만 받는다.
-   * 실패면 Error(서버가 준 문장), 422 면 err.reasons 에 걸린 이유. */
+   * 실패면 Error(서버가 준 문장) + err.status · err.body(응답 그대로 — 403 의 left 등), 422 면 err.reasons 에 걸린 이유. */
   function api(path, body) {
     if (!sb) return Promise.reject(new Error('Supabase 미설정'));
     return sb.auth.getSession().then(function (res) {
@@ -33,6 +33,7 @@
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok) {
           var err = new Error(j.error || '서버에 연결하지 못했어요.');
+          err.status = r.status; err.body = j;
           if (r.status === 422) err.reasons = j.reasons;
           throw err;
         }
@@ -47,6 +48,26 @@
     active: function () { return !!sb; },
     client: function () { return sb; },
     api: api,
+
+    /* 수업에서 짚을 거리 — 성공 결과만 이 브라우저에 둔다. key 는 CC.recap 이 만든다 (새 튜터 대화가 쌓이면 바뀐다).
+     * CC.sb.api 를 그때그때 찾는다 — 저장소가 막혀도 서버만 다시 부를 뿐이다 */
+    recap: function (body, key) {
+      try { var hit = localStorage.getItem(key); if (hit) return Promise.resolve(JSON.parse(hit)); } catch (e) { /* 막히면 서버로 */ }
+      return CC.sb.api('/api/tutor-recap', body).then(function (j) {
+        if (!(j && Array.isArray(j.items) && j.items.length)) return j;   /* 빈 결과·이상한 모양은 캐시하지 않는다 — 다시 누르면 다시 묻는다 */
+        try { localStorage.setItem(key, JSON.stringify(j)); } catch (e) { /* 저장 못 해도 결과는 보인다 */ }
+        return j;
+      });
+    },
+
+    /* 공용 PC — 로그아웃할 때 학생 질문이 담긴 recap 캐시를 모두 지운다 */
+    clearRecap: function () {
+      try {
+        var ks = [];
+        for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf('recap:') === 0) ks.push(k); }
+        ks.forEach(function (k) { localStorage.removeItem(k); });
+      } catch (e) { /* 막혀 있으면 지울 것도 없다 */ }
+    },
 
     /* ── 인증 ────────────────────────────────── */
     /* 프로필은 DB 트리거(handle_new_user)가 자동 생성한다.

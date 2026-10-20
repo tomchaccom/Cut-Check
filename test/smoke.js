@@ -1,4 +1,4 @@
-/* 5개 화면 × 3폭 × 2테마 연기 테스트.
+/* 화면 × 3폭 × 2테마 연기 테스트.
  * JS 에러 / 가로 스크롤 / 금지 단어를 본다.
  *
  * 금지 단어 검사가 이 파일에서 제일 중요하다.
@@ -21,7 +21,7 @@ function launchOpts() {
 }
 
 /* index.html 은 landing.html 로 넘기는 리다이렉트뿐이라 landing 을 본다 */
-const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html','sentence.html'];
+const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html','sentence.html','admin.html'];
 (async () => {
   const b = await chromium.launch(launchOpts());
   let bad = 0;

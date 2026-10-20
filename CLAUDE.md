@@ -86,7 +86,7 @@
 
 ## 파일 구조
 
-화면 7개와 **세 층**으로 나뉜 코드. 층의 경계가 이 저장소에서 제일 중요한 규칙이다.
+화면 8개와 **세 층**으로 나뉜 코드. 층의 경계가 이 저장소에서 제일 중요한 규칙이다.
 
 ```
 index.html      학생 화면 (미션 01·02·03·06 + 졸업 과제, 블록 기반)
@@ -96,6 +96,7 @@ review.html     미션 05 · 동료 검토
 make.html       졸업 시험 · 내 미션 만들기
 teacher.html    선생님 화면
 print.html      수업 준비물 (인쇄용)
+admin.html      관리자 화면 (강사별 생성 한도 · 최근 생성 기록, 관리자만)
 philosophy.html 철학 한 장 (리뷰·심사용)
 
 js/core/   판단의 규칙. 저장소도 네트워크도 화면도 모른다
@@ -114,7 +115,7 @@ js/data/   바깥 세계. 여기만 localStorage 와 fetch 를 안다
   store.js      오프라인 우선 기록 + 발신함
 
 js/ui/     화면. DOM 만 만진다
-  app.js  teacher.js  abstract.js  review.js  make.js  classroom.js  sentence.js
+  app.js  teacher.js  abstract.js  review.js  make.js  classroom.js  sentence.js  admin.js
 ```
 
 ### 층을 넘지 않는다
@@ -166,7 +167,7 @@ node test/engine.test.js     # 반례가 실제로 깨지는지, 에러가 몇 �
 node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
 node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
-node test/smoke.js           # 8개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
+node test/smoke.js           # 9개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 
 # 미션 생성 서버(api/*.py) — venv 없이 uv 가 pydantic 을 준비한다
@@ -175,11 +176,14 @@ uv run --with-requirements requirements.txt python test/test_pipeline_parity.py 
 uv run --with-requirements requirements.txt python test/test_generate.py         # LLM 을 가짜로 끼워 재요청·칸별 폴백 흐름
 uv run --with-requirements requirements.txt python test/test_accounts.py         # 학생 계정 만들기 — 남의 교실·중복 아이디·키 노출
 uv run --with-requirements requirements.txt python test/test_steps.py            # 단계별 생성 — 개념 낱말 규칙·예시 거르기·초안 검사·재요청·강사만
+uv run --with-requirements requirements.txt python test/test_tutor_recap.py      # 수업에서 짚을 거리 — 항목 검사·인용 대조·상한·재요청·강사만
+uv run --with-requirements requirements.txt python test/test_quota.py            # 강사별 생성 한도 — 예약·반환·재요청 ticket·0개면 403·네트워크 실패
+uv run --with-requirements requirements.txt python test/test_admin.py            # 관리자 API — 관리자만·한도 0..1000 정수·낮춰도 left 0·목록·로그
 ```
 
 8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.
 
-아홉 다 통과해야 커밋한다. `js/core/pipeline.js` 를 고치면 `api/_pipeline.py` 도 같이 고친다.
+위 테스트가 모두 통과해야 커밋한다. `js/core/pipeline.js` 를 고치면 `api/_pipeline.py` 도 같이 고친다.
 브라우저 경로가 다르면 `CC_CHROME=/path/to/chrome node test/smoke.js`.
 
 학생의 자유 입력(직접 쓴 성공 조건, 마무리 문장, 만든 미션)은 **반드시 교사 화면에

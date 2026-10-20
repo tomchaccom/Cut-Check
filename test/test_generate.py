@@ -228,7 +228,9 @@ print('\n[핸들러 — 네트워크 없이 확인할 수 있는 것]')
 spec = importlib.util.spec_from_file_location('gm', os.path.join(ROOT, 'api', 'generate-mission.py'))
 gm = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gm)
-gm.refuse = lambda *a: None  # 강사 확인은 test_steps.py 가 본다 — 여기는 그 뒤의 흐름만
+# 강사 확인은 test_steps.py, 생성 한도는 test_quota.py 가 본다 — 여기는 그 뒤의 흐름만
+gm.ident = lambda *a: ('t1', None)
+gm._quota = type('Q', (), {'charge': staticmethod(lambda tid, ticket, kind, lesson, concept, run, env, http: run())})
 
 
 def post(body):
