@@ -37,6 +37,11 @@
 학생 화면에는 절대 나가지 않는다 — 위 표의 "레벨" 금지는 학생 쪽에 그대로 살아 있다.
 되돌리거나("레벨은 금지인데요") 학생 쪽으로 넓히자고 다시 제안하지 않는다.
 
+**예외 둘 — 나침반.** 2026-10-20 사람이 정했다: 미션별 4방향 단계(0~3)와 AI 멘트는 선생님 화면에만.
+학생에게는 바늘과 선생님이 고른 방위 하나, 선생님이 쓴 문장만 간다. 단계로 정렬·평균·순위를 만들지 않는다.
+학생 문장은 AI 가 쓰지 않는다 — 학생이 미션을 마치면 선생님에게 알림이 가고, 한마디는 선생님이 쓴다.
+네 방향이 비슷하면(벡터 길이 1 미만) 학생에게 바늘을 보이지 않는다. 설계: `docs/superpowers/specs/2026-10-20-compass-design.md`.
+
 ---
 
 ## 화면 문구 규칙
@@ -108,6 +113,7 @@ js/core/   판단의 규칙. 저장소도 네트워크도 화면도 모른다
   hangul.js     조사 계산
   llmguard.js   LLM 출력 검사기
   asks.js       AI 되묻기 문장
+  compass.js    나침반 그림(바늘·다각형 SVG 문자열) · 방위 이름
 
 js/data/   바깥 세계. 여기만 localStorage 와 fetch 를 안다
   config.js     apiBase 가 비면 로컬, 있으면 서버
@@ -169,6 +175,7 @@ node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그
 node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
 node test/smoke.js           # 9개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
+node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG
 
 # 미션 생성 서버(api/*.py) — venv 없이 uv 가 pydantic 을 준비한다
 uv run --with-requirements requirements.txt python test/test_missionguard.py     # 생성 미션 검사 + 우리 미션 문장
@@ -179,6 +186,8 @@ uv run --with-requirements requirements.txt python test/test_steps.py           
 uv run --with-requirements requirements.txt python test/test_tutor_recap.py      # 수업에서 짚을 거리 — 항목 검사·인용 대조·상한·재요청·강사만
 uv run --with-requirements requirements.txt python test/test_quota.py            # 강사별 생성 한도 — 예약·반환·재요청 ticket·0개면 403·네트워크 실패
 uv run --with-requirements requirements.txt python test/test_admin.py            # 관리자 API — 관리자만·한도 0..1000 정수·낮춰도 left 0·목록·로그
+uv run --with-requirements requirements.txt python test/test_compass.py          # 나침반 규칙 — 사실·상한·근거 대조·벡터 바늘·JS 와 같은 답
+uv run --with-requirements requirements.txt python test/test_compass_api.py      # 나침반 API — 내 교실만·한 번만 읽기·보내기 바늘·학생에게 안 가는 열
 ```
 
 8123 을 다른 작업 폴더가 쓰고 있으면 `CC_BASE=http://localhost:8125 node test/smoke.js` 처럼 주소를 바꾼다.
