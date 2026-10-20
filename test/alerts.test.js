@@ -25,7 +25,7 @@ t('finish 같은 판정 두 번 → 새 알림 없음', run('한결', [j], [j, e
 t('finish 다른 미션은 따로', kinds(run('한결', [j], [j, ev('s-code-judge', 'm2')])) === 'finish');
 const sv = CC.alerts.snap([S('태인')], { server: true, finishedOf: () => ['db1'], eventsOf: () => [], missionName: () => '급식 투표' });
 d = CC.alerts.diff(CC.alerts.snap([S('태인')], { server: true, finishedOf: () => [], eventsOf: () => [] }), sv);
-t('finish 서버 — mid 는 DB id, 나침반 문장', d.length === 1 && d[0].mid === 'db1' && CC.alerts.say(d[0]) === '태인이 급식 투표를 마쳤어요. 나침반을 보고 한마디 적어 주세요.');
+t('finish 서버 — dbId, 나침반 문장', d.length === 1 && d[0].dbId === 'db1' && CC.alerts.say(d[0]) === '태인이 급식 투표를 마쳤어요. 나침반을 보고 한마디 적어 주세요.');
 
 // redefine / fixed
 d = run('민지', [], [ev('s-redefine', 'm1')]);
@@ -76,5 +76,25 @@ const all = [['finish', '한결'], ['finish', '태인'], ['redefine', '한결'],
   .map(([kind, name]) => CC.alerts.say({ kind, name, mission: '급식 투표' }));
 t('조사 — 한결이 · 태인이', all.every(s => /^(한결이|태인이) /.test(s)));
 t('칭찬 낱말 없음', all.every(s => !/잘했|훌륭|대단|최고/.test(s)));
+
+// 서버 모드 — 모든 종류가 mid(클라이언트) 와 dbId 를 같은 뜻으로 싣고, 문장에 미션 이름이 들어간다
+const sev = (n, mid, type) => Array.from({ length: n }, () => Object.assign(ev(type, mid), { _missionDbId: 'db-' + mid }));
+const svOpt = evs => ({ server: true, eventsOf: s => evs.filter(e => e.sid === s.id), finishedOf: s => evs.filter(e => e.sid === s.id && e.type === 's-code-judge').map(e => e._missionDbId),
+  missionName: mid => ({ m1: '분식집 주문' })[mid] });
+const P = [{ id: 'a', name: '한결', sDesignCount: 0, sCodeJudges: [] }, { id: 'b', name: '태인', sDesignCount: 0, sCodeJudges: [] }];
+const mk = evs => CC.alerts.snap(P, svOpt(evs));
+const bEv = (n, type) => sev(n, 'm1', type).map(e => Object.assign(e, { sid: 'b' }));
+d = CC.alerts.diff(mk(sev(4, 'm1', 's-tutor')), mk(sev(5, 'm1', 's-tutor').concat(bEv(5, 's-tutor'))));
+t('서버 tutor-many — 문장에 미션 이름, mid · dbId, 학생 둘 따로', d.length === 2 && d.every(a => a.mid === 'm1' && a.dbId === 'db-m1') &&
+  CC.alerts.say(d.filter(a => a.id === 'a')[0]) === '한결이 분식집 주문에서 튜터에게 5번 물었어요.' && d.filter(a => a.id === 'b').length === 1);
+d = CC.alerts.diff(mk([]), mk(sev(1, 'm1', 's-code-judge')));
+t('서버 finish — mid 는 기록 id, dbId 는 서버 id', d.length === 1 && d[0].mid === 'm1' && d[0].dbId === 'db-m1' && /분식집 주문을/.test(CC.alerts.say(d[0])));
+d = run('한결', [], [ev('s-redefine', 'm1')]);
+t('로컬 알림 dbId 는 null', d[0].mid === 'm1' && d[0].dbId === null);
+
+// 순서 없이 들어온 기록 · mid 없는 기록
+const late = ev('s-code', 'm1', { code: 'y', error: null, t: 9 }), early = ev('s-code', 'm1', { code: 'x', error: 'E', t: 2 });
+t('fixed — 기록 순서가 뒤섞여도 시각순으로 본다', kinds(run('민지', [], [late, early])) === 'fixed');
+t('mid 없는 기록은 건너뛴다(죽지 않는다)', run('민지', [], [{ type: 's-redefine', sid: 'a' }, { type: 's-tutor' }, ev('s-code-judge', '')]).length === 0);
 
 process.exit(fail ? 1 : 0);

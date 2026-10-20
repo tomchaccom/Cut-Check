@@ -17,25 +17,34 @@
   /* snap 의 opt (모두 선택)
    *   finishedOf(s) -> [미션 DB id]   서버 모드 — 키·mid 가 DB id
    *   eventsOf(s)   -> 이 학생의 원래 기록 (mid 가 붙은 것)
-   *   missionName(mid, s) / missionOf(mid)   문장·코드 사실에 쓴다
+   *   missionName(mid, s) / missionOf(mid)   문장·코드 사실에 쓴다 (mid 는 학생 기록 안의 미션 id)
    *   server        true 면 finish 문장에 나침반 안내가 붙는다
+   * 알림마다 mid = 학생 기록 안의 미션 id(e.mid, 모르면 ''), dbId = 서버 미션 id(없으면 null) — 종류와 상관없이 같은 뜻.
    * 키는 '종류:미션' — 같은 학생·미션·종류는 몇 번을 다시 계산해도 한 번만 알린다 */
   function snap(students, opt) {
     opt = opt || {};
-    var o = {};
+    var o = {}, mcache = {};
+    var missionOf = opt.missionOf && function (mid) { return mid in mcache ? mcache[mid] : (mcache[mid] = opt.missionOf(mid)); };   /* 저장소를 snap 한 번에 미션당 한 번만 */
     (students || []).forEach(function (s) {
       if (!s) return;
-      var evs = opt.eventsOf ? opt.eventsOf(s) || [] : null;
+      var evs = opt.eventsOf ? (opt.eventsOf(s) || []).slice() : null;
+      if (evs) evs.sort(function (x, y) { return (x.t || 0) - (y.t || 0); });   /* 안정 정렬 — 순서를 보장 못 하는 기록도 '에러 뒤'를 가린다 */
       var keys = {}, hasFinish = !!(opt.finishedOf || evs);
       var name = function (mid) { return (opt.missionName && opt.missionName(mid, s)) || ''; };
-      var add = function (kind, mid, extra) {
-        var k = kind + ':' + mid;
-        if (!(k in keys)) keys[k] = Object.assign({ kind: kind, mid: mid, mission: name(mid), compass: !!opt.server }, extra);
+      var dbOf = {}, midOf = {}, by = {};   /* 클라이언트 미션 id ↔ 서버 id, 미션별 기록 */
+      (evs || []).forEach(function (e) {
+        if (!e.mid) return;
+        (by[e.mid] = by[e.mid] || []).push(e);
+        if (e._missionDbId) { dbOf[e.mid] = e._missionDbId; midOf[e._missionDbId] = e.mid; }
+      });
+      var add = function (kind, mid, extra, key) {
+        var k = kind + ':' + (key || mid);
+        if (!(k in keys)) keys[k] = Object.assign({ kind: kind, mid: mid, dbId: dbOf[mid] || null, mission: name(mid), compass: !!opt.server }, extra);
       };
-      var by = {};   /* 미션별 기록 */
-      (evs || []).forEach(function (e) { if (e.mid) (by[e.mid] = by[e.mid] || []).push(e); });
 
-      if (opt.finishedOf) (opt.finishedOf(s) || []).forEach(function (m) { add('finish', m); });
+      if (opt.finishedOf) (opt.finishedOf(s) || []).forEach(function (db) {
+        add('finish', midOf[db] || '', { dbId: db }, db);
+      });
       Object.keys(by).forEach(function (mid) {
         var list = by[mid], bad = null, tutor = 0;
         list.forEach(function (e) {
@@ -46,7 +55,7 @@
           if (e.error) bad = e.code;
           else if (bad !== null && e.code !== bad) add('fixed', mid);
         });
-        var m = opt.missionOf && CC.facts && CC.fold && opt.missionOf(mid);
+        var m = missionOf && CC.facts && CC.fold && missionOf(mid);
         var v = m && list.some(function (e) { return e.type === 's-code'; }) && CC.fold.fold(list, { id: s.id, name: s.name });
         if (v && CC.facts.of(v, m).some(function (f) { return f.kind === 'hardcode'; })) add('hardcode', mid);
       });
@@ -69,7 +78,7 @@
       Object.keys(b.keys).forEach(function (k) {
         if (k in a.keys) return;
         var x = b.keys[k];
-        out.push({ id: id, name: b.name, mid: x.mid, kind: x.kind, tag: TAG_OF[x.kind], mission: x.mission, compass: x.compass, level: x.level });
+        out.push({ id: id, name: b.name, mid: x.mid, dbId: x.dbId, kind: x.kind, tag: TAG_OF[x.kind], mission: x.mission, compass: x.compass, level: x.level });
       });
       if (b.judged != null && b.judged > (a.judged || 0)) out.push({ id: id, name: b.name, kind: 'code', tag: TAG_OF.code });
     });

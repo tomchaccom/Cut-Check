@@ -11,7 +11,7 @@ const first = CC.alerts.snap([S('a', '민지', ['m1'])], { finishedOf: fin });
 t('첫 snap 에 있던 것은 알리지 않는다', CC.alerts.diff(null, first).length === 0 && CC.alerts.diff(first, CC.alerts.snap([S('a', '민지', ['m1'])], { finishedOf: fin })).length === 0);
 const s1 = CC.alerts.snap([S('a', '민지', ['m1', 'm2'])], { finishedOf: fin });
 const d1 = CC.alerts.diff(first, s1);
-t('다른 미션은 finish 한 번 더', d1.length === 1 && d1[0].kind === 'finish' && d1[0].mid === 'm2' && d1[0].id === 'a');
+t('다른 미션은 finish 한 번 더', d1.length === 1 && d1[0].kind === 'finish' && d1[0].dbId === 'm2' && d1[0].id === 'a');
 const again = CC.alerts.snap([Object.assign(S('a', '민지', ['m1', 'm2']), { sCodeJudges: [{}, {}] })], { finishedOf: fin });
 t('finish once — 같은 미션을 다시 판정해도 알리지 않고 code 알림도 없다', CC.alerts.diff(s1, again).length === 0);
 t('로컬(finishedOf 없음)은 예전 그대로 code', (() => {

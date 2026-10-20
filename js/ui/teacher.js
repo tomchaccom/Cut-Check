@@ -739,8 +739,8 @@
     var on = serverOn();
     return {
       server: on, eventsOf: eventsOf, missionOf: missionOf, finishedOf: on ? finishedOf : null,
-      missionName: function (mid, s) {
-        var m = missionOf(on && s ? clientMid(s, mid) : mid);
+      missionName: function (mid) {
+        var m = missionOf(mid);
         return m && m.title ? m.title : '';
       }
     };
