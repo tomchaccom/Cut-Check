@@ -18,7 +18,7 @@
   }
 
   /* 서버 함수 부르기 — 지금 세션의 토큰을 붙인다. 생성·계정 함수는 로그인한 강사만 받는다.
-   * 실패면 Error(서버가 준 문장), 422 면 err.reasons 에 걸린 이유. */
+   * 실패면 Error(서버가 준 문장) + err.status · err.body(응답 그대로 — 403 의 left 등), 422 면 err.reasons 에 걸린 이유. */
   function api(path, body) {
     if (!sb) return Promise.reject(new Error('Supabase 미설정'));
     return sb.auth.getSession().then(function (res) {
@@ -33,6 +33,7 @@
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok) {
           var err = new Error(j.error || '서버에 연결하지 못했어요.');
+          err.status = r.status; err.body = j;
           if (r.status === 422) err.reasons = j.reasons;
           throw err;
         }

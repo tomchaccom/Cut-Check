@@ -13,6 +13,7 @@
   var CM = CC.codemission;
   var PY_FAIL = 'Python을 불러오지 못했어요. 새로고침한 뒤 다시 만들어 주세요.';
   var RETRIES = 2;
+  var SPENT = '생성 횟수를 다 썼어요. 관리자에게 문의해 주세요.';
 
   function level() {
     return { difficulty: $('#gen-diff').value, stages: CC.onboard.spread(st.opts.students()) };
@@ -24,12 +25,23 @@
   function say(t) { $('#sg-status').textContent = t || ''; }
   function fail(e) { say(e && e.message ? e.message : '잠시 뒤에 다시 해 주세요.'); }
 
+  /* 남은 생성 — 서버가 알려 준 수만 두 생성 버튼 옆에 보인다. 0 이면 두 버튼을 끈다(다시 켜는 건 새로고침 — 한도는 관리자만 늘린다).
+     수가 없는 응답(로컬 개발 서버 등)은 그대로 둔다 */
+  function quota(n) {
+    if (typeof n !== 'number') return;
+    st.spent = n <= 0;
+    [].forEach.call(document.querySelectorAll('.gen-left'), function (s) { s.textContent = st.spent ? SPENT : '남은 생성 ' + n + '개'; });
+    if (st.spent) $('#gen-btn').disabled = true;
+    $('#sg-build').disabled = st.spent || st.pick < 0;
+  }
+  function spent(e) { if (e && e.status === 403 && e.body && e.body.left === 0) quota(0); }
+
   function pick(i) {
     st.pick = i;
     [].forEach.call(document.querySelectorAll('.sg-ex'), function (b, k) {
       b.setAttribute('aria-pressed', k === i ? 'true' : 'false');
     });
-    $('#sg-build').disabled = i < 0;
+    $('#sg-build').disabled = i < 0 || !!st.spent;
   }
 
   function show(list) {
@@ -103,13 +115,17 @@
     return out.concat(CM.solcheck(d, r.runs, r.uses).map(function (p) { return p.msg; }));
   }
 
-  /* 3단계 — 만들고 돌려 보고, 걸리면 이유를 붙여 다시 만든다(최대 RETRIES 번) */
-  function make(probs, left) {
+  /* 3단계 — 만들고 돌려 보고, 걸리면 이유를 붙여 다시 만든다(최대 RETRIES 번).
+     다시 만들 때는 직전 응답의 ticket 을 싣는다 — 서버가 같은 1개로 센다. 새 "만들기" 는 ticket 없이 */
+  function make(probs, left, ticket) {
     var my = ++bgen;
     say(probs.length ? '다시 만드는 중이에요.' : '만드는 중이에요.');
     boot();
-    return call({ action: 'build', concept: st.concept, example: st.examples[st.pick],
-      wish: $('#sg-wish').value.trim(), problems: probs }).then(function (r) {
+    var body = { action: 'build', concept: st.concept, example: st.examples[st.pick],
+      wish: $('#sg-wish').value.trim(), problems: probs, lesson: $('#gen-lesson').value.trim() };
+    if (ticket) body.ticket = ticket;
+    return call(body).then(function (r) {
+      quota(r && r.left);                 /* 늦게 온 응답이어도 쓴 횟수는 쓴 것이다 */
       if (my !== bgen) return;
       var d = r && r.draft;
       if (!d || !Array.isArray(d.inputs) || !d.inputs.length || typeof d.solution !== 'string') throw new Error('초안을 받지 못했어요. 다시 만들어 주세요.');
@@ -118,11 +134,11 @@
       return runAll(d).then(function (res) {
         if (my !== bgen) return;
         var p = problems(d, res);
-        if (p.length && left > 0) return make(p, left - 1);
+        if (p.length && left > 0) return make(p, left - 1, r.ticket);
         draft(d, res, p);
         say('');
       });
-    }).catch(function (e) { if (my === bgen) fail(e); });
+    }).catch(function (e) { spent(e); if (my === bgen) fail(e); });
   }
 
   /* 자료는 한 줄짜리 리터럴 — 학생 화면의 자료 줄 찾기(DATA_RE)가 한 줄만 본다 */
@@ -364,6 +380,13 @@
 
   CC.genflow = {
     state: st,
+    quota: quota,
+    spent: spent,
+    /* 화면을 연 강사에게 한 번 — 차감 없음. 못 받아도 생성은 그대로(서버가 다시 거른다) */
+    refresh: function () {
+      Promise.resolve().then(function () { return CC.sb.api('/api/mission-steps', { action: 'quota' }); })
+        .then(function (r) { quota(r && r.left); }).catch(function () {});
+    },
     init: function (opts) {
       st.opts = opts;
       var sel = $('#sg-concept-pick');
