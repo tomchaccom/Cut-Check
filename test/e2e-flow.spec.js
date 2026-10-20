@@ -12,7 +12,7 @@ const { test, expect } = require('@playwright/test');
 const BASE = process.env.CC_BASE || 'http://localhost:8123';   // 다른 작업 폴더가 8123 을 쓰고 있으면 CC_BASE 로 바꾼다
 
 async function local(ctx) {
-  await ctx.route('**/supabase-js@2/**', r => r.abort());
+  await ctx.route('**/supabase-js@*/**', r => r.abort());
 }
 
 /* 교사가 확정한 미션은 localStorage 'cutcheck.generated' 로 학생 화면에 간다 (teacher.html 확정 버튼).
@@ -584,7 +584,7 @@ signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthCha
 })(window.CC=window.CC||{});`;
 
 async function asStudent(page, rooms) {
-  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/supabase-js@*/**', r => r.abort());
   await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_SB }));
   if (rooms) await page.addInitScript(r => { window.__rooms = r; }, rooms);
   await page.goto(BASE + '/sentence.html');
@@ -715,7 +715,7 @@ roster.forEach(function(r){if(window.__due===r.id)r.onboard_due='2026-10-19T00:0
 window.__removed=[];window.__created=[];window.__reset=[];
 CC.sb={active:function(){return true},
 api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer fake'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(j){if(!r.ok){var e=new Error(j.error||'x');e.reasons=j.reasons;e.status=r.status;e.body=j;throw e}return j})})},
-getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:window.__role||'teacher',name:'김선생'})},
+getUser:function(){return P({id:'t1'})},getProfile:function(){if(window.__noProfile)return P(null);return P({role:window.__role||'teacher',name:'김선생'})},
 createStudent:function(rid,s){if(s.loginId==='taken')return Promise.reject(new Error('이미 있는 아이디예요.'));window.__created.push([rid,s]);roster.push({id:'n'+roster.length,name:s.name,login_id:s.loginId});return P({loginId:s.loginId,password:s.password||'k7mpq2xa'})},
 resetStudentPassword:function(rid,lid){window.__reset.push([rid,lid]);return P({loginId:lid,password:'zz88aa44'})},
 onAuthChange:function(){},signOut:function(){return P()},createClassroom:function(){return P({})},
@@ -730,7 +730,7 @@ compass:function(a,b){return CC.sb.api('/api/compass',Object.assign({action:a},b
 })(window.CC=window.CC||{});`;
 
 test('강사 — 교실 폴더, 기록 없는 학생도 폴더, 교실에서 빼기', async ({ page }) => {
-  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/supabase-js@*/**', r => r.abort());
   await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
   await page.goto(BASE + '/teacher.html');
   await expect(page.locator('#classroom-cards .room-tile')).toHaveCount(2);
@@ -775,7 +775,7 @@ test('강사 — 1440 폭에서 학생 서랍은 넓고 옆으로 넘치지 않�
 });
 
 async function asTeacher(page, role) {
-  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/supabase-js@*/**', r => r.abort());
   await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
   if (role) await page.addInitScript(r => { window.__role = r; }, role);
   await page.goto(BASE + '/teacher.html');
@@ -851,7 +851,7 @@ test('학생 프로필로 선생님 화면을 열면 학생 화면으로 간다'
 });
 
 test('로그인 화면 — 역할 고르기도 교실 코드 입력도 없다, 아이디로도 들어온다', async ({ page }) => {
-  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/supabase-js@*/**', r => r.abort());
   await page.goto(BASE + '/auth.html');
   await expect(page.locator('#signup-role')).toHaveCount(0);
   await expect(page.locator('#join-section')).toHaveCount(0);
@@ -1573,7 +1573,7 @@ const RECAP_EVS = [
   rv('s3', '한결', 's-wrap', 'ma', { text: '끝' })
 ];
 async function asRecapTeacher(page, evs, reply) {
-  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/supabase-js@*/**', r => r.abort());
   await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: RECAP_SB }));
   const calls = [];
   await page.route('**/api/tutor-recap', r => { calls.push(r.request().postDataJSON()); return r.fulfill(reply); });
@@ -1767,7 +1767,7 @@ async function asAdmin(page, handle) {
     const [status, body] = handle(b);
     return r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
   });
-  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/supabase-js@*/**', r => r.abort());
   await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
   await page.goto(BASE + '/admin.html');
   return reqs;
@@ -1795,7 +1795,7 @@ test('관리자 — 강사 표, 한도를 바꾸면 그 줄만 갱신, 범위 �
   await expect(rows.nth(0)).toContainText('garam@example.test');
   const q = rows.nth(1).locator('input[type="number"]');
   await q.fill('5'); await q.blur();
-  await expect(rows.nth(1).locator('td').nth(3)).toHaveText('2');
+  await expect(rows.nth(1).locator('td[data-l="남은"]')).toHaveText('2');
   expect(reqs.find(b => b.action === 'set_quota')).toEqual({ action: 'set_quota', id: T2, quota: 5 });
   await expect(rows.nth(1).locator('input[type="number"]')).toHaveValue('5');
   const q2 = rows.nth(0).locator('input[type="number"]');
@@ -1824,13 +1824,106 @@ test('관리자 — 생성 끄기와 기본 한도, 폰 폭에서도 화면은 �
   });
   const row = page.locator('#ad-teachers tbody tr').first();
   await row.locator('input[type="checkbox"]').check();
-  await expect(page.locator('#ad-teachers tbody tr').first().locator('td').nth(3)).toHaveText('0');
+  await expect(page.locator('#ad-teachers tbody tr').first().locator('td[data-l="남은"]')).toHaveText('꺼짐');
   expect(reqs.find(b => b.action === 'set_disabled')).toEqual({ action: 'set_disabled', id: T1, disabled: true });
   await page.locator('#ad-default').fill('7'); await page.locator('#ad-default').blur();
   await expect.poll(() => reqs.filter(b => b.action === 'set_default').length).toBe(1);
   expect(reqs.find(b => b.action === 'set_default')).toEqual({ action: 'set_default', quota: 7 });
   const o = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   expect(o).toBeLessThanOrEqual(0);
+});
+
+/* ── 관리자 화면 틀과 고칠 것 (2026-10-20, shell) ── */
+test('관리자 — 왼쪽 사이드바 틀, 오른쪽 패널 없음, 로그인 링크는 로그인이 안 됐을 때만', async ({ page }) => {
+  await page.addInitScript(() => { window.__noProfile = 1; });
+  await asAdmin(page, () => [200, {}]);
+  await expect(page.locator('#side')).toBeVisible();
+  await expect(page.locator('#alerts, aside')).toHaveCount(0);
+  await expect(page.locator('#ad-note a[href="auth.html"]')).toHaveText('로그인');
+  expect(page.url()).toContain('admin.html');                          // 조용히 옮기지 않는다
+  await expect(page.locator('#side a[href="teacher.html"]')).toBeVisible();
+});
+
+test('관리자 — 저장 중에는 그 줄이 잠기고 요청은 한 번, 저장했어요는 3초 뒤 사라진다', async ({ page }) => {
+  let release;
+  const gate = new Promise(r => { release = r; });
+  const reqs = [];
+  await page.route('**/api/admin', async r => {
+    const b = r.request().postDataJSON(); reqs.push(b);
+    if (b.action === 'list') return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(ADMIN_LIST) });
+    if (b.action === 'log') return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ log: [] }) });
+    await gate;
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...ADMIN_LIST.teachers[0], quota: b.quota, left: b.quota - 1 }) });
+  });
+  await page.route('**/supabase-js@*/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_TEACHER }));
+  await page.goto(BASE + '/admin.html');
+  const row = page.locator('#ad-teachers tbody tr').first();
+  const q = row.locator('input[type="number"]');
+  await q.fill('4'); await q.blur();
+  await expect(q).toBeDisabled();
+  await expect(row.locator('input[type="checkbox"]')).toBeDisabled();
+  await expect(row.locator('.ad-msg')).toHaveText('저장 중이에요.');
+  expect(reqs.filter(b => b.action === 'set_quota').length).toBe(1);
+  release();
+  const msg = page.locator('#ad-teachers tbody tr').first().locator('.ad-msg');
+  await expect(msg).toHaveText('저장했어요.');
+  await expect(page.locator('#ad-teachers tbody tr').first().locator('input[type="number"]')).toHaveValue('4');
+  await expect(msg).toHaveText('', { timeout: 5000 });
+});
+
+test('관리자 — 기본 한도도 저장했어요, 기록이 비면 안내 한 줄, 다 씀과 꺼짐은 글자로 다르다', async ({ page }) => {
+  const reqs = await asAdmin(page, b => {
+    if (b.action === 'list') return [200, { default_quota: 3, teachers: [
+      ...ADMIN_LIST.teachers,
+      { id: 'x3', name: '다온', email: 'daon@example.test', used: 0, quota: 0, left: 0, disabled: true }] }];
+    if (b.action === 'log') return [200, { log: [] }];
+    if (b.action === 'set_default') return [200, { default_quota: b.quota }];
+    return [400, { error: 'x' }];
+  });
+  await expect(page.locator('#ad-log-empty')).toHaveText('아직 만든 미션이 없어요.');
+  await expect(page.locator('#ad-log')).toBeHidden();
+  const left = i => page.locator('#ad-teachers tbody tr').nth(i).locator('td[data-l="남은"]');
+  await expect(left(0)).toHaveText('2');
+  await expect(left(1)).toContainText('다 씀');
+  await expect(left(2)).toHaveText('꺼짐');
+  await page.locator('#ad-default').fill('7'); await page.locator('#ad-default').blur();
+  await expect(page.locator('#ad-default-msg')).toHaveText('저장했어요.');
+  await expect(page.locator('#ad-default-msg')).toHaveText('', { timeout: 5000 });
+});
+
+test('관리자 — 390px 카드, 가로 스크롤 없음, 같은 이름도 이메일로 구분, 오류가 보인다', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await asAdmin(page, b => {
+    if (b.action === 'list') return [200, { default_quota: 3, teachers: [
+      { ...ADMIN_LIST.teachers[0], name: '김선생' }, { ...ADMIN_LIST.teachers[1], name: '김선생' }] }];
+    if (b.action === 'log') return [200, { log: [{ at: '2026-10-20T01:02:03Z', teacher: '김선생', lesson: '아주긴수업내용'.repeat(10), concept: 'for', kind: 'step', retries: 0 }] }];
+    return [400, { error: '한도는 0 이상 1000 이하 정수로 정해 주세요.' }];
+  });
+  const rows = page.locator('#ad-teachers tbody tr');
+  await expect(rows.nth(0)).toContainText('garam@example.test');
+  await expect(rows.nth(1)).toContainText('narae@example.test');
+  const q = rows.nth(0).locator('input[type="number"]');
+  await expect(q).toHaveAttribute('aria-label', /김선생.*garam@example.test|garam@example.test.*김선생/);
+  await q.fill('2000'); await q.blur();
+  const m = rows.nth(0).locator('.ad-msg');
+  await expect(m).toBeVisible();
+  const b = await m.boundingBox();
+  expect(b.x).toBeGreaterThanOrEqual(0); expect(b.x + b.width).toBeLessThanOrEqual(390);
+  expect(b.height).toBeLessThan(80);                                   // 한 글자씩 줄바꿈하지 않는다
+  await expect(q).toBeEnabled();                                       // 실패하면 다시 고칠 수 있다
+  for (const e of [q, rows.nth(0).locator('.ad-off')]) {
+    const bb = await e.boundingBox(); expect(bb.height).toBeGreaterThanOrEqual(44);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+});
+
+test('관리자 — supabase-js 는 정확한 버전으로 고정돼 있다', async () => {
+  const fs = require('fs');
+  for (const f of ['admin.html', 'teacher.html', 'sentence.html', 'auth.html', 'debug.html']) {
+    const m = fs.readFileSync(__dirname + '/../' + f, 'utf8').match(/supabase-js@([^/]+)\//);
+    expect(m && m[1], f).toMatch(/^\d+\.\d+\.\d+$/);
+  }
 });
 
 /* ── 사용법 안내 (js/ui/tour.js) ──
@@ -2013,7 +2106,7 @@ test('강사 — 열 때 끝난 미션은 알림 없이 하나씩 차례로 읽�
 
 test('강사 — 로컬 모드는 /api/compass 를 부르지 않고 나침반 카드도 없다', async ({ page }) => {
   let n = 0;
-  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/supabase-js@*/**', r => r.abort());
   await page.route('**/api/compass', r => { n++; r.abort(); });
   await page.goto(BASE + '/teacher.html');
   await page.waitForTimeout(500);

@@ -22,7 +22,7 @@ function launchOpts() {
   const ctx = await b.newContext({ viewport: { width: 1000, height: 1000 } });
   /* 학생·교사 화면은 Supabase 주소를 품고 있다. 라이브러리를 막아 로컬 모드로 돌린다 —
    * 테스트가 실제 교실 DB 에 쓰면 안 된다. (js/data/supabase.js 가 없으면 로컬로 도는 설계) */
-  await ctx.route('**/supabase-js@2/**', r => r.abort());
+  await ctx.route('**/supabase-js@*/**', r => r.abort());
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   let alerted = false;
@@ -117,7 +117,7 @@ function launchOpts() {
 
   // 선생님이 쓴 학생 이름 — 계정 만들기 칸에서 명단·학생 폴더로 흐른다 (서버는 가짜로 끼운다)
   const tc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
-  await tc.route('**/supabase-js@2/**', r => r.abort());
+  await tc.route('**/supabase-js@*/**', r => r.abort());
   await tc.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: `(function(CC){var P=function(v){return Promise.resolve(v)};var roster=[];
 CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},
 myClassrooms:function(){return P([{id:'r1',name:'반',code:'AB12CD'}])},getMissions:function(){return P([])},getClassroomEvents:function(){return P([])},
@@ -141,7 +141,7 @@ createStudent:function(rid,s){roster.push({id:'n'+roster.length,name:s.name,logi
   // 강사의 '이렇게 바꿔 줬으면'(#sg-wish) — LLM 에게만 가고 학생이 읽는 미션에는 실리지 않는다.
   // AI 가 그 말을 제목에 옮겨 써도 4단계에는 글자로만 보인다 (가짜 build, Pyodide 는 강사 브라우저에서 돈다)
   const gc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
-  await gc.route('**/supabase-js@2/**', r => r.abort());
+  await gc.route('**/supabase-js@*/**', r => r.abort());
   await gc.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: `(function(CC){var P=function(v){return Promise.resolve(v)};
 CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},
 myClassrooms:function(){return P([{id:'r1',name:'반',code:'AB12CD'}])},getMissions:function(){return P([])},getClassroomEvents:function(){return P([])},getClassroomStudents:function(){return P([])},
@@ -178,7 +178,7 @@ api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'applica
 
   // 선생님이 쓴 나침반 한마디 — 학생에게 그대로 가므로 글자로만 보여야 하고, 선생님 화면에도 글자로만 올라온다
   const kc = await b.newContext({ viewport: { width: 1000, height: 1000 } });
-  await kc.route('**/supabase-js@2/**', r => r.abort());
+  await kc.route('**/supabase-js@*/**', r => r.abort());
   await kc.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: `(function(CC){var P=function(v){return Promise.resolve(v)};
 var NOTE=${JSON.stringify(EVIL + LONG + ' 🙂👍')};
 CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},

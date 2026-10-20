@@ -327,15 +327,30 @@ details.more[open] > summary { margin-bottom: 16px; }
 .recap-item .tag { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--ink); }
 .recap-item .who, .recap-item .quote { margin: 4px 0 8px; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
 .gen-left { font-size: 13px; color: var(--ink-3); }
-/* 관리자 화면 — 표는 감싸개 안에서만 옆으로 밀린다 */
-.ad-scroll { overflow-x: auto; margin-top: 12px; }
-.ad-table { border-collapse: collapse; width: 100%; font-size: 14px; }
-.ad-table th, .ad-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere; }
-.ad-table th { font-size: 12.5px; color: var(--ink-3); font-weight: 600; white-space: nowrap; }
-.ad-in { width: 6em; padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 8px; font: inherit; background: var(--surface); color: var(--ink); }
-.ad-msg { font-size: 13px; color: var(--coral); }
-.ad-default { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+/* 관리자 화면 — 넓은 화면은 표, 휴대폰은 한 줄이 카드 하나(옆으로 밀지 않는다) */
+.shell-main.ad > * { max-width: 1000px; }
+.ad-table { border-collapse: collapse; width: 100%; font-size: 16px; margin-top: 12px; }
+.ad-table th, .ad-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere; }
+.ad-table th { font-size: 15px; color: var(--ink-2); font-weight: 600; }
+.ad-in { width: 6em; min-height: 44px; padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 8px; font: inherit; font-size: 16px; background: var(--surface); color: var(--ink); }
+.ad-in:disabled { opacity: .6; }
+.ad-off { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; }
+.ad-off input { width: 24px; height: 24px; }
+.ad-msg { font-size: 16px; color: var(--ink); min-height: 1.4em; }
+.ad-msg.err { color: var(--coral); font-weight: 600; }
+.ad-default { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-size: 16px; font-weight: 600; color: var(--ink-2); }
 #ad-main .panel { margin-top: 16px; }
+.ad-tag { display: inline-block; padding: 1px 10px; border: 1px solid var(--ink); border-radius: 999px; font-size: 15px; font-weight: 600; }
+@media (max-width: 760px) {
+  .ad-table, .ad-table tbody, .ad-table tr, .ad-table td { display: block; width: 100%; }
+  .ad-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .ad-table tr { padding: 10px 0; border-bottom: 2px solid var(--line-strong); }
+  .ad-table td { display: flex; gap: 12px; align-items: center; padding: 4px 0; border: 0; }
+  .ad-table td::before { content: attr(data-l); flex: 0 0 5.5em; font-size: 15px; color: var(--ink-2); font-weight: 600; }
+  .ad-table[hidden], .ad-table td.ad-msg:empty { display: none; }
+  .ad-table td.ad-msg { padding-left: 0; }
+  .ad-table td.ad-msg::before { content: none; }
+}
 
 /* 나침반 카드 — 회색·검정만 (브랜드 색 미정). 서랍 안, 기록 위 */
 .compass-card { border: 2px solid var(--line-strong); border-radius: 16px; padding: 20px 24px; margin: 12px 0; display: grid; gap: 12px; }
