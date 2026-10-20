@@ -488,35 +488,42 @@ body { font-size: 17px; }
   body.alerts-full { overflow: hidden; }
 }
 
-/* 미션 만들기 — 탭 둘, 4단계 */
+/* 미션 만들기 — 탭 둘, 4단계. 글씨는 본문 17px 기준, 누르는 곳은 44px 이상 */
+.btn.o { background: transparent; color: var(--ink); border: 2px solid var(--line-strong); box-shadow: none; }
+.btn.o:disabled { background: transparent; border-color: var(--line); color: var(--ink-3); }
+#dtab-missions .panel button { min-height: 44px; font-size: 16px; }
 .seg { display: inline-flex; margin-top: 14px; padding: 3px; gap: 2px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); max-width: 100%; }
-.seg-b { min-height: 40px; padding: 0 16px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-.seg-b[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+#dtab-missions .panel .seg-b { min-height: 44px; padding: 0 18px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-2); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+#dtab-missions .panel .seg-b[aria-selected="true"] { background: var(--ink); color: var(--paper); }
 .seg-b:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 [role=tabpanel] { margin-top: 14px; }
-[role=tabpanel][hidden], .gp-s[hidden], .gp-sum[hidden] { display: none; }
-.gp-prog { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+[role=tabpanel][hidden], .gp-s[hidden], .gp-sum[hidden], .gp-confirm[hidden] { display: none; }
+.gp-prog { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 15px; font-weight: 700; color: var(--ink-2); }
 .gp-bar { display: flex; gap: 4px; flex: 1 1 120px; max-width: 240px; }
-.gp-bar i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
-.gp-bar i.on { background: var(--ink); }
+.gp-bar i { flex: 1; height: 8px; border-radius: 4px; background: transparent; border: 2px solid var(--ink-3); box-sizing: border-box; }
+.gp-bar i.on { background: var(--ink); border-color: var(--ink); }
 .gp-s { margin-top: 12px; }
-.gp-s h3, #gp-quick h3 { font-size: 16px; font-weight: 700; }
-.gp-body { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--line-strong); border-radius: 12px; }
-.gp-body .lead { margin: -6px 0 0; }
-.gp-sum { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; min-width: 0; }
+.gp-s h3, #gp-quick h3 { font-size: 20px; font-weight: 700; }
+.gp-body { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--line-strong); border-radius: 12px; font-size: 17px; }
+.gp-body .lead, #gp-quick .lead { font-size: 16px; margin: -6px 0 0; }
+.gp-sum { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 16px; min-width: 0; }
 .gp-t { font-weight: 700; flex: none; }
-.gp-v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-3); }
-.gp-fix { flex: none; min-height: 36px; }
+.gp-v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.gp-fix { flex: none; }
 .gp-fields { display: flex; flex-direction: column; gap: 12px; }
-.gp-lb { font-size: 13px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 4px; }
-.gp-ta { width: 100%; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; font: inherit; font-size: 15px; background: var(--surface); color: var(--ink); resize: vertical; }
-.gp-sel { align-self: flex-start; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 10px; font-size: 14px; background: var(--surface); color: var(--ink); }
-.gp-spread { font-size: 13px; color: var(--ink-3); }
+.gp-lb, #dtab-missions .sg-lb { font-size: 16px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 4px; }
+#dtab-missions .sg-lb { display: flex; }
+.gp-ta, #dtab-missions .sg-in { width: 100%; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; font: inherit; font-size: 17px; background: var(--surface); color: var(--ink); resize: vertical; box-sizing: border-box; }
+#dtab-missions select.sg-in, .gp-sel { min-height: 44px; font-size: 16px; }
+.gp-sel { align-self: flex-start; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.gp-spread { font-size: 16px; color: var(--ink-2); }
 .gp-act { display: flex; gap: 8px; flex-wrap: wrap; }
-.gp-quota { font-size: 13px; color: var(--ink-3); }
+.gp-quota, .gp-quota .gen-left { font-size: 16px; color: var(--ink-2); }
+.gp-confirm { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding: 12px 14px; border: 2px solid var(--ink); border-radius: 12px; font-size: 16px; }
+.gp-confirm p { flex: 1 1 200px; margin: 0; }
+#sg-status { font-size: 16px; color: var(--ink-2); }
 #gp-quick { display: flex; flex-direction: column; gap: 12px; }
 #gp-quick[hidden] { display: none; }
-#gp-quick .lead { margin: -6px 0 0; }
-.gp-result { margin-top: 14px; }
+.gp-result { margin-top: 14px; font-size: 16px; }
 .list-h { font-size: 16px; font-weight: 700; margin: 20px 0 10px; }
-@media (max-width: 600px) { .seg { display: flex; } .seg-b { flex: 1; padding: 0 8px; } .gp-sum { flex-wrap: wrap; } }
+@media (max-width: 600px) { .seg { display: flex; } #dtab-missions .panel .seg-b { flex: 1; padding: 0 8px; } .gp-sum { flex-wrap: wrap; } }

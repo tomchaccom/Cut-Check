@@ -2301,6 +2301,11 @@ test('미션 만들기 — 탭 둘(화살표 키 · 기억)과 단계별 4단계
   await page.keyboard.press('Home');
   await expect(tabs.first()).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('End');
+  await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('ArrowLeft');
+  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true');
+  await expect(tabs.first()).toBeFocused();
+  await page.keyboard.press('End');
   await page.reload();
   await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
   await page.locator('.main-tab[data-dtab="dtab-missions"]').click();
@@ -2351,4 +2356,48 @@ test('학생 상세 — 폰 폭: 서랍을 열고 Esc 는 서랍만, 한 번 더
   await expect(page.locator('#detail')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('#detail')).toBeHidden();
+});
+
+test('미션 만들기 — 글씨는 읽을 크기, 누르는 곳은 44px 이상, 진행 막대는 채운 칸과 빈 칸이 다르다', async ({ page }) => {
+  await missionTab(page);
+  await page.locator('#gen-lesson').fill('리스트와 반복문');
+  await page.locator('#sg-concept').click();
+  await expect(page.locator('#gp-count')).toHaveText('2 / 4 개념 확인');
+  const px = (sel, prop) => page.locator(sel).first().evaluate((e, p) => parseFloat(getComputedStyle(e)[p]), prop);
+  for (const sel of ['.seg-b', '.gp-fix:visible', '#sg-concept-pick', '#sg-next', '#gt-quick'])
+    expect((await page.locator(sel).first().boundingBox()).height, sel).toBeGreaterThanOrEqual(44);
+  await page.locator('.gp-s[data-step="1"] .gp-fix').click();
+  for (const sel of ['#gen-diff', '#sg-concept'])
+    expect((await page.locator(sel).boundingBox()).height, sel).toBeGreaterThanOrEqual(44);
+  expect(await px('.gp-s h3:visible', 'fontSize')).toBeGreaterThanOrEqual(20);
+  for (const sel of ['.gp-body .lead', '.gp-quota', '.gp-lb', '.gp-ta', '#gen-diff', '.seg-b', '.gp-sum:visible'])
+    expect(await px(sel, 'fontSize'), sel).toBeGreaterThanOrEqual(16);
+  expect(await px('#gp-count', 'fontSize')).toBeGreaterThanOrEqual(15);
+  const cells = page.locator('.gp-bar i');
+  const bg = i => cells.nth(i).evaluate(e => getComputedStyle(e).backgroundColor);
+  expect(await bg(0)).not.toBe(await bg(3));                          // 채운 칸과 빈 칸이 색으로 갈린다
+  expect(await cells.nth(3).evaluate(e => parseFloat(getComputedStyle(e).borderTopWidth))).toBeGreaterThanOrEqual(2);
+});
+
+test('미션 만들기 — 만든 문제는 고치기로 돌아가도 남고, 개념이 바뀌면 먼저 묻고, 안 바뀌면 묻지 않는다', async ({ page }) => {
+  test.setTimeout(120000);
+  await sgBuild(page, [SG_FOR]);
+  await expect(page.locator('.sg-answer')).toHaveText(['2300', '300', '0'], { timeout: 90000 });
+  await expect(page.locator('#gp-count')).toHaveText('4 / 4 문제 확인');
+  await page.locator('#sg-title').fill('내가 고친 이름');
+  await page.locator('.gp-s[data-step="1"] .gp-fix').click();
+  await expect(page.locator('.gp-s[data-step="4"] .gp-v')).toHaveText('내가 고친 이름');   // 요약은 고친 제목
+  await page.locator('#sg-concept').click();
+  await expect(page.locator('#gp-count')).toHaveText('2 / 4 개념 확인');          // 같은 개념 — 묻지 않는다
+  await expect(page.locator('#gp-confirm')).toBeHidden();
+  await expect(page.locator('#sg-title')).toHaveValue('내가 고친 이름');
+  await page.locator('#sg-concept-pick').selectOption('while');
+  await expect(page.locator('#gp-confirm')).toBeVisible();
+  await expect(page.locator('#gp-confirm')).toContainText('만든 문제가 사라져요. 계속할까요?');
+  await page.locator('#gp-no').click();
+  await expect(page.locator('#sg-concept-pick')).toHaveValue('for');
+  await expect(page.locator('#sg-title')).toHaveValue('내가 고친 이름');
+  await page.locator('#sg-concept-pick').selectOption('while');
+  await page.locator('#gp-yes').click();
+  await expect(page.locator('#sg-title')).toHaveCount(0);
 });

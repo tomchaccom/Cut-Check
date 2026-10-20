@@ -29,7 +29,7 @@
      수가 없는 응답(로컬 개발 서버 등)은 그대로 둔다 */
   function quota(n) {
     if (typeof n !== 'number') return;
-    st.spent = n <= 0;
+    st.spent = n <= 0; st.left = n;
     [].forEach.call(document.querySelectorAll('.gen-left'), function (s) { s.textContent = st.spent ? SPENT : '남은 생성 ' + n + '개'; });
     if (st.spent) $('#gen-btn').disabled = true;
     $('#sg-build').disabled = st.spent || st.pick < 0;
@@ -41,7 +41,7 @@
   var cur = 1, reached = 1;
   function sums() {
     var c = CM.concept(st.concept), x = st.examples[st.pick];
-    return [$('#gen-lesson').value.trim(), c ? c.label : '', x ? x.title : '', st.d ? st.d.title : ''];
+    return [$('#gen-lesson').value.trim(), c ? c.label : '', x ? x.title : '', st.d ? val('#sg-title', st.d.title) : ''];
   }
   function paint() {
     var v = sums();
@@ -52,15 +52,26 @@
       li.querySelector('.gp-sum').hidden = k === cur;
       li.querySelector('.gp-v').textContent = v[i];
       li.querySelector('.gp-fix').textContent = k < cur ? '고치기' : '보기';
+      if (k === 4) li.querySelector('.gp-t').textContent = st.fresh ? '문제가 만들어졌어요' : '문제 확인';
     });
     $('#gp-count').textContent = cur + ' / 4 ' + NAMES[cur - 1];
     [].forEach.call(document.querySelectorAll('.gp-bar i'), function (b, i) { b.classList.toggle('on', i < cur); });
   }
-  function go(n) { cur = n; if (n > reached) reached = n; paint(); }
+  function go(n) { if (n === 4) st.fresh = false; cur = n; if (n > reached) reached = n; paint(); }
   /* 앞 단계의 입력이 바뀌면 그 뒤 상태는 버린다(초안 포함) — 옛 초안이 새 개념 옆에 남지 않게 */
   function drop(n) {
-    reached = n; bgen++; sgen++; st.d = null;
+    reached = n; sgen++; st.d = null; st.fresh = false;
     $('#sg-draft').textContent = '';
+  }
+  /* 만드는 동안은 개념을 바꾸지 못한다 — 바꾸면 이미 차감된 초안이 어디에도 못 붙는다 */
+  function busy(on) { $('#sg-concept-pick').disabled = on; $('#sg-concept').disabled = on; }
+  /* 만든 문제가 있는데 뒤 상태를 버려야 하면 먼저 묻는다 — 조용히 잃지 않는다 */
+  function ask(yes, no) {
+    var box = $('#gp-confirm');
+    box.hidden = false;
+    $('#gp-yes').onclick = function () { box.hidden = true; yes(); };
+    $('#gp-no').onclick = function () { box.hidden = true; if (no) no(); };
+    $('#gp-yes').focus();
   }
   function tab(name, noSave) {
     var q = name === 'quick';
@@ -160,13 +171,15 @@
   function make(probs, left, ticket, prev) {
     var my = ++bgen;
     say(probs.length ? '다시 만드는 중이에요.' : '만드는 중이에요.');
+    busy(true);
     boot();
     var body = { action: 'build', concept: st.concept, example: st.examples[st.pick],
       wish: $('#sg-wish').value.trim(), problems: probs, lesson: $('#gen-lesson').value.trim() };
     if (ticket) body.ticket = ticket;
     return call(body).then(function (r) {
-      if (my !== bgen) return;            /* 늦게 온 옛 응답의 left 는 더 최근 응답의 수를 되돌릴 수 있다 — 버린다 */
-      quota(r && r.left);
+      /* 차감은 이미 일어났다 — 늦은 응답이라도 수는 반영한다. 다만 더 최근에 받은 수보다 큰 값으로 되돌리지는 않는다 */
+      if (r && typeof r.left === 'number' && (st.left == null || r.left <= st.left)) quota(r.left);
+      if (my !== bgen) return;
       var d = r && r.draft;
       if (!d || !Array.isArray(d.inputs) || !d.inputs.length || typeof d.solution !== 'string') throw new Error('초안을 받지 못했어요. 다시 만들어 주세요.');
       d.inputs.forEach(function (x) { x.v = oneLine(x.v); });
@@ -181,7 +194,7 @@
     }).catch(function (e) {
       spent(e);
       if (my !== bgen) return;
-      if (!prev) return fail(e);
+      if (!prev) { busy(false); return fail(e); }
       draft(prev.d, prev.res, prev.p);
       say('다시 만들지 못해서 처음 만든 문제를 보여 드려요. 걸린 곳을 고쳐 쓰거나 만들기를 다시 눌러 주세요.');
     });
@@ -302,7 +315,8 @@
       .concat([{ v: '', trap: 'hardcode' }]));
     var box = $('#sg-draft');
     box.textContent = '';
-    go(4);
+    busy(false);
+    if (cur === 3) go(4); else { st.fresh = true; reached = 4; paint(); }   /* 만드는 사이 앞 단계로 돌아갔으면 끌고 오지 않고 한 줄로 알린다 */
     var root = el('div', 'draft');
     var hd = el('div', 'draft-hd');
     hd.appendChild(el('span', null, '초안 — 고친 뒤 확정하세요'));
@@ -417,10 +431,15 @@
     boot();
     say('개념을 확인하는 중이에요.');
     call({ action: 'concept', lesson: lesson, keyPoint: key }).then(function (r) {
-      st.concept = r.concept;
-      $('#sg-concept-pick').value = r.concept;
-      drop(1); go(2);
-      return load(false);
+      if (r.concept === st.concept) { go(2); say(''); return; }   /* 같은 개념이면 뒤 단계(만든 문제 포함)는 그대로 */
+      var apply = function () {
+        st.concept = r.concept;
+        $('#sg-concept-pick').value = r.concept;
+        drop(1); go(2);
+        return load(false);
+      };
+      if (st.d) { say(''); return ask(apply); }
+      return apply();
     }).catch(fail);
   }
 
@@ -444,7 +463,12 @@
       $('#sg-concept').addEventListener('click', concept);
       $('#sg-more').addEventListener('click', function () { load(true); });
       $('#sg-build').addEventListener('click', function () { if (st.pick >= 0) make([], RETRIES); });
-      sel.addEventListener('change', function () { st.concept = sel.value; drop(2); paint(); load(false); });
+      sel.addEventListener('change', function () {
+        var v = sel.value, go2 = function () { st.concept = v; drop(2); paint(); load(false); };
+        if (st.d && v !== st.concept) ask(go2, function () { sel.value = st.concept; });
+        else go2();
+      });
+      $('#sg-draft').addEventListener('input', paint);
       $('#sg-next').addEventListener('click', function () { go(3); });
       [].forEach.call(document.querySelectorAll('.gp-fix'), function (b) {
         b.addEventListener('click', function () { go(+b.closest('.gp-s').dataset.step); });
