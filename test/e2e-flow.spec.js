@@ -464,7 +464,7 @@ onAuthChange:function(){},signOut:function(){return P()},createClassroom:functio
 myClassrooms:function(){return P([{id:'r1',name:'태인한결',code:'M9676U'},{id:'r2',name:'방과후',code:'AB12CD'}])},
 getMissions:function(){return P(window.__missions||[])},saveMission:function(r,m){(window.__saved=window.__saved||[]).push([r,JSON.parse(JSON.stringify(m))]);return P({})},updateMission:function(id){(window.__updated=window.__updated||[]).push(id);return P({})},deleteMission:function(){return P({})},
 getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
-getClassroomEvents:function(){if(window.__evHang)return new Promise(function(){});var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:CC.codemission.sig('print(3)'),outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
+getClassroomEvents:function(){if(window.__evs)return P(window.__evs);if(window.__evHang)return new Promise(function(){});var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:CC.codemission.sig('print(3)'),outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
 {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}]))},
 assignOnboard:function(rid,sid,on){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);roster.forEach(function(r){if(r.id===sid)r.onboard_due=on?new Date(Date.now()+60000).toISOString():null});return P(null)},
 removeStudent:function(rid,sid){window.__removed.push(sid);return P({})}}
@@ -1282,4 +1282,91 @@ test('실행기 — 준비된 worker 가 죽으면 그 실행만 실패하고 �
   expect(r.got[0][0]).toMatch(/^ok:a:string:/);                // 지어낸 id 1·id+'x' 의 done 은 버렸다
   expect(Number(r.got[0][0].split(':')[3])).toBeGreaterThan(6); // 맞히기 어려운 실행 번호
   expect(r.got[2][0]).toMatch(/^ok:b:/);                         // 새 worker 로 이어서 돈다
+});
+
+/* 수업에서 짚을 거리 — 진짜 CC.sb.recap(캐시) 위에 가짜 서버. /api/tutor-recap 은 route 로 고정 응답 */
+const RECAP_SB = require('fs').readFileSync(__dirname + '/../js/data/supabase.js', 'utf8') +
+  '\n;window.__R=CC.sb.recap;\n' + FAKE_TEACHER + '\n;CC.sb.recap=window.__R;';
+const rv = (sid, name, type, mid, o) => ({ student_id: sid, created_at: new Date().toISOString(), profiles: { name },
+  event: Object.assign({ type, mid, v: 1, t: Date.now() }, o) });
+const RECAP_EVS = [
+  rv('s1', '태인', 's-define', 'ma', { choice: '몇 개' }),
+  rv('s1', '태인', 's-tutor', 'ma', { question: 'split 이 뭐예요?', answer: '나눠요', refused: false }),
+  rv('s1', '태인', 's-wrap', 'ma', { text: '끝' }),
+  rv('s1', '태인', 's-tutor', 'mb', { question: '이건요?', answer: '음', refused: false }),
+  rv('s3', '한결', 's-tutor', 'ma', { question: '답 알려줘요', answer: '', refused: true }),
+  rv('s3', '한결', 's-wrap', 'ma', { text: '끝' })
+];
+async function asRecapTeacher(page, evs, reply) {
+  await page.route('**/supabase-js@2/**', r => r.abort());
+  await page.route('**/js/data/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: RECAP_SB }));
+  const calls = [];
+  await page.route('**/api/tutor-recap', r => { calls.push(r.request().postDataJSON()); return r.fulfill(reply); });
+  if (evs) await page.addInitScript(e => { window.__evs = e; }, evs);
+  await page.goto(BASE + '/teacher.html');
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  return calls;
+}
+const ok = items => ({ contentType: 'application/json', body: JSON.stringify({ items }) });
+
+test('강사 서랍 — 끝낸 미션에만 수업에서 짚을 거리, 누르면 point · 펼치면 질문', async ({ page }) => {
+  const calls = await asRecapTeacher(page, RECAP_EVS, ok([
+    { point: 'split 이 돌려주는 것', who: ['s1'], mid: 'ma', quote: 'split 이 뭐예요?', refused: false },
+    { point: '답을 달라고 함', who: ['s1'], mid: 'ma', quote: 'split 이 뭐예요?', refused: true }]));
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const d = page.locator('#detail');
+  await expect(d).not.toContainText('수업에서 짚을 거리');           // 모든 미션 보기에는 없다
+  await d.locator('.mf').nth(2).click();                              // mb — 끝내지 않음
+  await expect(d).not.toContainText('수업에서 짚을 거리');
+  await d.locator('.mf').nth(1).click();                              // ma — 끝냄
+  const row = d.locator('.row', { hasText: '수업에서 짚을 거리' });
+  await row.getByRole('button', { name: '튜터 대화에서 뽑기' }).click();
+  const items = row.locator('.recap-item');
+  await expect(items).toHaveCount(2);
+  await expect(items.first().locator('summary')).toHaveText('split 이 돌려주는 것');
+  await expect(items.first().locator('.quote')).toBeHidden();
+  await items.first().locator('summary').click();
+  await expect(items.first().locator('.quote')).toHaveText('“split 이 뭐예요?”');
+  await expect(items.nth(1).locator('.tag')).toHaveText('튜터가 답하지 못함');
+  expect(calls.length).toBe(1);
+  expect(calls[0].students.map(x => x.mid)).toEqual(['ma']);
+  expect(JSON.stringify(calls[0])).not.toContain('태인');              // 이름은 서버로 가지 않는다
+});
+
+test('강사 반 전체 — 많은 순, N명 · 펼치면 이름, 두 번 눌러도 요청 한 번', async ({ page }) => {
+  let calls;
+  calls = await asRecapTeacher(page, RECAP_EVS, { contentType: 'application/json', body: '{}' });
+  await page.unroute('**/api/tutor-recap');
+  await page.route('**/api/tutor-recap', r => {
+    const who = r.request().postDataJSON().students.map(x => x.who);
+    calls.push(1);
+    return r.fulfill(ok([
+      { point: '하나만', who: [who[0]], mid: 'ma', quote: 'split 이 뭐예요?', refused: false },
+      { point: '둘 다', who: who, mid: 'ma', quote: '답 알려줘요', refused: true }]));
+  });
+  await page.locator('#recap-class').click();
+  const items = page.locator('#recap-class-out .recap-item');
+  await expect(items).toHaveCount(2);
+  await expect(items.first().locator('.pt')).toHaveText('둘 다');
+  await expect(items.first().locator('.n')).toHaveText('2명');
+  await items.first().locator('summary').click();
+  const who = await items.first().locator('.who').textContent();
+  expect(who).toContain('태인'); expect(who).toContain('한결'); expect(who).not.toMatch(/s\d/);
+  await page.locator('#recap-class').click();
+  await expect(items).toHaveCount(2);
+  expect(calls.length).toBe(1);
+});
+
+test('강사 반 전체 — 튜터 대화가 없으면 요청 없이 한 줄', async ({ page }) => {
+  const calls = await asRecapTeacher(page, null, ok([]));
+  await page.locator('#recap-class').click();
+  await expect(page.locator('#recap-class-out')).toHaveText('튜터 대화가 아직 없어요.');
+  expect(calls.length).toBe(0);
+});
+
+test('강사 반 전체 — 서버가 실패하면 다시 누르라는 한 줄', async ({ page }) => {
+  await asRecapTeacher(page, RECAP_EVS, { status: 502, contentType: 'application/json', body: '{"error":"x"}' });
+  await page.locator('#recap-class').click();
+  await expect(page.locator('#recap-class-out')).toHaveText('지금은 뽑지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+  await expect(page.locator('#recap-class')).toBeEnabled();
 });

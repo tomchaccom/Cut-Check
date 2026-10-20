@@ -88,6 +88,18 @@ function launchOpts() {
   console.log('튜터 질문이 교사 화면에 보임:', tutorShown ? '✓' : '✗ 없음');
   console.log('alert 발생:', alerted ? '✗' : '✓ 없음');
 
+  // 수업에서 짚을 거리 — 학생 질문 원문이 quote 로 돌아와도 글자로만 (서버는 가짜, CC.sb.api 를 바꿔 끼운다)
+  await t.route('**/api/tutor-recap', r => {
+    const st = r.request().postDataJSON().students;
+    return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ items: [{ point: EVIL, who: [st[0].who], mid: st[0].mid, quote: EVIL, refused: false }] }) });
+  });
+  await t.evaluate(() => { CC.sb.api = (p, body) => fetch(p, { method: 'POST', body: JSON.stringify(body) }).then(r => r.json()); });
+  await t.locator('.detail .recap-go').click();
+  await t.locator('.detail .recap-item summary').click();
+  const rq = (await t.locator('.detail .recap-item .quote').textContent()) || '';
+  const recapBad = !!(await t.evaluate(() => window.__pwned)) || (await t.locator('.detail img').count()) > 0 || alerted || rq.indexOf('<img') < 0;
+  console.log('짚을 거리 quote 가 글자로만 보임:', recapBad ? '✗' : '✓');
+
   // 학생 코드의 출력(s-probe)은 서랍의 '코드 사실'로 올라간다 — 글자로만 보여야 한다
   await t.evaluate((EVIL) => {
     CC.store.clear();
@@ -164,7 +176,7 @@ api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'applica
 
   console.log(errs.length ? '✗ JS 에러: ' + errs.join(' | ') : '✓ JS 에러 없음');
   await b.close();
-  const failed = !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad || wishBad || factBad;
+  const failed = recapBad || !tutorShown || pwned || imgs > 0 || alerted || errs.length || (w.d > w.w + 1) || nameBad || wishBad || factBad;
   console.log(failed ? '\n안전성 검사 실패' : '\n안전성 검사 전부 통과');
   process.exit(failed ? 1 : 0);
 })();

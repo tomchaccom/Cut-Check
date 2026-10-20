@@ -312,6 +312,7 @@ t('fixedList 새 꼴은 null', CC.cards.fixedList({ kind: 'code' }) === null);
   const rt = run([s1], two);
   t('recap: 한 학생의 두 미션은 같은 기호', rt.body.students.length === 2 && rt.body.students[0].who === rt.body.students[1].who);
   t('recap: forStudent 는 그 mid 만', R.forStudent(s1, 'm2', s => two, mis).body.students.length === 1);
+  t('recap: forStudent key 는 반 전체 key 와 겹치지 않는다', R.forStudent(s1, 'm2', s => two, mis).key !== rt.key);
 }
 
 // ── core 는 브라우저 API 를 모른다

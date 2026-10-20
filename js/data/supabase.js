@@ -48,6 +48,16 @@
     client: function () { return sb; },
     api: api,
 
+    /* 수업에서 짚을 거리 — 성공 결과만 이 브라우저에 둔다. key 는 CC.recap 이 만든다 (새 튜터 대화가 쌓이면 바뀐다).
+     * CC.sb.api 를 그때그때 찾는다 — 저장소가 막혀도 서버만 다시 부를 뿐이다 */
+    recap: function (body, key) {
+      try { var hit = localStorage.getItem(key); if (hit) return Promise.resolve(JSON.parse(hit)); } catch (e) { /* 막히면 서버로 */ }
+      return CC.sb.api('/api/tutor-recap', body).then(function (j) {
+        try { localStorage.setItem(key, JSON.stringify(j)); } catch (e) { /* 저장 못 해도 결과는 보인다 */ }
+        return j;
+      });
+    },
+
     /* ── 인증 ────────────────────────────────── */
     /* 프로필은 DB 트리거(handle_new_user)가 자동 생성한다.
      * 스스로 가입하는 사람은 모두 강사다 — 역할은 트리거가 정하고, 여기서 넘기지 않는다.

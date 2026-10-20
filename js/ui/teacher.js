@@ -214,6 +214,41 @@
   function mark(dd, txt) { dd.appendChild(el('span', 'mark', txt)); }
   function was(dd, txt) { if (txt) dd.appendChild(el('span', 'was', txt)); }
 
+  /* ── 수업에서 짚을 거리 — 누를 때만 서버에 간다. 학생 질문 원문(quote)은 글자로만 붙인다.
+   * 반 전체는 같은 지점에 막힌 학생이 많은 순 — 먼저 짚을 것을 고르는 순서지 학생 순위가 아니다 */
+  function recapOn(btn, out, req, many) {
+    btn.addEventListener('click', function () {
+      var r = req();
+      out.innerHTML = '';
+      if (!r.body.students.length) { out.appendChild(el('p', 'emptyrow', '튜터 대화가 아직 없어요.')); return; }
+      btn.disabled = true;
+      var go = CC.sb && CC.sb.recap ? CC.sb.recap(r.body, r.key) : Promise.reject(new Error('no server'));
+      go.then(function (j) { recapList(out, (j && j.items) || [], r, many); },
+        function () { out.appendChild(el('p', 'recap-fail', '지금은 뽑지 못했어요. 잠시 뒤 다시 눌러 주세요.')); })
+        .then(function () { btn.disabled = false; });
+    });
+  }
+  function recapList(out, items, r, many) {
+    if (r.truncated) out.appendChild(el('p', 'was', '최근에 끝낸 40명만 봤어요.'));
+    if (!items.length) { out.appendChild(el('p', 'emptyrow', '튜터 대화에서 짚을 거리가 나오지 않았어요.')); return; }
+    var whoOf = function (it) { return (it.who || []).map(function (w) { return r.names[w]; }).filter(Boolean); };
+    if (many) items = items.slice().sort(function (a, b) { return whoOf(b).length - whoOf(a).length; });
+    items.forEach(function (it) {
+      var d = el('details', 'recap-item');
+      var sm = el('summary');
+      sm.appendChild(el('span', 'pt', it.point || ''));
+      if (many) sm.appendChild(el('span', 'n', whoOf(it).length + '명'));
+      if (it.refused) sm.appendChild(el('span', 'tag', '튜터가 답하지 못함'));
+      d.appendChild(sm);
+      if (many) {
+        var m = missionOf(it.mid);
+        d.appendChild(el('p', 'who', whoOf(it).join(', ') + (m && m.title ? ' · ' + m.title : '')));
+      }
+      d.appendChild(el('p', 'quote', '“' + (it.quote || '') + '”'));
+      out.appendChild(d);
+    });
+  }
+
   function openDetail(s, mid) {
     var all = eventsOf(s);
     var ms = mids(all);
@@ -414,6 +449,17 @@
       });
       if (s.wrap) row(dl, '오늘 이 학생이 말할 문장', null, function (dd) { dd.textContent = s.wrap; });
     }
+    /* 미션 하나를 끝냈고 튜터와 말을 나눴을 때만 — 미션이 하나뿐이면 고르지 않아도 그 미션이다 */
+    var rmid = mid || (ms.length === 1 ? ms[0] : null);
+    if (rmid && CC.fold.missionStatus(evs) === 'done' && v.sTutor.length) row(dl, '수업에서 짚을 거리', null, function (dd) {
+      var b = el('button', 'pill recap-go', '튜터 대화에서 뽑기');
+      b.type = 'button';
+      var out = el('div', 'recap-out');
+      out.setAttribute('aria-live', 'polite');
+      recapOn(b, out, function () { return CC.recap.forStudent(s, rmid, eventsOf, missionOf); }, false);
+      dd.appendChild(b);
+      dd.appendChild(out);
+    });
     if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
     main.appendChild(dl);
     cols.appendChild(main);
@@ -640,6 +686,8 @@
     if (fresh) { me = fresh; C.students = [fresh].concat(C.students); }
     renderDashboard();
   });
+
+  recapOn($('#recap-class'), $('#recap-class-out'), function () { return CC.recap.build(C.students, eventsOf, missionOf); }, true);
 
   /* 튜터 기록 CSV — 수업 개선용. 파일 만들기는 화면 일이라 여기에 둔다 */
   $('#tutor-csv').addEventListener('click', function () {

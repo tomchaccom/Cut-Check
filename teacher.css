@@ -359,3 +359,12 @@ details.more[open] > summary { margin-bottom: 16px; }
 @media (min-width: 900px) { .d-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; } }
 .d-pair-cards, .d-pair-code { min-width: 0; }
 .d-pair .sub { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }
+
+/* 수업에서 짚을 거리 — 한 줄 point, 펼치면 이름 · 학생 질문 원문 */
+.recap-out { max-width: 760px; }
+.recap-out .was, .recap-out .recap-fail { font-size: 14px; color: var(--ink-2); margin: 8px 0; }
+.recap-item { border-top: 1px solid var(--line); padding: 6px 0; }
+.recap-item > summary { cursor: pointer; min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; overflow-wrap: anywhere; }
+.recap-item .n { font-size: 13px; color: var(--ink-2); }
+.recap-item .tag { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--ink); }
+.recap-item .who, .recap-item .quote { margin: 4px 0 8px; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }

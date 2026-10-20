@@ -65,6 +65,7 @@
 
   CC.recap = {
     build: function (students, eventsOf, missionOf) { return build(students, eventsOf, missionOf); },
-    forStudent: function (s, mid, eventsOf, missionOf) { return build([s], eventsOf, missionOf, mid); }
+    /* 미션 하나의 key 에 mid 를 붙인다 — 그 미션 대화가 마지막이면 반 전체 key 와 같아져 캐시가 섞인다 */
+    forStudent: function (s, mid, eventsOf, missionOf) { var r = build([s], eventsOf, missionOf, mid); r.key += ':' + mid; return r; }
   };
 })(window.CC = window.CC || {});
