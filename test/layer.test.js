@@ -170,21 +170,31 @@ t('객관식 마지막 보기는 모르겠어요', OB.QUESTIONS.filter(q => q.op
 t('모든 질문은 ? 로 끝나고 80자 이하', OB.QUESTIONS.every(q => /\?$/.test(q.ask) && q.ask.length <= 80));
 t('정답표는 밖에 없다', !('KEY' in OB) && OB.QUESTIONS.every(q => Object.keys(q).every(k => ['id', 'code', 'ask', 'options'].indexOf(k) >= 0)));
 /* 정답은 문항을 보고 사람이 적은 것 — core 의 정답표를 베끼지 않는다. 단답형은 쓴 글자 그대로 */
-const RIGHT = { d1: '34', d2: '나', d3: '3', d4: '크다', d5: '3', d6: '2', d7: 'A는 10, B는 2',
-  d8: '나누기 → 겹친 것은 하나만 → 개수 세기', d9: '>=', d10: '-1' };
+const RIGHT = { d1: '34', d2: '나', d11: '3번', d4: '크다', d5: '3', d12: '4', d13: 'A는 3, B는 2',
+  d8: '나누기 → 겹친 것은 하나만 → 개수 세기', d14: '>=', d15: '하람' };
 const pickOf = (q, v) => q.options ? q.options.indexOf(v) : v;
 const ans = (over) => OB.QUESTIONS.map(q => ({ q: q.id, pick: q.id in (over || {}) ? over[q.id] : pickOf(q, RIGHT[q.id]) }));
 const DUNNO = q => { const x = OB.QUESTIONS.find(y => y.id === q); return x.options ? x.options.length - 1 : null; };
 t('보기에 사람이 적은 정답이 다 있다', OB.QUESTIONS.filter(q => q.options).every(q => q.options.indexOf(RIGHT[q.id]) >= 0 && q.options.indexOf(RIGHT[q.id]) < q.options.length - 1));
 t('다 맞으면 상(ready), hardcode 아님', JSON.stringify(OB.stage(ans())) === JSON.stringify({ stage: 'ready', hardcode: false }));
-t('단답형은 공백·따옴표·대소문자를 보지 않는다', OB.stage(ans({ d2: ' "나" ', d9: '> =', d10: 'LEN(names) - 1' })).stage === 'ready');
-t('단답형 3번 도 받는다', OB.stage(ans({ d3: '3번' })).stage === 'ready');
-t('문법 6개 중 4개 틀리면 하(base)', OB.stage(ans({ d1: 1, d2: '가', d3: DUNNO('d3'), d4: 0 })).stage === 'base');
-t('문법 3개만 맞으면 의도를 다 맞혀도 중', OB.stage(ans({ d1: 1, d2: '가', d3: '4' })).stage === 'combine');
-t('문법은 다 맞고 의도 2개만 → 중(combine)', OB.stage(ans({ d8: 1, d9: '>' })).stage === 'combine');
-t('문법 5개 + 의도 3개 → 상', OB.stage(ans({ d5: '1', d10: '2' })).stage === 'ready');
-t('d7 모르겠어요 → hardcode', OB.stage(ans({ d7: DUNNO('d7') })).hardcode === true);
-t('d7 오답 → hardcode, 단계는 그대로', JSON.stringify(OB.stage(ans({ d7: 1 }))) === JSON.stringify({ stage: 'ready', hardcode: true }));
+t('단답형은 공백·따옴표를 보지 않는다', OB.stage(ans({ d2: ' "나" ', d12: ' 4 ' })).stage === 'ready');
+/* 룰베이스 채점 — 단답형은 화면에 찍히는 숫자 하나·낱말 하나만. 꼴이 갈리는 답(몇 번 · 기호 · 식)은 객관식 */
+const SHORT = [].concat(OB.SETS.low, OB.SETS.mid, OB.SETS.high).filter(q => !q.options).map(q => q.id).sort().join();
+t('단답형은 숫자 하나·낱말 하나로 답이 정해지는 문항만', SHORT === 'd2,d12,d5,h2,h3,h6,l2,l4,l6,l9'.split(',').sort().join());
+t('문법 6개 중 4개 틀리면 하(base)', OB.stage(ans({ d1: 1, d2: '가', d11: DUNNO('d11'), d4: 0 })).stage === 'base');
+t('문법 3개만 맞으면 의도를 다 맞혀도 중', OB.stage(ans({ d1: 1, d2: '가', d11: 2 })).stage === 'combine');
+t('문법은 다 맞고 의도 2개만 → 중(combine)', OB.stage(ans({ d8: 1, d14: 2 })).stage === 'combine');
+t('문법 5개 + 의도 3개 → 상', OB.stage(ans({ d5: '1', d15: 1 })).stage === 'ready');
+t('d13 모르겠어요 → hardcode', OB.stage(ans({ d13: DUNNO('d13') })).hardcode === true);
+t('d13 오답 → hardcode, 단계는 그대로', JSON.stringify(OB.stage(ans({ d13: 1 }))) === JSON.stringify({ stage: 'ready', hardcode: true }));
+/* 2026-10-21 이전 문제지(V1) 기록 — 바뀐 문항은 새 id 라서 예전 답은 예전 정답표로 푼다 */
+const V1MID = { d1: 0, d2: '나', d3: '3번', d4: 1, d5: '3', d6: 1, d7: 2, d8: 0, d9: '>=', d10: 'len(names)-1' };
+const v1 = (o, over) => Object.keys(o).map(q => ({ q, pick: q in (over || {}) ? over[q] : o[q] }));
+t('V1 중 기록 — 다 맞으면 그대로 상, 10문항', JSON.stringify(OB.stage(v1(V1MID), 'mid')) === JSON.stringify({ stage: 'ready', hardcode: false }) && OB.marks(v1(V1MID), 'mid').every(Boolean) && OB.marks(v1(V1MID), 'mid').length === 10);
+t('V1 중 기록 — d7 오답이면 hardcode', OB.stage(v1(V1MID, { d7: 0 }), 'mid').hardcode === true);
+const V1HIGH = { h1: 0, h2: '우산', h3: '7', h4: 1, h5: 2, h6: '4', h7: '<=', h8: 1, h9: 0, h10: '2개' };
+t('V1 상 기록 — 다 맞으면 10개 모두 참', OB.marks(v1(V1HIGH), 'high').every(Boolean) && OB.stage(v1(V1HIGH), 'high').stage === 'ready');
+t('V1 하 기록 — l8 은 예전 정답표', OB.marks([{ q: 'l8', pick: '4번' }], 'low')[7] === true);
 t('답하지 않은 문항은 틀린 것으로', OB.stage([]).stage === 'base' && OB.stage([]).hardcode === true);
 t('예전 8문항 기록은 예전 규칙으로', JSON.stringify(OB.stage(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'].map((q, i) => ({ q, pick: [0, 2, 1, 1, 1, 1, 0, 2][i] })))) === JSON.stringify({ stage: 'combine', hardcode: false }));
 t('상·중·하 이름', OB.LABEL.ready === '상' && OB.LABEL.combine === '중' && OB.LABEL.base === '하');
@@ -218,8 +228,8 @@ t('문제지 이름은 선생님 화면용', OB.SET_LABEL.low === '하' && OB.SE
 const allIds = [].concat(SETS.low, SETS.mid, SETS.high).map(q => q.id);
 t('문항 id 는 셋 전체에서 겹치지 않는다', new Set(allIds).size === 30);
 /* 사람이 문항을 보고 적은 정답 */
-const RIGHT2 = { l1: '안녕', l2: '8', l3: '5 그리고 23', l4: '11', l5: '사과', l6: '3', l7: '중학생', l8: '4', l9: '민지야', l10: '6',
-  h1: "{'짜장': 3, '짬뽕': 1}", h2: '우산', h3: '7', h4: '5 그리고 None', h5: '에러가 나요', h6: '4', h7: '<=', h8: '95', h9: '명단이 비었는지', h10: '2' };
+const RIGHT2 = { l1: '안녕', l2: '8', l3: '5 그리고 23', l4: '11', l5: '사과', l6: '3', l7: '중학생', l11: '4번', l9: '민지야', l10: '6',
+  h1: "{'짜장': 3, '짬뽕': 1}", h2: '우산', h3: '7', h11: '"민서 하람"', h5: '에러가 나요', h6: '4', h12: '<=', h8: '95', h13: 'False', h14: '2개' };
 const ansOf = (k, over) => SETS[k].map(q => ({ q: q.id, pick: q.id in (over || {}) ? over[q.id] : pickOf(q, RIGHT2[q.id]) }));
 t('하·상 보기에 정답이 있다', SETS.low.concat(SETS.high).filter(q => q.options).every(q => q.options.indexOf(RIGHT2[q.id]) >= 0 && q.options.indexOf(RIGHT2[q.id]) < q.options.length - 1));
 t('marks — 다 맞으면 10개 모두 참', OB.marks(ansOf('low'), 'low').every(Boolean) && OB.marks(ansOf('high'), 'high').every(Boolean) && OB.marks(ans(), 'mid').length === 10);
@@ -227,7 +237,7 @@ t('marks — 문제지 순서대로 ○/×', OB.marks(ansOf('low', { l2: '9' }),
 t('하 문제지 — 다 맞아도 중이 끝', OB.stage(ansOf('low'), 'low').stage === 'combine');
 t('하 문제지 — 8개는 중, 7개는 하', OB.stage(ansOf('low', { l1: 1, l2: '0' }), 'low').stage === 'combine' && OB.stage(ansOf('low', { l1: 1, l2: '0', l4: '10' }), 'low').stage === 'base');
 t('상 문제지 — 7개 상, 6개 중, 2개 하', OB.stage(ansOf('high', { h1: 1, h2: '모자', h3: '6' }), 'high').stage === 'ready'
-  && OB.stage(ansOf('high', { h1: 1, h2: '모자', h3: '6', h4: 0 }), 'high').stage === 'combine' && OB.stage([{ q: 'h1', pick: 0 }, { q: 'h2', pick: '우산' }], 'high').stage === 'base');
+  && OB.stage(ansOf('high', { h1: 1, h2: '모자', h3: '6', h11: 0 }), 'high').stage === 'combine' && OB.stage([{ q: 'h1', pick: 0 }, { q: 'h2', pick: '우산' }], 'high').stage === 'base');
 t('상 문제지 — h8 오답이면 hardcode', OB.stage(ansOf('high', { h8: 0 }), 'high').hardcode === true && OB.stage(ansOf('high'), 'high').hardcode === false);
 t('set 이 없거나 모르는 이름이면 중', OB.stage(ans()).stage === 'ready' && OB.stage(ans(), 'toString').stage === 'ready' && OB.marks(ans(), '__proto__').length === 10);
 t('예전 8문항 기록 marks 는 8개', OB.marks([{ q: 'q1', pick: 0 }]).length === 8);
