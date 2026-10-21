@@ -69,6 +69,7 @@ CC.onboard = { LABEL: { combine: '중' } };
 const lv = { onboard: { stage: 'combine', skipped: false } };
 d = CC.alerts.diff(CC.alerts.snap([S('태인')], OPT([])), CC.alerts.snap([S('태인', lv)], OPT([])));
 t('level — info, 레벨 문장', kinds(d) === 'level' && d[0].tag === 'info' && CC.alerts.say(d[0]) === '태인이 레벨 테스트를 마쳤어요. 레벨 중.');
+t('level — 재테스트를 마치면 한 번 더', CC.alerts.diff(CC.alerts.snap([S('태인', { onboard: { stage: 'combine', skipped: false, t: 1 } })], OPT([])), CC.alerts.snap([S('태인', { onboard: { stage: 'combine', skipped: false, t: 2 } })], OPT([]))).length === 1);
 t('level 건너뜀은 알리지 않는다', CC.alerts.diff(CC.alerts.snap([S('태인')], OPT([])), CC.alerts.snap([S('태인', { onboard: { stage: null, skipped: true } })], OPT([]))).length === 0);
 delete CC.onboard;
 d = CC.alerts.diff(CC.alerts.snap([S('태인')], OPT([])), CC.alerts.snap([S('태인', lv)], OPT([])));
@@ -84,6 +85,7 @@ t('retest — 60일이면 info, 정해진 문장', r.length === 1 && r[0].tag ==
 t('retest — 키는 학생·마지막 테스트', r[0].key === 'a:' + (NOW - 60 * DAY));
 t('retest — 다시 지정했으면(waiting) 없다', CC.alerts.retest([S('태인', ob(0))], NOW, () => true).length === 0);
 t('retest — 건너뛴 기록·기록 없음은 없다', CC.alerts.retest([S('태인', { onboard: { stage: null, skipped: true, t: 0 } }), S('가은')], NOW).length === 0);
+t('retest — 마지막이 건너뛰기여도 앞 테스트가 60일 지났으면 뜬다', CC.alerts.retest([S('태인', { onboard: { stage: null, skipped: true, t: NOW, tDone: NOW - 60 * DAY } })], NOW).length === 1);
 t('retest — 순서·소요 시간·점수 칸이 없다', Object.keys(r[0]).sort().join() === 'dbId,id,key,kind,mid,name,tag');
 
 // design / code (옛 알림 — 기록을 못 읽을 때)

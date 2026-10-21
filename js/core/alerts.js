@@ -65,7 +65,7 @@
       if (cc && cc.dbId) add('cancel', midOf[cc.dbId] || '', { dbId: cc.dbId, cands: cc.cands || [] }, cc.dbId);   /* 학생·가장 최근 미션당 한 번 */
       if (s.onboard && !s.onboard.skipped) {
         var L = CC.onboard && CC.onboard.LABEL;
-        add('level', '', { level: (L && s.onboard.stage && L[s.onboard.stage]) || '' });
+        add('level', '', { level: (L && s.onboard.stage && L[s.onboard.stage]) || '' }, s.onboard.t);   /* 재테스트를 마치면 한 번 더 */
       }
       o[s.id] = { name: s.name, design: s.sDesignCount || 0, judged: hasFinish ? null : (s.sCodeJudges || []).length, keys: keys };
     });
@@ -93,12 +93,17 @@
   /* 재테스트 — 시각으로 생기는 일이라 diff(새로 생긴 일)가 아니라 '쌓인 할 일' 이다.
    * 그래서 첫 화면 기준선 규칙을 따르지 않고, 화면이 학생·마지막 테스트(key)당 한 번만 띄운다.
    * 건너뛴 기록은 테스트가 아니다. waiting(s) 가 참이면(선생님이 이미 다시 지정함) 알리지 않는다 */
+  /* 건너뛰지 않은 마지막 테스트 시각. 한 번도 안 봤으면 null — 다시 볼 것도 없다 */
+  function lastTest(s) {
+    var o = s && s.onboard;
+    return o && (o.skipped ? o.tDone : o.t) || null;
+  }
   function retest(students, now, waiting) {
     return (students || []).filter(function (s) {
-      var o = s && s.onboard;
-      return o && !o.skipped && o.t && now - o.t >= RETEST_DAYS * 864e5 && !(waiting && waiting(s));
+      var t = lastTest(s);
+      return t && now - t >= RETEST_DAYS * 864e5 && !(waiting && waiting(s));
     }).map(function (s) {
-      return { id: s.id, name: s.name, kind: 'retest', tag: TAG_OF.retest, mid: '', dbId: null, key: s.id + ':' + s.onboard.t };
+      return { id: s.id, name: s.name, kind: 'retest', tag: TAG_OF.retest, mid: '', dbId: null, key: s.id + ':' + lastTest(s) };
     });
   }
 

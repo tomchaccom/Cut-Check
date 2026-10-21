@@ -141,6 +141,8 @@ def _run(body, db, uid, llm, t0):
     done = next((r.get('created_at') for r in evrows if isinstance(r.get('event'), dict) and r['event'].get('type') == 's-code-judge'), None)
     new = {'student_id': stu, 'mission_id': mis, 'classroom_id': room, 'checks': r['checks'], 'tutor_dirs': r['tutor_dirs'],
            'facts': [], 'done_at': done, 'updated_at': _now()}  # done_at = 미션을 마친 때 — 누적 순서의 기준
+    if old and not old[0].get('checks'):
+        new['teacher_dir'] = None  # 1차 행의 teacher_dir 는 '학생에게 보일 방향' 이었다. 2차의 '상쇄 때 고른 방향' 으로 읽히지 않게 버린다
     saved = db.rows('POST', 'compass?on_conflict=student_id,mission_id', new, 'resolution=merge-duplicates,return=representation')
     return _row(saved[0])
 

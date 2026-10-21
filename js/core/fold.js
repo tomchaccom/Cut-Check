@@ -63,7 +63,7 @@
       sTutor: [],            /* [{ question, answer, kind, refused, reasons, step, t }] */
 
       /* 교실 입장 진단 — 교사 화면만 쓴다. 학생 화면에 띄우지 않는다 */
-      onboard: null          /* { stage, hardcode, skipped, set, t } — 마지막 것이 이긴다 */
+      onboard: null          /* { stage, hardcode, skipped, set, t, tDone } — 마지막 것이 이긴다 */
     };
   }
 
@@ -145,7 +145,8 @@
       case 's-onboard':
         /* 해석은 core/onboard.js 한 곳에만 — 이 파일을 쓰는 화면은 onboard.js 도 싣는다 */
         var ob = e.skipped || !CC.onboard ? { stage: null, hardcode: false } : CC.onboard.stage(e.answers, e.set);
-        s.onboard = { stage: ob.stage, hardcode: ob.hardcode, skipped: !!e.skipped, set: e.set || 'mid', t: e.t }; break;
+        s.onboard = { stage: ob.stage, hardcode: ob.hardcode, skipped: !!e.skipped, set: e.set || 'mid', t: e.t,
+          tDone: e.skipped ? (s.onboard && s.onboard.tDone) || null : e.t }; break;   /* tDone = 건너뛰지 않은 마지막 테스트 시각 */
 
       default: /* 모르는 type 은 무시한다 — 구버전 화면이 새 서버를 만나도 안 죽는다 */ break;
     }

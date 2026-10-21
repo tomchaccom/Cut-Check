@@ -358,6 +358,7 @@
   /* ── 화면 2 ────────────────────────────────────── */
   $('#slot-define').addEventListener('change', function () {
     state.defineChoice = this.value;
+    state.defineTrap = ((M.define.options || []).find(function (o) { return o.v === state.defineChoice; }) || {}).trap || null;
     $('#go-method').disabled = !this.value;
   });
 

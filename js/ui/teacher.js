@@ -705,7 +705,12 @@
         });
       });
     }
-    if (v.sHelps) row(dl, '도움 요청', lastT(evs, ['s-help']), function (dd) { dd.textContent = v.sHelps + '번'; });
+    if (v.sHelps) row(dl, '도움 요청', lastT(evs, ['s-help']), function (dd) {
+      dd.textContent = v.sHelps + '번';
+      var h = evs.filter(function (e) { return e.type === 's-help'; }).pop() || {};
+      if (h.expected) was(dd, '기대한 결과 “' + h.expected + '”');
+      if (h.stuck) was(dd, '막힌 곳 “' + h.stuck + '”');
+    });
     if (v.sWrap) row(dl, '정리', lastT(evs, ['s-wrap']), function (dd) { dd.textContent = '“' + v.sWrap + '”'; });
 
     /* 블록 미션 (01·02·03·06) · 04 · 05 · 졸업 과제 — 예전 기록도 그대로 보인다 */

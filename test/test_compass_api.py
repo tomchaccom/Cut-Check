@@ -135,12 +135,13 @@ st, out = api.handle(body('analyze'), 'tok', ENV, http, llm_of(box))
 t('checks 가 있으면 llm 0번', st == 200 and len(box) == 1 and len(writes(calls)) == 1, (st, len(box)))
 st, out = api.handle(body('analyze', force=True), 'tok', ENV, http, llm_of(box))
 t('force 면 다시 1번', st == 200 and len(box) == 2 and len(writes(calls)) == 2, (st, len(box)))
-V1 = {'student_id': STU, 'mission_id': MIS, 'levels': {'N': 3, 'E': 0, 'S': 0, 'W': 0}, 'evidence': {}, 'needle_deg': 0, 'sent_at': '2026-10-20T00:00:00Z', 'teacher_note': '옛 한마디'}
+V1 = {'student_id': STU, 'mission_id': MIS, 'levels': {'N': 3, 'E': 0, 'S': 0, 'W': 0}, 'evidence': {}, 'needle_deg': 0, 'sent_at': '2026-10-20T00:00:00Z', 'teacher_note': '옛 한마디', 'teacher_dir': 'N'}
 http, calls, state = fake(row=dict(V1))
 box = []
 st, out = api.handle(body('analyze'), 'tok', ENV, http, llm_of(box))
 t('1차 행(checks 없음)은 한 번 다시 읽는다 · 보낸 한마디는 그대로', st == 200 and len(box) == 1 and len(out['checks']) == 12
   and out['teacher_note'] == '옛 한마디' and out['sent_at'], (st, out))
+t('1차 행의 옛 teacher_dir 는 첫 2차 판정에서 지워진다', out['teacher_dir'] is None, out)
 st, out = api.handle(body('list') | {'classroomId': ROOM}, 'tok', ENV, fake(row=dict(V1), rows=[dict(V1)])[0], llm_of([]))
 t('1차 행도 list 에서 안 죽는다', st == 200 and out['rows'][0]['checks'] is None, (st, out))
 
@@ -162,6 +163,15 @@ def mrow(mid, n=0, e=0, s=0, w=0, **kw):
 
 
 M2, M3 = uid('f'), uid('1')
+
+# 1차 행 둘이 옛 teacher_dir='N' 을 갖고 있어도, 다시 읽고 나면 누적 바늘은 체크(S)를 따른다
+old2 = [dict(V1, mission_id=m) for m in (MIS, M2)]
+redone = []
+for r in old2:
+    st, o = api.handle(body('analyze') | {'missionId': r['mission_id']}, 'tok', ENV, fake(row=dict(r))[0], llm_of([]))
+    redone.append(mrow(r['mission_id'], s=3, teacher_dir=o['teacher_dir']))
+cum = api._compass.cumulative(redone + [mrow(M3, s=3)])
+t('옛 teacher_dir 둘이 있던 S 세 행 → 바늘 S', all(r['teacher_dir'] is None for r in redone) and cum['dir'] == 'S' and not cum['cancel'], (redone, cum))
 
 # send — 상쇄가 아니면 학생 바늘(student_view)을 최신 행에 쓴다
 mine = mrow(MIS, n=3)

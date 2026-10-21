@@ -52,6 +52,12 @@ function launchOpts() {
   await p.waitForFunction(() => document.querySelector('#pyodide-status').textContent === 'Python 준비 완료', null, { timeout: 60000 });
   await p.locator('#run-code').click();
   await p.locator('#code-output').waitFor({ state: 'visible', timeout: 10000 });
+  await p.locator('#run-all').click();   // 도움 버튼은 반례까지 돌린 뒤에만 보인다
+  await p.locator('#help-btn').waitFor({ state: 'visible', timeout: 15000 });
+  await p.locator('#help-btn').click();   // 도움 요청 창 — 쓴 글이 선생님 화면에 그대로 올라가야 한다
+  await p.locator('#help-expected').fill('HELPX-' + EVIL);
+  await p.locator('#help-stuck').selectOption({ index: 1 });   // 막힌 곳은 고르는 칸 — 자유 입력은 기대한 결과뿐
+  await p.locator('#help-send').click(); await p.waitForTimeout(200);
   await p.locator('.judge-btn').first().click();
   await p.locator('#code-basis').fill(EVIL);
   await p.locator('#code-judge-save').click();
@@ -87,6 +93,7 @@ function launchOpts() {
   const w = await t.evaluate(() => ({ d: document.documentElement.scrollWidth, w: window.innerWidth }));
   console.log('긴 입력 후 가로 스크롤:', w.d > w.w + 1 ? '✗ ' + w.d + '/' + w.w : '✓ 없음');
   console.log('튜터 질문이 교사 화면에 보임:', tutorShown ? '✓' : '✗ 없음');
+  console.log('도움 요청 글이 교사 화면에 글자로 보임:', txt.includes('HELPX-<img') ? '✓' : '✗ 없음');
   console.log('alert 발생:', alerted ? '✗' : '✓ 없음');
 
   // 수업에서 짚을 거리 — 학생 질문 원문이 quote 로 돌아와도 글자로만 (서버는 가짜, CC.sb.api 를 바꿔 끼운다)

@@ -6,6 +6,8 @@ alter table compass add column if not exists tutor_dirs jsonb;
 alter table compass add column if not exists student_view jsonb;  -- { needle_deg, dir, length, sent_at } 학생에게 보낸 누적 바늘. send 때 서버가 최신 행에 쓴다
 alter table compass add column if not exists done_at timestamptz;  -- 학생이 미션을 마친 때(첫 s-code-judge). "최근 미션" 순서는 분석 시각이 아니라 이것이다
 update compass set done_at = created_at where done_at is null;      -- 1차 행은 만든 시각으로 대신한다
+-- 1차의 teacher_dir 는 "학생에게 보일 방향" 이었고 2차에서는 "상쇄 때 고른 방향" 이다. 뜻이 달라 옛 선택은 버린다(checks 없는 행 = 1차).
+update compass set teacher_dir = null where checks is null;
 alter table compass alter column levels drop not null;
 alter table compass alter column evidence drop not null;
 
