@@ -783,6 +783,7 @@ test('강사 — 1440 폭에서 학생 서랍은 넓고 옆으로 넘치지 않�
   const ask = await d.locator('.saybox').boundingBox();
   const rows = await d.locator('.d-rows').boundingBox();
   expect(ask.y).toBeLessThan(rows.y);
+  await expect(d.locator('.d-step-h')).toHaveText(['02 성공']);   // 기록은 학생 화면 단계 이름으로 묶인다
   const tut = await d.locator('.d-tutor').boundingBox();
   expect(tut.y).toBeGreaterThan(rows.y + rows.height - 1);   // 튜터 대화는 기록 아래 칸
   expect(rows.width).toBeLessThanOrEqual(760);
@@ -2194,6 +2195,13 @@ test('강사 — 나침반 카드: 누적 바늘 · 12칸 체크리스트 · 근
   await expect(card.locator('.compass-table td.no')).toHaveCount(9);
   await expect(card.locator('.compass-table td .q')).toHaveText(['“count 를 출력해 봤다”']);
   await expect(card.locator('.compass-tutor')).toContainText('▲ 이해 2번 · ◧ 설계 0번 · ○ 구현 1번 · ◇ 검증 0번');
+  // 두드러지는 것 — 바늘 아래 사실 몇 줄, 12칸 표는 접혀 있다
+  await expect(card.locator('.compass-gist > li', { hasText: '예가 가장 많은 쪽' })).toContainText('▲ 북쪽 · 이해');
+  await expect(card.locator('.compass-gist > li', { hasText: '예가 가장 적은 쪽' })).toContainText('◧ 동쪽 · 설계, ◇ 서쪽 · 검증');
+  await expect(card.locator('.compass-gist .q')).toHaveText(['“count 를 출력해 봤다”']);
+  await expect(card.locator('.compass-table')).toBeHidden();
+  await card.locator('.compass-more summary').click();
+  await expect(card.locator('.compass-table')).toBeVisible();
   await expect(card.locator('select')).toHaveCount(0);
   await expect(card.locator('.compass-cand')).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 800 });   // 휴대폰 — 표는 칸 안에서만 옆으로 밀고, 페이지는 안 민다

@@ -200,7 +200,7 @@ compass:function(a){var CK=['N1','N2','N3','E1','E2','E3','S1','S2','S3','W1','W
   await k.locator('#classroom-cards .room-tile').first().click();
   await k.locator('.student-tile', { hasText: '태인' }).click();
   await k.locator('.compass-card').waitFor({ timeout: 5000 });
-  await k.locator('.compass-sent-note').waitFor({ timeout: 5000 }); await k.locator('.compass-table td .q').waitFor({ timeout: 5000 });
+  await k.locator('.compass-sent-note').waitFor({ timeout: 5000 }); await k.locator('.compass-table td .q').waitFor({ state: 'attached', timeout: 5000 });   // 표는 접혀 있다
   const ks = await k.evaluate(() => ({ pwned: !!window.__pwned, imgs: document.querySelectorAll('#detail img').length, sent: (document.querySelector('.compass-sent-note') || {}).textContent, ta: (document.querySelector('.compass-card textarea') || {}).value, w: document.documentElement.scrollWidth - innerWidth }));
   const noteBad = ks.pwned || ks.imgs > 0 || alerted || ks.sent !== EVIL + LONG + ' 🙂👍' || ks.ta !== ks.sent || ks.w > 1 || (await k.locator('.compass-card').textContent()).indexOf('“<img') < 0;
   console.log('나침반 한마디가 글자로만 보임:', noteBad ? '✗ ' + JSON.stringify({ pwned: ks.pwned, imgs: ks.imgs, w: ks.w }) : '✓');

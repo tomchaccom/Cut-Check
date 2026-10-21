@@ -211,39 +211,52 @@ details.more[open] > summary { margin-bottom: 16px; }
 .mf[aria-pressed="true"] { border: 2px solid var(--ink); font-weight: 600; }
 .mf .st { font-size: 12px; color: var(--ink-2); font-weight: 400; }
 .d-main, .d-tutor { min-width: 0; margin-top: 32px; }
-.d-main h4, .d-tutor h4 { margin: 0; font-size: 17px; font-weight: 700; }
-.d-tutor h5 { margin: 20px 0 0; font-size: 15px; font-weight: 700; }
+.d-main h4, .d-tutor h4 { margin: 0; font-size: 19px; font-weight: 700; }
+.d-tutor h5 { margin: 20px 0 0; font-size: 16px; font-weight: 700; }
 .d-tutor .recap-go { margin-top: 12px; }
-.d-main .lead, .d-tutor .lead { margin: 4px 0 12px; font-size: 13px; color: var(--ink-2); }
-.d-rows, .d-qs { margin: 0; border-top: 1px solid var(--line-strong); }
-.d-rows .row { display: grid; grid-template-columns: 48px 104px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.6; }
+.d-main .lead, .d-tutor .lead { margin: 4px 0 12px; font-size: 15px; color: var(--ink-2); }
+.detail .emptyrow { font-size: 15px; color: var(--ink-2); }
+/* 읽는 글자는 16px, 곁 정보도 15px 아래로 내리지 않는다 — 회색은 --ink-2 까지만 (--ink-3 은 대비가 모자란다) */
+.d-flags { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; padding: 0; }
+.d-flags .mark { margin-left: 0; font-size: 15px; padding: 4px 12px; }
+.d-rows, .d-qs { margin: 0; }
+.d-step { border-top: 2px solid var(--line-strong); }
+.d-step + .d-step { margin-top: 20px; }
+.d-step-h { margin: 0; padding: 10px 0 2px; font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: .02em; }
+.d-step dl { margin: 0; }
+.d-qs { border-top: 1px solid var(--line-strong); }
+.d-rows .row { display: grid; grid-template-columns: 52px 112px minmax(0, 1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 1.65; }
+.d-step .row:last-child { border-bottom: 0; }
 .d-rows .row.moment { box-shadow: inset 4px 0 0 var(--folder); margin-left: -16px; padding-left: 16px; }   /* 선만 바깥 여백에 — 칸 정렬은 그대로 */
-.d-rows dt { font-size: 14px; font-weight: 600; color: var(--ink); padding-top: 1px; }
+.d-rows .row.look { box-shadow: inset 4px 0 0 var(--coral); }
+.d-rows dt { font-size: 15px; font-weight: 700; color: var(--ink); padding-top: 1px; }
 .d-rows dd { margin: 0; max-width: 72ch; overflow-wrap: anywhere; }
-.d-rows .tm { font-size: 13px; color: var(--ink-2); padding-top: 2px; font-variant-numeric: tabular-nums; }
-.detail .was { display: block; margin-top: 6px; font-size: 14px; line-height: 1.55; color: var(--ink-2); font-family: var(--sans); }
-.detail .sub { display: block; font-size: 13px; color: var(--ink-2); }
-.detail .code { font-family: var(--mono); font-size: 13.5px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: 10px; padding: 12px 14px 12px 0; margin: 8px 0 0; counter-reset: ln; }
+.d-rows .tm { font-size: 15px; color: var(--ink-2); padding-top: 1px; font-variant-numeric: tabular-nums; }
+.detail .was { display: block; margin-top: 6px; font-size: 15px; line-height: 1.6; color: var(--ink-2); font-family: var(--sans); }
+.detail .sub { display: block; font-size: 15px; color: var(--ink-2); }
+.detail .code { font-family: var(--mono); font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: 10px; padding: 12px 14px 12px 0; margin: 8px 0 0; counter-reset: ln; }
 .detail .code .ln { display: block; padding-left: 3.4em; text-indent: 0; position: relative; min-height: 1.7em; }
-.detail .code .ln::before { counter-increment: ln; content: counter(ln); position: absolute; left: 0; width: 2.4em; text-align: right; color: var(--ink-3); user-select: none; }
-.d-tbl { width: auto; max-width: 100%; border-collapse: collapse; font-size: 14px; table-layout: auto; }
-.d-tbl th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-2); padding: 0 12px 6px 0; border-bottom: 1px solid var(--line); }
-.d-tbl td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.detail .code .ln::before { counter-increment: ln; content: counter(ln); position: absolute; left: 0; width: 2.4em; text-align: right; color: var(--ink-2); user-select: none; }
+.d-tbl { width: auto; max-width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto; }
+.d-tbl th { text-align: left; font-size: 15px; font-weight: 600; color: var(--ink-2); padding: 0 14px 6px 0; border-bottom: 1px solid var(--line); }
+.d-tbl td { padding: 8px 14px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
 .d-tbl tr:last-child td { border-bottom: 0; }
-.d-tbl .mono { font-family: var(--mono); font-size: 13.5px; }
+.d-tbl .mono { font-family: var(--mono); font-size: 15px; }
 .d-tbl .out { font-weight: 600; }
 .d-tbl .out.err { color: var(--coral); font-weight: 400; }
-.detail .mark { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--folder); color: var(--on-folder); font-size: 12px; font-weight: 600; }
-.d-qs .q { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.55; overflow-wrap: anywhere; }
-.d-qs .q-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
-.d-qs .tag { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--ink); color: var(--ink); }
-.d-qs .qq, .d-qs .a { margin: 0; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; }
+.detail .mark { display: inline-block; margin-left: 6px; padding: 1px 9px; border-radius: 999px; background: var(--folder); color: var(--on-folder); font-size: 14px; font-weight: 700; line-height: 1.5; }
+.detail .mark.look { background: var(--coral-soft); color: var(--coral); box-shadow: inset 0 0 0 1.5px var(--coral); }
+.d-qs .q { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
+.d-qs .q-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; color: var(--ink-2); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.d-qs .tag { font-size: 14px; font-weight: 600; padding: 1px 10px; border-radius: 999px; border: 1px solid var(--ink); color: var(--ink); }
+.d-qs .qq, .d-qs .a { margin: 0; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 8px; }
 .d-qs .qq { font-weight: 600; }
 .d-qs .a { margin-top: 6px; color: var(--ink-2); }
-.d-qs .who { font-size: 12px; font-weight: 600; color: var(--ink-3); padding-top: 2px; }
-.d-qs .q .why { margin: 6px 0 0 44px; font-size: 12px; color: var(--ink-3); }
+.d-qs .who { font-size: 14px; font-weight: 600; color: var(--ink-2); padding-top: 2px; }
+.d-qs .q .why { margin: 6px 0 0 48px; font-size: 14px; color: var(--ink-2); }
 @media (max-width: 600px) {
-  .d-rows .row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .d-rows .row { grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; }
+  .d-rows .row dd { grid-column: 1 / -1; }
   .d-rows .row.moment { margin-left: -12px; padding-left: 12px; }
 }
 
@@ -362,34 +375,47 @@ details.more[open] > summary { margin-bottom: 16px; }
 }
 
 /* 나침반 카드 — 회색·검정만 (브랜드 색 미정). 서랍 안, 기록 위. 방향은 색이 아니라 모양(▲ ◧ ○ ◇) */
-.compass-card { border: 2px solid var(--line-strong); border-radius: 16px; padding: 20px 24px; margin: 12px 0; display: grid; gap: 14px; min-width: 0; }
-.compass-card h4, .compass-card h5 { margin: 0; }
-.compass-top { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
-.compass-card .compass-fig svg { width: 180px; height: 180px; display: block; }
-.compass-now { display: grid; gap: 4px; }
-.compass-dir { font-size: 20px; font-weight: 700; }
+.compass-card { border: 2px solid var(--line-strong); border-radius: 16px; padding: 20px 24px; margin: 12px 0; display: grid; gap: 16px; min-width: 0; font-size: 16px; line-height: 1.6; }
+.compass-card h4 { margin: 0; font-size: 19px; }
+.compass-card h5 { margin: 0; font-size: 16px; }
+.compass-top { display: flex; gap: 16px 28px; flex-wrap: wrap; align-items: flex-start; }
+.compass-card .compass-fig svg { width: 168px; height: 168px; display: block; }
+.compass-now { display: grid; gap: 4px; align-self: center; }
+.compass-dir { font-size: 22px; font-weight: 700; }
 .compass-line { margin: 0; color: var(--ink-2); }
+/* 두드러지는 것 — 바늘 옆. 이름표(왼쪽) · 사실(오른쪽) */
+.compass-gist { min-width: 0; max-width: 80ch; list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.compass-gist > li { display: grid; grid-template-columns: minmax(0, 9.5em) minmax(0, 1fr); gap: 2px 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.compass-gist > li:last-child { border-bottom: 0; padding-bottom: 0; }
+.compass-gist .gk { font-size: 15px; font-weight: 700; color: var(--ink-2); }
+.compass-gist .gv { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .compass-gist > li { grid-template-columns: minmax(0, 1fr); } }
+.gist-items { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.gist-items li { font-weight: 400; }
+.gist-items .q, .compass-table .q { display: block; color: var(--ink-2); font-size: 15px; overflow-wrap: anywhere; }
 .compass-pick { display: grid; gap: 10px; }
 .compass-cancel { margin: 0; font-weight: 600; }
 .compass-cands { display: flex; gap: 8px; flex-wrap: wrap; }
 .compass-cand[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.compass-more > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; }
+.compass-more[open] > summary { margin-bottom: 8px; }
 .compass-tablewrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 10px; }
-.compass-table { border-collapse: collapse; width: 100%; font-size: 14px; }
-.compass-table th, .compass-table td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.compass-table { border-collapse: collapse; width: 100%; font-size: 16px; }
+.compass-table th, .compass-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .compass-table thead th { font-weight: 700; white-space: nowrap; }
 .compass-table tbody th[scope="row"] { font-weight: 400; min-width: 14em; }
-.compass-table .dir-head th { background: var(--paper-2, rgba(127,127,127,.08)); font-weight: 700; }
+.compass-table .dir-head th { background: var(--surface-2); font-weight: 700; }
 .compass-table td { min-width: 6em; }
-.compass-table td.no { color: var(--ink-3); }
+.compass-table td.no { color: var(--ink-2); }
+.compass-table td.yes { background: var(--surface-2); }
 .compass-table .mk { font-weight: 700; }
-.compass-table .q { display: block; color: var(--ink-2); font-size: 13px; overflow-wrap: anywhere; }
-.compass-tutor { margin: 0; font-size: 14px; color: var(--ink-2); }
+.compass-tutor { margin: 0; font-size: 15px; color: var(--ink-2); }
 .compass-form { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 14px; }
-.compass-form label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.compass-form label { font-size: 15px; font-weight: 600; color: var(--ink-2); }
 .compass-form select, .compass-form textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); min-height: 44px; }
 .compass-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .compass-card .pill { min-height: 44px; padding: 0 16px; cursor: pointer; }
-.compass-msg { font-size: 14px; color: var(--ink-3); margin: 0; min-height: 1em; }
+.compass-msg { font-size: 15px; color: var(--ink-2); margin: 0; min-height: 1em; }
 .compass-sent { display: flex; gap: 8px; align-items: baseline; }
 .compass-sent-note { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .student-tile .tag.wait { font-size: 11px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; margin-top: 4px; }
