@@ -976,7 +976,7 @@ test('교실 첫 입장 — 레벨 테스트 10문항, 맞고 틀림은 보이�
   expect(evs.length).toBe(1);
   expect(evs[0].type).toBe('s-onboard');
   expect(evs[0].skipped).toBe(false);
-  expect(evs[0].answers.map(a => a.q)).toEqual(['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10']);
+  expect(evs[0].answers.map(a => a.q)).toEqual(['d1', 'd2', 'd11', 'd4', 'd5', 'd12', 'd13', 'd8', 'd14', 'd15']);
   expect(evs[0].answers[1].pick).toBe('나');                        // 단답형은 쓴 글자 그대로
   expect(await page.evaluate(() => window.__pushed)).toEqual([['r1', null]]);
   // 다시 열면 진단은 없다. 큰 교실 이름이 '내 교실' 링크를 덮어 마우스 클릭이 h1 에 떨어진다 (기존 배치 문제) — 이벤트로 누른다
@@ -1011,7 +1011,7 @@ test('지정한 문제지(상)로 출제되고, 화면에 난이도가 없고, �
   await page.locator('#ob-done').click();
   const evs = await page.evaluate(() => window.__evs);
   expect(evs[0].set).toBe('high');
-  expect(evs[0].answers.map(a => a.q)).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'h9', 'h10']);
+  expect(evs[0].answers.map(a => a.q)).toEqual(['h1', 'h2', 'h3', 'h11', 'h5', 'h6', 'h12', 'h8', 'h13', 'h14']);
   expect(Object.keys(evs[0]).sort()).toEqual(['answers', 'set', 'skipped', 't', 'type', 'v']);   // 점수·레벨 칸 없음
 });
 
