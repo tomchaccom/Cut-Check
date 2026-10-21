@@ -11,8 +11,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
   /slide2 — 산학협력실무 발표 (설계: docs/superpowers/specs/2026-10-21-slide2-design.md)
-  설문 문항은 slide2-data.js 에만 있다 — 배열에 하나 더하면 장이 하나 생긴다. 이 파일은 고치지 않는다.
-  나침반 그림은 화면과 같은 js/core/compass.js, 레벨 테스트 문항은 js/core/onboard.js 에서 바로 읽는다(정답은 읽지 않는다).
+  순서: 표지 → 설계 철학 → 이름 → 설문 신호 셋 → 핵심 플로우(레벨 테스트 · 미션 만들기 · 나침반 두 장) → 시연 → 만들지 않은 것.
+  설문 문항은 slide2-data.js 에만 있다 — 어느 문항이 나올지(signal · show)도 거기서 정한다. 이 파일은 고치지 않는다.
+  나침반 그림은 화면과 같은 js/core/compass.js 로 그린다.
   아래 SLIDE2_CODE 의 수는 코드에서 옮겨 적은 것 — 갈라지면 node test/slide2.test.js 가 깨진다.
   1920×1080 무대 하나를 화면에 맞춰 줄인다. 시연 장만 화면 전체를 쓴다(iframe 글자가 작아지지 않게).
 -->
@@ -91,15 +92,7 @@ code, .code { font-family: var(--mono); }
 .motto p.big { font-size: 104px; font-weight: 700; letter-spacing: -.045em; line-height: 1.18; }
 .motto mark { background: var(--yellow); color: var(--ink); padding: 0 .1em; }
 
-/* 단계 · 도식 */
-.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 64px; border-top: 4px solid var(--ink); }
-.steps > div { padding: 30px 32px 0 0; }
-.steps .n { font-family: var(--disp); font-weight: 800; font-size: 88px; line-height: 1; }
-.steps h3 { font-size: 36px; margin-top: 16px; letter-spacing: -.02em; }
-.steps p { font-size: 26px; color: var(--ink-2); margin-top: 12px; line-height: 1.45; }
-.steps .who { display: inline-block; margin-top: 18px; font-size: 22px; font-weight: 700; padding: 3px 12px; border: 2px solid var(--ink); }
-.steps .who.big { background: var(--ink); color: var(--paper); }
-
+/* 미션 만들기 — 상자 다섯이 화살표로 */
 .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; margin-top: 60px; align-items: stretch; }
 .box { border: 3px solid var(--ink); padding: 26px 24px; position: relative; display: flex; flex-direction: column; }
 .box.y { background: var(--yellow); }
@@ -109,27 +102,47 @@ code, .code { font-family: var(--mono); }
 .box li { list-style: none; font-size: 23px; line-height: 1.4; padding: 7px 0; border-top: 1px solid var(--line); }
 .box + .box::before { content: ""; position: absolute; left: -31px; top: 50%; width: 28px; height: 3px; background: var(--ink); }
 .box + .box::after { content: ""; position: absolute; left: -12px; top: calc(50% - 8px); border: 9px solid transparent; border-left: 12px solid var(--ink); border-right: 0; }
-.retry { margin-top: 36px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
-.retry p { font-size: 26px; border-left: 8px solid var(--yellow); padding-left: 22px; }
+.facts { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 40px; margin-top: auto; border-top: 4px solid var(--ink); padding-top: 22px; }
+.facts p { font-size: 26px; line-height: 1.4; color: var(--ink-2); }
+.facts b { display: block; font-size: 30px; color: var(--ink); margin-bottom: 4px; }
 
-.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 96px; margin-top: 60px; }
-.axes { padding: 0; }
-.axes li { list-style: none; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 28px; }
-.axes li b { font-weight: 700; }
-.axes li span { color: var(--ink-2); }
-.axes li.step b::after { content: " ●"; font-size: 18px; vertical-align: 4px; }
-.big-n { font-family: var(--disp); font-weight: 800; font-size: 220px; line-height: .9; letter-spacing: -.05em; }
+/* 이름 — 아이콘 크게, 뜻은 brand.md 그대로 */
+.name-grid { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 88px; align-items: center; margin-top: 36px; }
+.name-grid img { width: 400px; height: 400px; display: block; }
+.name h2 { font-size: 88px; max-width: 14ch; }
+.name .lead { max-width: 40ch; }
+.name .lead b { color: var(--ink); font-weight: 700; }
+.rose { display: flex; padding: 0; margin-top: auto; border-top: 4px solid var(--ink); }
+.rose li { list-style: none; font-size: 34px; padding-top: 18px; }
+.rose li + li { margin-left: 28px; }
+.rose li + li::before { content: "→"; margin-right: 28px; color: var(--ink-3); }
+.rose b { font-family: var(--sans); font-weight: 700; margin-right: 8px; }
+.rose-note { margin-top: 14px; max-width: 80ch; }
 
-/* 레벨 테스트 */
-.sets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px; margin-top: 48px; flex: 1; min-height: 0; }
-.set h3 { font-size: 40px; border-bottom: 4px solid var(--ink); padding-bottom: 10px; }
-.q { margin-top: 24px; }
-.q pre { font-family: var(--mono); font-size: 24px; line-height: 1.45; background: #F3F3F3; padding: 16px 18px; white-space: pre-wrap; }
-.q .ask { font-size: 24px; font-weight: 600; margin-top: 12px; line-height: 1.4; }
-.q ol { padding: 0; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
-.q ol li { list-style: none; font-size: 21px; border: 2px solid var(--ink); padding: 3px 12px; }
-.q .blank { font-size: 21px; color: var(--ink-2); margin-top: 8px; border-bottom: 2px solid var(--ink); width: 240px; padding-bottom: 4px; }
-.rule-line { font-size: 24px; color: var(--ink-2); margin-top: 18px; line-height: 1.45; }
+/* 신호 셋 — 큰 수 하나에 문장 하나 */
+.signals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 64px; margin-top: 52px; flex: 1; min-height: 0; }
+.signal { display: flex; flex-direction: column; border-top: 4px solid var(--ink); padding-top: 20px; }
+.signal .sn { font-family: var(--disp); font-size: 64px; font-weight: 500; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.signal .sn b { font-size: 200px; font-weight: 800; letter-spacing: -.06em; }
+.signal .sd { font-size: 24px; color: var(--ink-2); margin-top: 14px; }
+.signal h3 { font-size: 40px; line-height: 1.3; letter-spacing: -.025em; margin-top: 28px; }
+.signal .made { margin-top: auto; background: var(--yellow); padding: 20px 24px; font-size: 28px; line-height: 1.4; font-weight: 600; }
+.signal .made span { display: block; font-size: 22px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+
+/* 핵심 플로우 — 학생 줄 · 강사 줄 */
+.lanes { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 56px 24px; flex: 1; align-content: center; align-items: stretch; }
+.lane-who { font-size: 34px; font-weight: 700; padding-top: 20px; }
+.lane { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; padding: 0; }
+.lane.t { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lane li { list-style: none; border: 3px solid var(--ink); padding: 28px 26px 34px; position: relative; display: flex; flex-direction: column; gap: 10px; }
+.lane.t li { background: var(--yellow); }
+.lane b { font-size: 40px; letter-spacing: -.02em; line-height: 1.2; }
+.lane span { font-size: 27px; line-height: 1.4; color: var(--ink-2); }
+.lane.t span { color: var(--ink); }
+.lane li + li::before { content: ""; position: absolute; left: -31px; top: 50%; width: 28px; height: 3px; background: var(--ink); }
+.lane li + li::after { content: ""; position: absolute; left: -12px; top: calc(50% - 8px); border: 9px solid transparent; border-left: 12px solid var(--ink); border-right: 0; }
+
+/* 레벨 테스트 — 학생 화면 · 강사 화면 */
 .shots { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 64px; margin-top: 48px; flex: 1; min-height: 0; }
 .shot { display: flex; flex-direction: column; min-height: 0; }
 .shot img { width: 100%; flex: 1; min-height: 0; object-fit: contain; object-position: top left; border: 3px solid var(--ink); background: #fff; }
@@ -143,7 +156,11 @@ code, .code { font-family: var(--mono); }
 .checks h3 { font-size: 36px; border-bottom: 4px solid var(--ink); padding-bottom: 10px; }
 .checks li { list-style: none; font-size: 24px; line-height: 1.4; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .checks ul { padding: 0; }
-.checks .ai { display: inline-block; font-size: 18px; font-weight: 700; background: var(--yellow); padding: 0 8px; margin-left: 6px; }
+.checks .sees { font-size: 28px; font-weight: 600; line-height: 1.35; margin: 16px 0 6px; min-height: 2.7em; }
+.checks .id { font-family: var(--mono); font-size: 20px; color: var(--ink-3); margin-right: 10px; }
+.checks .ai, .rule-line .ai { display: inline-block; font-size: 18px; font-weight: 700; background: var(--yellow); padding: 0 8px; margin-right: 10px; vertical-align: 3px; }
+.rule-line { font-size: 26px; color: var(--ink-2); margin-top: auto; line-height: 1.5; max-width: 72ch; }
+.rule-line .ai { margin: 0 6px 0 0; vertical-align: 2px; }
 .vec { display: grid; grid-template-columns: 560px minmax(0, 1fr); gap: 96px; margin-top: 40px; flex: 1; min-height: 0; align-items: start; }
 .vec .dial { color: var(--ink); }
 .vec .dial svg { width: 560px; height: 560px; overflow: visible; }
@@ -198,7 +215,9 @@ code, .code { font-family: var(--mono); }
 .nav { position: fixed; right: 12px; bottom: 12px; z-index: 50; display: flex; gap: 6px; align-items: center; }
 .nav button { min-width: 48px; min-height: 48px; font-size: 20px; }
 .nav .pg { font-family: var(--disp); font-weight: 800; font-size: 16px; color: var(--ink); background: var(--paper); border: 2px solid var(--ink); padding: 0 10px; min-height: 48px; display: flex; align-items: center; }
-body.full .nav { bottom: 8px; }
+/* 시연 장 — 넘김은 노란 자막 띠 오른쪽 끝으로. 아래 구석에 두면 학생 칸의 오른쪽 아래(다음 · 제출 버튼)를 가린다 */
+body.full .nav { top: 8px; bottom: auto; right: 16px; }
+.demo .cap { padding-right: 220px; }
 button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outline-offset: 2px; box-shadow: 0 0 0 7px var(--ink); }
 @media (prefers-reduced-motion: reduce) { .vec .dial .compass-needle { transition: none; } }
 </style>
@@ -212,125 +231,105 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outlin
     <p class="sub">의도를 코드로 옮긴다</p>
   </div>
   <div class="meta">
-    <p>산학협력실무 발표 · 2026년 10월 21일</p>
+    <p>산학협력실무 발표 · 2026년 10월</p>
     <svg viewBox="0 0 64 64" role="img" aria-label="KOMPAS 아이콘"><path d="M32 6 37 27 58 32 37 37 32 58 27 37 6 32 27 27Z" fill="#000"/><path d="M53 11 40 40 24 24Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="round"/></svg>
   </div>
 </section>
 
-<section class="slide part" aria-label="설문">
-  <p class="no">1</p>
-  <h2>만들기 전에 강사 다섯 명에게 먼저 물었습니다</h2>
-  <p class="lead">파이썬 수업에서 학생의 의도를 확인하는 법 · 2026년 10월 18–20일 · 응답 5</p>
-</section>
-
-<!-- 설문 장은 여기에 slide2-data.js 의 길이만큼 들어간다 -->
-<template id="survey-anchor"></template>
-
 <section class="slide motto" aria-label="설계 철학">
-  <p class="kick">그래서 기능마다 이 질문 하나로 거릅니다</p>
+  <p class="kick">기능마다 이 질문 하나로 거릅니다</p>
   <p class="big">시작은 대신해주고,<br><mark>판단은 하나도 대신하지 않는다.</mark></p>
   <p class="lead">이건 시작 비용을 줄이는 건가, 판단을 대신하는 건가? 판단을 대신하는 쪽이면 아무리 친절해 보여도 만들지 않습니다.</p>
 </section>
 
-<section class="slide part" aria-label="AI 문제 생성">
-  <p class="no">2</p>
-  <h2>AI 문제 생성</h2>
-  <p class="lead">AI 는 초안을 쓰고, 정답은 실행한 값이고, 학생에게 내보내는 건 강사입니다.</p>
-</section>
-
-<section class="slide" aria-label="단계별 생성">
-  <p class="kick">강사 화면 · 단계별로 만들기</p>
-  <h2>네 단계마다 강사가 보고 넘깁니다</h2>
-  <div class="steps">
-    <div><p class="n">1</p><h3>수업 내용</h3><p>오늘 배운 것과 핵심을 적고 난이도를 고릅니다. 반의 레벨 분포가 같이 넘어갑니다.</p></div>
-    <div><p class="n">2</p><h3>개념 확인</h3><p>낱말 규칙으로 먼저 찾고, 못 찾으면 AI 가 개념 하나를 고릅니다. 강사가 바꿀 수 있습니다.</p><span class="who">작은 모델</span></div>
-    <div><p class="n">3</p><h3>이야기 고르기</h3><p>AI 가 이야기 후보를 보여 줍니다. 흥미는 반을 아는 강사가 고릅니다.</p><span class="who">작은 모델</span></div>
-    <div><p class="n">4</p><h3>문제 확인</h3><p>문제 · 자료 셋 · 성공 보기 · 설계 카드와 모범 답안을 만들고, 강사가 고친 뒤 확정합니다.</p><span class="who big">큰 모델</span></div>
-  </div>
-</section>
-
-<section class="slide" aria-label="생성 파이프라인">
-  <p class="kick">4단계 안에서 일어나는 일</p>
-  <h2>AI 가 셈한 정답은 쓰지 않습니다</h2>
-  <div class="flow">
-    <div class="box"><span class="w">서버</span><h3>LLM 이 초안을 씁니다</h3><ul><li>문제 · 상황 · 요청</li><li>자료 3개</li><li>성공 보기 · 설계 카드</li><li>모범 답안 코드</li></ul></div>
-    <div class="box"><span class="w">서버 · 실행 없이</span><h3>형식 검사</h3><ul><li>자료는 정확히 3개</li><li>마지막 자료는 반례</li><li>헷갈리는 카드 정확히 1장</li><li>성공 보기에 자료별 답 금지</li><li>print 한 번 · 금지 함수</li></ul></div>
-    <div class="box"><span class="w">강사 브라우저 · Pyodide</span><h3>모범 답안을 자료마다 실행</h3><ul><li>에러 · 시간 초과</li><li>결과가 한 줄 한 값인지</li><li>고른 개념을 썼는지</li><li>반례 결과가 첫 자료와 같은지</li></ul></div>
-    <div class="box"><span class="w">강사 브라우저</span><h3>자료별 정답 = 실행한 값</h3><ul><li>외우기 함정 보기도 첫 자료의 실제 답으로 다시 씁니다</li></ul></div>
-    <div class="box y"><span class="w">강사</span><h3>고치고 확정</h3><ul><li>확정한 미션만 학생 폴더에 보입니다</li><li>모범 답안은 학생에게 가지 않습니다</li></ul></div>
-  </div>
-  <div class="retry">
-    <p>형식 검사에 걸리면 걸린 이유를 붙여 서버가 한 번 더 요청합니다.</p>
-    <p id="retry-browser">실행 검사에 걸리면 이유를 붙여 다시 만듭니다. 같은 생성으로 셉니다.</p>
-  </div>
-</section>
-
-<section class="slide" aria-label="반례와 생성 한도">
-  <p class="kick">빠뜨리지 않게 · 남용하지 않게</p>
-  <h2>마지막 자료는 늘 반례입니다</h2>
-  <div class="two">
+<section class="slide name" aria-label="이름">
+  <p class="kick">이름은 왜 KOMPAS 인가</p>
+  <div class="name-grid">
+    <img src="favicon.svg" alt="KOMPAS 아이콘 — 노란 바탕, 검은 네 방위, 북동을 가리키는 흰 바늘 하나">
     <div>
-      <ul class="axes" id="axes"></ul>
-      <p class="small" style="margin-top:18px">● 단계별 생성이 쓰는 축. 한 번에 만들기는 다섯 축 모두.</p>
-    </div>
-    <div>
-      <p class="kick">강사별 생성 한도 · 새 강사 기본</p>
-      <p class="big-n" id="quota"></p>
-      <p class="lead" style="color:var(--ink)">성공했을 때만 하나를 씁니다. AI 를 부르기 전에 예약하고, 실패하면 돌려줍니다.</p>
-      <p class="lead">다 쓰면 만들기 버튼이 꺼지고, 한도는 관리자 화면에서만 늘립니다.</p>
+      <h2>목적지는 몰라도, 방향은 안다.</h2>
+      <p class="lead">나침반은 목적지를 알려주지 않고 오직 방향만 가리킵니다. KOMPAS 는 학생이 어디에 도달할지 정해주지 않지만, 지금 어느 쪽으로 나아가야 하는지는 분명히 알려줍니다.</p>
+      <p class="lead">바늘은 어디에 서 있든, 길이 어떻게 바뀌든 같은 쪽을 가리킵니다 — <b>계획은 바뀌어도 의도는 흔들리지 않는다.</b></p>
     </div>
   </div>
+  <ol class="rose">
+    <li><b>▲ 북</b> 이해</li><li><b>◧ 동</b> 설계</li><li><b>○ 남</b> 구현</li><li><b>◇ 서</b> 검증</li>
+  </ol>
+  <p class="small rose-note">한 문제를 푸는 순서가 나침반을 시계 방향으로 한 바퀴 돕니다. 아이콘에는 지도도, 도착 핀도 없습니다. COMPASS 는 흔한 낱말이라 묻혀서, 나침반인 줄 알아보면서도 이름처럼 보이는 K 로 씁니다.</p>
 </section>
 
-<section class="slide part" aria-label="레벨 테스트">
-  <p class="no">3</p>
-  <h2>레벨 테스트</h2>
-  <p class="lead">반의 분포로 문제 난이도를 맞춥니다. 학생은 결과를 보지 않습니다.</p>
+<section class="slide" aria-label="설문 — 필요하다는 신호">
+  <p class="kick">만들기 전에 강사 다섯 명에게 물었습니다 · 2026년 10월 18–20일</p>
+  <h2>이 서비스가 필요하다는 신호 셋</h2>
+  <div class="signals" id="signals"></div>
 </section>
 
-<section class="slide" aria-label="문제지 셋">
-  <p class="kick">문제지 하 · 중 · 상, 각 10문항 · 강사가 학생마다 지정</p>
-  <h2>고르는 문항과 한 낱말로 쓰는 문항만</h2>
-  <div class="sets" id="sets"></div>
-  <p class="rule-line">채점은 규칙으로 합니다. 단답은 숫자 하나 · 낱말 하나로 답이 갈리지 않는 문항만 남겼습니다. 중 문제지는 문법 여섯 + 의도 넷 — 문법 2개 이하면 하, 문법 5개 이상이고 의도 3개 이상이면 상.</p>
+<!-- show: true 인 설문 문항은 여기에 한 장씩 들어간다(slide2-data.js) -->
+<template id="survey-anchor"></template>
+
+<section class="slide" aria-label="핵심 플로우">
+  <p class="kick">수업 한 번 · 시연에서 이 순서 그대로 봅니다</p>
+  <h2>학생은 다섯 단계, 강사는 그 옆에서</h2>
+  <div class="lanes">
+    <p class="lane-who">학생</p>
+    <ol class="lane">
+      <li><b>01 문제</b><span>무엇을 할지만 읽는다. 방법은 없다</span></li>
+      <li><b>02 성공</b><span>함정 섞인 보기에서 성공을 고른다</span></li>
+      <li><b>03 설계</b><span>카드 순서와 이유 한 줄</span></li>
+      <li><b>04 코딩</b><span>튜터는 문법만 준다. 반례까지 실행</span></li>
+      <li><b>05 정리</b><span>자기 말로 한 문장</span></li>
+    </ol>
+    <p class="lane-who">강사</p>
+    <ol class="lane t">
+      <li><b>미션 만들기</b><span>AI 초안 · 실행 검사 · 강사가 확정</span></li>
+      <li><b>알림</b><span>칭찬 타이밍만 알린다</span></li>
+      <li><b>학생 상세 · 나침반</b><span>12칸 체크 · 바늘 · 튜터 질문</span></li>
+      <li><b>한마디</b><span>말은 강사가 한다</span></li>
+    </ol>
+  </div>
 </section>
 
-<section class="slide" aria-label="학생 화면과 강사 화면">
-  <p class="kick">같은 기록, 두 화면</p>
+<section class="slide" aria-label="레벨 테스트">
+  <p class="kick">강사 · 미션 만들기 전에 · 레벨 테스트 문제지 하 · 중 · 상</p>
   <h2>맞았는지는 강사만 봅니다</h2>
   <div class="shots">
     <div class="shot"><h3>학생 화면</h3><ul><li>문제만 나옵니다. 문제지 이름 · 맞음 · 점수가 없습니다.</li></ul><img src="docs/수업-흐름/s2-onboard.png" alt="학생 레벨 테스트 화면"></div>
-    <div class="shot"><h3>강사 화면</h3><ul><li>레벨과 문항별 기록. 이벤트에는 고른 답만 남고, 레벨은 화면이 그때 계산합니다.</li><li id="retest"></li></ul><img class="fit" src="docs/수업-흐름/t7-level-record.png" alt="강사 화면의 레벨 기록"></div>
+    <div class="shot"><h3>강사 화면</h3><ul><li>학생별 레벨과 문항별 기록. 반 분포로 문제 난이도를 맞춥니다.</li><li id="retest"></li></ul><img class="fit" src="docs/수업-흐름/t7-level-record.png" alt="강사 화면의 레벨 기록"></div>
   </div>
 </section>
 
-<section class="slide part" aria-label="나침반">
-  <p class="no">4</p>
-  <h2>벡터 나침반</h2>
-  <p class="lead">목적지가 아니라 방향만. 점수는 강사 화면에만, 학생에게는 바늘 하나.</p>
+<section class="slide" aria-label="AI 문제 생성">
+  <p class="kick">강사 · 미션 만들기 · 수업 내용 → 개념 확인 → 이야기 고르기 → 문제 확인, 단계마다 강사가 넘깁니다</p>
+  <h2>AI 가 셈한 정답은 쓰지 않습니다</h2>
+  <div class="flow">
+    <div class="box"><span class="w">서버</span><h3>LLM 이 초안을 씁니다</h3><ul><li>문제 · 자료 3개</li><li>성공 보기 · 설계 카드</li><li>모범 답안 코드</li></ul></div>
+    <div class="box"><span class="w">서버 · 실행 없이</span><h3>형식 검사</h3><ul><li>마지막 자료는 반례</li><li>성공 보기에 자료별 답 금지</li></ul></div>
+    <div class="box"><span class="w">강사 브라우저</span><h3>모범 답안을 자료마다 실행</h3><ul><li>에러 · 시간 초과</li><li>반례 결과가 첫 자료와 같은지</li></ul></div>
+    <div class="box"><span class="w">강사 브라우저</span><h3>자료별 정답 = 실행한 값</h3></div>
+    <div class="box y"><span class="w">강사</span><h3>고치고 확정</h3><ul><li>확정한 미션만 학생에게 보입니다</li></ul></div>
+  </div>
+  <div class="facts">
+    <p><b>반례 다섯 축</b><span id="axes"></span></p>
+    <p><b id="retry-browser"></b><span>걸리면 이유를 붙여 다시 만듭니다</span></p>
+    <p><b id="quota"></b><span>성공했을 때만 하나를 씁니다</span></p>
+  </div>
 </section>
 
-<section class="slide" aria-label="12칸 체크">
-  <p class="kick">미션 하나를 마칠 때마다 · 예 / 아니오</p>
-  <h2>방향마다 세 칸, 코드가 여덟 · AI 가 넷</h2>
+<section class="slide" aria-label="나침반 방향별 의미">
+  <p class="kick">강사 · 학생 상세 · 미션 하나를 마칠 때마다 예 / 아니오 12칸</p>
+  <h2>방향마다 세 칸 — 코드가 여덟, AI 가 넷</h2>
   <div class="checks" id="checks"></div>
-  <p class="rule-line">AI 칸은 학생 기록에 글자 그대로 있는 인용이 있어야 '예'. 인용이 기록에 없으면 서버가 '아니오'로 바꿉니다. 저장하는 건 원본 판정뿐 — 점수와 평균은 그때 계산합니다.</p>
+  <p class="rule-line"><span class="ai">AI</span> 칸은 학생 기록에 글자 그대로 있는 인용이 있어야 '예'. 인용이 기록에 없으면 서버가 '아니오'로 바꿉니다. 방향 점수는 '예'의 개수(0–3). 저장하는 건 원본 판정뿐이고, 칸 · 점수 · 인용은 강사 화면에만 있습니다.</p>
 </section>
 
-<section class="slide" aria-label="바늘이 정해지는 순서" data-steps="4" id="vec-slide">
-  <p class="kick">선생님 화면과 같은 그림 · js/core/compass.js</p>
-  <h2>체크 → 방향 점수 → 벡터 → 바늘</h2>
+<section class="slide" aria-label="바늘이 정해지는 순서" data-steps="5" id="vec-slide">
+  <p class="kick">강사 화면과 같은 그림 · js/core/compass.js · 수는 api/_compass.py</p>
+  <h2>방향 점수 → 벡터 → 가중 평균 → 바늘</h2>
   <div class="vec">
     <div class="dial"><div id="dial"></div><p class="read" id="dial-read"></p></div>
     <div id="vsteps"></div>
   </div>
   <div class="pips" id="vpips"></div>
-</section>
-
-<section class="slide part" aria-label="시연">
-  <p class="no">5</p>
-  <h2>수업 한 번을 그대로</h2>
-  <p class="lead">왼쪽 강사, 오른쪽 학생. 실제 서비스에 각자 로그인합니다.</p>
 </section>
 
 <section class="slide demo" aria-label="시연" id="demo">
@@ -388,13 +387,13 @@ window.SLIDE2_CODE = {
   "AXES": ["count", "sep", "empty", "invisible", "boundary"],
   "STEP_AXES": ["count", "empty", "boundary"],
   "QUOTA_DEFAULT": 3,
-  "BUILD_RETRIES": 2
+  "BUILD_RETRIES": 2,
+  "AI_ITEMS": ["N2", "N3", "E2", "W2"]
 };
 </script>
 <script src="slide2-data.js"></script>
 <script src="js/core/hangul.js"></script>
 <script src="js/core/compass.js"></script>
-<script src="js/core/onboard.js"></script>
 <script>
 (function () {
   'use strict';
@@ -488,56 +487,54 @@ window.SLIDE2_CODE = {
     sec.appendChild(grid);
     return sec;
   }
+  var SURVEY = window.SLIDE2_SURVEY || [];
   var anchor = $('#survey-anchor');
-  (window.SLIDE2_SURVEY || []).forEach(function (it, i, all) { anchor.parentNode.insertBefore(surveySlide(it, i, all), anchor); });
+  SURVEY.filter(function (it) { return it.show; }).forEach(function (it, i, all) { anchor.parentNode.insertBefore(surveySlide(it, i, all), anchor); });
+
+  /* 신호 장 — signal 순번이 있는 문항만. 큰 수 = pick 보기들의 합 / n */
+  SURVEY.filter(function (it) { return it.signal; }).sort(function (a, b) { return a.signal - b.signal; }).forEach(function (it) {
+    var got = it.options.filter(function (o) { return it.pick.indexOf(o.label) >= 0; });
+    var sum = got.reduce(function (a, o) { return a + o.count; }, 0);
+    var col = el('div', 'signal');
+    col.insertAdjacentHTML('beforeend', '<p class="sn"><b>' + sum + '</b> / ' + it.n + '</p>');
+    var parts = got.length > 1 ? ' — ' + got.map(function (o) { return o.label.replace(/^.*\((.*)\)$/, '$1') + ' ' + o.count; }).join(' · ') : '';
+    col.appendChild(el('p', 'sd', (it.unit || '') + parts));
+    col.appendChild(el('h3', null, it.head));
+    var m = el('p', 'made'); m.appendChild(el('span', null, '그래서 만든 것')); m.appendChild(document.createTextNode(it.made));
+    col.appendChild(m);
+    $('#signals').appendChild(col);
+  });
 
   /* ── 코드 값 ───────────────────────────────────────── */
-  var AXIS = { count: ['개수 변화', '자료 수가 달라진다'], sep: ['구분자 변화', '쉼표 대신 다른 기준'], empty: ['빈 결과', '걸리는 게 하나도 없다'],
-    invisible: ['보이지 않는 차이', '앞뒤 공백'], boundary: ['경계값', '기준과 정확히 같은 값 · 첫 · 마지막 · 0 · 길이 1'] };
-  K.AXES.forEach(function (a) {
-    var li = el('li', K.STEP_AXES.indexOf(a) >= 0 ? 'step' : '');
-    li.appendChild(el('b', null, AXIS[a][0])); li.appendChild(el('span', null, AXIS[a][1]));
-    $('#axes').appendChild(li);
-  });
-  $('#quota').textContent = K.QUOTA_DEFAULT + '개';
-  $('#retry-browser').textContent = '실행 검사에 걸리면 이유를 붙여 다시 만듭니다(최대 ' + K.BUILD_RETRIES + '번). 같은 생성 하나로 셉니다.';
+  var AXIS = { count: '개수 변화', sep: '구분자 변화', empty: '빈 결과', invisible: '보이지 않는 차이', boundary: '경계값' };
+  $('#axes').textContent = K.AXES.map(function (a) { return AXIS[a]; }).join(' · ');
+  $('#quota').textContent = '새 강사 생성 한도 ' + K.QUOTA_DEFAULT + '개';
+  $('#retry-browser').textContent = '실행 검사 최대 ' + K.BUILD_RETRIES + '번 다시';
   $('#retest').textContent = '마지막 테스트 뒤 ' + K.RETEST_DAYS + '일이 지나면 강사에게 "레벨 테스트" 알림.';
 
-  /* ── 레벨 테스트 — 문항 · 보기만. 정답은 읽지도 그리지도 않는다 ── */
-  var PICK = { low: ['l5', 'l2'], mid: ['d1', 'd2'], high: ['h13', 'h3'] };
-  ['low', 'mid', 'high'].forEach(function (set) {
-    var col = el('div', 'set');
-    col.appendChild(el('h3', null, '문제지 ' + CC.onboard.SET_LABEL[set]));
-    var qs = CC.onboard.SETS[set];
-    PICK[set].forEach(function (id) {
-      var q = qs.filter(function (x) { return x.id === id; })[0];
-      if (!q) return;
-      var b = el('div', 'q');
-      b.appendChild(el('pre', null, q.code));
-      b.appendChild(el('p', 'ask', q.ask));
-      if (q.options) { var ol = el('ol'); q.options.forEach(function (o) { ol.appendChild(el('li', null, o)); }); b.appendChild(ol); }
-      else b.appendChild(el('p', 'blank', '한 낱말로 쓰기'));
-      col.appendChild(b);
-    });
-    $('#sets').appendChild(col);
-  });
-
-  /* ── 나침반 12칸 ───────────────────────────────────── */
-  var CHECKS = {
-    N: [['N1', '함정이 아닌 성공 조건을 골랐다', 0], ['N2', '성공 조건을 코드로 직접 옮겼다', 1], ['N3', '튜터에게 이해한 것을 설명하고 물었다', 1]],
-    E: [['E1', '설계 카드를 냈다', 0], ['E2', '설계 이유를 자기 말로 적었다', 1], ['E3', '실행해 본 뒤 설계를 고쳤다', 0]],
-    S: [['S1', '에러 없이 실행되는 코드가 있다', 0], ['S2', '에러가 난 뒤 스스로 고쳐 다시 돌렸다', 0], ['S3', '반례 자료까지 같은 코드로 돌렸다', 0]],
-    W: [['W1', '반례 자료를 직접 돌렸다', 0], ['W2', '판정 근거를 실제 실행 결과에 기댔다', 1], ['W3', '반례가 깨진 걸 보고 고쳤다', 0]]
-  };
+  /* ── 나침반 12칸 — 이름은 강사 화면(js/ui/teacher.js CHECKS) 그대로, AI 칸은 api/_compass.py AI_ITEMS ── */
+  var CHECKS = [
+    ['N', 'N1', '함정이 아닌 성공 조건을 골랐어요'], ['N', 'N2', '성공 조건을 코드로 직접 옮겼어요'], ['N', 'N3', '튜터에게 이해한 것을 설명하고 물었어요'],
+    ['E', 'E1', '설계 카드를 냈어요'], ['E', 'E2', '설계 이유를 자기 말로 적었어요'], ['E', 'E3', '실행해 본 뒤 설계를 고쳤어요'],
+    ['S', 'S1', '에러 없이 실행되는 코드가 있어요'], ['S', 'S2', '에러가 난 뒤 스스로 고쳐 다시 돌렸어요'], ['S', 'S3', '반례 자료까지 같은 코드로 돌렸어요'],
+    ['W', 'W1', '반례 자료를 직접 돌렸어요'], ['W', 'W2', '판정 근거를 실제 실행 결과에 기댔어요'], ['W', 'W3', '반례가 깨진 걸 보고 고쳤어요']
+  ];
+  /* 방향마다 무엇을 보는지 — docs/superpowers/specs/brand.md 3.1 의 정의 */
+  var SEES = { N: '문제가 무엇을 요구하는지, 조건을 정확히 파악했나?', E: '접근법을 세우고 순서를 정했나?', S: '설계를 정확한 코드로 옮겼나?', W: '엣지 케이스로 확인하고 돌아봤나?' };
   'NESW'.split('').forEach(function (d) {
     var col = el('div'), ul = el('ul');
     col.appendChild(el('h3', null, CC.compass.SHAPE[d] + ' ' + CC.compass.DIRS[d]));
-    CHECKS[d].forEach(function (c) { var li = el('li', null, c[1]); if (c[2]) li.appendChild(el('span', 'ai', 'AI')); ul.appendChild(li); });
+    col.appendChild(el('p', 'sees', SEES[d]));
+    CHECKS.filter(function (c) { return c[0] === d; }).forEach(function (c) {
+      var li = el('li'); li.appendChild(el('code', 'id', c[1]));
+      if (K.AI_ITEMS.indexOf(c[1]) >= 0) li.appendChild(el('span', 'ai', 'AI'));
+      li.appendChild(document.createTextNode(c[2]));
+      ul.appendChild(li);
+    });
     col.appendChild(ul); $('#checks').appendChild(col);
   });
 
   /* ── 바늘 — api/_compass.py cumulative() 를 보여 주기 위해 옮긴 계산(가중 평균 · 길이) ── */
-  var UNIT = { N: [0, 1], E: [1, 0], S: [0, -1], W: [-1, 0] };
   function view(x, y) {
     var mag = Math.hypot(x, y), deg = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
     return { deg: deg, len: K.MIN_LEN + (K.MAX_LEN - K.MIN_LEN) * Math.min(mag, K.FULL) / K.FULL, mag: mag };
@@ -545,17 +542,19 @@ window.SLIDE2_CODE = {
   var MISSIONS = [   /* 최신부터 — 지어낸 예시 */
     { N: 3, E: 2, S: 1, W: 0 }, { N: 2, E: 1, S: 2, W: 1 }, { N: 1, E: 2, S: 2, W: 0 }, { N: 2, E: 0, S: 1, W: 1 }, { N: 1, E: 1, S: 3, W: 0 }];
   var one = MISSIONS[0], ox = one.E - one.W, oy = one.N - one.S;
-  var tw = 0, ax = 0, ay = 0;
-  MISSIONS.forEach(function (m, i) { var w = K.WEIGHTS[i]; tw += w; ax += w * (m.E - m.W); ay += w * (m.N - m.S); });
-  ax /= tw; ay /= tw;
+  var tw = 0, sx = 0, sy = 0;
+  MISSIONS.forEach(function (m, i) { var w = K.WEIGHTS[i]; tw += w; sx += w * (m.E - m.W); sy += w * (m.N - m.S); });
+  var ax = sx / tw, ay = sy / tw, avg = view(ax, ay);
   var CAN = { N: 1, E: 3, S: 1, W: 3 };   /* 동 3 · 서 3, 북 1 · 남 1 → 크기 0 */
   var f2 = function (v) { return (Math.round(v * 100) / 100).toString(); };
   var dirName = function (deg) { return CC.compass.DIRS[CC.compass.dirOf(deg)]; };
+  var row = function (o, lab) { return '<table><tr><th></th><th>북</th><th>동</th><th>남</th><th>서</th></tr><tr><td>' + lab + '</td><td>' + o.N + '</td><td>' + o.E + '</td><td>' + o.S + '</td><td>' + o.W + '</td></tr></table>'; };
   var V = [
-    { deg: null, h: '미션 하나를 마치면', body: '<p>방향마다 세 칸 중 \'예\'가 몇 개인지가 그 방향 점수입니다(0–3).</p><table><tr><th></th><th>북</th><th>동</th><th>남</th><th>서</th></tr><tr><td>예 개수</td><td>' + one.N + '</td><td>' + one.E + '</td><td>' + one.S + '</td><td>' + one.W + '</td></tr></table>' },
-    { v: view(ox, oy), h: '마주 보는 방향끼리 뺍니다', body: '<p class="eq">x = 동 − 서 = ' + one.E + ' − ' + one.W + ' = ' + ox + '<br>y = 북 − 남 = ' + one.N + ' − ' + one.S + ' = ' + oy + '</p><p>이 미션 하나의 화살표입니다. 칸을 많이 채웠다고 길어지는 게 아니라, 한쪽으로 기울었을 때 길어집니다.</p>' },
-    { v: view(ax, ay), h: '최근 미션 ' + K.WEIGHTS.length + '개를 가중 평균', body: '<table><tr><th>미션</th><th>가중치</th><th>x</th><th>y</th></tr>' + MISSIONS.map(function (m, i) { return '<tr><td>' + (i ? i + '개 전' : '이번') + '</td><td>' + K.WEIGHTS[i] + '</td><td>' + (m.E - m.W) + '</td><td>' + (m.N - m.S) + '</td></tr>'; }).join('') + '</table><p class="eq">평균 (' + f2(ax) + ', ' + f2(ay) + ') → 바늘 길이 ' + K.MIN_LEN + '–' + K.MAX_LEN + '</p>' },
-    { deg: 90, len: K.MIN_LEN, cancel: true, h: '서로 지워지면 기계가 정하지 않습니다', body: '<table><tr><th></th><th>북</th><th>동</th><th>남</th><th>서</th></tr><tr><td>예 개수</td><td>' + CAN.N + '</td><td>' + CAN.E + '</td><td>' + CAN.S + '</td><td>' + CAN.W + '</td></tr></table><p>크기가 ' + K.CANCEL + '보다 작으면 강사에게 칭찬 타이밍 알림이 가고, 겹친 후보 중 하나를 강사가 고릅니다. 고르기 전에는 학생 바늘이 바뀌지 않습니다.</p><div class="cands"><span class="pick">◧ 동 · 설계</span><span>◇ 서 · 검증</span></div>' }
+    { deg: null, h: '1. 방향 점수 — 예 개수', body: '<p>미션 하나를 마치면 방향마다 세 칸 중 \'예\'가 몇 개인지 셉니다(0–3).</p>' + row(one, '예 개수') },
+    { v: view(ox, oy), h: '2. 마주 보는 방향끼리 뺍니다', body: '<p class="eq">x = 동 − 서 = ' + one.E + ' − ' + one.W + ' = ' + ox + '<br>y = 북 − 남 = ' + one.N + ' − ' + one.S + ' = ' + oy + '</p><p>이 미션 하나의 화살표입니다. 칸을 많이 채웠다고 길어지지 않고, 한쪽으로 기울었을 때 길어집니다.</p>' },
+    { v: avg, h: '3. 최근 미션 ' + K.WEIGHTS.length + '개를 가중 평균', body: '<table><tr><th>미션</th><th>가중치</th><th>x</th><th>y</th></tr>' + MISSIONS.map(function (m, i) { return '<tr><td>' + (i ? i + '개 전' : '이번') + '</td><td>' + K.WEIGHTS[i] + '</td><td>' + (m.E - m.W) + '</td><td>' + (m.N - m.S) + '</td></tr>'; }).join('') + '</table><p class="eq">x = ' + f2(sx) + ' ÷ ' + f2(tw) + ' = ' + f2(ax) + '<br>y = ' + f2(sy) + ' ÷ ' + f2(tw) + ' = ' + f2(ay) + '</p>' },
+    { v: avg, h: '4. 각도와 길이', body: '<p class="eq">크기 = √(' + f2(ax) + '² + ' + f2(ay) + '²) = ' + f2(avg.mag) + '<br>각도 = atan2(x, y) = ' + Math.round(avg.deg) + '° → ' + dirName(avg.deg) + '<br>길이 = ' + K.MIN_LEN + ' + (' + K.MAX_LEN + ' − ' + K.MIN_LEN + ') × ' + f2(Math.min(avg.mag, K.FULL)) + ' ÷ ' + K.FULL + ' = ' + f2(avg.len) + '</p><p>길이는 ' + K.MIN_LEN + '–' + K.MAX_LEN + '. 크기 ' + K.FULL + '(한 방향 만점)이면 가장 깁니다. 크기 ' + f2(avg.mag) + '는 ' + K.CANCEL + ' 이상이라 기계가 바늘을 정합니다.</p>' },
+    { deg: 90, len: K.MIN_LEN, cancel: true, h: '5. 크기가 ' + K.CANCEL + '보다 작으면 강사가 고릅니다', body: '<p>최근 미션의 가중 평균 점수가 이렇게 맞서면</p>' + row(CAN, '평균 점수') + '<p class="eq">x = 3 − 3 = 0 · y = 1 − 1 = 0 · 크기 0</p><p>강사에게 칭찬 타이밍 알림이 가고, 겹친 후보 중 하나를 강사가 고릅니다. 고르기 전에는 학생 바늘이 바뀌지 않습니다.</p><div class="cands"><span class="pick">◧ 동 · 설계</span><span>◇ 서 · 검증</span></div>' }
   ];
   V.forEach(function (s) { var d = el('div', 'vstep'); d.innerHTML = '<h3>' + esc(s.h) + '</h3>' + s.body; $('#vsteps').appendChild(d); $('#vpips').appendChild(el('i')); });
   var lastDeg = 0;
