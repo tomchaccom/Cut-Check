@@ -13,6 +13,19 @@
   /* Supabase CDN 클라이언트가 로드되어 있고 설정이 있을 때만 활성화 */
   var STUDENT_DOMAIN = 'students.invalid';
   var sb = null;
+
+  /* PostgREST 는 한 번에 max_rows(1000)줄까지만 준다. 오래된 것부터 받으니 넘치면 '방금 마친 일'이 잘린다 —
+     2026-10-21 마침 알림이 안 온 원인 후보. 1000줄씩 끝까지 받는다. make 는 매번 새 쿼리를 만든다(range 가 쿼리를 바꾼다) */
+  var PAGE = 1000;
+  function allPages(make, from) {
+    from = from || 0;
+    return make().range(from, from + PAGE - 1).then(function (r) {
+      if (r.error) return { error: r.error };
+      var d = r.data || [];
+      if (d.length < PAGE) return { data: d };
+      return allPages(make, from + PAGE).then(function (n) { return n.error ? n : { data: d.concat(n.data) }; });
+    });
+  }
   if (url && key && typeof window !== 'undefined' && window.supabase) {
     sb = window.supabase.createClient(url, key);
   }
@@ -283,23 +296,26 @@
 
     getClassroomEvents: function (classroomId) {
       if (!sb) return Promise.resolve([]);
-      return sb.from('student_events').select('*, profiles(name)')
-        .eq('classroom_id', classroomId)
-        .order('created_at', { ascending: true })
-        .then(function (r) { return r.error ? null : (r.data || []); }); /* 실패는 null — 빈 목록과 구분한다 */
+      return allPages(function () {
+        return sb.from('student_events').select('*, profiles(name)')
+          .eq('classroom_id', classroomId)
+          .order('created_at', { ascending: true }).order('id', { ascending: true });
+      }).then(function (r) { return r.error ? null : r.data; }); /* 실패는 null — 빈 목록과 구분한다 */
     },
 
     getMyEvents: function (classroomId, missionId) {
       if (!sb) return Promise.resolve([]);
       return sb.auth.getUser().then(function (res) {
         if (!res.data.user) return [];
-        var q = sb.from('student_events').select('mission_id, event, created_at')
-          .eq('student_id', res.data.user.id)
-          .eq('classroom_id', classroomId)
-          .order('created_at', { ascending: true });
-        if (missionId) q = q.eq('mission_id', missionId);
+        var make = function () {
+          var q = sb.from('student_events').select('mission_id, event, created_at')
+            .eq('student_id', res.data.user.id)
+            .eq('classroom_id', classroomId)
+            .order('created_at', { ascending: true }).order('id', { ascending: true });
+          return missionId ? q.eq('mission_id', missionId) : q;
+        };
         /* _missionDbId: 내 미션 목록이 미션별 상태를 셀 때 쓴다 (이벤트 본문에는 DB id 가 없다) */
-        return q.then(function (r) {
+        return allPages(make).then(function (r) {
           return (r.data || []).map(function (row) {
             var ev = {}; for (var k in row.event) ev[k] = row.event[k];
             ev._missionDbId = row.mission_id;
