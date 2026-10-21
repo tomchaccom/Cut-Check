@@ -36,6 +36,7 @@
 .row p { color: var(--ink-2); font-size: 15px; margin-top: 10px; }
 .row .shots { display: grid; gap: 14px; }
 .row .shots.two { grid-template-columns: 1fr 1fr; }
+.row img.tall { aspect-ratio: 4 / 3; object-fit: cover; object-position: top; }
 .row img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); background: #fff; }
 
 .not { margin-top: 80px; }
@@ -67,7 +68,7 @@
     </div>
     <div class="cta">
       <a class="btn primary" href="auth.html">시작하기</a>
-      <a class="btn secondary" href="https://github.com/tomchaccom/Cut-Check">GitHub</a>
+      <a class="btn secondary" href="https://github.com/tomchaccom/KOMPAS">GitHub</a>
     </div>
   </div>
 
@@ -80,7 +81,7 @@
 
     <div class="row">
       <div>
-        <span class="no">01</span>
+        <span class="no">내 미션</span>
         <h3>교실은 폴더, 미션은 파일</h3>
         <p>선생님이 만들어 준 아이디로 들어오면 내 교실이 폴더로 보입니다. 열면 선생님이 확정한 미션이 파일로 놓여 있습니다. 옆자리가 어디까지 갔는지는 보이지 않습니다.</p>
       </div>
@@ -88,6 +89,15 @@
         <img src="docs/수업-흐름/s1-rooms.png" alt="학생 홈 — 내 교실 폴더" loading="lazy">
         <img src="docs/수업-흐름/s3-missions.png" alt="교실 안 — 미션 파일 목록" loading="lazy">
       </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <span class="no">02 성공</span>
+        <h3>무엇이 성공인지 내가 정합니다</h3>
+        <p>요청은 일부러 모호합니다. 성공 조건을 고르고 이유를 한 줄 씁니다. 보기에는 "이번 결과만 나오면 성공" 같은 함정이 섞여 있고, 어느 게 맞는지 알려주지 않습니다. 언제든 다시 정할 수 있고, 고친 기록은 남습니다.</p>
+      </div>
+      <div class="shots"><img src="docs/수업-흐름/s5-step2-success.png" alt="02 성공 — 성공 조건 고르기와 이유" loading="lazy"></div>
     </div>
 
     <div class="row">
@@ -103,9 +113,9 @@
       <div>
         <span class="no">04 코딩</span>
         <h3>세 번째 자료에서 결과가 달라집니다</h3>
-        <p>설계도를 옆에 두고 파이썬 코드를 직접 씁니다. 같은 코드를 자료 3개에 돌려 결과를 나란히 봅니다. 마지막 자료는 처음 두 개와 다르게 생겼습니다. "왜 달라졌는지"는 학생 스스로 발견합니다.</p>
+        <p>설계도를 옆에 두고 파이썬 코드를 직접 씁니다. 같은 코드를 자료 3개에 돌려 결과를 나란히 봅니다. 마지막 자료는 늘 반례입니다. 막히면 오른쪽 튜터에게 묻습니다 — 문법은 이름과 짧은 예시로 알려 주고, 미션에 바로 붙일 풀이는 되묻습니다.</p>
       </div>
-      <div class="shots"><img src="docs/images/flow-s4-code.png" alt="04 코딩 — 왼쪽 설계도, 오른쪽 코드와 자료 3개 실행 결과 표" loading="lazy"></div>
+      <div class="shots"><img class="tall" src="docs/수업-흐름/s8-tutor.png" alt="04 코딩 — 코드와 오른쪽 튜터 사이드바" loading="lazy"></div>
     </div>
 
     <div class="row">
@@ -114,7 +124,16 @@
         <h3>"틀렸어요"라고 말하지 않습니다</h3>
         <p>결과를 보여주고, "내가 정한 성공 조건을 지켰는가"는 학생이 직접 판정합니다. 고친 기록까지 모아 보고 한두 문장으로 돌아봅니다. 그 문장은 선생님이 읽습니다.</p>
       </div>
-      <div class="shots"><img src="docs/images/flow-s5-wrap.png" alt="05 정리 — 내가 해 온 것과 한두 문장" loading="lazy"></div>
+      <div class="shots"><img class="tall" src="docs/수업-흐름/s9-step5-wrap.png" alt="05 정리 — 내가 해 온 것과 한두 문장" loading="lazy"></div>
+    </div>
+
+    <div class="row">
+      <div>
+        <span class="no">내 기록</span>
+        <h3>내가 어느 쪽으로 가고 있는지</h3>
+        <p>미션을 마치면 선생님이 한마디를 보내 줍니다. 내 기록에는 최근 미션들을 모은 나침반 — 이해 · 설계 · 구현 · 검증 중 어느 쪽으로 가고 있는지 — 가 보입니다. 숫자나 등급은 없습니다.</p>
+      </div>
+      <div class="shots"><img class="tall" src="docs/수업-흐름/s11-my-compass.png" alt="내 기록 — 내 나침반" loading="lazy"></div>
     </div>
   </section>
 
@@ -124,37 +143,41 @@
 
     <div class="row" data-lint-ok>
       <div>
-        <span class="no">교실</span>
-        <h3>정답률 대신, 지금 누구부터 가야 하는가</h3>
-        <p>학생은 가나다순 폴더로 보입니다. 화면을 연 뒤 생긴 일은 "말 걸 순간"에 사실만 쌓입니다. 점수·순위·소요 시간은 보여주지 않고, 무슨 말을 할지는 선생님이 정합니다.</p>
+        <span class="no">교실 · 알림</span>
+        <h3>정답률 대신, 지금 누구에게 가야 하는가</h3>
+        <p>왼쪽에 교실과 학생, 오른쪽에 알림. 알림은 사실만 씁니다 — 칭찬 타이밍(미션을 마쳤어요 · 성공 조건을 스스로 바꿨어요 · 에러 뒤 스스로 고쳤어요), 살펴볼 것(하드코딩일 수 있어요 · 튜터에게 5번 물었어요), 레벨 테스트. 순위 · 소요 시간은 없고, 무슨 말을 할지는 선생님이 정합니다.</p>
       </div>
-      <div class="shots"><img src="docs/images/flow-t-students.png" alt="강사 화면 — 가나다순 학생 폴더와 말 걸 순간" loading="lazy"></div>
+      <div class="shots"><img src="docs/수업-흐름/t1-rooms.png" alt="강사 화면 — 왼쪽 사이드바, 가나다순 학생 폴더, 오른쪽 알림" loading="lazy"></div>
     </div>
 
     <div class="row">
       <div>
         <span class="no">학생 상세</span>
-        <h3>한 학생이 한 것을 순서대로</h3>
-        <p>성공 조건과 이유, 설계도, 마지막으로 실행한 코드, 자료별 결과, 스스로 내린 판단과 근거. 튜터에게 물은 것과 받은 답도 그대로 보입니다.</p>
+        <h3>한 학생이 한 것과, 그 학생의 방향</h3>
+        <p>성공 조건과 이유, 설계도, 코드, 자료별 결과, 스스로 내린 판단과 근거, 튜터에게 물은 것. 나침반은 방향마다 예/아니오 항목을 보고 최근 5개 미션을 모아 바늘을 그립니다. 방향이 서로 지워지면 기계가 정하지 않고 선생님이 고릅니다. 학생에게 갈 한마디도 선생님이 씁니다.</p>
       </div>
-      <div class="shots"><img src="docs/수업-흐름/t3-detail.png" alt="학생 상세 — 나침반 카드와 시간 순 기록" loading="lazy"></div>
+      <div class="shots two">
+        <img class="tall" src="docs/수업-흐름/t3-detail.png" alt="학생 상세 — 나침반 바늘과 방향별 항목" loading="lazy">
+        <img class="tall" src="docs/수업-흐름/t3-cancel.png" alt="나침반 — 방향이 겹치면 선생님이 고른다" loading="lazy">
+      </div>
     </div>
 
     <div class="row">
       <div>
         <span class="no">학생 추가</span>
         <h3>학생 계정은 선생님이 만듭니다</h3>
-        <p>가입은 강사만 합니다. 교실에서 이름과 아이디를 적으면 계정이 생기고, 아이디와 비밀번호가 한 번 보입니다. 학생은 그 아이디로 들어옵니다.</p>
+        <p>가입은 강사만 합니다. 이름과 아이디를 적으면 계정이 생기고, 비밀번호가 한 번 보입니다. 필요하면 레벨 테스트를 지정합니다 — 문제지 하 · 중 · 상. 결과와 기록은 선생님 화면에만 있고, 두 달이 지나면 다시 지정하라는 알림이 옵니다.</p>
       </div>
-      <div class="shots"><img src="docs/수업-흐름/t5-invite.png" alt="학생 추가 — 학생 계정 만들기와 등록된 학생 명단" loading="lazy"></div>
+      <div class="shots"><img src="docs/수업-흐름/t5-invite.png" alt="학생 추가 — 학생 계정 만들기와 레벨 테스트 문제지 고르기" loading="lazy"></div>
     </div>
 
     <div class="row">
       <div>
         <span class="no">미션</span>
         <h3>수업 내용을 입력하면 미션 초안이 만들어집니다</h3>
-        <p>오늘 배운 것과 핵심을 적으면 AI가 초안을 만듭니다. 선생님이 고쳐서 확정해야 학생에게 보입니다. 마지막 자료는 늘 처음 방법을 깨뜨리는 자료입니다.</p>
+        <p>단계별로 — 수업 내용, 개념 확인, 이야기 고르기, 문제 확인 — 또는 한 번에. AI가 모범 답안을 돌려 자료별 정답을 붙이고, 선생님이 고쳐서 확정해야 학생에게 보입니다. 마지막 자료는 늘 처음 방법을 깨뜨리는 자료입니다.</p>
       </div>
+      <div class="shots"><img src="docs/수업-흐름/t4-missions.png" alt="미션 만들기 — 단계별로 · 한 번에 탭" loading="lazy"></div>
     </div>
   </section>
 
@@ -169,12 +192,13 @@
       <div class="r"><dt>다음 행동 추천</dt><dd>판단 대행의 가장 흔한 형태</dd></div>
       <div class="r"><dt>반 전체 현황</dt><dd>옆자리 진도가 보이면 속도 경쟁이 된다</dd></div>
     </dl>
+    <p class="motto-sub" style="margin-top:14px">예외 둘 — 레벨(상 · 중 · 하)과 나침반 항목은 선생님 화면에만 있습니다. 학생에게는 가지 않습니다.</p>
   </section>
 
   <div class="end"><a class="btn primary" href="auth.html">시작하기</a></div>
 
   <footer class="ld-foot">
-    <p>KOMPAS · <a href="https://github.com/tomchaccom/Cut-Check">GitHub</a> · <a href="docs/tech-spec.md">테크스펙</a> · <a href="docs/philosophy.md">설계 철학 전문</a> · <a href="docs/수업-흐름.md">수업 흐름 안내</a></p>
+    <p>KOMPAS · <a href="https://github.com/tomchaccom/KOMPAS">GitHub</a> · <a href="docs/tech-spec.md">테크스펙</a> · <a href="docs/philosophy.md">설계 철학 전문</a> · <a href="docs/수업-흐름.md">수업 흐름 안내</a></p>
   </footer>
 
 </main>
