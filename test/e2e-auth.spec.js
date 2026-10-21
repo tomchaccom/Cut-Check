@@ -67,3 +67,32 @@ test('로그인 버튼 hover 는 초록이 아니다', async ({ context, page })
     expect(g > r + 20 && g > b + 20, scheme + ' ' + bg).toBe(false);
   }
 });
+
+/* 재발 원인: 저장된 세션이 있으면 늦게 끝난 세션 확인이 폼을 치우고 이동해 "로그인된 것처럼" 보였다 */
+async function fakeSession(ctx) {
+  await ctx.route('**/supabase-js@*/**', r => r.fulfill({ contentType: 'text/javascript', body:
+    `window.__calls=[];window.supabase={createClient:function(){var q={select(){return q},eq(){return q},single(){return Promise.resolve({data:{id:'u',role:'teacher',name:'김'}})}};return{from(){return q},auth:{
+      getUser:function(){return new Promise(function(r){setTimeout(function(){r({data:{user:{id:'u'}}})},1200)})},
+      signInWithPassword:function(a){window.__calls.push(a);return Promise.resolve({data:{},error:{message:'Invalid login'}})}}}}};` }));
+}
+
+for (const how of ['fill', 'type']) {
+  test(`저장된 세션이 있어도 ${how} 로 쓰는 동안 폼은 그대로고 로그인 요청은 없다`, async ({ context, page }) => {
+    await fakeSession(context);
+    await page.goto(BASE + '/auth.html');
+    if (how === 'fill') { await page.fill('#login-email', 'student01'); await page.fill('#login-pw', 'abcdef12'); }
+    else { await page.locator('#login-email').pressSequentially('student01', { delay: 30 }); await page.locator('#login-pw').pressSequentially('abcdef12', { delay: 30 }); }
+    await page.waitForTimeout(2000);
+    await expect(page.locator('#form-login')).toBeVisible();
+    expect(await calls(page)).toBe(0);
+    await page.locator('#form-login .auth-btn').click();
+    await expect.poll(() => calls(page)).toBe(1);
+  });
+}
+
+test('저장된 세션이 있고 아무것도 안 썼으면 이동한다(정상)', async ({ context, page }) => {
+  await fakeSession(context);
+  await page.goto(BASE + '/auth.html');
+  await expect(page.locator('#form-login')).toBeHidden({ timeout: 3000 });
+  expect(await calls(page)).toBe(0);
+});
