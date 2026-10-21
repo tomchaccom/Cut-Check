@@ -301,10 +301,7 @@
       cCum[st.id] = j;
       delete cCumFail[st.id];
       if (cPick[st.id] && (!j.cumulative || (j.cumulative.candidates || []).indexOf(cPick[st.id]) < 0)) delete cPick[st.id];   /* 후보가 바뀌었으면 옛 선택은 서버가 400 으로 거절한다 */
-      if (silent && lastSnap && lastSnap[st.id]) {   /* 기준선에 넣어 둔다 — 새 알림으로 쏟아지지 않게 */
-        var ns = CC.alerts.snap([st], alertOpt())[st.id];
-        Object.keys(ns.keys).forEach(function (k) { if (!(k in lastSnap[st.id].keys)) lastSnap[st.id].keys[k] = ns.keys[k]; });
-      }
+      if (silent && lastSnap && lastSnap[st.id]) catchUp(st);   /* 토스트 없이 — 확인 안 한 것만 목록에 */
     }, function () { if (!cCum[st.id]) cCumFail[st.id] = true; }).then(function () {
       if (cRoom !== roomId) return;
       if (cDraw[st.id]) cDraw[st.id]();
@@ -980,21 +977,33 @@
 
   /* ── 교사 알림 ─────────────────────────────────── */
   var lastSnap = null;
-  /* Supabase 모드는 첫 기록을 받기 전까지 기준선을 만들지 않는다 (빈 목록이 기준선이 되면
-   * 이미 있던 제출이 전부 새 알림이 된다). 교실을 고를 때마다 다시 시작한다. */
+  /* Supabase 모드는 첫 기록을 받기 전까지 첫 snap 을 만들지 않는다 (빈 목록이 첫 snap 이 되면
+   * 이미 있던 일이 전부 새 알림 토스트가 된다). 교실을 고를 때마다 다시 시작한다. */
   var alertsLoaded = !(CC.sb && CC.sb.active());
-  /* 놓친 일 — 이 브라우저가 이 교실에서 마지막으로 본 일의 시각(CC.prefs, 기록이 아니라 보기 편의).
-   * 첫 snap 에서 그 뒤에 생긴 일만 목록에 올린다. 처음 여는 브라우저는 예전처럼 기준선만 잡는다 */
-  var alertRoom = 'local';
-  function seenKey() { return 'alertsSeen.' + alertRoom; }
-  function remember(snap) {
-    var u = CC.alerts.seenUpTo(snap), old = CC.prefs.get(seenKey(), null);
-    if (u == null && old == null) u = Date.now();   /* 아직 아무 일도 없던 교실 — 지금부터가 '본 것'. 시계가 조금 어긋나면 한 번 더 뜰 뿐이다 */
-    if (u != null && (old == null || u > old)) CC.prefs.set(seenKey(), u);
+  /* 확인한 알림 — CC.alertChecks(서버면 DB, 없으면 이 브라우저). 받기 전에는 첫 snap 을 만들지 않는다.
+   * 알림은 '확인'을 누를 때까지 남는다 — 새로고침 · 다른 기기에서도 */
+  var alertRoom = 'local', checks = null;
+  function loadChecks(room) {
+    alertRoom = room; checks = null;
+    CC.alertChecks.load(room).catch(function () { return { since: Date.now(), keys: {} }; })   /* 못 읽으면 연 뒤에 생긴 일만 — 쏟아지지 않게 */
+      .then(function (c) {
+        if (alertRoom !== room) return;
+        checks = c;
+        if (alertsLoaded && !lastSnap) firstSnap(lastSnap = CC.alerts.snap(C.students, alertOpt()));
+        retestAlerts();
+      });
   }
+  function unchecked(a) { return !checks.keys[CC.alerts.keyOf(a)]; }
+  /* 첫 snap — 아직 확인 안 한 일을 토스트 없이 목록에 (시각은 그 일이 생긴 때) */
   function firstSnap(snap) {
-    CC.alerts.missed(snap, CC.prefs.get(seenKey(), null)).forEach(function (a) { showAlert(a, true); });
-    remember(snap);
+    CC.alerts.pending(snap, checks.keys, checks.since).forEach(function (a) { showAlert(a, true); });
+  }
+  /* 늦게 온 재료(누적 바늘)로 생긴 키 — first snap 처럼 토스트 없이, 확인 안 한 것만 */
+  function catchUp(st) {
+    var ns = CC.alerts.snap([st], alertOpt())[st.id], one = {};
+    one[st.id] = { name: ns.name, keys: {} };
+    Object.keys(ns.keys).forEach(function (k) { if (!(k in lastSnap[st.id].keys)) one[st.id].keys[k] = lastSnap[st.id].keys[k] = ns.keys[k]; });
+    if (checks) CC.alerts.pending(one, checks.keys, checks.since).forEach(function (a) { showAlert(a, true); });
   }
   /* 알림 재료 — 서버 모드는 DB id 로 끝낸 미션을 센다. 미션 이름은 학생 기록 안의 id 로 찾는다 */
   function alertOpt() {
@@ -1007,21 +1016,21 @@
       }
     };
   }
-  CC._resetAlerts = function () {
-    cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); alertRoom = 'local';
+  CC._resetAlerts = function (roomId) {
+    cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); retestShown = {};
     $('#alert-list').innerHTML = ''; $('#moments-empty').hidden = false; alCount();   /* 다른 교실의 알림을 끌고 오지 않는다 */
+    loadChecks(roomId || 'local');
   };
-  /* 재테스트 — 쌓인 할 일이라 첫 화면에도 띄운다. 학생·마지막 테스트당 이 브라우저에서 한 번 (CC.seen + 이 화면의 기억).
+  /* 재테스트 — 쌓인 할 일이라 첫 화면에도 띄운다. 학생·마지막 테스트당 확인할 때까지 (since 를 따르지 않는다).
    * 교실은 서버에만 있고 지정도 서버에서만 되니 로컬 모드에는 없다 */
   var retestShown = {};
   function retestAlerts() {
-    if (!serverOn()) return;
+    if (!serverOn() || !checks) return;
     var waiting = function (s) { var r = (C.roster || []).filter(function (x) { return x.id === s.id; })[0]; return !!(r && r.levelWait); };
     CC.alerts.retest(C.students, Date.now(), waiting).forEach(function (a) {
-      var k = 'retest.' + a.key;
-      if (retestShown[k] || (CC.seen && CC.seen.has(k))) return;
+      var k = CC.alerts.keyOf(a);
+      if (retestShown[k] || !unchecked(a)) return;
       retestShown[k] = true;
-      if (CC.seen) CC.seen.mark(k);
       showAlert(a);
     });
   }
@@ -1033,12 +1042,14 @@
   };
   CC._alertsLoaded = function (students, roomId) {
     alertsLoaded = true;
-    if (roomId) alertRoom = roomId;
-    if (!lastSnap) firstSnap(lastSnap = CC.alerts.snap(students || [], alertOpt()));
+    if (roomId && roomId !== alertRoom) loadChecks(roomId);
+    if (!lastSnap && checks) firstSnap(lastSnap = CC.alerts.snap(students || [], alertOpt()));
   };
+  if (alertsLoaded) loadChecks('local');   /* 로컬 모드 — 교실은 하나 */
 
   /* 오른쪽 알림 — 이름표 · 사실 문장 · 시각. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다.
-   * 굵게 = 아직 안 누름. 읽음은 이 화면을 연 동안만 기억한다 (서버에 저장하지 않는다) */
+   * 굵게 = 아직 안 누름(이 화면을 연 동안만). 알림은 '확인'을 눌러야 내려간다 — 눌러서 학생을 열어 보는 것은 확인이 아니다:
+   * '골라 주세요' · '다시 지정할까요?' 같은 알림은 열어 본 뒤에야 할 일이 시작되고, 잘못 누르거나 수업 중에 끊겨도 사라지면 안 된다 */
   var alFilter = 'all';
   function ago(t) {
     var m = Math.floor((Date.now() - t) / 60000);
@@ -1053,7 +1064,7 @@
       .map(function (k) { return CC.alerts.TAGS[k] + ' ' + n[k] + '개'; }).join(' · ');
     $('#alerts-count').textContent = t || '새 알림이 없어요';
   }
-  /* missed — 화면을 닫은 동안 생긴 일. 토스트 없이 목록에만, 시각은 그 일이 생긴 때 */
+  /* missed — 화면을 열 때 이미 있던 확인 안 한 일. 토스트 없이 목록에만, 시각은 그 일이 생긴 때 */
   function showAlert(a, missed) {
     var text = CC.alerts.say(a);
     var host = $('#toasts');
@@ -1089,6 +1100,19 @@
       if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined, a.kind === 'finish' || a.kind === 'cancel' ? 'compass' : a.kind === 'tutor-many' || a.kind === 'tutor-stuck' ? 'tutor' : undefined);
     });
     li.appendChild(b);
+    var ok = el('button', 'al-ok', '확인');
+    ok.type = 'button';
+    ok.setAttribute('aria-label', '확인 — ' + text);
+    ok.addEventListener('click', function () {
+      var k = CC.alerts.keyOf(a);
+      if (checks) checks.keys[k] = true;
+      CC.alertChecks.check(alertRoom, k).catch(function (e) { console.warn('알림 확인 저장 실패:', e && e.message); });   /* 못 남기면 다음에 열 때 다시 뜰 뿐이다 */
+      var next = li.nextElementSibling || li.previousElementSibling;
+      li.remove();
+      if (next) next.querySelector('.al-ok').focus(); else $('#moments-empty').hidden = false;
+      alCount();
+    });
+    li.appendChild(ok);
     list.insertBefore(li, list.firstChild);
     while (list.children.length > 30) {   /* 넘치면 읽은 것 중 가장 오래된 것부터 — 안 읽은 알림을 먼저 버리지 않는다 */
       var read = list.querySelectorAll('li:not(.new)');
@@ -1282,11 +1306,13 @@
     }
 
     if (!alertsLoaded) return;
-    var nowSnap = CC.alerts.snap(C.students, alertOpt());
-    if (lastSnap) { CC.alerts.diff(lastSnap, nowSnap).forEach(function (a) { showAlert(a); }); remember(nowSnap); }
-    else firstSnap(nowSnap);
-    lastSnap = nowSnap;
-    retestAlerts();
+    if (checks) {
+      var nowSnap = CC.alerts.snap(C.students, alertOpt());
+      if (lastSnap) CC.alerts.diff(lastSnap, nowSnap).filter(unchecked).forEach(function (a) { showAlert(a); });
+      else firstSnap(nowSnap);
+      lastSnap = nowSnap;
+      retestAlerts();
+    }
     renderFolders();
   }
 

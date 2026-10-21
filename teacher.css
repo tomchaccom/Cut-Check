@@ -516,8 +516,10 @@ body { font-size: 17px; }
 .al-filter { min-height: 44px; padding: 0 12px; border-radius: 999px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
 .al-filter[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); font-weight: 700; }
 .alert-list { list-style: none; margin: 0; padding: 0; }
-.al-item { border-top: 1px solid var(--line); }
-.al-it { display: block; width: 100%; padding: 12px 4px; border: 0; background: none; color: var(--ink); font: inherit; font-size: 16px; line-height: 1.5; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.al-item { display: flex; align-items: flex-start; gap: 6px; border-top: 1px solid var(--line); }
+.al-ok { flex: 0 0 auto; min-width: 52px; min-height: 44px; margin-top: 8px; padding: 0 10px; border-radius: 8px; border: 2px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.al-ok:hover { background: var(--surface-2); }
+.al-it { display: block; flex: 1 1 auto; min-width: 0; padding: 12px 4px; border: 0; background: none; color: var(--ink); font: inherit; font-size: 16px; line-height: 1.5; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
 .al-it:hover { background: var(--surface-2); }
 .al-say { font-weight: 400; }
 .al-item.new .al-say { font-weight: 700; }

@@ -312,3 +312,15 @@ DB 장애 한 번에 비용 한도가 통째로 풀린다. 그래서 순서가 �
 2. 확인: `select onboard_set from enrollments limit 1;` 이 에러 없이 돈다. anon 키로 `rpc/assign_onboard2` 가 401 이다.
 3. 그다음 코드를 배포한다.
 
+#### 알림 확인 — `20261024000000_alert_checks.sql`
+
+테이블 `alert_checks`(teacher_id · classroom_id · alert_key · checked_at, 기본 키 셋) 와 RPC `alert_checks_since()` 를 만든다.
+RLS — 선생님 본인 행 · 자기 교실만 읽고 쓴다. 학생 · anon 은 읽지도 쓰지도 못한다. 알림 자체는 저장하지 않는다(화면이 기록에서 계산).
+`alert_checks_since()` 는 **마이그레이션을 적용한 시각**을 상수로 돌려준다 — 그 전에 생긴 일은 확인한 것으로 친다(첫날 몇 주 치가 쏟아지지 않게).
+그래서 적용 시각이 곧 기준이다. 코드 배포 직전에 적용한다. 다시 적용하면 기준이 그 시각으로 옮겨간다.
+코드가 먼저 나가면 강사 화면이 확인 목록을 못 읽어 '연 뒤에 생긴 일만' 띄우고, 확인 버튼은 저장되지 않는다(다음에 열면 다시 뜬다). 수업 흐름은 그대로.
+
+1. `supabase/migrations/20261024000000_alert_checks.sql` 을 운영 DB 에 적용한다.
+2. 확인: `select alert_checks_since();` 가 적용한 시각을 돌려준다. anon 키로 `rest/v1/alert_checks?select=*` 가 401(권한 없음), `rpc/alert_checks_since` 가 401 이다.
+3. 그다음 코드를 배포한다. 로컬 확인: `python test/test_alert_checks.py` 가 임시 PostgreSQL 에서 RLS 를 돌려 본다.
+

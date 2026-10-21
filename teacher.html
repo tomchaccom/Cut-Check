@@ -243,7 +243,7 @@
       <button type="button" class="al-filter" data-tag="look" aria-pressed="false">살펴볼 것</button>
     </div>
     <ol id="alert-list" class="alert-list"></ol>
-    <p class="emptyrow" id="moments-empty">화면을 연 뒤에 생긴 일이 여기에 쌓여요.</p>
+    <p class="emptyrow" id="moments-empty">확인할 알림이 없어요. 새로 생긴 일은 확인을 누를 때까지 여기에 남아요.</p>
   </aside>
   <button type="button" class="al-handle" id="alerts-handle" aria-controls="alerts" aria-expanded="false" hidden>알림 펼치기</button>
   <button type="button" class="al-bar" id="alerts-bar" aria-controls="alerts" aria-expanded="false" hidden><b>알림</b> <span id="alerts-count">새 알림이 없어요</span></button>
@@ -276,6 +276,7 @@ window.CC_SUPABASE = {
 <script src="js/data/store.js"></script>
 <script src="js/data/seen.js"></script>
 <script src="js/data/prefs.js"></script>
+<script src="js/data/checks.js"></script>
 <script src="js/core/blocks.js"></script>
 <script src="js/core/pyerr.js"></script>
 <script src="js/ui/pyrun.js"></script>
@@ -434,7 +435,7 @@ window.CC_SUPABASE = {
     CC._shellView('room');
     CC.tour.auto('teacher-dash', TOUR_DASH, { onEnd: function () { tab('dtab-students'); } });
     loadMissions();
-    if (CC._resetAlerts) CC._resetAlerts();
+    if (CC._resetAlerts) CC._resetAlerts(room.id);
     CC.genflow.reset();   /* 다른 교실에서 만들던 초안이 이 교실에 저장되지 않게 */
     loadStudents().then(loadStudentEvents);   /* 명단이 있어야 기록 없는 학생도 폴더가 된다 */
     clearInterval(eventTimer);

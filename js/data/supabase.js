@@ -259,6 +259,26 @@
         .then(function (r) { if (r.error) throw r.error; return (r.data && r.data[0]) || null; });
     },
 
+    /* 선생님 알림 확인 — 내 교실의 확인한 키 전부 + 기능을 켠 시각(마이그레이션 적용 시각). RLS 가 내 행 · 내 교실만 준다 */
+    alertChecks: function (classroomId) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return Promise.all([
+        sb.rpc('alert_checks_since'),
+        allPages(function () { return sb.from('alert_checks').select('alert_key').eq('classroom_id', classroomId).order('alert_key'); })
+      ]).then(function (r) {
+        if (r[0].error) throw r[0].error;
+        if (r[1].error) throw r[1].error;
+        return { since: new Date(r[0].data).getTime(), keys: r[1].data.map(function (x) { return x.alert_key; }) };
+      });
+    },
+
+    /* 확인 — 다른 기기에서 같은 키를 또 눌러도 한 줄. teacher_id 는 DB 기본값 auth.uid() */
+    checkAlert: function (classroomId, key) {
+      if (!sb) return Promise.reject(new Error('Supabase 미설정'));
+      return sb.from('alert_checks').upsert({ classroom_id: classroomId, alert_key: key }, { onConflict: 'teacher_id,classroom_id,alert_key', ignoreDuplicates: true })
+        .then(function (r) { if (r.error) throw r.error; });
+    },
+
     /* 학생 계정 만들기 · 비밀번호 다시 만들기 — 서버(api/create-student.py)가 service 키로 한다.
      * 브라우저는 선생님 토큰만 넘긴다. password 를 비우면 서버가 만든다. → { loginId, password } */
     createStudent: function (classroomId, s) {

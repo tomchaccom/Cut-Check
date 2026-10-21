@@ -92,7 +92,7 @@ t('retest — 키는 학생·마지막 테스트', r[0].key === 'a:' + (NOW - 60
 t('retest — 다시 지정했으면(waiting) 없다', CC.alerts.retest([S('태인', ob(0))], NOW, () => true).length === 0);
 t('retest — 건너뛴 기록·기록 없음은 없다', CC.alerts.retest([S('태인', { onboard: { stage: null, skipped: true, t: 0 } }), S('가은')], NOW).length === 0);
 t('retest — 마지막이 건너뛰기여도 앞 테스트가 60일 지났으면 뜬다', CC.alerts.retest([S('태인', { onboard: { stage: null, skipped: true, t: NOW, tDone: NOW - 60 * DAY } })], NOW).length === 1);
-t('retest — 순서·소요 시간·점수 칸이 없다', Object.keys(r[0]).sort().join() === 'dbId,id,key,kind,mid,name,tag');
+t('retest — 순서·소요 시간·점수 칸이 없다', Object.keys(r[0]).sort().join() === 'dbId,id,k,key,kind,mid,name,tag' && CC.alerts.keyOf(r[0]) === 'a/retest:' + (NOW - 60 * DAY));
 
 // design / code (옛 알림 — 기록을 못 읽을 때)
 const a = CC.alerts.snap([S('나')]), b = CC.alerts.snap([S('나', { sCodeJudges: [{}] })]), c = CC.alerts.snap([S('나', { sDesignCount: 1 })]);
@@ -142,23 +142,34 @@ t('cancel — 더 최근 미션에서 또 겹치면 다시 한 번', kinds(CC.al
 t('cancel — 처음 snap 에 이미 겹쳐 있으면 알리지 않는다', CC.alerts.diff(null, c1).length === 0);
 t('cancel — 문장에 칭찬 낱말 · 순번 · 숫자 없음', !/좋|잘|훌륭|대단|[0-9]/.test(CC.alerts.say({ kind: 'cancel', name: '태인', cands: ['N', 'S'] })));
 
-// 놓친 일 — 화면을 닫은 동안 마친 미션은 다음 첫 snap 에서 since(지난번 seenUpTo) 뒤에 생긴 것만
+// 확인할 때까지 남는다 — pending(snap, 확인한 키, since). since 이전 일은 확인한 것으로 친다 (첫 배포 날 쏟아지지 않게)
 {
   const at = (type, mid, t, x) => Object.assign(ev(type, mid, x), { t });
-  const before = [at('s-code-judge', 'm1', 10)];
-  const seen = CC.alerts.seenUpTo(CC.alerts.snap([S('한결')], OPT(before)));
-  const after = before.concat([at('s-code-judge', 'm2', 20), at('s-redefine', 'm2', 25)]);
-  const m = CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(after)), seen);
-  t('missed — 닫은 동안 마친 미션은 알린다(운영: 다음 접속 때 "마쳤어요" 가 없던 버그)', seen === 10 && kinds(m) === 'finish,redefine' &&
-    CC.alerts.say(m[0]) === '한결이 급식 투표를 마쳤어요.' && m[0].at === 20);
-  t('missed — 이미 본 일은 다시 알리지 않는다', CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(after)), 25).length === 0);
-  t('missed — 이 브라우저에서 처음이면(since 없음) 기준선 그대로', CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(after)), null).length === 0);
-  t('missed — 같은 미션을 다시 판정해도 첫 판정 시각 — 한 번만', CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(before.concat([at('s-code-judge', 'm1', 30)]))), 10).length === 0);
+  const evs = [at('s-code-judge', 'm1', 10), at('s-code-judge', 'm2', 20), at('s-redefine', 'm2', 25)];
+  const sn = CC.alerts.snap([S('한결')], OPT(evs));
+  let p = CC.alerts.pending(sn, {}, 15);
+  t('pending — since 뒤 일만, 오래된 것부터, 그 일이 생긴 시각', kinds(p) === 'finish,redefine' && CC.alerts.say(p[0]) === '한결이 급식 투표를 마쳤어요.' && p[0].at === 20);
+  t('pending — 새로고침해도(같은 snap 다시) 그대로 남는다', kinds(CC.alerts.pending(CC.alerts.snap([S('한결')], OPT(evs)), {}, 15)) === 'finish,redefine');
+  t('keyOf — 학생/종류:미션', CC.alerts.keyOf(p[0]) === 'a/finish:m2' && CC.alerts.keyOf(p[1]) === 'a/redefine:m2');
+  const ck = {}; ck[CC.alerts.keyOf(p[0])] = true;
+  t('pending — 확인한 키는 빠진다, 나머지는 남는다', kinds(CC.alerts.pending(sn, ck, 15)) === 'redefine');
+  t('pending — since 와 같은 시각은 남긴다', CC.alerts.pending(sn, {}, 25).length === 1);
+  t('pending — 같은 미션을 다시 판정해도 첫 판정 시각 — 한 번만', CC.alerts.pending(CC.alerts.snap([S('한결')], OPT(evs.concat([at('s-code-judge', 'm1', 30)]))), {}, 15).length === 2);
   const sOpt = { server: true, eventsOf: () => [Object.assign(at('s-code-judge', 'm1', 1), { _missionDbId: 'db1', _at: 50 })], finishedOf: () => ['db1'], missionName: () => '분식집 주문' };
-  const sm = CC.alerts.missed(CC.alerts.snap([S('태인')], sOpt), 40);
-  t('missed 서버 — 학생 기기 시각이 아니라 서버 시각(_at)으로 가린다', sm.length === 1 && sm[0].dbId === 'db1' && sm[0].at === 50);
-  t('missed — 시각 없는 cancel 은 놓친 일로 치지 않는다', CC.alerts.missed(CC.alerts.snap([S('태인')], CO('db2', ['N', 'S'])), 0).length === 0);
-  t('seenUpTo — 아무 일도 없으면 null', CC.alerts.seenUpTo(CC.alerts.snap([S('태인')], OPT([]))) === null);
+  const sm = CC.alerts.pending(CC.alerts.snap([S('태인')], sOpt), {}, 40);
+  t('pending 서버 — 학생 기기 시각이 아니라 서버 시각(_at)으로 가린다, 키는 DB id', sm.length === 1 && sm[0].dbId === 'db1' && sm[0].at === 50 && CC.alerts.keyOf(sm[0]) === 'a/finish:db1');
+  // cancel · hardcode · design 도 시각이 붙는다 — since 로 가릴 수 있어야 첫 배포 날 쏟아지지 않는다
+  const cOpt = Object.assign(CO('db2', ['N', 'S']), { eventsOf: () => [Object.assign(at('s-define', 'mx', 1), { _missionDbId: 'db2', _at: 70 })] });
+  t('pending cancel — 그 미션의 마지막 기록 시각', CC.alerts.pending(CC.alerts.snap([S('태인')], cOpt), {}, 60).length === 1 && CC.alerts.pending(CC.alerts.snap([S('태인')], cOpt), {}, 80).length === 0);
+  t('pending — 시각 모르는 cancel 은 치지 않는다', CC.alerts.pending(CC.alerts.snap([S('태인')], CO('db2', ['N', 'S'])), {}, 0).length === 0);
+  CC.facts = { of: () => [{ kind: 'hardcode' }] };
+  const hOpt = Object.assign(OPT([at('s-code', 'm1', 30, { code: 'a' }), at('s-code', 'm1', 40, { code: 'a' })]), { missionOf: m => ({ id: m }) });
+  const hp = CC.alerts.pending(CC.alerts.snap([S('나')], hOpt), {}, 35);
+  t('pending hardcode — 그 미션의 마지막 코드 실행 시각', hp.length === 1 && hp[0].kind === 'hardcode' && hp[0].at === 40);
+  delete CC.facts;
+  const dp = CC.alerts.pending(CC.alerts.snap([S('나', { sDesignCount: 2 })], OPT([at('s-design', '', 5), at('s-design', '', 9)])), {}, 0);
+  t('pending design — 낼 때마다 키 하나, 마지막 낸 시각', dp.length === 1 && dp[0].kind === 'design' && dp[0].at === 9 && CC.alerts.keyOf(dp[0]) === 'a/design:n2');
+  t('pending — 아무 일도 없으면 []', CC.alerts.pending(CC.alerts.snap([S('태인')], OPT([])), {}, 0).length === 0);
 }
 
 if (fail) console.log(fail + ' 실패');
