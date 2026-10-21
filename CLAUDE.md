@@ -50,7 +50,11 @@
 마지막 테스트 뒤 `RETEST_DAYS`(60) 가 지나면 "레벨 테스트" 알림.
 
 **알림은 타이밍만.** 선생님 화면 오른쪽 알림(`js/core/alerts.js`)은 세 이름표 — 칭찬 타이밍(미션 마침 · 성공 조건 바꿈 · 스스로 고침 · 나침반 상쇄) · 살펴볼 것 · 레벨 테스트(마침 · 재테스트).
-학생·미션당 종류별 한 번, 화면을 처음 열 때 있던 일은 알리지 않는다 — 단 이 브라우저가 그 교실에서 마지막으로 본 일(`CC.prefs` `alertsSeen.<교실>`, 서버 시각) 뒤에 생긴 일은 닫은 동안 놓친 일이라 토스트 없이 목록에만 올린다(`CC.alerts.missed`). 문장은 사실만 쓰고 칭찬 낱말을 넣지 않는다
+학생·미션당 종류별 한 번. 알림은 선생님이 **확인** 버튼을 누를 때까지 남는다 — 새로고침 · 다른 브라우저 · 다른 기기에서도
+(2026-10-22 사람 피드백). 알림을 눌러 학생을 열어 보는 것은 확인이 아니다. 계산은 그대로 `CC.alerts`(순수)가 하고,
+확인한 키(`CC.alerts.keyOf` = `학생/종류:미션`)만 `CC.alertChecks`(`js/data/checks.js`)가 서버면 DB `alert_checks`, 없으면 localStorage 에 둔다.
+기능을 켠 시각(서버: 마이그레이션 적용 시각 `alert_checks_since()`, 로컬: 이 브라우저가 처음 연 시각) 이전 일은 확인한 것으로 친다 —
+첫 배포 날 몇 주 치가 쏟아지지 않게. 화면을 열 때 이미 있던 확인 안 한 일은 토스트 없이 목록에만 올린다. "확인함" 보기는 만들지 않았다(기록은 학생 상세에 그대로 있다). 문장은 사실만 쓰고 칭찬 낱말을 넣지 않는다
 (말은 선생님이 한다). 순서 번호 · 소요 시간 · 반 평균을 붙이지 않는다. "튜터에게 많이 물었어요" 기준은 `TUTOR_MANY`(5) 하나.
 
 ---
@@ -133,6 +137,7 @@ js/data/   바깥 세계. 여기만 localStorage 와 fetch 를 안다
   api.js        local / http 어댑터
   store.js      오프라인 우선 기록 + 발신함
   prefs.js      이 브라우저의 보기 편의(사이드바 접힘 · 고른 탭) — 기록이 아니다
+  checks.js     선생님이 확인한 알림 — 서버면 DB(alert_checks), 없으면 localStorage
 
 js/ui/     화면. DOM 만 만진다
   app.js  teacher.js  abstract.js  review.js  make.js  classroom.js  sentence.js  admin.js
@@ -187,7 +192,7 @@ node test/engine.test.js     # 반례가 실제로 깨지는지, 에러가 몇 �
 node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
 node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
-node test/alerts.test.js     # 교사 알림 — 종류별 한 번 · 첫 화면 기준선 · 사실 문장
+node test/alerts.test.js     # 교사 알림 — 종류별 한 번 · 확인할 때까지 남음 · 켠 시각 이전은 확인 · 사실 문장
 node test/smoke.js           # 10개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG · 방향 모양
@@ -206,6 +211,7 @@ uv run --with-requirements requirements.txt python test/test_admin.py           
 uv run --with-requirements requirements.txt python test/test_compass.py          # 나침반 규칙 — 체크 12항목·인용 대조·최근 5개 가중 평균·상쇄 후보·선생님 선택
 uv run --with-requirements requirements.txt python test/test_compass_api.py      # 나침반 API — 내 교실만·한 번만 읽기·누적·상쇄 때 고른 방향·학생에게 안 가는 열
 uv run --with-requirements requirements.txt python test/test_tutorguard.py      # 튜터 — 문법은 주고(이름·생김새·상관없는 예시 2줄) 미션 자료에 붙인 코드는 막기
+uv run --with-requirements requirements.txt python test/test_alert_checks.py    # 알림 확인 RLS — 본인 행·자기 교실만, 학생·anon 불가 (PostgreSQL 이 있으면 임시 DB 로 실제 검사)
 
 npx playwright test                # 화면 흐름 e2e (서버 8123) — 나침반 카드·상쇄 고르기·레벨 테스트 문제지·재테스트 알림
 ```

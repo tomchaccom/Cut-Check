@@ -388,5 +388,27 @@ t('기본은 로컬 모드', CC.config.online() === false);
   t('읽은 기록은 200개로 자른다', JSON.parse(mem['cutcheck.log.v1']).length === 200);
 }
 
+// ── 알림 확인 — 서버 없이도 이 브라우저에 남고, 옛 alertsSeen 은 지운다. data 층은 document 를 모른다
+(async () => {
+  const src = fs.readFileSync(__dirname + '/../js/data/checks.js', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  t('data/checks.js 는 document 를 모른다', !/\bdocument\./.test(src));
+  const mem = { 'cutcheck.prefs.alertsSeen.r1': '5', 'cutcheck.prefs.side': 'true' };
+  global.localStorage = { getItem: k => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; },
+    get length() { return Object.keys(mem).length; }, key: i => Object.keys(mem)[i] };
+  const sb = CC.sb; CC.sb = { active: () => false };
+  require('../js/data/checks.js');
+  t('옛 alertsSeen 은 지우고 다른 prefs 는 둔다', !('cutcheck.prefs.alertsSeen.r1' in mem) && mem['cutcheck.prefs.side'] === 'true');
+  const a = await CC.alertChecks.load('local');
+  await CC.alertChecks.check('local', 's1/finish:m1');
+  await CC.alertChecks.check('local', 's1/finish:m1');
+  const b = await CC.alertChecks.load('local');
+  t('로컬 확인 — since 는 처음 연 시각 그대로, 키는 한 번만 남는다', typeof a.since === 'number' && b.since === a.since && b.keys['s1/finish:m1'] === true &&
+    JSON.parse(mem['cutcheck.alertChecks.local']).keys.length === 1);
+  CC.sb = { active: () => true, alertChecks: () => Promise.resolve({ since: 7, keys: ['x/redefine:m'] }), checkAlert: (r, k) => Promise.resolve(['srv', r, k]) };
+  const c = await CC.alertChecks.load('r1');
+  t('서버 확인 — 서버가 준 since · 키', c.since === 7 && c.keys['x/redefine:m'] === true && (await CC.alertChecks.check('r1', 'k'))[0] === 'srv');
+  CC.sb = sb;
+})().then(() => {
 console.log(fail ? '\n실패 ' + fail + '건' : '\n전부 통과');
 process.exit(fail ? 1 : 0);
+});

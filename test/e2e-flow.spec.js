@@ -739,7 +739,7 @@ test('설계도 — 390 폭 긴 카드 이름에서도 번호와 버튼이 이�
 const FAKE_TEACHER = `(function(CC){var P=function(v){return Promise.resolve(v)};
 var roster=[{id:'s1',name:'태인',login_id:'m9676u-1'},{id:'s2',name:'가은'},{id:'s3',name:'한결',login_id:'m9676u-2'}];
 roster.forEach(function(r){if(window.__due===r.id)r.onboard_due='2026-10-19T00:00:00Z'});
-window.__removed=[];window.__created=[];window.__reset=[];
+window.__removed=[];window.__created=[];window.__reset=[];var T0=Date.now()-864e5;
 CC.sb={active:function(){return true},
 api:function(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer fake'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(j){if(!r.ok){var e=new Error(j.error||'x');e.reasons=j.reasons;e.status=r.status;e.body=j;throw e}return j})})},
 getUser:function(){return P({id:'t1'})},getProfile:function(){if(window.__noProfile)return P(null);return P({role:window.__role||'teacher',name:'김선생'})},
@@ -749,10 +749,12 @@ onAuthChange:function(){},signOut:function(){return P()},createClassroom:functio
 myClassrooms:function(){return P([{id:'r1',name:'태인한결',code:'M9676U'},{id:'r2',name:'방과후',code:'AB12CD'}])},
 getMissions:function(){return P(window.__missions||[])},saveMission:function(r,m){(window.__saved=window.__saved||[]).push([r,JSON.parse(JSON.stringify(m))]);return P({})},updateMission:function(id){(window.__updated=window.__updated||[]).push(id);return P({})},deleteMission:function(){return P({})},
 getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
-getClassroomEvents:function(){if(window.__evs)return P(window.__evs);if(window.__evHang)return new Promise(function(){});var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:CC.codemission.sig('print(3)'),outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
-{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}]))},
+getClassroomEvents:function(){if(window.__evs)return P(window.__evs);if(window.__evHang)return new Promise(function(){});var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:T0},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:T0},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:T0},{type:'s-probe',mid:'mx',sig:CC.codemission.sig('print(3)'),outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:T0}].map(function(e){return {student_id:'s1',created_at:new Date(T0).toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date(T0).toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:T0}},
+{student_id:'s1',created_at:new Date(T0).toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:T0}}]))},
 assignOnboard:function(rid,sid,on,set){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);(window.__sets=window.__sets||[]).push(set);roster.forEach(function(r){if(r.id===sid){r.onboard_due=on?new Date(Date.now()+60000).toISOString():null;r.onboard_set=on?set:null}});return P(null)},
 removeStudent:function(rid,sid){window.__removed.push(sid);return P({})},
+alertChecks:function(rid){var s=sessionStorage;if(!s.__since)s.__since=String(window.__since||Date.now());return P({since:+s.__since,keys:JSON.parse(s['__ck'+rid]||'[]')})},
+checkAlert:function(rid,k){var s=sessionStorage,a=JSON.parse(s['__ck'+rid]||'[]');if(a.indexOf(k)<0)a.push(k);s['__ck'+rid]=JSON.stringify(a);return P()},
 compass:function(a,b){return CC.sb.api('/api/compass',Object.assign({action:a},b))}}
 })(window.CC=window.CC||{});`;
 
@@ -893,9 +895,15 @@ test('강사 — 마지막 테스트 두 달 뒤 재테스트 알림, 학생당 
   await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
   await page.locator('.roster-row', { hasText: '태인' }).locator('.roster-test').click();
   await expect(al).toHaveCount(0);
-  await page.reload();                                                           // 이 브라우저에서 이미 띄웠다
+  await page.reload();                                                           // 가짜 명단은 지정을 잊는다 — 확인 전이라 다시 뜬다
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await expect(al).toHaveCount(1);
+  await al.locator('.al-ok').click();
+  await expect(al).toHaveCount(0);
+  await page.reload();                                                           // 확인했으면 다시 열어도 없다
   await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
   await expect(page.locator('.student-tile')).toHaveCount(3);
+  await page.waitForTimeout(500);
   await expect(al).toHaveCount(0);
 });
 
@@ -2351,7 +2359,7 @@ test('강사 — 바늘이 지워지면 칭찬 타이밍 알림 한 번, 열 때
   await expect(cancelLi).toHaveAttribute('data-tag', 'praise');
   await page.waitForTimeout(3500);
   await expect(cancelLi).toHaveCount(1);   // 폴링을 거듭해도 한 번
-  await cancelLi.locator('button').click();
+  await cancelLi.locator('.al-it').click();
   const landed = await page.evaluate(() => document.activeElement === document.querySelector('#detail .compass-card'));
   expect(landed).toBe(true);
 });
@@ -2610,7 +2618,7 @@ test('선생님 알림 — 이름표 · 문장 · 시각, 누르면 학생 상�
   await expect(praise).toContainText('태인이 성공 조건을 스스로 바꿨어요.');
   await expect(praise.locator('time')).toHaveText('방금');
   await noPraise(page);
-  await expect(praise.locator('button')).toContainText('새 알림');              // 안 읽음은 낭독기에도
+  await expect(praise.locator('.al-it')).toContainText('새 알림');              // 안 읽음은 낭독기에도
 
   await page.waitForTimeout(10500);                                 // 5초 폴링 두 번
   await expect(items).toHaveCount(3);
@@ -2622,8 +2630,8 @@ test('선생님 알림 — 이름표 · 문장 · 시각, 누르면 학생 상�
   }
   const say = praise.locator('.al-say');
   expect(Number(await say.evaluate(e => getComputedStyle(e).fontWeight))).toBeGreaterThanOrEqual(600);
-  await praise.locator('button').click();
-  await expect(praise.locator('button')).not.toContainText('새 알림');
+  await praise.locator('.al-it').click();
+  await expect(praise.locator('.al-it')).not.toContainText('새 알림');
   await expect(page.locator('#detail')).toBeVisible();
   await expect(page.locator('#detail')).toContainText('태인');
   await page.keyboard.press('Escape');
@@ -2684,7 +2692,7 @@ test('선생님 틀 — 390 폭: ☰ 로 사이드바, 아래 알림 막대는 �
   await expect(al).toBeHidden();
   await expect(bar).toBeFocused();
   await bar.click();
-  await al.locator('#alert-list li button').click();                // 누르면 알림 화면을 닫고 학생 상세
+  await al.locator('#alert-list li .al-it').click();                // 누르면 알림 화면을 닫고 학생 상세
   await expect(al).toBeHidden();
   await expect(page.locator('#detail')).toBeVisible();
   await page.evaluate(() => document.querySelector('#side-open').click());   // 상세 위에 서랍을 열면 Esc 는 서랍부터
@@ -2711,7 +2719,7 @@ test('선생님 알림 — 30개를 넘기면 읽은 것부터 버리고 안 읽
   await expect(items).toHaveCount(1, { timeout: 8000 });
   await page.evaluate((e) => { window.__evs.push(e); }, alEv('s1', '태인', { type: 's-redefine', mid: 'm-read' }));
   await expect(items).toHaveCount(2, { timeout: 8000 });
-  await items.first().locator('button').click();                    // 새것을 읽고, 가장 오래된 것은 안 읽은 채로
+  await items.first().locator('.al-it').click();                    // 새것을 읽고, 가장 오래된 것은 안 읽은 채로
   await page.keyboard.press('Escape');
   await page.evaluate((add) => { window.__evs.push(...add); }, Array.from({ length: 29 }, (_, i) => alEv('s1', '태인', { type: 's-redefine', mid: 'm' + i })));
   await expect(page.locator('#alert-list li.new')).toHaveCount(30, { timeout: 8000 });
@@ -2761,7 +2769,7 @@ test('학생 상세 — 알림 항목으로 열면 그 미션 칩이 골라져 �
   ]);
   const praise = page.locator('#alert-list li', { hasText: '칭찬 타이밍' });
   await expect(praise).toHaveCount(1, { timeout: 8000 });
-  await praise.locator('button').click();
+  await praise.locator('.al-it').click();
   const on = page.locator('#detail .mf[aria-pressed="true"]');
   await expect(on).toHaveCount(1);
   await expect(on).not.toContainText('모든 미션');
@@ -2935,14 +2943,14 @@ test('알림을 누르면 그 알림이 말한 곳에 내려앉는다 — 마침
   await alertLands(page, [judgeEv('M1', 'mx')]);
   await page.locator('.student-tile', { hasText: '태인' }).click();                     // 상세가 이미 열려 있다
   await page.locator('#detail .d-back').focus();
-  await page.locator('#alert-list li button').click();
+  await page.locator('#alert-list li .al-it').click();
   expect(await focused(page, '#detail .compass-card')).toBe(true);
 });
 
 test('알림을 누르면 튜터 대화에 내려앉는다', async ({ page }) => {
   test.setTimeout(60000);
   await alertLands(page, [...[1, 2, 3, 4, 5].map(i => alEv('s1', '태인', { type: 's-tutor', mid: 'mx', q: 'q' + i, a: 'a' }))]);
-  await page.locator('#alert-list li button').click();
+  await page.locator('#alert-list li .al-it').click();
   expect(await focused(page, '#detail .d-tutor')).toBe(true);
 });
 
@@ -2957,7 +2965,7 @@ test('휴대폰 — 알림 화면에서 마침 알림을 누르면 나침반에 
   await page.evaluate(e => { window.__evs.push(e); }, judgeEv('M1', 'mx'));
   await expect(page.locator('#alerts-bar')).toContainText('칭찬 타이밍 1개', { timeout: 8000 });
   await page.locator('#alerts-bar').click();
-  await page.locator('#alert-list li button').click();
+  await page.locator('#alert-list li .al-it').click();
   await expect(page.locator('#alerts')).toBeHidden();
   expect(await focused(page, '#detail .compass-card')).toBe(true);
 });
@@ -3059,7 +3067,7 @@ test('사용법 안내 — 선생님 교실 안: 총 단계 수가 끝까지 같
   expectSteady(await tourCounts(page));
 });
 
-test('선생님 화면을 닫은 동안 마친 미션은 다음에 열 때 알린다 — 한 번만', async ({ context, page }) => {
+test('선생님 화면을 닫은 동안 마친 미션은 다음에 열 때 알린다 — 확인할 때까지 남는다', async ({ context, page }) => {
   await local(context);
   await page.goto(BASE + '/teacher.html');          // 먼저 한 번 연다 — 이때 있던 일은 이미 본 것
   await expect(page.locator('#alert-list li')).toHaveCount(0);
@@ -3073,5 +3081,46 @@ test('선생님 화면을 닫은 동안 마친 미션은 다음에 열 때 알�
   await expect(page.locator('#alert-list')).toContainText('마쳤어요');
   await expect(page.locator('#toasts .toast')).toHaveCount(0);   // 놓친 일은 목록에만 — 열자마자 토스트가 쏟아지지 않게
   await page.reload();
-  await expect(page.locator('#alert-list li')).toHaveCount(0);  // 이미 보여 준 일은 다시 알리지 않는다
+  await expect(page.locator('#alert-list li')).toHaveCount(1);  // 확인하기 전에는 새로고침해도 남는다
+  await expect(page.locator('#toasts .toast')).toHaveCount(0);
+  await page.locator('#alert-list li .al-ok').click();           // 확인하면 내려가고
+  await expect(page.locator('#alert-list li')).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('#moments-empty')).toBeVisible();
+  await expect(page.locator('#alert-list li')).toHaveCount(0);  // 다시 열어도 안 뜬다
+});
+
+test('선생님 알림 — 서버 모드: 새로고침 · 다른 기기에서도 확인할 때까지 남고, 학생을 열어 보는 것은 확인이 아니다', async ({ browser }) => {
+  test.setTimeout(60000);
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.addInitScript(() => { window.__evs = window.__evs || JSON.parse(sessionStorage.__evs || '[]'); });
+  await asTeacher(page);
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await expect(page.locator('#alert-list li')).toHaveCount(0);
+  const add = [alEv('s1', '태인', { type: 's-redefine', mid: 'mx' }), alEv('s3', '한결', { type: 's-redefine', mid: 'my' })];
+  await page.evaluate(add => { window.__evs.push(...add); sessionStorage.__evs = JSON.stringify(window.__evs); }, add);
+  const items = page.locator('#alert-list li');
+  await expect(items).toHaveCount(2, { timeout: 8000 });
+  await items.filter({ hasText: '태인' }).locator('.al-it').click();   // 열어 보기만
+  await expect(page.locator('#detail')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.reload();
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(items).toHaveCount(2);                                   // 새로고침해도 남는다 (열어 본 것도)
+  await expect(page.locator('#toasts .toast')).toHaveCount(0);
+  const ok = items.filter({ hasText: '태인' }).locator('.al-ok');
+  await expect(ok).toHaveAccessibleName(/^확인 — 태인이 성공 조건을/);
+  expect((await ok.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  await ok.click();
+  await expect(items).toHaveCount(1);
+  await expect(items.locator('.al-ok')).toBeFocused();                  // 포커스는 남은 알림으로
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.__ckr1))).toEqual(['s1/redefine:mx']);
+  await page.reload();
+  await page.locator('.room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await expect(items).toHaveCount(1);                                   // 확인한 것은 다시 열어도 안 뜬다
+  await expect(items).toContainText('한결이 성공 조건을 스스로 바꿨어요.');
+  await ctx.close();
 });
