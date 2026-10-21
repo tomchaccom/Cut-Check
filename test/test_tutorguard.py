@@ -144,6 +144,14 @@ print('[답 프롬프트]')
 t('문법 질문이면 answer 로 문법을 준다', '문법 질문' in SYSTEM and '1~2줄' in SYSTEM and '생김새' in SYSTEM, SYSTEM)
 t('금지문 없음', '말하지 않는다' not in SYSTEM and '쓰지 않는다' not in SYSTEM, SYSTEM)
 t('형식은 남김', '존댓말' in SYSTEM and '300' in SYSTEM, SYSTEM)
+t('먼저 답하고, 되묻기는 답 뒤에만', '먼저 바로 답한다' in SYSTEM and '답 없이 되묻기만 하지 않는다' in SYSTEM
+  and '에러 이름이 뜻하는 것' in SYSTEM, SYSTEM)
+from _tutor import SCHEMA as TSCHEMA  # noqa: E402
+t('답 종류에 되묻기만 하는 kind 가 없다', TSCHEMA['properties']['kind']['enum'] == ['answer', 'off_topic'], TSCHEMA)
+t('고정 문장 중 되묻기(? 로 끝남)가 없다', not any(v.endswith('?') for v in REFUSE.values()), REFUSE)
+OLD_ASK = '원하는 결과와 어디가 달라요'
+src = [os.path.join(d, f) for d in ('api', 'js/ui', 'js/core') for f in os.listdir(os.path.join(ROOT, d)) if f.endswith(('.py', '.js'))]
+t('예전 고정 되묻기 문장이 코드 어디에도 없다', not [f for f in src if OLD_ASK in open(os.path.join(ROOT, f), encoding='utf-8').read()])
 u = json.loads(_messages('q', {**CTX, 'define': '메뉴별 개수가 맞는가'})[-1]['content'])
 t('목표에 이름을 붙여 넘긴다', u.get('학생이 정한 목표') == '메뉴별 개수가 맞는가' and 'define' not in u, u)
 
@@ -160,58 +168,63 @@ r = ask('메뉴 세는 코드 알려줘', CTX, llm)
 t('유출 → 재요청 → 재답도 판정 → 통과', len(llm.calls) == 4 and '이 자료로 바로 세는 코드' in llm.calls[2][-1]['content']
   and '같은 키에 값을' in llm.calls[3][-1]['content'] and r['retried'] and r['judged'] and not r['refused'] and r['kind'] == 'answer', r)
 
+A = '딕셔너리는 키마다 값을 하나 가져요.'
+OLD = '지금 코드를 실행하면 무엇이 나오고, 원하는 결과와 어디가 달라요?'
+blocked = lambda r: r['kind'] == 'blocked' and r['answer'] == REFUSE['blocked'] and r['refused']  # noqa: E731
+
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK,
            {'kind': 'ask_back', 'answer': '메뉴를 항목별로 나눈 다음, 같은 값이 나올 때마다 숫자를 올리는 생각까지는 정했나요?'},
-           {'verdict': 'leak', 'why': '풀이 순서', 'cut': ''})
+           {'kind': 'answer', 'answer': A}, OK)
 r = ask('코드 줘', CTX, llm)
-t('재답을 두 번째 판정이 막음 → ask_back 고정 문장', len(llm.calls) == 4 and r['answer'] == REFUSE['ask_back'] and r['refused']
-  and r['retried'] and 'leak: 풀이 순서' in r['reasons'], r)
+t('재답이 되묻기만이면 판정 없이 한 번 더 요청 → 답한다', len(llm.calls) == 5 and r['answer'] == A and not r['refused']
+  and r['retried'] and '되묻기만으로 바꾸지 않는다' in llm.calls[3][-1]['content'], r)
 
-llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, '판정 아님')
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '`d[m] += 1` 쓰세요.'}, LEAK,
+           {'kind': 'answer', 'answer': '`d[m] = 0` 쓰세요.'}, LEAK)
 r = ask('코드 줘', CTX, llm)
-t('재답 판정 실패 → ask_back', r['answer'] == REFUSE['ask_back'] and 'judge_failed' in r['reasons'] and r['retried'], r)
+t('재요청 두 번까지 다 막히면 보내지 않음 사실 문장 — 되묻기 아님', len(llm.calls) == 6 and blocked(r) and r['retried']
+  and not r['answer'].endswith('?') and r['answer'] != OLD, r)
+
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': A}, '판정 아님', {'kind': 'answer', 'answer': A}, OK)
+r = ask('코드 줘', CTX, llm)
+t('재답 판정 실패 → 한 번 더 요청 → 판정 통과면 답한다', len(llm.calls) == 6 and r['answer'] == A and not r['refused']
+  and 'judge_failed' in r['reasons'] and '같은 질문에 다시 답한다' in llm.calls[4][-1]['content']
+  and 'judge_failed' not in llm.calls[4][-1]['content'], r)
 
 clock = iter([0, 10, 22])
-llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, OK)
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': A}, OK)
 r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
 t('재답 시간 = min(10, 남은-6)', llm.timeouts[:3] == [10, 5, 10], llm.timeouts)
-t('재답 판정할 시간 없음 → ask_back', len(llm.calls) == 3 and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+t('재답 판정할 시간 없음 → 보내지 않음 (판정 안 한 답은 안 보낸다)', len(llm.calls) == 3 and blocked(r) and r['retried'], r)
 
-llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '`d[m] += 1` 쓰세요.'}, LEAK)
-r = ask('코드 줘', CTX, llm)
-t('재답 코드를 재판정이 막음 → ask_back', r['kind'] == 'ask_back' and r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
-
-llm = fake({'kind': 'answer', 'answer': '문자열은 따옴표로 감싼 글자예요.'}, '판정 아님')
+llm = fake({'kind': 'answer', 'answer': '문자열은 따옴표로 감싼 글자예요.'}, '판정 아님', {'kind': 'answer', 'answer': '문자열은 따옴표로 감싼 글자예요.'}, OK)
 r = ask('문자열이 뭐고', CTX, llm)
-t('판정 실패 → ask_back', r['kind'] == 'ask_back' and 'judge_failed' in r['reasons'] and r['answer'] == REFUSE['ask_back'], r)
+t('첫 판정 실패 → 고정 되묻기 대신 다시 요청 → 답한다', len(llm.calls) == 4 and r['kind'] == 'answer'
+  and r['answer'].startswith('문자열은') and 'judge_failed' in r['reasons'] and r['retried'] and not r['refused'], r)
 
-llm = fake({'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'}, OK)
+llm = fake({'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'}, {'kind': 'answer', 'answer': A}, OK)
 r = ask('모르겠어요', CTX, llm)
-t('되묻기도 판정한다', r['kind'] == 'ask_back' and r['answer'].endswith('?') and r['judged'] and not r['refused'] and len(llm.calls) == 2, r)
+t('되묻기만 한 첫 답은 보내지 않고 다시 요청 → 답한다', len(llm.calls) == 3 and r['answer'] == A and r['retried']
+  and r['kind'] == 'answer', r)
 
-llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를 세는 변수를 둘 건가요?'}, LEAK,
-           {'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'}, OK)
-r = ask('모르겠어요', CTX, llm)
-t('유출된 되묻기 → 재요청 → 재답', len(llm.calls) == 4 and r['retried'] and r['kind'] == 'ask_back' and r['answer'].startswith('지금 print'), r)
-
-llm = fake({'kind': 'ask_back', 'answer': '쉼표로 나눈 뒤 같은 메뉴를 세는 변수를 둘 건가요?'}, LEAK,
-           {'kind': 'ask_back', 'answer': "`name = '김밥,떡볶이'` 처럼 넣었나요?"}, LEAK)
-r = ask('모르겠어요', CTX, llm)
-t('재답 되묻기를 재판정이 막음 → ask_back 고정 문장', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+Q = "split 은 문자열을 기준 글자로 잘라 목록을 만들어요. 예: `'a,b'.split(',')` 지금 2번째 줄 출력은 한 줄인가요?"
+llm = fake({'kind': 'answer', 'answer': Q}, OK)
+r = ask('split 이 뭐예요?', CTX, llm)
+t('답 뒤에 덧붙인 되묻기는 그대로 보낸다', r['answer'] == Q and not r['refused'] and len(llm.calls) == 2, r)
 
 clock = iter([0, 14, 18])
-llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요.'}, OK)
+llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, {'kind': 'answer', 'answer': A}, OK)
 r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
 t('남은 12초 → 재답 6초 · 재판정 5초 → 통과', llm.timeouts == [10, 5, 6, 5] and not r['refused'] and r['retried'], (llm.timeouts, r))
 
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK, TimeoutError('재답 시간 초과'))
 r = ask('코드 줘', CTX, llm)
-t('재답 호출 예외 → ask_back (502 아님)', r['answer'] == REFUSE['ask_back'] and 'retry_failed' in r['reasons'] and r['retried'], r)
+t('재답 호출 예외 → 보내지 않음 (502 아님)', blocked(r) and 'retry_failed' in r['reasons'] and r['retried'], r)
 
 clock = iter([0, 17])
 llm = fake({'kind': 'answer', 'answer': '`x`'}, LEAK)
 r = ask('코드 줘', CTX, llm, now=lambda: next(clock))
-t('남은 시간 < 10초면 재요청 없음', len(llm.calls) == 2 and r['kind'] == 'ask_back' and not r['retried'], r)
+t('남은 시간 < 10초면 재요청 없음', len(llm.calls) == 2 and blocked(r) and not r['retried'], r)
 
 llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼요. 개수는 len 으로 세요.'}, HARD,
            {'kind': 'answer', 'answer': '개수는 len 으로 세요.'}, OK)
@@ -227,7 +240,7 @@ t('cut 이 답에 없으면 why 로 고쳐 쓰기', '아래 문제를 고쳐 다
 
 llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼요.'}, HARD, {'kind': 'answer', 'answer': '결과가 3이면 그대로 출력해요.'}, HARD)
 r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
-t('재답도 걸리면 고정 되묻기', r['answer'] == REFUSE['ask_back'] and r['refused'] and r['retried'], r)
+t('재답도 걸리면 보내지 않음 — 고정 되묻기 아님', blocked(r) and r['retried'] and r['answer'] != OLD, r)
 
 llm = fake({'kind': 'answer', 'answer': "split 은 기준 글자로 잘라요. 예: `'a,b'.split(',')` 결과가 3이면 print(3) 하면 돼요."},
            {**HARD, 'cut': '결과가 3이면 print(3) 하면 돼요.'},
