@@ -27,8 +27,9 @@
   function start(steps, opts) {
     opts = opts || {};
     if (cur) cur();
-    /* 시작할 때 한 번 센다 — before 가 탭을 바꿔 앞 단계가 숨어도 '2 / 6' 의 6 이 흔들리지 않게 */
-    var list = steps.filter(function (s) { return s.before || shown(find(s)); })
+    /* 시작할 때 한 번 센다 — before 를 실제로 불러 열어 보고 센다. before 가 있다고 일단 넣어 두면
+     * 열어도 없는 단계가 나중에 빠지면서 '1 / 5' 다음에 '2 / 2' 가 된다 (교실 목록 화면: 탭이 안 열린다) */
+    var list = steps.filter(function (s) { if (s.before) s.before(); return shown(find(s)); })
       .map(function (s) { return { key: s.key, title: s.title, text: s.text, before: s.before }; });
     if (!list.length) return false;
     var back = document.activeElement;
@@ -52,17 +53,15 @@
 
     function go(dir) {
       for (var j = i + dir; j >= 0 && j < list.length; j += dir) {
-        if (list[j].gone) continue;
         if (list[j].before) list[j].before();
         var el = find(list[j]);
         if (shown(el)) { i = j; target = el; return render(); }
-        list[j].gone = true;   /* 열어 봐도 없다 — 숫자에서 뺀다 */
       }
       if (dir > 0) end();
     }
 
     function render() {
-      var l = list.filter(function (s) { return !s.gone; }), k = l.indexOf(list[i]);
+      var k = i, l = list;
       q('#tour-count').textContent = (k + 1) + ' / ' + l.length;
       q('#tour-title').textContent = list[i].title;
       q('#tour-text').textContent = list[i].text;

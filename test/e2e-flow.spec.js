@@ -2976,3 +2976,38 @@ test('철학 틈 — 이유 두 글자 · 다시 고른 성공 조건은 처음 
   expect(evs[0]).toHaveProperty('trap');
   await expect(page.locator('#help-btn')).toBeHidden();
 });
+
+/* 사용법 안내를 끝까지 넘기며 'n / 총' 을 읽는다 — 총은 그대로, n 은 1씩 */
+async function tourCounts(page) {
+  const seen = [];
+  while (await page.locator('.tour').count()) {
+    seen.push((await page.locator('#tour-count').textContent()).split(' / ').map(Number));
+    await page.locator('.tour-btn[data-a="next"]').click();
+  }
+  return seen;
+}
+function expectSteady(seen) {
+  const msg = JSON.stringify(seen);
+  expect(seen.length, msg).toBeGreaterThan(1);
+  seen.forEach(([n, t], i) => { expect(t, msg).toBe(seen[0][1]); expect(n, msg).toBe(i + 1); });
+  expect(seen.length, msg).toBe(seen[0][1]);
+}
+
+test('사용법 안내 — 선생님 교실 목록 화면: 총 단계 수가 끝까지 같고 번호는 1씩 오른다', async ({ context, page }) => {
+  await context.addInitScript(() => { window.__tour = 1; });
+  await asTeacher(page);
+  await expect(page.locator('.tour')).toBeVisible();
+  expectSteady(await tourCounts(page));
+});
+
+test('사용법 안내 — 선생님 교실 안: 총 단계 수가 끝까지 같고 번호는 1씩 오른다', async ({ context, page }) => {
+  await context.addInitScript(() => { window.__tour = 1; });
+  await asTeacher(page);
+  await page.locator('.tour-btn[data-a="skip"]').click();
+  await page.evaluate(() => localStorage.clear());
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.tour')).toBeVisible();
+  expectSteady(await tourCounts(page));
+  await page.locator('#tour-replay').click();
+  expectSteady(await tourCounts(page));
+});
