@@ -190,6 +190,7 @@ node test/alerts.test.js     # 교사 알림 — 종류별 한 번 · 첫 화면
 node test/smoke.js           # 9개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG · 방향 모양
+node test/shots.js           # 수업-흐름 그림 다시 찍기 (가짜 데이터)
 
 # 미션 생성 서버(api/*.py) — venv 없이 uv 가 pydantic 을 준비한다
 uv run --with-requirements requirements.txt python test/test_missionguard.py     # 생성 미션 검사 + 우리 미션 문장
