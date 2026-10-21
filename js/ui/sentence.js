@@ -807,25 +807,55 @@
     }
   }
 
-  function renderHistory() {
-    var list = $('#history-list');
-    list.innerHTML = '';
-    /* 미션이 로드되지 않은 상태(DB에 미션 없음)면 빈 상태 표시 */
-    if (!M) { $('#history-empty').hidden = false; return; }
-    myEvents(function (events) { drawHistory(list, events); });
+  /* 내 기록 탭 — 지난 미션마다 카드 하나 (2026-10-22).
+   * 예전에는 지금 연 미션(M) 하나만 그려서, 로그인하고 바로 내 기록을 누르면 마친 미션이 있어도 비었다.
+   * 미션마다 카드를 나눠 다른 미션 기록이 한 카드에 섞이지 않게 한다.
+   * 서버 모드: 내 교실마다 내 이벤트 + 그 교실 미션. 로컬 모드: 이 브라우저 기록을 mid 로 나눈다 */
+  var myRooms = [];
+  var histSeq = 0;
+  function vals(o) { return Object.keys(o).map(function (k) { return o[k]; }); }
+  function historyGroups() {
+    if (!CC.sb || !CC.sb.active()) {
+      var byMid = {};
+      (CC.store ? CC.store.all() : []).forEach(function (e) {
+        (byMid[e.mid] = byMid[e.mid] || { m: CC.sentenceMission(e.mid), evs: [] }).evs.push(e);
+      });
+      return Promise.resolve(vals(byMid));
+    }
+    return Promise.all(myRooms.map(function (r) {
+      return Promise.all([CC.sb.getMyEvents(r.id), CC.sb.getMissions(r.id)]).then(function (x) {
+        var byDb = {}, byMid = {};
+        x[1].forEach(function (row) { byDb[row.id] = { m: row.data, db: row.id, evs: [] }; });
+        x[0].forEach(function (e) {
+          var g = e._missionDbId ? byDb[e._missionDbId]
+            : (byMid[e.mid] = byMid[e.mid] || { m: CC.sentenceMission(e.mid), evs: [] });  /* 기본 미션은 DB id 가 없다 */
+          if (g) g.evs.push(e);
+        });
+        return vals(byDb).concat(vals(byMid));
+      }, function () { return []; });   /* 한 교실을 못 읽어도 나머지는 보인다 */
+    })).then(function (all) { return [].concat.apply([], all); });
   }
 
-  function drawHistory(list, events) {
-    if (!events.length) { $('#history-empty').hidden = false; return; }
-    $('#history-empty').hidden = true;
+  function renderHistory() {
+    var list = $('#history-list'), empty = $('#history-empty');
+    var n = ++histSeq;
+    list.innerHTML = '';
+    empty.hidden = true;
+    historyGroups().then(function (gs) {
+      if (n !== histSeq) return;   /* 탭을 빨리 두 번 누르면 답이 둘 온다 — 두 번 그리지 않게 */
+      gs.forEach(function (g) { if (g.m) drawHistory(list, g.m, g.evs, g.db); });
+      empty.hidden = list.children.length > 0;
+    });
+  }
 
+  function drawHistory(list, M, events, dbId) {
     var defines = events.filter(function (e) { return e.type === 's-define' || e.type === 's-redefine'; });
     var methods = events.filter(function (e) { return e.type === 's-method' || e.type === 's-remethod'; });
     var codes = events.filter(function (e) { return e.type === 's-code'; });
     var codeJudges = events.filter(function (e) { return e.type === 's-code-judge'; });
     var wraps = events.filter(function (e) { return e.type === 's-wrap'; });
 
-    if (!defines.length) { $('#history-empty').hidden = false; return; }
+    if (!defines.length) return;   /* 진단만 했거나 미션을 열기만 한 것 — 카드로 남길 판단이 없다 */
 
     var card = el('div', 'record-card');
 
@@ -898,6 +928,17 @@
     }
 
     list.appendChild(card);
+
+    /* 선생님이 이 미션에 남긴 한마디 — 보낸 것만 */
+    if (dbId && CC.sb && CC.sb.active()) {
+      CC.sb.compassNote(dbId).then(function (c) {
+        if (!c || !c.teacher_note) return;
+        var note = el('div', 'rc-section rc-note');
+        note.appendChild(el('span', 'rc-label', '선생님 한마디'));
+        note.appendChild(el('span', 'rc-value', c.teacher_note));
+        card.appendChild(note);
+      }, function () {});
+    }
   }
 
   /* 내 교실 = 폴더. 교실을 열면 그 교실 미션이 파일로 나온다 */
@@ -970,7 +1011,9 @@
     if (!CC.sb || !CC.sb.active()) {
       /* Supabase 미설정 → 로컬 전용 모드: 탭 숨기고 바로 플레이, 미션바 표시 */
       if ($('#login-link')) $('#login-link').hidden = true;
-      if ($('#main-tabs')) $('#main-tabs').hidden = true;
+      /* 탭은 보인다 — 숨기면 내 기록으로 가는 문이 없다(2026-10-22). 교실 폴더(내 미션)만 서버에 있다 */
+      if ($('#main-tabs')) $('#main-tabs').hidden = false;
+      document.querySelector('.main-tab[data-panel="panel-missions"]').hidden = true;
       $('#crumb-play-home').hidden = $('#crumb-play-home').nextElementSibling.hidden = true;  /* 교실 폴더가 없다 */
       bar.hidden = false;
       CC.SENTENCE_MISSIONS.forEach(function (m) {
@@ -1006,6 +1049,7 @@
       /* 교실 미션 로드 */
       CC.sb.myClassrooms().then(function (rooms) {
         console.log('[CC] myClassrooms:', rooms);
+        myRooms = rooms || [];
         renderRooms(rooms);
         switchTab('panel-missions');
       });
