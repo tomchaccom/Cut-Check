@@ -154,7 +154,7 @@ def examples(concept_id, level, seen, call_llm=mini_llm):
 
 DEFINE_Q = '어떤 결과가 나오면 성공일까요?'
 LUCK = '에러 없이 끝나기만 하면 성공'
-AXES = ('count', 'empty')  # 새 꼴에 맞는 반례 축 — 구분자·공백은 숫자 목록·while 소재에 안 맞는다 (스펙 반례 규칙)
+AXES = ('count', 'empty', 'boundary')  # 새 꼴에 맞는 반례 축 — 구분자·공백은 숫자 목록·while 소재에 안 맞는다 (스펙 반례 규칙)
 # 학생 문장에 개념 이름이 나오면 분해가 끝나 버린다 — 개념은 강사에게만 보인다
 ANSWER_LIST = re.compile(r'[,/][^,/]*[,/]|자료 ?\d')  # 쉼표·빗금 둘 이상('a, b, c') · '자료 1은'
 BROKEN_POLITE = re.compile(r'[아어여려워]해 주세요')  # 보여해·알려해·찾아해 — 구해·더해·말해는 통과
@@ -178,7 +178,7 @@ BUILD_SYSTEM = '\n'.join([
     '- v 는 한 줄짜리 파이썬 리터럴 문자열 (120자 안). 예: "[1500, 800, 2000]", "{\'주급\': 3000, \'가격\': 20000}", "\'떡볶이,우동\'".',
     '  여러 값이 필요하면 한글 키 딕셔너리로 쓴다. 학생 코드가 data = <v> 로 받는다.',
     '- 앞 두 자료로는 대충 세운 기준도 통한다. 세 번째 자료는 반례다 — 그 기준이 깨지게 쓴다.',
-    '- axis: 반례가 건드리는 것 하나. count = 항목 수가 달라짐 / empty = 빈 자료이거나 결과가 0·없음.',
+    '- axis: 반례가 건드리는 것 하나. count = 항목 수가 달라짐 / empty = 빈 자료이거나 결과가 0·없음 / boundary = 경계값, 기준과 정확히 같은 값(넘으면인지 이상인지 갈리는 값)·첫이나 마지막 원소·0·항목 하나.',
     '- 반례의 답은 자료 1의 답과 달라야 한다. 이름에 "반례" 같은 말을 쓰지 않는다.',
     '- 답을 정하는 규칙(요금표·기준 점수·목표 금액)은 상황·요청이나 자료 안에 보여야 한다. 모범 답안에만 있으면 학생이 풀 수 없다.',
     '',
@@ -315,7 +315,7 @@ def validate_draft(d):
         if ins[2].get('counter') is not True:
             out.append('d03: 마지막 자료는 반례예요')
         if ins[2].get('axis') not in AXES:
-            out.append('d03: 반례 축은 count 또는 empty 예요')
+            out.append('d03: 반례 축은 count · empty · boundary 중 하나예요')
 
     cards = d.get('cards')
     if not isinstance(cards, list) or not 4 <= len(cards) <= 6:

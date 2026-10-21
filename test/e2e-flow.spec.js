@@ -161,9 +161,11 @@ test('튜터는 설계도를 낸 뒤 코드 단계에서만 보인다', async ({
   await page.locator('#go-define').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(0);
   await pickCards(page);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(1);
   await page.locator('#back-method').click();
@@ -301,8 +303,10 @@ async function toCode(page, id) {
   await page.locator('.m-btn[data-id="' + id + '"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await pickCards(page);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator(TUTOR_ANY)).toHaveCount(1);
 }
@@ -418,6 +422,7 @@ test('무한루프는 5초 뒤 멈추고 화면은 살아 있다', async ({ cont
   await expect(page.locator('#run-code')).toBeDisabled();
   await page.locator('#back-method').click();                          // 그동안에도 화면은 반응한다
   await expect(page.locator('#step3')).toHaveClass(/active/);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator('#code-result')).toHaveText('5초 안에 끝나지 않아서 멈췄어요.', { timeout: 10000 });
   await expect(page.locator('#run-code')).toBeDisabled();              // 새 worker 준비 전
@@ -456,12 +461,14 @@ test('설계 카드가 코드 뼈대가 되고, 쓴 코드는 설계를 고쳐�
   await expect(page.locator('#samples .sample-data')).toHaveCount(2);           // 첫 화면에 자료 2개
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await expect(page.locator('.card-pick')).toHaveCount(4);                      // 진짜 3 + 헷갈리는 1
   await pickCards(page);
   await page.locator('.design-item').nth(2).locator('.card-up').click();        // 개수 세기를 위로
   await expect(page.locator('.design-item').nth(1)).toContainText('개수 세기');
   await page.locator('.design-item').nth(1).locator('.card-down').click();      // 되돌리기
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   const code = await page.locator('#code-editor').inputValue();
   expect(code).toContain('# 1. 나누기 (기준: 쉼표)');
@@ -471,11 +478,13 @@ test('설계 카드가 코드 뼈대가 되고, 쓴 코드는 설계를 고쳐�
   await page.locator('#code-editor').fill('data = "a,b"\nprint(1)\n');
   await page.locator('#back-method').click();
   await page.locator('.design-item').nth(2).locator('.card-remove').click();
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   expect(await page.locator('#code-editor').inputValue()).toContain('print(1)'); // 덮어쓰지 않는다
 
   /* 설계↔코드를 오가도 Tab 리스너는 하나 — 한 번 눌러 공백 4칸 */
   await page.locator('#back-method').click();
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await page.locator('#code-editor').fill('');
   await page.locator('#code-editor').focus();
@@ -491,8 +500,10 @@ test('다른 미션으로 바꾸면 앞 미션 코드가 남지 않는다', asyn
   await page.locator('.m-btn[data-id="sm2"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await pickCards(page);
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   expect(await page.locator('#code-editor').inputValue()).not.toContain('앞 미션');
 });
@@ -579,7 +590,7 @@ CC.sb={active:function(){return true},getProfile:function(){return P({role:'stud
 myClassrooms:function(){return P(window.__rooms||[{id:'r1',name:'1학년 3반'},{id:'r2',name:'방과후 코딩반'}])},
 getMissions:function(rid){return P(rid==='r1'?[{id:'db1',data:m('ai-a','푼 미션')},{id:'db2',data:m('ai-b','하던 미션')},{id:'db3',data:m('ai-c','안 한 미션')}]:[])},
 getMyEvents:function(){return P(window.__evs||[{type:'s-onboard',answers:[],skipped:true,_missionDbId:null},{type:'s-define',_missionDbId:'db1'},{type:'s-wrap',text:'끝',_missionDbId:'db1'},{type:'s-define',_missionDbId:'db2'}])},
-pushEvent:function(rid,mid,ev){(window.__pushed=window.__pushed||[]).push([rid,mid]);(window.__evs=window.__evs||[]).push(ev);return P(null)},compassMine:function(id){window.__cm=(window.__cm||[]);window.__cm.push(id);var c=window.__compass;return c==='throw'?Promise.reject(new Error('x')):P(c||null)},
+pushEvent:function(rid,mid,ev){(window.__pushed=window.__pushed||[]).push([rid,mid]);(window.__evs=window.__evs||[]).push(ev);return P(null)},compassMine:function(){var c=window.__compass;return c==='throw'?Promise.reject(new Error('x')):P(c||null)},compassNote:function(id){window.__cn=(window.__cn||[]);window.__cn.push(id);var c=window.__note;return c==='throw'?Promise.reject(new Error('x')):P(c||null)},
 signOut:function(){return P()},getUser:function(){return P({id:'u1'})},onAuthChange:function(){}}
 })(window.CC=window.CC||{});`;
 
@@ -615,6 +626,7 @@ test('다른 교실을 둘러보고 돌아와도 기록은 미션을 연 교실�
   await expect(page.locator('#crumb-play-room')).toHaveText('1학년 3반');
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   const pushed = await page.evaluate(() => window.__pushed);
   expect(pushed).toEqual([['r1', 'db1']]);
@@ -660,6 +672,7 @@ test('설계도 줄은 위에서 아래로, 이름 옆에 ▲▼✕', async ({ p
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await pickCards(page);
   const rows = page.locator('.design-item');
@@ -686,6 +699,7 @@ test('설계도 — 390 폭 긴 카드 이름에서도 번호와 버튼이 이�
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   for (const l of long) await page.locator('.card-pick', { hasText: l }).click();
   const r = await page.evaluate(() => {
@@ -724,7 +738,7 @@ getMissions:function(){return P(window.__missions||[])},saveMission:function(r,m
 getClassroomStudents:function(){return P(roster.filter(function(r){return window.__removed.indexOf(r.id)<0}))},
 getClassroomEvents:function(){if(window.__evs)return P(window.__evs);if(window.__evHang)return new Promise(function(){});var X=window.__facts?[{type:'s-method',mid:'mx',cards:[{label:'더하기'},{label:'나누기'}],v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[1, 2]',output:'3',error:'',v:1,t:Date.now()},{type:'s-code',mid:'mx',code:'print(3)',dataId:'[]',output:'3',error:'',v:1,t:Date.now()},{type:'s-probe',mid:'mx',sig:CC.codemission.sig('print(3)'),outs:[{dataId:'[1, 2]',output:'3',error:''},{dataId:'[]',output:'3',error:''}],uses:['For'],v:1,t:Date.now()}].map(function(e){return {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:e}}):[];return P(X.concat([{student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-define',choice:'몇 개',v:1,t:Date.now()}},
 {student_id:'s1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-onboard',answers:[],skipped:false,v:1,t:Date.now()}}]))},
-assignOnboard:function(rid,sid,on){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);roster.forEach(function(r){if(r.id===sid)r.onboard_due=on?new Date(Date.now()+60000).toISOString():null});return P(null)},
+assignOnboard:function(rid,sid,on,set){(window.__assigned=window.__assigned||[]).push([rid,sid,on]);(window.__sets=window.__sets||[]).push(set);roster.forEach(function(r){if(r.id===sid){r.onboard_due=on?new Date(Date.now()+60000).toISOString():null;r.onboard_set=on?set:null}});return P(null)},
 removeStudent:function(rid,sid){window.__removed.push(sid);return P({})},
 compass:function(a,b){return CC.sb.api('/api/compass',Object.assign({action:a},b))}}
 })(window.CC=window.CC||{});`;
@@ -823,6 +837,52 @@ test('강사 — 명단에 레벨이 보이고, 대상자로 지정·풀기', as
   await page.locator('.main-tab[data-dtab="dtab-students"]').click();
   await page.locator('.student-tile', { hasText: '태인' }).click();
   await expect(page.locator('#detail .dsub')).toContainText('레벨 하');
+});
+
+test('강사 — 문제지를 골라 지정하고, 서랍에 레벨 테스트 기록이 남는다', async ({ page }) => {
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  const 가은 = page.locator('.roster-row', { hasText: '가은' });
+  await expect(가은.locator('.roster-set')).toHaveValue('mid');                   // 기본은 중
+  const h = await 가은.locator('.roster-set').boundingBox();
+  expect(h.height).toBeGreaterThanOrEqual(44);
+  await 가은.locator('.roster-set').selectOption('high');
+  await 가은.locator('.roster-test').click();
+  await expect(가은.locator('.roster-level')).toHaveText('레벨 테스트 대기');
+  expect(await page.evaluate(() => window.__sets)).toEqual(['high']);
+  await page.locator('.main-tab[data-dtab="dtab-students"]').click();
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const rec = page.locator('#detail .lv-rec');
+  await expect(rec).toHaveCount(1);
+  await expect(rec).toContainText('문제지 중');                                  // set 없던 기록은 중
+  await expect(rec.locator('.lv-n')).toHaveText('0/10');
+  await expect(rec.locator('.lv-ox')).toHaveText('××××××××××');
+  await expect(rec.locator('.lv-stage')).toHaveText('레벨 하');
+});
+
+test('강사 — 마지막 테스트 두 달 뒤 재테스트 알림, 학생당 한 번, 지정하면 사라진다', async ({ page }) => {
+  const now = Date.now();                                                         // 새로고침해도 같은 기록 — 시각을 한 번만 정한다
+  await page.addInitScript(now => {
+    const row = (sid, name, ev) => ({ student_id: sid, created_at: new Date().toISOString(), profiles: { name }, event: Object.assign({ v: 1 }, ev) });
+    window.__evs = [row('s1', '태인', { type: 's-onboard', answers: [], skipped: false, set: 'low', t: now - 61 * 864e5 }),
+      row('s3', '한결', { type: 's-onboard', answers: [], skipped: false, t: now - 59 * 864e5 })];
+  }, now);
+  await asTeacher(page);
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  const al = page.locator('#alert-list li[data-kind="retest"]');
+  await expect(al).toHaveCount(1);
+  await expect(al).toContainText('태인의 레벨 테스트가 두 달 지났어요. 다시 지정할까요?');
+  await expect(al.locator('.al-tag')).toHaveText('레벨 테스트');
+  await page.waitForTimeout(5500);                                               // 다음 기록 읽기 뒤에도 한 번
+  await expect(al).toHaveCount(1);
+  await page.locator('.main-tab[data-dtab="dtab-invite"]').click();
+  await page.locator('.roster-row', { hasText: '태인' }).locator('.roster-test').click();
+  await expect(al).toHaveCount(0);
+  await page.reload();                                                           // 이 브라우저에서 이미 띄웠다
+  await page.locator('#classroom-cards .room-tile', { hasText: '태인한결' }).click();
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await expect(al).toHaveCount(0);
 });
 
 test('강사 — 명단을 다시 그려도 입력한 아이디와 새 비밀번호는 남는다', async ({ page }) => {
@@ -935,6 +995,34 @@ test('선생님이 대상자로 정하면 로그인하자마자 테스트가 뜨
   await expect(page.locator('#ob-skip')).toBeHidden();
 });
 
+/* 2026-10-20 사람이 정함 — 문제지 하·중·상, 기록은 남고, 학생은 난이도도 점수도 못 본다 */
+test('지정한 문제지(상)로 출제되고, 화면에 난이도가 없고, 기록에는 문제지와 답만', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = []; });
+  await asStudent(page, [{ id: 'r1', name: '1학년 3반', onboard_due: '2026-10-19T00:00:00Z', onboard_set: 'high' }]);
+  const ob = page.locator('#onboard-view');
+  await expect(ob).toBeVisible();
+  await expect(page.locator('#ob-code')).toContainText('짜장');              // 상 문제지 첫 문항
+  for (let i = 0; i < 10; i++) {
+    await expect(ob).not.toContainText(/문제지|난이도|레벨|맞았|틀렸|정답/);
+    if (await page.locator('#ob-input').count()) { await page.locator('#ob-input').fill('1'); await page.locator('#ob-input').press('Enter'); }
+    else await page.locator('#ob-options button').first().click();
+  }
+  await expect(ob).not.toContainText(/문제지|난이도|레벨|점수|\/10/);
+  await page.locator('#ob-done').click();
+  const evs = await page.evaluate(() => window.__evs);
+  expect(evs[0].set).toBe('high');
+  expect(evs[0].answers.map(a => a.q)).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'h9', 'h10']);
+  expect(Object.keys(evs[0]).sort()).toEqual(['answers', 'set', 'skipped', 't', 'type', 'v']);   // 점수·레벨 칸 없음
+});
+
+test('지정 없는 첫 입장은 중 문제지', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = []; });
+  await asStudent(page, [{ id: 'r1', name: '1학년 3반', onboard_set: 'low' }]);   // 지정(due) 없이 남은 문제지는 쓰지 않는다
+  await page.locator('.room-tile').first().click();
+  await page.locator('#ob-skip').click();
+  expect((await page.evaluate(() => window.__evs))[0].set).toBe('mid');
+});
+
 test('지정 뒤 이미 테스트를 봤으면 다시 뜨지 않는다', async ({ page }) => {
   await page.addInitScript(() => { window.__evs = [{ type: 's-onboard', answers: [], skipped: false, _at: '2026-10-19T01:00:00Z' }]; });
   await asStudent(page, [{ id: 'r1', name: '1학년 3반', onboard_due: '2026-10-19T00:00:00Z' }]);
@@ -979,12 +1067,14 @@ test('골라내기 고정 목록이 01 문제·03 카드·04 요청에 보인다
   await expect(page.locator('#samples .sample-data')).toHaveCount(2);           // 반례는 여전히 숨는다
   await page.locator('#go-define').click();
   await page.locator('.define-card').first().click();
+  await page.locator('#reason-define').fill('이유 적기');
   await page.locator('#go-method').click();
   await page.locator('.card-pick', { hasText: '골라내기' }).click();
   await expect(page.locator('.design-item .card-list')).toHaveText('우유,달걀,땅콩');
   await page.locator('.card-pick', { hasText: '나누기' }).click();
   await page.locator('.card-pick', { hasText: '개수 세기' }).click();
   for (const s of await page.locator('.design-item select').all()) await s.selectOption({ index: 1 });
+  await page.locator('#reason-method').fill('이유 적기');
   await page.locator('#go-run').click();
   await expect(page.locator('#step4-fixed')).toHaveText('주의 재료 목록: 우유,달걀,땅콩');
 });
@@ -2060,10 +2150,14 @@ test('사용법 안내 — 선생님 화면: 생성 두 방식을 밝히고, 닫
 });
 
 
-/* 나침반 — 선생님 서랍 카드 (2026-10-20). 서버(api/compass)는 page.route 로 가짜 */
+/* 나침반 2차 — 선생님 서랍 카드 (2026-10-21). 서버(api/compass)는 page.route 로 가짜 */
 const judgeEv = (mission_id, mid) => ({ student_id: 's1', mission_id, created_at: new Date().toISOString(), profiles: { name: '태인' }, event: { type: 's-code-judge', mid, verdict: '지켰다', basis: 'b', v: 1, t: Date.now() } });
-const cRow = (missionId, o) => Object.assign({ studentId: 's1', missionId, levels: { N: 3, E: 2, S: 0, W: 1 }, evidence: { N: ['f1'], W: ['t1'] }, facts: [{ id: 'f1', dir: 'N', kind: 'trap-fixed', text: '함정 보기를 고쳤다' }, { id: 't1', dir: null, kind: 'tutor', text: '쉼표가 뭐예요?' }],
-  ai_note: '성공 조건을 스스로 고쳤다', needle_deg: 18.4, strongest: 'N', teacher_dir: null, teacher_note: null, sent_at: null }, o || {});
+const CK = ['N1', 'N2', 'N3', 'E1', 'E2', 'E3', 'S1', 'S2', 'S3', 'W1', 'W2', 'W3'];
+const mkChecks = (oks, quotes) => Object.fromEntries(CK.map(k => [k, { ok: oks.includes(k), quote: (quotes || {})[k] || '' }]));
+const cRow = (missionId, o) => Object.assign({ studentId: 's1', missionId, checks: mkChecks(['N1', 'N2', 'S1'], { N2: 'count 를 출력해 봤다' }), tutor_dirs: { N: 2, E: 0, S: 1, W: 0 },
+  teacher_dir: null, teacher_note: null, sent_at: null }, o || {});
+const cumOf = (rows, c) => ({ cumulative: Object.assign({ needle_deg: 18.4, dir: 'N', length: 0.7, cancel: false, candidates: [], n: rows.length }, c || {}), rows });
+const cancelCum = rows => cumOf(rows, { needle_deg: null, dir: null, length: null, cancel: true, candidates: ['N', 'S'] });
 async function compassTeacher(page, evs, handler) {
   const calls = [];
   await page.addInitScript(e => { window.__evs = e; }, evs);
@@ -2077,37 +2171,47 @@ async function compassTeacher(page, evs, handler) {
   return calls;
 }
 
-test('강사 — 학생 서랍의 나침반 카드: 단계·근거·기본 방위·보내기', async ({ page }) => {
+test('강사 — 나침반 카드: 누적 바늘 · 12칸 체크리스트 · 근거 인용 · 튜터 분포 · 보내기', async ({ page }) => {
   const sent = [];
   const calls = await compassTeacher(page, [judgeEv('M1', 'mx')], b => {
     if (b.action === 'list') return { json: { rows: [cRow('M1')] } };
-    if (b.action === 'send') { sent.push(b); return { json: cRow('M1', { teacher_dir: b.dir, teacher_note: b.note, sent_at: '2026-10-20T00:00:00Z' }) }; }
+    if (b.action === 'cumulative') return { json: cumOf([cRow('M1')]) };
+    if (b.action === 'send') { sent.push(b); return { json: cRow('M1', { teacher_note: b.note, sent_at: '2026-10-20T00:00:00Z' }) }; }
     return { status: 500, json: { error: 'x' } };
   });
-  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const tile = page.locator('.student-tile', { hasText: '태인' });
+  await expect(tile.locator('.tag.wait')).toHaveText('한마디 기다림');
+  await tile.click();
   const card = page.locator('#detail .compass-card');
   await expect(card).toHaveCount(1);
-  await expect(card.locator('svg .compass-poly')).toHaveCount(1);
   await expect(card.locator('svg .compass-needle')).toHaveAttribute('transform', /rotate\(18\.4/);
-  await expect(card.locator('.compass-dir')).toHaveCount(4);
-  await expect(card.locator('.compass-dir').first()).toContainText('북쪽 · 이해');
-  await expect(card.locator('.compass-dir').first()).toContainText('3단계');
-  await expect(card).toContainText('함정 보기를 고쳤다');
-  await expect(card).toContainText('튜터에게: "쉼표가 뭐예요?"');
-  await expect(card).toContainText('성공 조건을 스스로 고쳤다');
-  await expect(card.getByLabel('학생에게 보일 방향')).toHaveValue('N');
-  await expect(card.locator('select option')).toHaveText(['고르지 않음', '북쪽 · 이해', '동쪽 · 설계', '남쪽 · 구현', '서쪽 · 검증']);
+  await expect(card.locator('svg .compass-poly')).toHaveCount(0);
+  await expect(card.locator('.compass-dir')).toHaveText('▲ 북쪽 · 이해');
+  await expect(card.locator('.compass-line')).toHaveText('북쪽으로 가고 있어요');
+  await expect(card.locator('.compass-table tbody tr:not(.dir-head)')).toHaveCount(12);
+  await expect(card.locator('.compass-table .dir-head')).toHaveText(['▲ 북쪽 · 이해', '◧ 동쪽 · 설계', '○ 남쪽 · 구현', '◇ 서쪽 · 검증']);
+  await expect(card.locator('.compass-table td.yes')).toHaveCount(3);
+  await expect(card.locator('.compass-table td.no')).toHaveCount(9);
+  await expect(card.locator('.compass-table td .q')).toHaveText(['“count 를 출력해 봤다”']);
+  await expect(card.locator('.compass-tutor')).toContainText('▲ 이해 2번 · ◧ 설계 0번 · ○ 구현 1번 · ◇ 검증 0번');
+  await expect(card.locator('select')).toHaveCount(0);
+  await expect(card.locator('.compass-cand')).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 800 });   // 휴대폰 — 표는 칸 안에서만 옆으로 밀고, 페이지는 안 민다
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+  await page.setViewportSize({ width: 1280, height: 800 });
   await expect(card.getByLabel('한마디 — 학생에게 그대로 보여요.')).toBeVisible();
   for (const sel of ['.compass-send', '.compass-reread']) expect((await card.locator(sel).boundingBox()).height).toBeGreaterThanOrEqual(44);
   await card.locator('.compass-send').click();
   await expect(card.locator('.compass-msg')).toHaveText('한마디를 적어 주세요.');
   expect(calls.filter(c => c.action === 'send')).toHaveLength(0);
-  await card.getByLabel('학생에게 보일 방향').selectOption('E');
   await card.getByLabel('한마디 — 학생에게 그대로 보여요.').fill('설계를 고친 게 좋았어요.');
   await card.locator('.compass-send').click();
   await expect(card.locator('.compass-sent')).toContainText('보냈어요');
   await expect(card.locator('.compass-sent-note')).toHaveText('설계를 고친 게 좋았어요.');
-  expect(sent).toEqual([{ action: 'send', classroomId: 'r1', studentId: 's1', missionId: 'M1', dir: 'E', note: '설계를 고친 게 좋았어요.' }]);
+  await page.locator('#detail-back').click();
+  await expect(tile.locator('.tag.wait')).toHaveCount(0);   // 보낸 뒤 명단 꼬리표가 사라진다
+  await tile.click();
+  expect(sent).toEqual([{ classroomId: 'r1', studentId: 's1', missionId: 'M1', note: '설계를 고친 게 좋았어요.', action: 'send' }]);   // 안 지워졌으면 dir 를 싣지 않는다
   await card.getByLabel('한마디 — 학생에게 그대로 보여요.').fill('고쳐 다시 보내요.');   // 고쳐 다시 보낼 수 있다
   await card.locator('.compass-send').click();
   await expect(card.locator('.compass-sent-note')).toHaveText('고쳐 다시 보내요.');
@@ -2115,31 +2219,130 @@ test('강사 — 학생 서랍의 나침반 카드: 단계·근거·기본 방�
   await expect.poll(() => calls.filter(c => c.action === 'analyze' && c.force === true).length).toBe(1);
 });
 
-test('강사 — 바늘이 없으면 안내와 "고르지 않음", 보낸 뒤 명단 꼬리표가 사라진다', async ({ page }) => {
-  const calls = await compassTeacher(page, [judgeEv('M1', 'mx')], b => {
-    if (b.action === 'list') return { json: { rows: [cRow('M1', { needle_deg: null, strongest: null })] } };
-    return { json: cRow('M1', { needle_deg: null, teacher_dir: null, teacher_note: '고마워요.', sent_at: 'x' }) };
+test('강사 — 짧은 바늘은 고르게, 지워지면 바늘 없이 후보만 · 고른 방향은 가장 최근 미션에만 실린다', async ({ page }) => {
+  let cancel = true; const sent = [];
+  const calls = await compassTeacher(page, [judgeEv('M1', 'mx'), judgeEv('M2', 'my')], b => {
+    if (b.action === 'list') return { json: { rows: [cRow('M1'), cRow('M2')] } };
+    if (b.action === 'cumulative') return { json: cancel ? cancelCum([cRow('M2'), cRow('M1')]) : cumOf([cRow('M2'), cRow('M1')], { dir: 'N', needle_deg: 0, length: 0.25 }) };
+    if (b.action === 'send') { sent.push(b); if (b.dir) cancel = false; return { json: cRow(b.missionId, { teacher_note: b.note, sent_at: 'x' }) }; }
+    return { status: 500, json: { error: 'x' } };
   });
-  const tile = page.locator('.student-tile', { hasText: '태인' });
-  await expect(tile.locator('.tag.wait')).toHaveText('한마디 기다림');
-  await tile.click();
+  await page.locator('.student-tile', { hasText: '태인' }).click();
   const card = page.locator('#detail .compass-card');
-  await expect(card).toContainText('아직 방향이 뚜렷하지 않아요');
+  await expect(card.locator('.compass-cand')).toHaveText(['▲ 북쪽 · 이해', '○ 남쪽 · 구현']);   // 겹친 후보만
   await expect(card.locator('svg .compass-needle')).toHaveCount(0);
-  await expect(card.getByLabel('학생에게 보일 방향')).toHaveValue('');
-  await card.getByLabel('한마디 — 학생에게 그대로 보여요.').fill('고마워요.');
-  await card.locator('.compass-send').click();
-  expect(calls.find(c => c.action === 'send').dir).toBeNull();
-  await expect(tile.locator('.tag.wait')).toHaveCount(0);
+  await expect(card.locator('.compass-line')).toHaveCount(0);
+  await expect(card).toContainText('어느 쪽이 더 보였는지 골라 주세요');
+  await expect(card.locator('.compass-table th[scope="col"]')).toHaveCount(2);
+  await card.locator('.compass-cand', { hasText: '북쪽' }).click();
+  await expect(card.locator('.compass-cand', { hasText: '북쪽' })).toHaveAttribute('aria-pressed', 'true');
+  const forms = card.locator('.compass-form');
+  await expect(forms).toHaveCount(2);
+  await forms.nth(0).locator('textarea').fill('이전 미션 한마디');   // M1 — 가장 최근이 아니다
+  await forms.nth(0).locator('.compass-send').click();
+  await expect.poll(() => sent.length).toBe(1);
+  expect(sent[0].missionId).toBe('M1');
+  expect('dir' in sent[0]).toBe(false);
+  await expect(forms.nth(0).locator('.compass-sent')).toBeVisible();   // 첫 보내기의 다시 그리기가 끝난 뒤에 둘째 칸을 쓴다
+  await expect(card.locator('.compass-cand', { hasText: '북쪽' })).toHaveAttribute('aria-pressed', 'true');   // 고른 것이 남아 있다
+  await card.locator('.compass-form').nth(1).locator('textarea').fill('이번 미션 한마디');
+  await card.locator('.compass-form').nth(1).locator('.compass-send').click();
+  await expect.poll(() => sent.length).toBe(2);
+  expect(sent[1].missionId).toBe('M2');
+  expect(sent[1].dir).toBe('N');
+  await expect(card.locator('svg .compass-needle')).toHaveCount(1);   // 다시 계산해 바늘이 돌아온다
+  await expect(card.locator('.compass-cand')).toHaveCount(0);
+  await expect(card.locator('.compass-line')).toHaveText('북쪽으로 가고 있어요 · 고르게 가고 있어요');
 });
 
-test('강사 — 열 때 끝난 미션은 알림 없이 하나씩 차례로 읽고, 실패하면 카드에 다시 읽기', async ({ page }) => {
+test('강사 — 쓰던 한마디는 다시 그려도 남고, 후보가 바뀌면 옛 선택은 실리지 않는다', async ({ page }) => {
+  let mode = 'NS'; const sent = [];
+  const calls = await compassTeacher(page, [judgeEv('M1', 'mx'), judgeEv('M2', 'my')], b => {
+    if (b.action === 'list') return { json: { rows: [cRow('M1'), cRow('M2')] } };
+    if (b.action === 'cumulative') return { json: cumOf([cRow('M2'), cRow('M1')], { needle_deg: null, dir: null, length: null, cancel: true, candidates: mode === 'NS' ? ['N', 'S'] : ['E', 'W'] }) };
+    if (b.action === 'send') { sent.push(b); return { json: cRow(b.missionId, { teacher_note: b.note, sent_at: 'x' }) }; }
+    return { status: 500, json: { error: 'x' } };
+  });
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const card = page.locator('#detail .compass-card');
+  const forms = card.locator('.compass-form');
+  await expect(forms).toHaveCount(2);
+  await card.locator('.compass-cand', { hasText: '북쪽' }).click();
+  await forms.nth(1).locator('textarea').fill('쓰던 중인 말');
+  await forms.nth(0).locator('textarea').fill('다른 칸');
+  await forms.nth(0).locator('.compass-send').click();               // 한 칸을 보내면 카드 전체가 다시 그려진다
+  await expect(forms.nth(0).locator('.compass-sent')).toBeVisible();
+  await expect(forms.nth(1).locator('textarea')).toHaveValue('쓰던 중인 말');
+  mode = 'EW';
+  await page.locator('#detail-back').click();                          // 다시 열면 누적을 새로 받는다
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  await expect(card.locator('.compass-cand')).toHaveText(['◧ 동쪽 · 설계', '◇ 서쪽 · 검증']);
+  await expect(card.locator('.compass-form').nth(1).locator('textarea')).toHaveValue('쓰던 중인 말');   // 초안은 세션 동안 남는다
+  await card.locator('.compass-form').nth(1).locator('.compass-send').click();
+  await expect.poll(() => sent.length).toBe(2);
+  expect(sent[1].missionId).toBe('M2');
+  expect('dir' in sent[1]).toBe(false);                                // 옛 선택(북)은 후보에 없으니 싣지 않는다
+  await expect(card.locator('.compass-form').nth(1).locator('textarea')).toHaveValue('쓰던 중인 말');   // 보낸 뒤엔 보낸 말(= 같은 말)
+});
+
+test('강사 — 보내기가 실패하면 안내가 남고, 버튼은 다시 눌리고, 쓴 말은 그대로다', async ({ page }) => {
+  let fail = true; const sent = [];
+  await compassTeacher(page, [judgeEv('M1', 'mx')], b => {
+    if (b.action === 'list') return { json: { rows: [cRow('M1')] } };
+    if (b.action === 'cumulative') return { json: cumOf([cRow('M1')]) };
+    if (b.action === 'send') { sent.push(b); return fail ? { status: 502, json: { error: 'x' } } : { json: cRow('M1', { teacher_note: b.note, sent_at: 'x' }) }; }
+    return { status: 500, json: { error: 'x' } };
+  });
+  await page.locator('.student-tile', { hasText: '태인' }).click();
+  const card = page.locator('#detail .compass-card');
+  await card.locator('textarea').fill('꼭 전하고 싶은 말');
+  await card.locator('.compass-send').click();
+  await expect(card.locator('.compass-msg')).toHaveText('지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+  await page.waitForTimeout(300);                                   // 뒤따르는 다시 그리기를 지나도
+  await expect(card.locator('.compass-msg')).toHaveText('지금은 보내지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+  await expect(card.locator('.compass-send')).toBeEnabled();
+  await expect(card.locator('textarea')).toHaveValue('꼭 전하고 싶은 말');
+  fail = false;
+  await card.locator('.compass-send').click();
+  await expect(card.locator('.compass-sent-note')).toHaveText('꼭 전하고 싶은 말');
+  await expect(card.locator('.compass-msg')).toHaveText('');
+  expect(sent).toHaveLength(2);
+});
+
+test('강사 — 바늘이 지워지면 칭찬 타이밍 알림 한 번, 열 때 이미 지워져 있던 것은 알리지 않는다', async ({ page }) => {
+  test.setTimeout(60000);
+  let two = false;
+  const calls = await compassTeacher(page, [judgeEv('M1', 'mx')], b => {
+    if (b.action === 'list') return { json: { rows: [cRow('M1')] } };
+    if (b.action === 'analyze') return { json: cRow(b.missionId) };
+    if (b.action === 'cumulative') return { json: two ? cancelCum([cRow('M2'), cRow('M1')]) : cancelCum([cRow('M1')]) };   // 처음부터 지워져 있었다
+    return { status: 500, json: { error: 'x' } };
+  });
+  await expect(page.locator('.student-tile')).toHaveCount(3);
+  await expect.poll(() => calls.filter(c => c.action === 'cumulative').length).toBeGreaterThan(0);
+  await page.waitForTimeout(3500);
+  await expect(page.locator('#alert-list li')).toHaveCount(0);   // 기준선 — 열 때 있던 일
+  two = true;
+  await page.evaluate(e => { window.__evs.push(e); }, judgeEv('M2', 'my'));
+  const cancelLi = page.locator('#alert-list li', { hasText: '이해와 구현이 같이 두드러져요' });
+  await expect(cancelLi).toHaveCount(1, { timeout: 10000 });
+  await expect(cancelLi).toContainText('태인이 최근 미션에서 이해와 구현이 같이 두드러져요. 어느 쪽이 더 보였는지 골라 주세요.');
+  await expect(cancelLi).toHaveAttribute('data-tag', 'praise');
+  await page.waitForTimeout(3500);
+  await expect(cancelLi).toHaveCount(1);   // 폴링을 거듭해도 한 번
+  await cancelLi.locator('button').click();
+  const landed = await page.evaluate(() => document.activeElement === document.querySelector('#detail .compass-card'));
+  expect(landed).toBe(true);
+});
+
+test('강사 — 열 때 끝난 미션은 알림 없이 하나씩 차례로 읽고, 실패하면 한마디 칸에 다시 읽기', async ({ page }) => {
   let running = 0, maxRun = 0;
   const calls = await compassTeacher(page, [judgeEv('M1', 'mx'), judgeEv('M2', 'my'), judgeEv('M3', 'mz')], async b => {
     if (b.action === 'list') return { json: { rows: [cRow('M1', { sent_at: 'x', teacher_note: 'ok' })] } };
     running++; maxRun = Math.max(maxRun, running);
     await new Promise(r => setTimeout(r, 150));
     running--;
+    if (b.action === 'cumulative') return { json: cumOf([cRow('M1')]) };
     return b.missionId === 'M3' ? { status: 502, json: { error: '지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.' } } : { json: cRow(b.missionId) };
   });
   const tile = page.locator('.student-tile', { hasText: '태인' });
@@ -2151,9 +2354,11 @@ test('강사 — 열 때 끝난 미션은 알림 없이 하나씩 차례로 읽�
   await expect(page.locator('#alert-list li')).toHaveCount(0);
   await tile.click();
   const cards = page.locator('#detail .compass-card');
-  await expect(cards).toHaveCount(3);
-  await expect(cards.nth(2)).toContainText('지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.');
-  await expect(cards.nth(2).locator('.compass-reread')).toBeVisible();
+  await expect(cards).toHaveCount(1);
+  const forms = cards.locator('.compass-form');
+  await expect(forms).toHaveCount(3);
+  await expect(forms.nth(2)).toContainText('지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+  await expect(forms.nth(2).locator('.compass-reread')).toBeVisible();
   const cw = (await cards.first().boundingBox()).width, dw = (await page.locator('#detail').boundingBox()).width;
   expect(cw).toBeGreaterThan(dw - 4);                          // 나침반 카드는 본문 폭 전체
   await page.locator('#detail-back').click();
@@ -2172,7 +2377,7 @@ test('강사 — 로컬 모드는 /api/compass 를 부르지 않고 나침반 �
 
 test('강사 — list 가 실패하면 폴링마다 다시 부르지 않고 다시 읽기에서만 다시 부른다', async ({ page }) => {
   let ok = false;
-  const calls = await compassTeacher(page, [judgeEv('M1', 'mx')], b => ok ? { json: { rows: [cRow('M1')] } } : { status: 502, json: { error: 'x' } });
+  const calls = await compassTeacher(page, [judgeEv('M1', 'mx')], b => !ok ? { status: 502, json: { error: 'x' } } : b.action === 'cumulative' ? { json: cumOf([cRow('M1')]) } : { json: { rows: [cRow('M1')] } });
   await expect.poll(() => calls.length).toBe(1);
   await page.evaluate(() => CC._compassSync('r1')); await page.evaluate(() => CC._compassSync('r1'));
   await page.waitForTimeout(300);
@@ -2180,58 +2385,75 @@ test('강사 — list 가 실패하면 폴링마다 다시 부르지 않고 다�
   await page.locator('.student-tile', { hasText: '태인' }).click();
   await expect(page.locator('#detail .compass-card')).toContainText('지금은 읽지 못했어요');
   ok = true;
-  await page.locator('#detail .compass-reread').click();
+  await page.locator('#detail .compass-reread').first().click();
   await expect(page.locator('#detail .compass-send')).toBeVisible();
-  expect(calls.length).toBe(2);
+  expect(calls.filter(c => c.action === 'list')).toHaveLength(2);   // 다시 읽기는 목록을 딱 한 번 더 부른다
 });
 
-/* 나침반 — 학생 카드 (2026-10-20). 선생님이 보낸 뒤에만, 바늘과 한마디만 */
-async function studentCompass(page, row) {
+/* 나침반 2차 — 학생. "내 기록" 탭에 누적 나침반 하나, 미션 카드에는 선생님 한마디만 */
+async function studentCompass(page, o) {
   const errs = []; page.on('pageerror', e => errs.push(e.message));
-  await page.addInitScript(r => { window.__compass = r; }, row);
+  await page.addInitScript(r => { Object.assign(window, r); }, o);
   await asStudent(page);
   await page.locator('.room-tile').first().click();
   await page.locator('.mission-file').first().click();
   return errs;
 }
 
-test('학생 — 보낸 나침반은 바늘 · 방위 이름 · 선생님 문장 그대로, 단계 숫자는 없다', async ({ page }) => {
-  const errs = await studentCompass(page, { needle_deg: 18.4, teacher_dir: 'N', teacher_note: '첫 줄\n둘째 줄 <b>x</b>', sent_at: 't',
-    levels: { N: 3, E: 2, S: 0, W: 1 }, ai_note: 'AI메모' });
-  const card = page.locator('#compass-mine');
+test('학생 — 내 기록 탭의 누적 나침반: 바늘(길이) · ○쪽으로 가고 있어요, 점수·체크는 없다', async ({ page }) => {
+  const errs = await studentCompass(page, { __compass: { needle_deg: 100, dir: 'E', length: 0.8, sent_at: 't', levels: { N: 3 }, checks: { N1: 1 } } });
+  await page.locator('.main-tab[data-panel="panel-history"]').click();
+  const card = page.locator('#compass-cum');
   await expect(card).toBeVisible();
   await expect(card.locator('h2')).toHaveText('내 나침반');
-  await expect(card.locator('svg .compass-needle')).toHaveAttribute('transform', /rotate\(18\.4/);
-  await expect(card.locator('svg .compass-poly')).toHaveCount(0);
-  await expect(card.locator('svg')).toHaveAttribute('aria-label', '북쪽 · 이해');
-  await expect(card.locator('.compass-dir')).toHaveText('북쪽 · 이해');
+  await expect(card.locator('svg .compass-needle')).toHaveAttribute('transform', /rotate\(100/);
+  await expect(card.locator('svg')).toHaveAttribute('aria-label', '동쪽 · 설계');
+  await expect(card.locator('.compass-dir')).toHaveText('동쪽으로 가고 있어요');
+  await expect(card.locator('.compass-even')).toHaveCount(0);
+  const html = await page.content();
+  for (const w of ['3단계', 'levels', 'checks', 'N1']) expect(html).not.toContain(w);
+  expect(errs).toEqual([]);
+});
+
+test('학생 — 바늘이 짧으면(0.3 이하) 고르게 가고 있어요가 덧붙는다', async ({ page }) => {
+  await studentCompass(page, { __compass: { needle_deg: 10, dir: 'N', length: 0.25, sent_at: 't' } });
+  await page.locator('.main-tab[data-panel="panel-history"]').click();
+  await expect(page.locator('#compass-cum .compass-dir')).toHaveText('북쪽으로 가고 있어요');
+  await expect(page.locator('#compass-cum .compass-even')).toHaveText('고르게 가고 있어요');
+});
+
+test('학생 — 보낸 적 없으면(0행) 기다리는 말, 바늘은 없다', async ({ page }) => {
+  await studentCompass(page, { __compass: null });
+  await page.locator('.main-tab[data-panel="panel-history"]').click();
+  const card = page.locator('#compass-cum');
+  await expect(card).toContainText('선생님이 곧 방향을 알려 주실 거예요.');
+  await expect(card.locator('svg')).toHaveCount(0);
+});
+
+test('학생 — 호출이 실패하면 나침반 카드가 없고 에러도 없다', async ({ page }) => {
+  const errs = await studentCompass(page, { __compass: 'throw', __note: 'throw' });
+  await page.locator('.main-tab[data-panel="panel-history"]').click();
+  await expect(page.locator('#compass-cum')).toBeHidden();
+  await expect(page.locator('#compass-mine')).toBeHidden();
+  expect(errs).toEqual([]);
+});
+
+test('학생 — 미션 카드에는 선생님 한마디만, 바늘도 방향도 없다', async ({ page }) => {
+  await studentCompass(page, { __note: { teacher_note: '첫 줄\n둘째 줄 <b>x</b>', sent_at: 't', needle_deg: 18, dir: 'N' } });
+  const card = page.locator('#compass-mine');
+  await expect(card).toBeVisible();
+  await expect(card.locator('h2')).toHaveText('선생님 한마디');
   await expect(card.locator('.compass-note')).toHaveText('첫 줄\n둘째 줄 <b>x</b>');
   expect(await card.locator('.compass-note').evaluate(e => getComputedStyle(e).whiteSpace)).toBe('pre-wrap');
-  const html = await page.content();
-  for (const w of ['AI메모', '3단계', 'levels', 'ai_note']) expect(html).not.toContain(w);
-  expect(errs).toEqual([]);
-});
-
-test('학생 — 방향 없이 보낸 나침반은 한마디만', async ({ page }) => {
-  await studentCompass(page, { needle_deg: null, teacher_dir: null, teacher_note: '수고했어요.', sent_at: 't' });
-  const card = page.locator('#compass-mine');
-  await expect(card.locator('.compass-note')).toHaveText('수고했어요.');
   await expect(card.locator('svg')).toHaveCount(0);
   await expect(card.locator('.compass-dir')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__cn)).toEqual(['db1']);
 });
 
-test('학생 — 아직 안 보냈거나 호출이 실패하면 카드가 없다', async ({ page }) => {
-  const errs = await studentCompass(page, 'throw');
+test('학생 — 한마디를 안 받았으면 미션 카드가 없다', async ({ page }) => {
+  await studentCompass(page, { __note: null });
   await expect(page.locator('#step1')).toBeVisible();
   await expect(page.locator('#compass-mine')).toBeHidden();
-  expect(errs).toEqual([]);
-});
-
-test('학생 — 아직 안 보냈으면(null) 카드가 없다', async ({ page }) => {
-  await studentCompass(page, null);
-  await expect(page.locator('#step1')).toBeVisible();
-  await expect(page.locator('#compass-mine')).toBeHidden();
-  expect(await page.evaluate(() => window.__cm)).toEqual(['db1']);
 });
 
 test('학생 — 로컬 모드는 나침반을 부르지 않고 카드도 없다', async ({ page }) => {
@@ -2239,6 +2461,7 @@ test('학생 — 로컬 모드는 나침반을 부르지 않고 카드도 없다
   await seedMission(page);
   await page.locator('.m-btn[data-id="ai-e2e"]').click();
   await expect(page.locator('#compass-mine')).toBeHidden();
+  await expect(page.locator('#compass-cum')).toBeHidden();
 });
 
 /* ── 선생님 화면 틀 (2026-10-20 시안) — 왼쪽 사이드바 · 한 열 본문 · 오른쪽 알림 ── */
@@ -2652,7 +2875,7 @@ test('교실을 바꾼 뒤 늦게 온 옛 교실 응답은 새 교실에 알림�
 });
 
 async function alertLands(page, evs, sel) {
-  const calls = await compassTeacher(page, [], b => b.action === 'list' ? { json: { rows: [cRow('M1')] } } : { status: 500, json: { error: 'x' } });
+  const calls = await compassTeacher(page, [], b => b.action === 'list' ? { json: { rows: [cRow('M1')] } } : b.action === 'cumulative' ? { json: cumOf([cRow('M1')]) } : { status: 500, json: { error: 'x' } });
   await expect(page.locator('.student-tile')).toHaveCount(3);
   await page.evaluate(e => { window.__evs.push(...e); }, evs);
   await expect(page.locator('#alert-list li.new')).toHaveCount(1, { timeout: 8000 });
@@ -2680,7 +2903,7 @@ test('휴대폰 — 알림 화면에서 마침 알림을 누르면 나침반에 
   test.setTimeout(60000);
   await page.setViewportSize({ width: 390, height: 800 });
   await page.addInitScript(() => { window.__evs = []; });
-  await page.route('**/api/compass', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ rows: [cRow('M1')] }) }));
+  await page.route('**/api/compass', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(r.request().postDataJSON().action === 'cumulative' ? cumOf([cRow('M1')]) : { rows: [cRow('M1')] }) }));
   await asTeacher(page);
   await page.locator('#side-open').click();
   await page.locator('#side .room-tile', { hasText: '태인한결' }).click();
@@ -2725,4 +2948,31 @@ test('교실을 바꾸면 단계별 만들기는 처음부터 — 옛 교실의 
   await expect(page.locator('#gp-count')).toHaveText('1 / 4 수업 내용');
   await expect(page.locator('.sg-ex')).toHaveCount(0);
   expect(await page.evaluate(() => window.__saved || [])).toEqual([]);
+});
+
+
+test('철학 틈 — 이유 두 글자 · 다시 고른 성공 조건은 처음 것이 남고 · 도움 요청은 증상 뒤에만', async ({ context, page }) => {
+  await local(context);
+  await seedMission(page);
+  await page.locator('.m-btn[data-id="ai-e2e"]').click();
+  await page.locator('#go-define').click();
+  await page.locator('.define-card').nth(1).click();
+  await page.locator('#reason-define').fill('.');
+  await page.locator('#go-method').click();
+  await expect(page.locator('#msg-define')).toHaveText('이유를 한 줄 적어 주세요.');
+  await expect(page.locator('#step2')).toHaveClass(/active/);
+  await page.locator('#reason-define').fill('모두 세야 하니까');
+  await page.locator('#go-method').click();
+  await expect(page.locator('#step3')).toHaveClass(/active/);
+  await expect(page.locator('#step3 .step-title')).toHaveText('내 설계');
+  await page.locator('#back-define').click();
+  await page.locator('.define-card').first().click();
+  await page.locator('#go-method').click();
+  const evs = await page.evaluate(() => window.CC.store.all().filter(e => e.type === 's-define' || e.type === 's-redefine'));
+  expect(evs.length).toBe(2);
+  expect(evs[1].type).toBe('s-redefine');
+  expect(evs[1].from).toBe(evs[0].choice);
+  expect(evs[1].to).not.toBe(evs[1].from);
+  expect(evs[0]).toHaveProperty('trap');
+  await expect(page.locator('#help-btn')).toBeHidden();
 });

@@ -278,9 +278,9 @@ class Counter(BaseModel):
         '앞 자료에 나온 항목과 새 항목을 섞는다 (empty 제외). 첫 자료를 그대로 베끼고 덧붙이지 않는다. '
         '학생이 앞 두 자료로 세운 기준이 여기서 깨져야 한다. axis 에 맞게 만든다: '
         'count=항목 수가 다름 / sep=쉼표 대신 띄어쓰기 같은 다른 구분자 / empty=결과가 0이나 비어 있게 / '
-        'invisible=항목 앞뒤에 공백.'))
-    axis: Literal['count', 'sep', 'empty', 'invisible'] = Field(description=(
-        '반례가 건드리는 축 하나. 개수 변화 / 구분자 변화 / 빈 결과 / 보이지 않는 차이.'))
+        'invisible=항목 앞뒤에 공백 / boundary=기준과 정확히 같은 값(기준이 "넘으면"인지 "이상"인지 갈리는 값), 첫·마지막 항목, 0, 항목 하나.'))
+    axis: Literal['count', 'sep', 'empty', 'invisible', 'boundary'] = Field(description=(
+        '반례가 건드리는 축 하나. 개수 변화 / 구분자 변화 / 빈 결과 / 보이지 않는 차이 / 경계값.'))
 
 
 class _Base(BaseModel):

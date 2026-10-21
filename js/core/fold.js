@@ -63,7 +63,7 @@
       sTutor: [],            /* [{ question, answer, kind, refused, reasons, step, t }] */
 
       /* 교실 입장 진단 — 교사 화면만 쓴다. 학생 화면에 띄우지 않는다 */
-      onboard: null          /* { stage, hardcode, skipped, t } — 마지막 것이 이긴다 */
+      onboard: null          /* { stage, hardcode, skipped, set, t, tDone } — 마지막 것이 이긴다 */
     };
   }
 
@@ -111,9 +111,11 @@
       /* 문장형 미션 */
       case 's-define':
         s.sDefine = { choice: e.choice, reason: e.reason };
+        if (e.trap !== undefined) s.define = { text: e.choice, trap: e.trap };   /* 예전 기록은 trap 이 없다 — 분류하지 않는다 */
         s.sDefineVer++; break;
       case 's-redefine':
         s.sDefine = { choice: e.to, reason: e.reason };
+        if (e.trap !== undefined) s.define = { text: e.to, trap: e.trap };
         s.sDefineVer++; break;
       case 's-method':
         s.sMethod = { slots: e.slots, cards: e.cards, reason: e.reason };
@@ -142,8 +144,9 @@
         s.sTutor.push({ question: e.question, answer: e.answer, kind: e.kind, refused: !!e.refused, reasons: e.reasons || [], retried: !!e.retried, mid: e.mid || '', step: e.step == null ? null : e.step, t: e.t }); break;
       case 's-onboard':
         /* 해석은 core/onboard.js 한 곳에만 — 이 파일을 쓰는 화면은 onboard.js 도 싣는다 */
-        var ob = e.skipped || !CC.onboard ? { stage: null, hardcode: false } : CC.onboard.stage(e.answers);
-        s.onboard = { stage: ob.stage, hardcode: ob.hardcode, skipped: !!e.skipped, t: e.t }; break;
+        var ob = e.skipped || !CC.onboard ? { stage: null, hardcode: false } : CC.onboard.stage(e.answers, e.set);
+        s.onboard = { stage: ob.stage, hardcode: ob.hardcode, skipped: !!e.skipped, set: e.set || 'mid', t: e.t,
+          tDone: e.skipped ? (s.onboard && s.onboard.tDone) || null : e.t }; break;   /* tDone = 건너뛰지 않은 마지막 테스트 시각 */
 
       default: /* 모르는 type 은 무시한다 — 구버전 화면이 새 서버를 만나도 안 죽는다 */ break;
     }

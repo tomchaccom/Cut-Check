@@ -52,6 +52,12 @@ function launchOpts() {
   await p.waitForFunction(() => document.querySelector('#pyodide-status').textContent === 'Python 준비 완료', null, { timeout: 60000 });
   await p.locator('#run-code').click();
   await p.locator('#code-output').waitFor({ state: 'visible', timeout: 10000 });
+  await p.locator('#run-all').click();   // 도움 버튼은 반례까지 돌린 뒤에만 보인다
+  await p.locator('#help-btn').waitFor({ state: 'visible', timeout: 15000 });
+  await p.locator('#help-btn').click();   // 도움 요청 창 — 쓴 글이 선생님 화면에 그대로 올라가야 한다
+  await p.locator('#help-expected').fill('HELPX-' + EVIL);
+  await p.locator('#help-stuck').selectOption({ index: 1 });   // 막힌 곳은 고르는 칸 — 자유 입력은 기대한 결과뿐
+  await p.locator('#help-send').click(); await p.waitForTimeout(200);
   await p.locator('.judge-btn').first().click();
   await p.locator('#code-basis').fill(EVIL);
   await p.locator('#code-judge-save').click();
@@ -87,6 +93,7 @@ function launchOpts() {
   const w = await t.evaluate(() => ({ d: document.documentElement.scrollWidth, w: window.innerWidth }));
   console.log('긴 입력 후 가로 스크롤:', w.d > w.w + 1 ? '✗ ' + w.d + '/' + w.w : '✓ 없음');
   console.log('튜터 질문이 교사 화면에 보임:', tutorShown ? '✓' : '✗ 없음');
+  console.log('도움 요청 글이 교사 화면에 글자로 보임:', txt.includes('HELPX-<img') ? '✓' : '✗ 없음');
   console.log('alert 발생:', alerted ? '✗' : '✓ 없음');
 
   // 수업에서 짚을 거리 — 학생 질문 원문이 quote 로 돌아와도 글자로만 (서버는 가짜, CC.sb.api 를 바꿔 끼운다)
@@ -184,7 +191,7 @@ var NOTE=${JSON.stringify(EVIL + LONG + ' 🙂👍')};
 CC.sb={active:function(){return true},getUser:function(){return P({id:'t1'})},getProfile:function(){return P({role:'teacher',name:'김선생'})},onAuthChange:function(){},signOut:function(){return P()},
 myClassrooms:function(){return P([{id:'r1',name:'반',code:'AB12CD'}])},getMissions:function(){return P([])},getClassroomStudents:function(){return P([{id:'s1',name:'태인'}])},
 getClassroomEvents:function(){return P([{student_id:'s1',mission_id:'M1',created_at:new Date().toISOString(),profiles:{name:'태인'},event:{type:'s-code-judge',mid:'mx',verdict:'지켰다',basis:'b',v:1,t:Date.now()}}])},
-compass:function(a){if(a==='list')return P({rows:[{studentId:'s1',missionId:'M1',levels:{N:1,E:1,S:1,W:1},evidence:{N:['f1','t1']},facts:[{id:'f1',dir:'N',kind:'define',text:${JSON.stringify(EVIL)}},{id:'t1',dir:null,kind:'tutor',text:${JSON.stringify(EVIL)}}],ai_note:${JSON.stringify(EVIL)},needle_deg:null,strongest:null,teacher_dir:'N',teacher_note:NOTE,sent_at:'2026-10-20T00:00:00Z'}]});return Promise.reject(new Error('x'))}}
+compass:function(a){var CK=['N1','N2','N3','E1','E2','E3','S1','S2','S3','W1','W2','W3'],ck={};CK.forEach(function(k){ck[k]={ok:k==='N2',quote:k==='N2'?${JSON.stringify(EVIL)}:''}});var row={studentId:'s1',missionId:'M1',checks:ck,tutor_dirs:{N:1,E:0,S:0,W:0},teacher_dir:'N',teacher_note:NOTE,sent_at:'2026-10-20T00:00:00Z'};if(a==='list')return P({rows:[row]});if(a==='cumulative')return P({cumulative:{needle_deg:10,dir:'N',length:0.7,cancel:false,candidates:[],n:1},rows:[row]});return Promise.reject(new Error('x'))}}
 })(window.CC=window.CC||{});` }));
   const k = await kc.newPage();
   k.on('pageerror', e => errs.push('K: ' + e.message));
@@ -193,8 +200,9 @@ compass:function(a){if(a==='list')return P({rows:[{studentId:'s1',missionId:'M1'
   await k.locator('#classroom-cards .room-tile').first().click();
   await k.locator('.student-tile', { hasText: '태인' }).click();
   await k.locator('.compass-card').waitFor({ timeout: 5000 });
+  await k.locator('.compass-sent-note').waitFor({ timeout: 5000 }); await k.locator('.compass-table td .q').waitFor({ timeout: 5000 });
   const ks = await k.evaluate(() => ({ pwned: !!window.__pwned, imgs: document.querySelectorAll('#detail img').length, sent: (document.querySelector('.compass-sent-note') || {}).textContent, ta: (document.querySelector('.compass-card textarea') || {}).value, w: document.documentElement.scrollWidth - innerWidth }));
-  const noteBad = ks.pwned || ks.imgs > 0 || alerted || ks.sent !== EVIL + LONG + ' 🙂👍' || ks.ta !== ks.sent || ks.w > 1 || (await k.locator('.compass-card').textContent()).indexOf('튜터에게: "<img') < 0;
+  const noteBad = ks.pwned || ks.imgs > 0 || alerted || ks.sent !== EVIL + LONG + ' 🙂👍' || ks.ta !== ks.sent || ks.w > 1 || (await k.locator('.compass-card').textContent()).indexOf('“<img') < 0;
   console.log('나침반 한마디가 글자로만 보임:', noteBad ? '✗ ' + JSON.stringify({ pwned: ks.pwned, imgs: ks.imgs, w: ks.w }) : '✓');
 
   // 알림 목록 — 학생 이름과 미션 제목이 뭐든 #alert-list 에는 글자로만 올라온다 (토스트도)

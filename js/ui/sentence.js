@@ -79,6 +79,8 @@
     /* 상태 초기화 */
     state = {
       defineChoice: '',
+      defineTrap: null,
+      lastDefine: '',
       defineReason: '',
       design: [],
       methodReason: '',
@@ -136,6 +138,7 @@
           defineCards.querySelectorAll('.define-card').forEach(function (c) { c.classList.remove('selected'); });
           card.classList.add('selected');
           state.defineChoice = o.v;
+          state.defineTrap = o.trap || null;
           defineSelect.value = o.v;
           $('#go-method').disabled = false;
         });
@@ -151,6 +154,8 @@
     });
     defineSelect.value = '';
     $('#reason-define').value = '';
+    $('#msg-define').textContent = ''; $('#msg-method').textContent = '';
+    if ($('#help-btn')) $('#help-btn').hidden = true;
     $('#go-method').disabled = true;
 
     /* 화면 3: 설계 카드 */
@@ -174,28 +179,50 @@
     showCompass();
   }
 
-  /* 선생님이 보낸 나침반 — 바늘과 한마디만. 단계·AI 메모는 서버가 주지 않고, 와도 그리지 않는다 */
+  /* 미션 카드 — 선생님이 이 미션에 남긴 한마디만. 바늘·방향·체크는 없다 */
   function showCompass() {
     var box = $('#compass-mine');
     box.hidden = true;
     box.innerHTML = '';
     if (!CC.sb || !CC.sb.active() || !currentMissionDbId) return;
     var db = currentMissionDbId;
-    CC.sb.compassMine(db).then(function (c) {
-      if (!c || db !== currentMissionDbId) return;
+    CC.sb.compassNote(db).then(function (c) {
+      if (!c || !c.teacher_note || db !== currentMissionDbId) return;
       box.innerHTML = '';   /* A → B → A 로 빨리 바꾸면 A 응답이 둘 온다 — 두 번 그리지 않게 */
-      var dir = c.teacher_dir || CC.compass.dirOf(c.needle_deg);
-      var h = el('h2', 'step-title', '내 나침반');
-      box.appendChild(h);
-      box.appendChild(el('p', 'muted', '선생님이 남긴 말이에요.'));
-      var says = el('div', 'compass-says');   /* 오른쪽 — 방위 이름과 선생님 말. 바늘이 없으면 말만 넓게 */
-      if (c.needle_deg != null && dir) {
+      box.appendChild(el('h2', 'step-title', '선생님 한마디'));
+      var says = el('div', 'compass-says wide');
+      says.appendChild(el('p', 'compass-note', c.teacher_note));
+      box.appendChild(says);
+      box.hidden = false;
+    }, function () {});
+  }
+
+  /* 내 기록 탭 — 누적 나침반 하나. 바늘 · "○쪽으로 가고 있어요" (짧으면 "고르게 가고 있어요").
+   * 0행이면 아직 보낸 적 없는 것 — 기다리는 말만. 점수·체크·단계는 서버가 주지 않는다 */
+  var cumSeq = 0;
+  function showCumulative() {
+    var box = $('#compass-cum');
+    if (!box) return;
+    box.hidden = true;
+    box.innerHTML = '';
+    if (!CC.sb || !CC.sb.active()) return;
+    var n = ++cumSeq;
+    CC.sb.compassMine().then(function (c) {
+      if (n !== cumSeq) return;
+      box.innerHTML = '';
+      box.appendChild(el('h2', 'step-title', '내 나침반'));
+      var says = el('div', 'compass-says');
+      var dir = c && c.needle_deg != null ? (c.dir || CC.compass.dirOf(c.needle_deg)) : null;
+      if (dir) {
         var wrap = el('div', 'compass-fig');
-        wrap.innerHTML = CC.compass.svg(null, c.needle_deg);
+        wrap.innerHTML = CC.compass.svg(c.needle_deg, c.length);
         box.appendChild(wrap);
-        says.appendChild(el('strong', 'compass-dir', CC.compass.DIRS[dir]));
-      } else says.classList.add('wide');
-      if (c.teacher_note) says.appendChild(el('p', 'compass-note', c.teacher_note));
+        says.appendChild(el('strong', 'compass-dir', CC.compass.line(dir)));
+        if (CC.compass.even(c.length)) says.appendChild(el('p', 'compass-even', '고르게 가고 있어요'));
+      } else {
+        says.classList.add('wide');
+        says.appendChild(el('p', 'compass-note', '선생님이 곧 방향을 알려 주실 거예요.'));
+      }
       box.appendChild(says);
       box.hidden = false;
     }, function () {});
@@ -331,6 +358,7 @@
   /* ── 화면 2 ────────────────────────────────────── */
   $('#slot-define').addEventListener('change', function () {
     state.defineChoice = this.value;
+    state.defineTrap = ((M.define.options || []).find(function (o) { return o.v === state.defineChoice; }) || {}).trap || null;
     $('#go-method').disabled = !this.value;
   });
 
@@ -338,15 +366,25 @@
     state.defineReason = this.value.trim();
   });
 
+  /* 이유는 글자(한글·영문·숫자) 2자 이상 — "." 하나로 넘어가지 않게. 막을 때는 위치와 사실만 말한다 */
+  function reasonOk(text, msgSel) {
+    var ok = (String(text).match(/[가-힣A-Za-z0-9]/g) || []).length >= 2;
+    $(msgSel).textContent = ok ? '' : '이유를 한 줄 적어 주세요.';
+    return ok;
+  }
+
   $('#go-method').addEventListener('click', function () {
     if (!state.defineChoice) return;
+    if (!reasonOk(state.defineReason, '#msg-define')) { $('#reason-define').focus(); return; }
     if (!state.firstDefine) state.firstDefine = state.defineChoice;
     $('#side-define').textContent = state.defineChoice;
+    /* 처음 고른 것은 lastDefine 에 남겨 두고, 실제로 바뀐 때만 s-redefine 을 남긴다 */
     if (state.defineVer > 0) {
-      rec('s-redefine', { from: state.defineChoice, to: state.defineChoice, reason: state.defineReason });
+      if (state.lastDefine !== state.defineChoice) rec('s-redefine', { from: state.lastDefine, to: state.defineChoice, reason: state.defineReason, trap: state.defineTrap });
     } else {
-      rec('s-define', { choice: state.defineChoice, reason: state.defineReason });
+      rec('s-define', { choice: state.defineChoice, reason: state.defineReason, trap: state.defineTrap });
     }
+    state.lastDefine = state.defineChoice;
     state.defineVer++;
     showStep(3);
   });
@@ -360,6 +398,7 @@
 
   $('#go-run').addEventListener('click', function () {
     if (!checkMethodComplete()) return;
+    if (!reasonOk(state.methodReason, '#msg-method')) { $('#reason-method').focus(); return; }
     var cardsSnapshot = picked();
     if (state.methodVer > 0) {
       rec('s-remethod', { toCards: cardsSnapshot, reason: state.methodReason });
@@ -514,6 +553,7 @@
     outputBox.hidden = false;
     resultEl.textContent = text;
     resultEl.style.color = isError ? 'var(--coral)' : 'var(--ink)';
+    if (isError && $('#help-btn')) $('#help-btn').hidden = false;   /* 증상이 나온 뒤에만 — 실행 전에는 열지 않는다 */
   }
 
   /* 판정은 학생이 한다 — 시스템은 결과만 보여 준다 */
@@ -576,6 +616,7 @@
           });
           $('#code-table-wrap').hidden = false;
           $('#code-output').hidden = true;
+          if ($('#help-btn')) $('#help-btn').hidden = false;   /* 반례까지 돌린 뒤 */
           if (anyOk) showJudge();
           return;
         }
@@ -688,7 +729,7 @@
   document.querySelectorAll('.main-tab').forEach(function (t) {
     t.addEventListener('click', function () {
       switchTab(t.dataset.panel);
-      if (t.dataset.panel === 'panel-history') renderHistory();
+      if (t.dataset.panel === 'panel-history') { renderHistory(); showCumulative(); }
     });
   });
 
@@ -918,7 +959,7 @@
       if (viewedRoom !== asked) return;
       var ats = onboardAts(evs);
       var forced = CC.onboard.pending(r.onboard_due, ats);   /* 선생님이 정했으면 건너뛸 수 없다 */
-      if (ats.length && !forced) showMissions(); else CC.onboardView.open(r.id, showMissions, forced);
+      if (ats.length && !forced) showMissions(); else CC.onboardView.open(r.id, showMissions, forced, forced ? r.onboard_set : 'mid');   /* 지정 없는 첫 입장은 중 */
     }, showMissions);  /* 확인이 안 되면 막지 않는다 — 진단 때문에 수업이 멈추면 안 된다 */
   }
   if ($('#crumb-home')) $('#crumb-home').addEventListener('click', function (e) { e.preventDefault(); showRooms(); });

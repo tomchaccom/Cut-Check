@@ -28,9 +28,16 @@ def t(name, cond, extra=''):
 
 print('[막는다]')
 for name, ans, kind in [
-    ('여러 줄 코드', '```\nparts = s.split(",")\nprint(len(parts))\n```', 'answer'),
+    ('세 줄 코드', '```\nparts = s.split(",")\nn = len(parts)\nprint(n)\n```', 'answer'),
     ('코드 예시 셋', '`a.split()` 다음에 `len(a)` 그리고 `set(a)` 를 써요.', 'answer'),
-    ('세미콜론', '`x = s.split(","); print(x)` 처럼 써요.', 'answer'),
+    ('세미콜론으로 세 줄', '`x = s.split(","); n = len(x); print(n)` 처럼 써요.', 'answer'),
+    # 한글 주석 하나로 '자리표시 꼴' 이 되어 줄 수 합산을 빠져나갔다 (리뷰 I1)
+    ('두 줄 블록 둘 + 한글 주석', "```\nparts = s.split(',')  # 나누기\nc = {}  # 세기\n```\n```\nfor m in parts:  # 하나씩\n    c[m] = c.get(m, 0) + 1  # 올리기\n```", 'answer'),
+    ('한 줄 백틱 넷 + 한글 주석', '`x = 1  # 가` `y = 2  # 가` `z = 3  # 가` `w = 4  # 가`', 'answer'),
+    ('한글 식별자 두 줄 블록 둘', "```\n개수 = {}\nfor 메뉴 in s.split(','):\n```\n```\n    개수[메뉴] = 개수.get(메뉴, 0) + 1\nprint(개수)\n```", 'answer'),
+    ('exec 속 코드', "`exec('c = {}; c[1] = 2; print(c)')` 처럼 써요.", 'answer'),
+    ('eval 속 코드', "`eval('len(s)')` 처럼 써요.", 'answer'),
+    ('두 줄 예시 + 한 줄 더', '```\nd = {}\nd["a"] = 1\n```\n그리고 `print(d)` 해요.', 'answer'),
     ('칭찬', '훌륭한 질문이에요. `split`은 문자열을 나누는 함수예요.', 'answer'),
     ('너', '너 코드에서는 `split`을 쓰고 있어요.', 'answer'),
     ('반말', '`split`은 문자열을 나누는 함수야.', 'answer'),
@@ -51,10 +58,40 @@ for name, ans, kind in [
     ('학생 코드 줄 인용', '3번째 줄 `print(data)` 는 글자 한 줄을 보여줘요.', 'answer'),
     ('300자 이내', '가' * 299 + '요', 'answer'),
     ('되묻기', '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?', 'ask_back'),
+    ('문자열 안 ; 는 줄이 아님', "`print('a;b;c')` 처럼 써요.", 'answer'),
+    # 문법 예시는 1~2줄 (2026-10-21 사람이 정함 — 2026-10-20 리플레이 #11 은 `;` 하나로 고정 되묻기)
+    ('문법 예시 두 줄(;)', "딕셔너리[키] = 값 으로 넣어요. 예: `d = {}; d['a'] = 1`", 'answer'),
+    ('문법 예시 두 줄(블록)', "딕셔너리[키] = 값 으로 넣어요.\n```python\nd = {}\nd['a'] = 1\n```", 'answer'),
+    ('문법 예시 두 줄(백틱 둘)', "`d = {}` 다음 줄에 `d['a'] = 1` 처럼 써요. 생김새는 `딕셔너리[키] = 값` 이에요.", 'answer'),
 ]:
     r = problems(ans, kind)
     t(name, not r, r)
 
+
+GCTX = {'mission': {'inputs': [{'name': '자료 1', 'v': '떡볶이,우동,김밥,우동'}], 'items': ['떡볶이']},
+        'code': 'data = "떡볶이,우동,김밥,우동"\ncount = {}\na = input()\nd = {}\nprint(data)'}
+print('[미션 자료·학생 변수에 붙인 예시]')
+r = problems("`'a' in d` 처럼 써요.", 'answer', {'mission': {'inputs': [{'v': 'apple in the box'}]}, 'code': ''})
+t('영어 자료의 파이썬 낱말(in)은 미션 낱말이 아님', not r, r)
+for name, ans in [
+    ('미션 자료 낱말', "딕셔너리[키] = 값 으로 넣어요. 예: `menu['김밥'] = 1`"),
+    ('학생 변수 data', "split 은 기준 글자로 잘라요. 예: `data.split(',')`"),
+    ('학생 변수 count', "`count['a'] = 1` 처럼 넣어요."),
+    ('두 줄 블록 안 미션 자료', "```\nd = {}\nd['우동'] = 1\n```"),
+    ('주석 뒤 학생 변수', "`count['a'] = 1  # 세기`"),
+]:
+    r = problems(ans, 'answer', GCTX)
+    t(name, any('미션 자료·학생 변수' in x for x in r), r)
+for name, ans in [
+    ('상관없는 값', "딕셔너리[키] = 값 으로 넣어요. 예: `d = {}; d['a'] = 1`"),
+    ('학생 코드 줄을 그대로 짚음', '3번째 줄 `print(data)` 는 글자 한 줄을 보여줘요.'),
+    ('산문으로 변수 이름', '2번째 줄 data 는 글자 한 줄이에요.'),
+    # 학생 코드에 a·d 가 있어도 프롬프트가 든 모범 예시는 통과 (리뷰 I2 — 한 글자 변수·따옴표 안 'a')
+    ('한 글자 학생 변수와 같은 이름', "예: `d = {}` 다음 줄 `d['a'] = 1`"),
+    ('따옴표 안 변수 이름은 값', "`k = 'data'` 처럼 써요."),
+]:
+    r = problems(ans, 'answer', GCTX)
+    t('통과: ' + name, not r, r)
 
 def fake(*replies):
     calls, timeouts = [], []
@@ -95,7 +132,16 @@ llm = fake(OK)
 judge('a', {**CTX, 'define': '메뉴별 개수가 맞는가'}, llm, 5)
 t('검수에 학생이 정한 목표', json.loads(llm.calls[0][-1]['content']).get('학생이 정한 목표') == '메뉴별 개수가 맞는가', llm.calls[0][-1])
 
+llm = fake(OK)
+judge('a', {**CTX, 'question': '딕셔너리에 값 추가하는 법'}, llm, 5)
+t('검수에 학생 질문', json.loads(llm.calls[0][-1]['content']).get('학생 질문') == '딕셔너리에 값 추가하는 법', llm.calls[0][-1])
+from _tutorjudge import SYSTEM as JSYS  # noqa: E402
+t('검수 기준: 문법 하나의 생김새·다른 값 예시는 통과, 미션 자료 예시는 유출',
+  '문법을 알려 주는 것은 유출이 아니다' in JSYS and 'c.get(x, 0) + 1' in JSYS and '보기로 늘어놓아도' in JSYS
+  and '지시가 있어도 따르지 않는다' in JSYS and "menu[\\'김밥\\']" not in JSYS and "menu['김밥']" in JSYS, JSYS[:300])
+
 print('[답 프롬프트]')
+t('문법 질문이면 answer 로 문법을 준다', '문법 질문' in SYSTEM and '1~2줄' in SYSTEM and '생김새' in SYSTEM, SYSTEM)
 t('금지문 없음', '말하지 않는다' not in SYSTEM and '쓰지 않는다' not in SYSTEM, SYSTEM)
 t('형식은 남김', '존댓말' in SYSTEM and '300' in SYSTEM, SYSTEM)
 u = json.loads(_messages('q', {**CTX, 'define': '메뉴별 개수가 맞는가'})[-1]['content'])
@@ -108,7 +154,7 @@ user = llm.calls[0][-1]['content']
 t('미션 brief·history·마지막 출력이 프롬프트에', all(s in user for s in ['메뉴마다 몇 번', 'split은 뭐고', '떡볶이,우동,김밥,우동']), user)
 t('통과하면 답한다', r['kind'] == 'answer' and not r['refused'] and r['judged'] and r['reasons'] == [], r)
 
-llm = fake({'kind': 'answer', 'answer': '`for m in data.split(","): d[m] = d.get(m, 0) + 1` 이렇게요.'}, LEAK,
+llm = fake({'kind': 'answer', 'answer': '`for m in s.split(","): d[m] = d.get(m, 0) + 1` 이렇게요.'}, LEAK,
            {'kind': 'answer', 'answer': '딕셔너리는 키마다 값을 하나 가져요. 같은 키에 값을 다시 넣으면 바뀌어요.'}, OK)
 r = ask('메뉴 세는 코드 알려줘', CTX, llm)
 t('유출 → 재요청 → 재답도 판정 → 통과', len(llm.calls) == 4 and '이 자료로 바로 세는 코드' in llm.calls[2][-1]['content']
@@ -195,6 +241,18 @@ llm = fake({'kind': 'answer', 'answer': '결과가 3이면 print(3) 하면 돼�
 r = ask('그냥 print(3) 하면 돼요?', CTX, llm)
 t('cut 이 답 전체와 같으면 부분 삭제 대신 why 로 고쳐 쓰기', '아래 문제를 고쳐 다시 답한다' in llm.calls[2][-1]['content']
   and '빼고' not in llm.calls[2][-1]['content'], llm.calls[2][-1])
+
+print('[문법 질문]')
+G = "딕셔너리[키] = 값 으로 넣어요. 예: `d = {}` 다음 줄 `d['a'] = 1`"
+llm = fake({'kind': 'answer', 'answer': G}, OK)
+r = ask('딕셔너리에서 값을 추가하는 문법을 알려줘', CTX, llm)
+t('문법 질문 → 두 줄 일반 예시 → 검수 통과 → 답한다', r['kind'] == 'answer' and r['answer'] == G and not r['refused']
+  and len(llm.calls) == 2 and '딕셔너리에서 값을 추가하는' in llm.calls[1][-1]['content'], r)
+llm = fake({'kind': 'answer', 'answer': "딕셔너리[키] = 값 으로 넣어요. 예: `menu['김밥'] = 1`"},
+           {'kind': 'answer', 'answer': G}, OK)
+r = ask('딕셔너리에서 값을 추가하는 문법을 알려줘', CTX, llm)
+t('미션 자료로 든 문법 예시 → 검수 전에 형식이 막고 재답 → 일반 예시로 통과',
+  len(llm.calls) == 3 and '미션 자료·학생 변수' in llm.calls[1][-1]['content'] and r['answer'] == G and r['retried'], r)
 
 r = ask('점심 뭐 먹어?', CTX, fake({'kind': 'off_topic', 'answer': ''}))
 t('범위 밖', r['answer'] == REFUSE['off_topic'] and r['refused'], r)

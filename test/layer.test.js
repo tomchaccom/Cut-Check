@@ -203,7 +203,38 @@ const os = CC.fold.fold([
 ], { now: Date.now() });
 t('건너뛰면 stage 는 null', os.onboard.stage === null && os.onboard.skipped === true);
 t('진단 전에는 onboard 가 null', CC.fold.empty().onboard === null);
-t('진단 이벤트에 맞음·점수 칸이 없다', (() => { const e = CC.events.make(T.S_ONBOARD, { answers: ans(), skipped: false }); return Object.keys(e).sort().join() === 'answers,skipped,t,type,v'; })());
+t('진단 이벤트에 맞음·점수 칸이 없다', (() => { const e = CC.events.make(T.S_ONBOARD, { answers: ans(), skipped: false, set: 'mid' }); return Object.keys(e).sort().join() === 'answers,set,skipped,t,type,v'; })());
+
+console.log('\n[레벨 테스트] 문제지 하·중·상');
+const SETS = OB.SETS;
+t('문제지 셋, 지금 것이 중', Object.keys(SETS).join() === 'low,mid,high' && SETS.mid === OB.QUESTIONS);
+t('문제지 이름은 선생님 화면용', OB.SET_LABEL.low === '하' && OB.SET_LABEL.mid === '중' && OB.SET_LABEL.high === '상');
+['low', 'high'].forEach(k => {
+  const Q = SETS[k];
+  t(k + ' — 10문항, 객관식+단답형', Q.length === 10 && Q.some(q => q.options) && Q.some(q => !q.options));
+  t(k + ' — ? 로 끝나고 80자 이하, 마지막 보기는 모르겠어요', Q.every(q => /\?$/.test(q.ask) && q.ask.length <= 80) && Q.filter(q => q.options).every(q => q.options[q.options.length - 1] === '모르겠어요'));
+  t(k + ' — 정답이 문항에 섞이지 않는다', Q.every(q => Object.keys(q).every(x => ['id', 'code', 'ask', 'options'].indexOf(x) >= 0)));
+});
+const allIds = [].concat(SETS.low, SETS.mid, SETS.high).map(q => q.id);
+t('문항 id 는 셋 전체에서 겹치지 않는다', new Set(allIds).size === 30);
+/* 사람이 문항을 보고 적은 정답 */
+const RIGHT2 = { l1: '안녕', l2: '8', l3: '5 그리고 23', l4: '11', l5: '사과', l6: '3', l7: '중학생', l8: '4', l9: '민지야', l10: '6',
+  h1: "{'짜장': 3, '짬뽕': 1}", h2: '우산', h3: '7', h4: '5 그리고 None', h5: '에러가 나요', h6: '4', h7: '<=', h8: '95', h9: '명단이 비었는지', h10: '2' };
+const ansOf = (k, over) => SETS[k].map(q => ({ q: q.id, pick: q.id in (over || {}) ? over[q.id] : pickOf(q, RIGHT2[q.id]) }));
+t('하·상 보기에 정답이 있다', SETS.low.concat(SETS.high).filter(q => q.options).every(q => q.options.indexOf(RIGHT2[q.id]) >= 0 && q.options.indexOf(RIGHT2[q.id]) < q.options.length - 1));
+t('marks — 다 맞으면 10개 모두 참', OB.marks(ansOf('low'), 'low').every(Boolean) && OB.marks(ansOf('high'), 'high').every(Boolean) && OB.marks(ans(), 'mid').length === 10);
+t('marks — 문제지 순서대로 ○/×', OB.marks(ansOf('low', { l2: '9' }), 'low').map(x => x ? 1 : 0).join('') === '1011111111');
+t('하 문제지 — 다 맞아도 중이 끝', OB.stage(ansOf('low'), 'low').stage === 'combine');
+t('하 문제지 — 8개는 중, 7개는 하', OB.stage(ansOf('low', { l1: 1, l2: '0' }), 'low').stage === 'combine' && OB.stage(ansOf('low', { l1: 1, l2: '0', l4: '10' }), 'low').stage === 'base');
+t('상 문제지 — 7개 상, 6개 중, 2개 하', OB.stage(ansOf('high', { h1: 1, h2: '모자', h3: '6' }), 'high').stage === 'ready'
+  && OB.stage(ansOf('high', { h1: 1, h2: '모자', h3: '6', h4: 0 }), 'high').stage === 'combine' && OB.stage([{ q: 'h1', pick: 0 }, { q: 'h2', pick: '우산' }], 'high').stage === 'base');
+t('상 문제지 — h8 오답이면 hardcode', OB.stage(ansOf('high', { h8: 0 }), 'high').hardcode === true && OB.stage(ansOf('high'), 'high').hardcode === false);
+t('set 이 없거나 모르는 이름이면 중', OB.stage(ans()).stage === 'ready' && OB.stage(ans(), 'toString').stage === 'ready' && OB.marks(ans(), '__proto__').length === 10);
+t('예전 8문항 기록 marks 는 8개', OB.marks([{ q: 'q1', pick: 0 }]).length === 8);
+const fs3 = CC.fold.fold([CC.events.make(T.S_ONBOARD, { answers: ansOf('low'), skipped: false, set: 'low' })], { now: Date.now() });
+t('접기는 문제지를 보고 푼다', fs3.onboard.stage === 'combine' && fs3.onboard.set === 'low');
+t('set 없던 예전 기록은 중으로 접는다', of.onboard.set === 'mid');
+t('진단 이벤트에 점수·레벨을 담으면 거절', (() => { try { CC.events.make(T.S_ONBOARD, { answers: [], set: 'low', level: '하' }); return false; } catch (e) { return true; } })());
 
 const ob = (o) => ({ onboard: o });
 const sp = OB.spread([ob({ stage: 'base', hardcode: true, skipped: false }), ob({ stage: 'base', hardcode: false, skipped: false }),
@@ -334,6 +365,18 @@ const fs = require('fs');
 global.window.CC_CONFIG = {};
 require('../js/data/config.js');
 t('기본은 로컬 모드', CC.config.online() === false);
+
+// ── 발신함은 200개 상한이 없다: 오프라인으로 쌓인 250개가 하나도 안 잘린다 (읽은 기록 KEY 만 200개로 자른다)
+{
+  const mem = {};
+  global.localStorage = { getItem: k => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } };
+  CC.config.online = () => true; CC.config.retryMs = 1e9; CC.config.batchSize = 50;
+  CC.api = { send: () => new Promise(() => {}) };   // 서버가 답이 없다 = 오프라인
+  require('../js/data/store.js');
+  for (let i = 0; i < 250; i++) CC.store.push({ type: 's-wrap', mid: 'm', text: 'n' + i, v: 1, t: i + 1 });
+  t('발신함 250개가 그대로 남는다', JSON.parse(mem['cutcheck.outbox.v1']).length === 250);
+  t('읽은 기록은 200개로 자른다', JSON.parse(mem['cutcheck.log.v1']).length === 200);
+}
 
 console.log(fail ? '\n실패 ' + fail + '건' : '\n전부 통과');
 process.exit(fail ? 1 : 0);

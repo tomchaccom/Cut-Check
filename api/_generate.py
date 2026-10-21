@@ -342,7 +342,7 @@ BRIEF_FALLBACK = {  # 요청 기본 틀 — 구할 값만 말하고 방법은 �
 }
 
 
-AXES = ('count', 'sep', 'empty', 'invisible')
+AXES = ('count', 'sep', 'empty', 'invisible', 'boundary')
 
 
 def _counter_candidates(pid, items1, items2, ft):

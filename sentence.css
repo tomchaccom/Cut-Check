@@ -699,6 +699,7 @@ dialog::backdrop {
 .content > .tutor-open { flex: 0 0 48px; align-self: flex-start; position: sticky; top: 16px; height: 120px; border-radius: 12px; }
 .tutor { flex: 0 0 360px; width: 360px; align-self: flex-start; position: sticky; top: 16px; height: min(calc(100dvh - 32px), 640px); display: flex; flex-direction: column; padding: 0; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface); color: var(--ink); overflow: hidden; }
 .tutor[hidden] { display: none; }
+.tutor-code { font-family: var(--mono); font-size: .92em; padding: 1px 5px; border-radius: 4px; background: var(--surface-3); color: var(--ink); }
 body.tutor-full { overflow: hidden; }
 @media (max-width: 1099px) {
   .content > .tutor-open { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 40; width: auto; height: auto; min-height: 56px; border-width: 1px 0 0; border-radius: 0; padding-bottom: env(safe-area-inset-bottom); }
@@ -892,6 +893,7 @@ body.tutor-full { overflow: hidden; }
 .compass-mine .compass-fig svg { width: 168px; height: 168px; }
 .compass-mine .compass-dir { display: block; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .compass-mine .compass-note { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0 0; font-size: 19px; line-height: 1.6; }
+.compass-mine .compass-even { margin: 6px 0 0; font-size: 19px; }
 @media (max-width: 560px) { .compass-mine { grid-template-columns: minmax(0, 1fr); } .compass-mine .compass-fig svg { width: 140px; height: 140px; } }
 /* 로고 — 나침반 아이콘 그림이 칸을 채운다 */
 span.mark.icon { background: none; padding: 0; overflow: hidden; }

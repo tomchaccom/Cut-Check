@@ -80,7 +80,7 @@
     <header id="mission-head" hidden>
     <nav class="crumb" aria-label="위치" id="play-crumb"><a href="#" id="crumb-play-home">내 교실</a><span class="sep" aria-hidden="true">/</span><span id="crumb-play-room"></span><span class="sep" aria-hidden="true">/</span><span id="crumb-play-mission"></span></nav>
     <h1 class="big-title" id="mission-title"></h1>
-    <section class="compass-mine" id="compass-mine" aria-label="내 나침반" hidden></section>
+    <section class="compass-mine" id="compass-mine" aria-label="선생님 한마디" hidden></section>
     <nav class="step-tabs" id="steps-nav" aria-label="단계" data-tour="steps">
       <button type="button" data-step="1" disabled>01 문제</button>
       <button type="button" data-step="2" disabled>02 성공</button>
@@ -120,6 +120,7 @@
       <label class="reason-label" style="margin-top:12px">왜 그렇게 생각했나요?
         <textarea class="reason" id="reason-define" placeholder="생각나는 대로 적어 주세요." rows="2"></textarea>
       </label>
+      <p class="reason-msg" id="msg-define" aria-live="polite" style="color:var(--coral);min-height:1.2em;margin:4px 0 0"></p>
       <div class="step-actions">
         <button class="btn secondary" id="back-request">다시 보기</button>
         <button class="btn primary" id="go-method" disabled>다음</button>
@@ -128,7 +129,7 @@
 
     <!-- 화면 3: 어떻게 할까 -->
     <section class="step" id="step3" tabindex="-1">
-      <h2 class="step-title">어떻게 할까?</h2>
+      <h2 class="step-title">내 설계</h2>
       <p class="card-hint">할 일을 눌러 담고, 위에서 아래로 순서를 맞춰 보세요.</p>
       <div class="card-pool" id="card-pool" data-tour="cards" aria-label="고를 수 있는 카드"></div>
       <div class="design-head">
@@ -139,6 +140,7 @@
       <label class="reason-label">이유
         <textarea class="reason" id="reason-method" placeholder="이 방법을 고른 이유를 적어보세요." rows="2"></textarea>
       </label>
+      <p class="reason-msg" id="msg-method" aria-live="polite" style="color:var(--coral);min-height:1.2em;margin:4px 0 0"></p>
       <div class="step-actions">
         <button class="btn secondary" id="back-define">성공 조건 수정</button>
         <button class="btn primary" id="go-run" disabled>자료로 확인하기</button>
@@ -185,6 +187,7 @@
         <button class="pill primary" id="run-all" disabled>자료 3개로 실행</button>
         <button class="pill" id="run-code" disabled>실행</button>
         <button class="pill" id="back-method">설계 수정</button>
+        <button class="pill" id="help-btn" hidden>도움 요청</button>
       </div>
 
       <!-- 실행 결과: 자료 3개는 표, 한 자료·실행 중은 #code-result -->
@@ -268,6 +271,7 @@
   <!-- [내 기록] 패널 -->
   <section class="tab-panel" id="panel-history">
     <h2 class="step-title">내 기록</h2>
+    <section class="compass-mine" id="compass-cum" aria-label="내 나침반" hidden></section>
     <div id="history-list"></div>
     <div class="empty-msg" id="history-empty" hidden>아직 기록이 없어요.</div>
   </section>

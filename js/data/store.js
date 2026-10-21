@@ -56,7 +56,7 @@
     mem[key] = list;
     if (!probe()) return;
     try {
-      localStorage.setItem(key, JSON.stringify(list.slice(-200)));
+      localStorage.setItem(key, JSON.stringify(key === OUT ? list : list.slice(-200))  /* 상한은 읽은 기록 KEY 만 — 아직 못 보낸 발신함은 자르지 않는다 */);
     } catch (e) { /* 저장 실패는 학습을 막지 않는다 */ }
   }
 

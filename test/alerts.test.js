@@ -1,6 +1,6 @@
 // 교사 알림 core — 학생·미션당 종류별 한 번, 첫 화면 기준선, 사실 문장만
 global.window = {};
-require('../js/core/hangul.js'); require('../js/core/fold.js'); require('../js/core/alerts.js');
+require('../js/core/hangul.js'); require('../js/core/fold.js'); require('../js/core/alerts.js'); require('../js/core/compass.js');
 const CC = global.window.CC;
 let fail = 0;
 function t(name, cond) { console.log((cond ? '  ok  ' : '  FAIL') + ' ' + name); if (!cond) fail++; }
@@ -69,10 +69,24 @@ CC.onboard = { LABEL: { combine: '중' } };
 const lv = { onboard: { stage: 'combine', skipped: false } };
 d = CC.alerts.diff(CC.alerts.snap([S('태인')], OPT([])), CC.alerts.snap([S('태인', lv)], OPT([])));
 t('level — info, 레벨 문장', kinds(d) === 'level' && d[0].tag === 'info' && CC.alerts.say(d[0]) === '태인이 레벨 테스트를 마쳤어요. 레벨 중.');
+t('level — 재테스트를 마치면 한 번 더', CC.alerts.diff(CC.alerts.snap([S('태인', { onboard: { stage: 'combine', skipped: false, t: 1 } })], OPT([])), CC.alerts.snap([S('태인', { onboard: { stage: 'combine', skipped: false, t: 2 } })], OPT([]))).length === 1);
 t('level 건너뜀은 알리지 않는다', CC.alerts.diff(CC.alerts.snap([S('태인')], OPT([])), CC.alerts.snap([S('태인', { onboard: { stage: null, skipped: true } })], OPT([]))).length === 0);
 delete CC.onboard;
 d = CC.alerts.diff(CC.alerts.snap([S('태인')], OPT([])), CC.alerts.snap([S('태인', lv)], OPT([])));
 t('level — CC.onboard 없으면 레벨 문장 생략', CC.alerts.say(d[0]) === '태인이 레벨 테스트를 마쳤어요.');
+
+// retest — 60일, 학생·마지막 테스트당 키 하나, 지정하면 없다
+const DAY = 864e5, NOW = 100 * DAY;
+const ob = t0 => ({ onboard: { stage: 'combine', skipped: false, t: t0 } });
+t('RETEST_DAYS 60', CC.alerts.RETEST_DAYS === 60);
+t('retest — 59일은 아직', CC.alerts.retest([S('태인', ob(NOW - 59 * DAY))], NOW).length === 0);
+let r = CC.alerts.retest([S('태인', ob(NOW - 60 * DAY))], NOW);
+t('retest — 60일이면 info, 정해진 문장', r.length === 1 && r[0].tag === 'info' && r[0].kind === 'retest' && CC.alerts.say(r[0]) === '태인의 레벨 테스트가 두 달 지났어요. 다시 지정할까요?');
+t('retest — 키는 학생·마지막 테스트', r[0].key === 'a:' + (NOW - 60 * DAY));
+t('retest — 다시 지정했으면(waiting) 없다', CC.alerts.retest([S('태인', ob(0))], NOW, () => true).length === 0);
+t('retest — 건너뛴 기록·기록 없음은 없다', CC.alerts.retest([S('태인', { onboard: { stage: null, skipped: true, t: 0 } }), S('가은')], NOW).length === 0);
+t('retest — 마지막이 건너뛰기여도 앞 테스트가 60일 지났으면 뜬다', CC.alerts.retest([S('태인', { onboard: { stage: null, skipped: true, t: NOW, tDone: NOW - 60 * DAY } })], NOW).length === 1);
+t('retest — 순서·소요 시간·점수 칸이 없다', Object.keys(r[0]).sort().join() === 'dbId,id,key,kind,mid,name,tag');
 
 // design / code (옛 알림 — 기록을 못 읽을 때)
 const a = CC.alerts.snap([S('나')]), b = CC.alerts.snap([S('나', { sCodeJudges: [{}] })]), c = CC.alerts.snap([S('나', { sDesignCount: 1 })]);
@@ -105,4 +119,22 @@ const late = ev('s-code', 'm1', { code: 'y', error: null, t: 9 }), early = ev('s
 t('fixed — 기록 순서가 뒤섞여도 시각순으로 본다', kinds(run('민지', [], [late, early])) === 'fixed');
 t('mid 없는 기록은 건너뛴다(죽지 않는다)', run('민지', [], [{ type: 's-redefine', sid: 'a' }, { type: 's-tutor' }, ev('s-code-judge', '')]).length === 0);
 
+// cancel — 학생·가장 최근 미션당 한 번, 첫 화면 기준선, 사실 문장
+const CO = (dbId, cands) => ({ eventsOf: () => [], missionName: () => '', cancelOf: () => dbId ? { dbId, cands } : null });
+const c0 = CC.alerts.snap([S('태인')], CO(null));
+const c1 = CC.alerts.snap([S('태인')], CO('db2', ['N', 'S']));
+d = CC.alerts.diff(c0, c1);
+t('cancel — 북·남 후보, praise, 정확한 문장', d.length === 1 && d[0].kind === 'cancel' && d[0].tag === 'praise' && d[0].dbId === 'db2' &&
+  CC.alerts.say(d[0]) === '태인이 최근 미션에서 이해와 구현이 같이 두드러져요. 어느 쪽이 더 보였는지 골라 주세요.');
+t('cancel — 동·서 후보는 설계와 검증, 조사 계산', CC.alerts.say({ kind: 'cancel', name: '한결', cands: ['E', 'W'] }) === '한결이 최근 미션에서 설계와 검증이 같이 두드러져요. 어느 쪽이 더 보였는지 골라 주세요.');
+t('cancel — 넷이면 네 방향 문장', CC.alerts.say({ kind: 'cancel', name: '민지', cands: ['N', 'E', 'S', 'W'] }) === '민지가 최근 미션에서 네 방향이 고르게 보여요. 어느 쪽이 더 보였는지 골라 주세요.');
+t('cancel — 같은 미션은 다시 계산해도 한 번', CC.alerts.diff(c1, CC.alerts.snap([S('태인')], CO('db2', ['N', 'S']))).length === 0);
+const gone = CC.alerts.snap([S('태인')], CO(null));
+const back = CC.alerts.diff(c1, gone);   // 고른 뒤 사라짐 — diff 가 알린 키를 gone 에 되살린다
+t('cancel — 고른 뒤 사라졌다 돌아와도 한 번', back.length === 0 && CC.alerts.diff(gone, CC.alerts.snap([S('태인')], CO('db2', ['N', 'S']))).length === 0);
+t('cancel — 더 최근 미션에서 또 겹치면 다시 한 번', kinds(CC.alerts.diff(c1, CC.alerts.snap([S('태인')], CO('db3', ['E', 'W'])))) === 'cancel');
+t('cancel — 처음 snap 에 이미 겹쳐 있으면 알리지 않는다', CC.alerts.diff(null, c1).length === 0);
+t('cancel — 문장에 칭찬 낱말 · 순번 · 숫자 없음', !/좋|잘|훌륭|대단|[0-9]/.test(CC.alerts.say({ kind: 'cancel', name: '태인', cands: ['N', 'S'] })));
+
+if (fail) console.log(fail + ' 실패');
 process.exit(fail ? 1 : 0);

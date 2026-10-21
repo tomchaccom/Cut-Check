@@ -460,9 +460,17 @@ window.CC_SUPABASE = {
         who.appendChild(el('span', 'meta roster-level'));   /* 레벨 — 기록을 읽은 뒤 showLevels 가 채운다 */
         row.dataset.sid = s.id;
         var acts = el('div', 'acts');
+        /* 지정할 때 문제지를 고른다 — 기본은 중. 학생 화면에는 어느 문제지인지 나가지 않는다 (2026-10-20) */
+        var qs = el('select', 'roster-set');
+        qs.setAttribute('aria-label', s.name + ' 레벨 테스트 문제지');
+        [['low', '문제지 하'], ['mid', '문제지 중'], ['high', '문제지 상']].forEach(function (o) {
+          var op = el('option', null, o[1]); op.value = o[0]; qs.appendChild(op);
+        });
+        qs.value = s.onboard_set || 'mid';
+        acts.appendChild(qs);
         var lt = el('button', 'pill roster-test', s.onboard_due ? '레벨 테스트 지정 풀기' : '레벨 테스트 지정');
         lt.type = 'button';
-        lt.addEventListener('click', function () { assignTest(s, lt); });
+        lt.addEventListener('click', function () { assignTest(s, lt, qs.value); });
         acts.appendChild(lt);
         if (s.login_id) {
           var rp = el('button', 'pill roster-reset', '비밀번호 다시 만들기');
@@ -485,14 +493,15 @@ window.CC_SUPABASE = {
   }
 
   /* 레벨 테스트 대상 지정 — 학생은 다음 로그인 때 건너뛸 수 없는 테스트를 본다 (2026-10-19) */
-  function assignTest(s, btn) {
+  function assignTest(s, btn, set) {
     if (!selectedRoom || !CC.sb.active()) return;
     /* 끝난 지정은 '다시 지정' — 시각을 새로 찍는다. 기록을 아직 못 읽었으면(levelWait 없음) 버튼 글자와 같은
        기준(onboard_due 만)으로 본다: '지정 풀기' 를 눌렀는데 다시 지정되면 안 된다 */
     var wait = s.levelWait == null ? CC.onboard.pending(s.onboard_due, []) : s.levelWait;
     var on = !(s.onboard_due && wait);
     btn.disabled = true;
-    CC.sb.assignOnboard(selectedRoom.id, s.id, on).then(function () {
+    CC.sb.assignOnboard(selectedRoom.id, s.id, on, set).then(function () {
+      if (on && CC._dropRetest) CC._dropRetest(s.id);   /* 다시 지정했으면 재테스트 알림은 할 일이 끝났다 */
       return loadStudents().then(loadStudentEvents);
     }).catch(function (e) { btn.disabled = false; window.alert(e.message || '지정하지 못했어요.'); });
   }

@@ -39,7 +39,13 @@
   function bubble(who, text) {
     var row = el('div', 'tutor-row ' + who);
     row.appendChild(el('span', 'tutor-who' + (who === 'me' ? ' sr-only' : ''), who === 'me' ? '나' : '튜터'));
-    row.appendChild(el('div', 'tutor-msg ' + who, text));
+    var msg = el('div', 'tutor-msg ' + who);
+    if (who === 'me') msg.textContent = text;
+    else String(text).split(/`([^`\n]+)`/).forEach(function (part, i) {   /* 홀수 칸이 백틱 안 — textContent 로만 넣는다 */
+      if (i % 2) msg.appendChild(el('code', 'tutor-code', part));
+      else if (part) msg.appendChild(document.createTextNode(part));
+    });
+    row.appendChild(msg);
     var log = $('#tutor-log');
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
