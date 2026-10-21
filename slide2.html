@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<title>KOMPAS 발표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  /slide2 — 산학협력실무 발표 (설계: docs/superpowers/specs/2026-10-21-slide2-design.md)
+  설문 문항은 slide2-data.js 에만 있다 — 배열에 하나 더하면 장이 하나 생긴다. 이 파일은 고치지 않는다.
+  나침반 그림은 화면과 같은 js/core/compass.js, 레벨 테스트 문항은 js/core/onboard.js 에서 바로 읽는다(정답은 읽지 않는다).
+  아래 SLIDE2_CODE 의 수는 코드에서 옮겨 적은 것 — 갈라지면 node test/slide2.test.js 가 깨진다.
+  1920×1080 무대 하나를 화면에 맞춰 줄인다. 시연 장만 화면 전체를 쓴다(iframe 글자가 작아지지 않게).
+-->
+<style>
+:root {
+  --paper: #FFFFFF; --ink: #000000; --ink-2: #4A4A4A; --ink-3: #767676;
+  --line: #D9D9D9; --yellow: #FFD400; --yellow-soft: #FFF3A6;
+  --sans: "IBM Plex Sans KR", system-ui, -apple-system, sans-serif;
+  --disp: "Archivo", "IBM Plex Sans KR", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "IBM Plex Sans KR", monospace;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; background: #000; }
+body { font-family: var(--sans); color: var(--ink); word-break: keep-all; -webkit-font-smoothing: antialiased; }
+
+#stage { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--paper); overflow: hidden; }
+body.full #stage { width: 100vw; height: 100vh; transform: none !important; }
+.slide { position: absolute; inset: 0; padding: 96px 120px 120px; display: none; flex-direction: column; }
+.slide.on { display: flex; }
+
+/* 글자 — 3 m 뒤에서 읽힌다. 본문 30 · 작은 글 24 가 바닥 */
+h1, h2 { font-family: var(--sans); font-weight: 700; letter-spacing: -.035em; line-height: 1.15; }
+h2 { font-size: 64px; max-width: 26ch; }
+.kick { font-size: 26px; color: var(--ink-2); font-weight: 500; margin-bottom: 20px; }
+.lead { font-size: 32px; color: var(--ink-2); line-height: 1.5; margin-top: 24px; max-width: 46ch; }
+p, li { font-size: 30px; line-height: 1.5; }
+.small { font-size: 24px; color: var(--ink-3); }
+code, .code { font-family: var(--mono); }
+
+/* 구간 첫 장 — 노랑 한 면. 이 발표에서 색을 크게 쓰는 곳은 여기뿐이다 */
+.slide.part { background: var(--yellow); justify-content: flex-end; }
+.part .no { font-family: var(--disp); font-weight: 800; font-size: 360px; line-height: .8; letter-spacing: -.06em; }
+.part h2 { font-size: 112px; margin-top: 40px; max-width: 18ch; }
+.part .lead { color: var(--ink); }
+
+/* 표지 */
+.cover { background: var(--yellow); justify-content: space-between; }
+.cover .mark { font-family: var(--disp); font-weight: 500; font-size: 330px; line-height: .82; letter-spacing: -.055em; }
+.cover .sub { font-size: 56px; font-weight: 600; letter-spacing: -.03em; margin-top: 36px; }
+.cover .meta { font-size: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+.cover svg { width: 220px; height: 220px; }
+
+/* 설문 — 왼쪽 결과, 오른쪽 "그래서 정한 것" */
+.sv { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 96px; flex: 1; margin-top: 56px; min-height: 0; }
+.sv-q h2 { font-size: 52px; max-width: 34ch; }
+.sv-q { grid-column: 1 / -1; }
+.sv-n { font-size: 24px; color: var(--ink-3); margin-top: 14px; }
+.sample { display: inline-block; background: var(--ink); color: var(--yellow); font-size: 22px; font-weight: 700; padding: 4px 14px; margin-left: 12px; vertical-align: middle; }
+.bars { display: grid; gap: 22px; align-content: start; }
+.bar .lab { display: flex; justify-content: space-between; font-size: 28px; gap: 24px; }
+.bar .lab b { font-family: var(--disp); font-weight: 800; font-size: 34px; font-variant-numeric: tabular-nums; }
+.bar svg { display: block; width: 100%; height: 22px; margin-top: 8px; }
+.stack svg { display: block; width: 100%; height: auto; overflow: visible; }
+.stack .keys { display: flex; flex-wrap: wrap; gap: 14px 36px; margin-top: 26px; font-size: 28px; }
+.stack .keys i { display: inline-block; width: 22px; height: 22px; vertical-align: -3px; margin-right: 10px; border: 2px solid var(--ink); }
+.scale svg { display: block; width: 100%; height: 260px; overflow: visible; }
+.quotes { display: grid; gap: 26px; align-content: start; }
+.quote { border-left: 8px solid var(--ink); padding: 6px 0 6px 28px; }
+.quote p { font-size: 32px; line-height: 1.45; }
+.quote .who { font-size: 22px; color: var(--ink-3); margin-top: 8px; }
+.quote.no { border-left-color: var(--line); }
+.quote.no p { color: var(--ink-2); }
+.verdict { font-size: 22px; font-weight: 700; margin-right: 10px; padding: 2px 10px; }
+.verdict.yes { background: var(--yellow); }
+.verdict.no { border: 2px solid var(--ink); }
+.links { border-top: 4px solid var(--ink); padding-top: 28px; align-self: start; }
+.links .t { font-size: 24px; color: var(--ink-2); font-weight: 600; margin-bottom: 18px; }
+.links li { list-style: none; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.links ul { padding: 0; }
+.links .ph { font-size: 34px; font-weight: 700; letter-spacing: -.02em; line-height: 1.3; }
+.links .ft { font-size: 26px; color: var(--ink-2); margin-top: 6px; }
+.extra-quote { margin-top: 44px; }
+
+/* 철학 한 줄 */
+.motto { justify-content: center; }
+.motto p.big { font-size: 104px; font-weight: 700; letter-spacing: -.045em; line-height: 1.18; }
+.motto mark { background: var(--yellow); color: var(--ink); padding: 0 .1em; }
+
+/* 단계 · 도식 */
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 64px; border-top: 4px solid var(--ink); }
+.steps > div { padding: 30px 32px 0 0; }
+.steps .n { font-family: var(--disp); font-weight: 800; font-size: 88px; line-height: 1; }
+.steps h3 { font-size: 36px; margin-top: 16px; letter-spacing: -.02em; }
+.steps p { font-size: 26px; color: var(--ink-2); margin-top: 12px; line-height: 1.45; }
+.steps .who { display: inline-block; margin-top: 18px; font-size: 22px; font-weight: 700; padding: 3px 12px; border: 2px solid var(--ink); }
+.steps .who.big { background: var(--ink); color: var(--paper); }
+
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; margin-top: 60px; align-items: stretch; }
+.box { border: 3px solid var(--ink); padding: 26px 24px; position: relative; display: flex; flex-direction: column; }
+.box.y { background: var(--yellow); }
+.box .w { font-size: 22px; color: var(--ink-2); font-weight: 600; }
+.box h3 { font-size: 32px; margin-top: 8px; letter-spacing: -.02em; line-height: 1.25; }
+.box ul { padding: 0; margin-top: 16px; }
+.box li { list-style: none; font-size: 23px; line-height: 1.4; padding: 7px 0; border-top: 1px solid var(--line); }
+.box + .box::before { content: ""; position: absolute; left: -31px; top: 50%; width: 28px; height: 3px; background: var(--ink); }
+.box + .box::after { content: ""; position: absolute; left: -12px; top: calc(50% - 8px); border: 9px solid transparent; border-left: 12px solid var(--ink); border-right: 0; }
+.retry { margin-top: 36px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.retry p { font-size: 26px; border-left: 8px solid var(--yellow); padding-left: 22px; }
+
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 96px; margin-top: 60px; }
+.axes { padding: 0; }
+.axes li { list-style: none; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 28px; }
+.axes li b { font-weight: 700; }
+.axes li span { color: var(--ink-2); }
+.axes li.step b::after { content: " ●"; font-size: 18px; vertical-align: 4px; }
+.big-n { font-family: var(--disp); font-weight: 800; font-size: 220px; line-height: .9; letter-spacing: -.05em; }
+
+/* 레벨 테스트 */
+.sets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px; margin-top: 48px; flex: 1; min-height: 0; }
+.set h3 { font-size: 40px; border-bottom: 4px solid var(--ink); padding-bottom: 10px; }
+.q { margin-top: 24px; }
+.q pre { font-family: var(--mono); font-size: 24px; line-height: 1.45; background: #F3F3F3; padding: 16px 18px; white-space: pre-wrap; }
+.q .ask { font-size: 24px; font-weight: 600; margin-top: 12px; line-height: 1.4; }
+.q ol { padding: 0; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+.q ol li { list-style: none; font-size: 21px; border: 2px solid var(--ink); padding: 3px 12px; }
+.q .blank { font-size: 21px; color: var(--ink-2); margin-top: 8px; border-bottom: 2px solid var(--ink); width: 240px; padding-bottom: 4px; }
+.rule-line { font-size: 24px; color: var(--ink-2); margin-top: 18px; line-height: 1.45; }
+.shots { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 64px; margin-top: 48px; flex: 1; min-height: 0; }
+.shot { display: flex; flex-direction: column; min-height: 0; }
+.shot img { width: 100%; flex: 1; min-height: 0; object-fit: contain; object-position: top left; border: 3px solid var(--ink); background: #fff; }
+.shot img.fit { flex: none; height: auto; }
+.shot h3 { font-size: 36px; }
+.shot ul { padding: 0; margin: 12px 0 22px; }
+.shot li { list-style: none; font-size: 26px; color: var(--ink-2); }
+
+/* 나침반 */
+.checks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px; margin-top: 56px; }
+.checks h3 { font-size: 36px; border-bottom: 4px solid var(--ink); padding-bottom: 10px; }
+.checks li { list-style: none; font-size: 24px; line-height: 1.4; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.checks ul { padding: 0; }
+.checks .ai { display: inline-block; font-size: 18px; font-weight: 700; background: var(--yellow); padding: 0 8px; margin-left: 6px; }
+.vec { display: grid; grid-template-columns: 560px minmax(0, 1fr); gap: 96px; margin-top: 40px; flex: 1; min-height: 0; align-items: start; }
+.vec .dial { color: var(--ink); }
+.vec .dial svg { width: 560px; height: 560px; overflow: visible; }
+.vec .dial .compass-needle { transform-box: view-box; transform-origin: 60px 60px; transition: transform .9s cubic-bezier(.3, .7, .2, 1); }
+.vec .dial .read { font-size: 30px; font-weight: 600; text-align: center; margin-top: 12px; min-height: 1.5em; }
+.vstep { display: none; }
+.vstep.on { display: block; }
+.vstep h3 { font-size: 44px; letter-spacing: -.02em; }
+.vstep p { margin-top: 16px; color: var(--ink-2); }
+.vstep .eq { font-family: var(--mono); font-size: 32px; margin-top: 26px; color: var(--ink); line-height: 1.6; }
+.vstep table { border-collapse: collapse; margin-top: 26px; font-size: 28px; }
+.vstep th, .vstep td { padding: 10px 22px 10px 0; text-align: left; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.vstep th { font-weight: 600; color: var(--ink-2); font-size: 22px; }
+.cands { display: flex; gap: 18px; margin-top: 26px; }
+.cands span { font-size: 30px; font-weight: 700; border: 3px solid var(--ink); padding: 10px 26px; }
+.cands span.pick { background: var(--yellow); }
+.pips { position: absolute; left: 120px; bottom: 56px; display: flex; gap: 10px; }
+.pips i { width: 44px; height: 6px; background: var(--line); }
+.pips i.on { background: var(--ink); }
+
+/* 시연 — 화면 전체 */
+.slide.demo { padding: 0; background: #000; }
+.demo .cap { background: var(--yellow); display: flex; align-items: center; gap: 20px; padding: 10px 16px; min-height: 64px; }
+.demo .cap .now { font-size: clamp(16px, 1.7vw, 30px); font-weight: 700; letter-spacing: -.02em; flex: 1; min-width: 0; }
+.demo .cap .k { font-size: clamp(12px, 1vw, 18px); font-weight: 600; white-space: nowrap; }
+.demo .cap .cnt { font-family: var(--disp); font-weight: 800; font-size: clamp(14px, 1.3vw, 24px); white-space: nowrap; }
+.demo .tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.demo .tools button, .nav button { font: inherit; font-size: clamp(12px, .95vw, 17px); font-weight: 600; min-height: 40px; padding: 0 14px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer; }
+.demo .tools button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.panes { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; min-height: 0; background: #000; }
+.panes.t { grid-template-columns: 1fr 0; }
+.panes.s { grid-template-columns: 0 1fr; }
+.pane { position: relative; background: #fff; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.pane .who { position: absolute; left: 0; top: 0; z-index: 2; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 700; padding: 3px 10px; }
+.pane.lit .who { background: var(--yellow); color: var(--ink); }
+.pane iframe { flex: 1; width: 100%; border: 0; }
+.pane img { display: none; position: absolute; left: 0; top: 0; width: 100%; height: auto; transform-origin: 0 0; }
+.demo.backup .pane iframe { display: none; }
+.demo.backup .pane img { display: block; }
+.demo .bk { display: none; position: absolute; right: 12px; top: 6px; z-index: 2; font-size: 13px; font-weight: 700; background: var(--ink); color: var(--yellow); padding: 3px 10px; }
+.demo.backup .bk { display: block; }
+
+/* 마무리 */
+.nots { padding: 0; margin-top: 48px; border-top: 4px solid var(--ink); }
+.nots li { list-style: none; display: grid; grid-template-columns: 560px minmax(0, 1fr); gap: 40px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.nots b { font-size: 32px; }
+.nots span { font-size: 28px; color: var(--ink-2); }
+.end-links { display: flex; gap: 80px; margin-top: auto; font-size: 30px; }
+.end-links a { color: var(--ink); font-weight: 600; }
+
+/* 넘김 — 늘 보인다(iframe 에 초점이 있으면 키가 그쪽으로 간다) */
+.nav { position: fixed; right: 12px; bottom: 12px; z-index: 50; display: flex; gap: 6px; align-items: center; }
+.nav button { min-width: 48px; min-height: 48px; font-size: 20px; }
+.nav .pg { font-family: var(--disp); font-weight: 800; font-size: 16px; color: var(--ink); background: var(--paper); border: 2px solid var(--ink); padding: 0 10px; min-height: 48px; display: flex; align-items: center; }
+body.full .nav { bottom: 8px; }
+button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outline-offset: 2px; box-shadow: 0 0 0 7px var(--ink); }
+@media (prefers-reduced-motion: reduce) { .vec .dial .compass-needle { transition: none; } }
+</style>
+</head>
+<body>
+<div id="stage">
+
+<section class="slide cover on" aria-label="표지">
+  <div>
+    <h1 class="mark">KOMPAS</h1>
+    <p class="sub">의도를 코드로 옮긴다</p>
+  </div>
+  <div class="meta">
+    <p>산학협력실무 발표 · 2026년 10월 21일</p>
+    <svg viewBox="0 0 64 64" role="img" aria-label="KOMPAS 아이콘"><path d="M32 6 37 27 58 32 37 37 32 58 27 37 6 32 27 27Z" fill="#000"/><path d="M53 11 40 40 24 24Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="round"/></svg>
+  </div>
+</section>
+
+<section class="slide part" aria-label="설문">
+  <p class="no">1</p>
+  <h2>만들기 전에 강사 다섯 명에게 먼저 물었습니다</h2>
+  <p class="lead">파이썬 수업에서 학생의 의도를 확인하는 법 · 2026년 10월 18–20일 · 응답 5</p>
+</section>
+
+<!-- 설문 장은 여기에 slide2-data.js 의 길이만큼 들어간다 -->
+<template id="survey-anchor"></template>
+
+<section class="slide motto" aria-label="설계 철학">
+  <p class="kick">그래서 기능마다 이 질문 하나로 거릅니다</p>
+  <p class="big">시작은 대신해주고,<br><mark>판단은 하나도 대신하지 않는다.</mark></p>
+  <p class="lead">이건 시작 비용을 줄이는 건가, 판단을 대신하는 건가? 판단을 대신하는 쪽이면 아무리 친절해 보여도 만들지 않습니다.</p>
+</section>
+
+<section class="slide part" aria-label="AI 문제 생성">
+  <p class="no">2</p>
+  <h2>AI 문제 생성</h2>
+  <p class="lead">AI 는 초안을 쓰고, 정답은 실행한 값이고, 학생에게 내보내는 건 강사입니다.</p>
+</section>
+
+<section class="slide" aria-label="단계별 생성">
+  <p class="kick">강사 화면 · 단계별로 만들기</p>
+  <h2>네 단계마다 강사가 보고 넘깁니다</h2>
+  <div class="steps">
+    <div><p class="n">1</p><h3>수업 내용</h3><p>오늘 배운 것과 핵심을 적고 난이도를 고릅니다. 반의 레벨 분포가 같이 넘어갑니다.</p></div>
+    <div><p class="n">2</p><h3>개념 확인</h3><p>낱말 규칙으로 먼저 찾고, 못 찾으면 AI 가 개념 하나를 고릅니다. 강사가 바꿀 수 있습니다.</p><span class="who">작은 모델</span></div>
+    <div><p class="n">3</p><h3>이야기 고르기</h3><p>AI 가 이야기 후보를 보여 줍니다. 흥미는 반을 아는 강사가 고릅니다.</p><span class="who">작은 모델</span></div>
+    <div><p class="n">4</p><h3>문제 확인</h3><p>문제 · 자료 셋 · 성공 보기 · 설계 카드와 모범 답안을 만들고, 강사가 고친 뒤 확정합니다.</p><span class="who big">큰 모델</span></div>
+  </div>
+</section>
+
+<section class="slide" aria-label="생성 파이프라인">
+  <p class="kick">4단계 안에서 일어나는 일</p>
+  <h2>AI 가 셈한 정답은 쓰지 않습니다</h2>
+  <div class="flow">
+    <div class="box"><span class="w">서버</span><h3>LLM 이 초안을 씁니다</h3><ul><li>문제 · 상황 · 요청</li><li>자료 3개</li><li>성공 보기 · 설계 카드</li><li>모범 답안 코드</li></ul></div>
+    <div class="box"><span class="w">서버 · 실행 없이</span><h3>형식 검사</h3><ul><li>자료는 정확히 3개</li><li>마지막 자료는 반례</li><li>헷갈리는 카드 정확히 1장</li><li>성공 보기에 자료별 답 금지</li><li>print 한 번 · 금지 함수</li></ul></div>
+    <div class="box"><span class="w">강사 브라우저 · Pyodide</span><h3>모범 답안을 자료마다 실행</h3><ul><li>에러 · 시간 초과</li><li>결과가 한 줄 한 값인지</li><li>고른 개념을 썼는지</li><li>반례 결과가 첫 자료와 같은지</li></ul></div>
+    <div class="box"><span class="w">강사 브라우저</span><h3>자료별 정답 = 실행한 값</h3><ul><li>외우기 함정 보기도 첫 자료의 실제 답으로 다시 씁니다</li></ul></div>
+    <div class="box y"><span class="w">강사</span><h3>고치고 확정</h3><ul><li>확정한 미션만 학생 폴더에 보입니다</li><li>모범 답안은 학생에게 가지 않습니다</li></ul></div>
+  </div>
+  <div class="retry">
+    <p>형식 검사에 걸리면 걸린 이유를 붙여 서버가 한 번 더 요청합니다.</p>
+    <p id="retry-browser">실행 검사에 걸리면 이유를 붙여 다시 만듭니다. 같은 생성으로 셉니다.</p>
+  </div>
+</section>
+
+<section class="slide" aria-label="반례와 생성 한도">
+  <p class="kick">빠뜨리지 않게 · 남용하지 않게</p>
+  <h2>마지막 자료는 늘 반례입니다</h2>
+  <div class="two">
+    <div>
+      <ul class="axes" id="axes"></ul>
+      <p class="small" style="margin-top:18px">● 단계별 생성이 쓰는 축. 한 번에 만들기는 다섯 축 모두.</p>
+    </div>
+    <div>
+      <p class="kick">강사별 생성 한도 · 새 강사 기본</p>
+      <p class="big-n" id="quota"></p>
+      <p class="lead" style="color:var(--ink)">성공했을 때만 하나를 씁니다. AI 를 부르기 전에 예약하고, 실패하면 돌려줍니다.</p>
+      <p class="lead">다 쓰면 만들기 버튼이 꺼지고, 한도는 관리자 화면에서만 늘립니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide part" aria-label="레벨 테스트">
+  <p class="no">3</p>
+  <h2>레벨 테스트</h2>
+  <p class="lead">반의 분포로 문제 난이도를 맞춥니다. 학생은 결과를 보지 않습니다.</p>
+</section>
+
+<section class="slide" aria-label="문제지 셋">
+  <p class="kick">문제지 하 · 중 · 상, 각 10문항 · 강사가 학생마다 지정</p>
+  <h2>고르는 문항과 한 낱말로 쓰는 문항만</h2>
+  <div class="sets" id="sets"></div>
+  <p class="rule-line">채점은 규칙으로 합니다. 단답은 숫자 하나 · 낱말 하나로 답이 갈리지 않는 문항만 남겼습니다. 중 문제지는 문법 여섯 + 의도 넷 — 문법 2개 이하면 하, 문법 5개 이상이고 의도 3개 이상이면 상.</p>
+</section>
+
+<section class="slide" aria-label="학생 화면과 강사 화면">
+  <p class="kick">같은 기록, 두 화면</p>
+  <h2>맞았는지는 강사만 봅니다</h2>
+  <div class="shots">
+    <div class="shot"><h3>학생 화면</h3><ul><li>문제만 나옵니다. 문제지 이름 · 맞음 · 점수가 없습니다.</li></ul><img src="docs/수업-흐름/s2-onboard.png" alt="학생 레벨 테스트 화면"></div>
+    <div class="shot"><h3>강사 화면</h3><ul><li>레벨과 문항별 기록. 이벤트에는 고른 답만 남고, 레벨은 화면이 그때 계산합니다.</li><li id="retest"></li></ul><img class="fit" src="docs/수업-흐름/t7-level-record.png" alt="강사 화면의 레벨 기록"></div>
+  </div>
+</section>
+
+<section class="slide part" aria-label="나침반">
+  <p class="no">4</p>
+  <h2>벡터 나침반</h2>
+  <p class="lead">목적지가 아니라 방향만. 점수는 강사 화면에만, 학생에게는 바늘 하나.</p>
+</section>
+
+<section class="slide" aria-label="12칸 체크">
+  <p class="kick">미션 하나를 마칠 때마다 · 예 / 아니오</p>
+  <h2>방향마다 세 칸, 코드가 여덟 · AI 가 넷</h2>
+  <div class="checks" id="checks"></div>
+  <p class="rule-line">AI 칸은 학생 기록에 글자 그대로 있는 인용이 있어야 '예'. 인용이 기록에 없으면 서버가 '아니오'로 바꿉니다. 저장하는 건 원본 판정뿐 — 점수와 평균은 그때 계산합니다.</p>
+</section>
+
+<section class="slide" aria-label="바늘이 정해지는 순서" data-steps="4" id="vec-slide">
+  <p class="kick">선생님 화면과 같은 그림 · js/core/compass.js</p>
+  <h2>체크 → 방향 점수 → 벡터 → 바늘</h2>
+  <div class="vec">
+    <div class="dial"><div id="dial"></div><p class="read" id="dial-read"></p></div>
+    <div id="vsteps"></div>
+  </div>
+  <div class="pips" id="vpips"></div>
+</section>
+
+<section class="slide part" aria-label="시연">
+  <p class="no">5</p>
+  <h2>수업 한 번을 그대로</h2>
+  <p class="lead">왼쪽 강사, 오른쪽 학생. 실제 서비스에 각자 로그인합니다.</p>
+</section>
+
+<section class="slide demo" aria-label="시연" id="demo">
+  <div class="cap">
+    <span class="k">지금 보는 것</span>
+    <span class="now" id="demo-now"></span>
+    <span class="cnt" id="demo-cnt"></span>
+    <span class="tools">
+      <button type="button" data-v="" aria-pressed="true">반반</button>
+      <button type="button" data-v="t" aria-pressed="false">강사 크게</button>
+      <button type="button" data-v="s" aria-pressed="false">학생 크게</button>
+      <button type="button" id="bk-btn" aria-pressed="false" title="B 키">비상 화면</button>
+    </span>
+  </div>
+  <div class="panes" id="panes">
+    <div class="pane" id="pane-t"><span class="who">강사</span><span class="bk">비상 화면</span><iframe name="kompas-teacher" title="강사 화면" data-src="auth.html"></iframe><img alt="강사 화면 갈무리"></div>
+    <div class="pane" id="pane-s"><span class="who">학생</span><span class="bk">비상 화면</span><iframe name="kompas-student" title="학생 화면" data-src="auth.html"></iframe><img alt="학생 화면 갈무리"></div>
+  </div>
+</section>
+
+<section class="slide" aria-label="마무리">
+  <p class="kick">한 번씩 좋은 아이디어로 제안됐다가 거절한 것</p>
+  <h2>만들지 않은 것</h2>
+  <ul class="nots">
+    <li><b>학생 점수 · 포인트 · 레벨</b><span>칭찬을 기계에 넘기면 사람의 격려가 싸구려가 됩니다.</span></li>
+    <li><b>정답 블록 순서와 대조하는 채점</b><span>채점하는 순간 학생은 우리 답을 추측하기 시작합니다.</span></li>
+    <li><b>다음에 할 일 추천</b><span>판단 대행의 가장 흔한 형태입니다.</span></li>
+    <li><b>정답률 · 순위 · 소요 시간 랭킹</b><span>숫자를 띄우면 교사가 줄을 세우고, 학생은 결과를 맞히러 갑니다.</span></li>
+    <li><b>AI 가 쓰는 칭찬 문구</b><span>알림은 타이밍만 알려 줍니다. 말은 선생님이 합니다.</span></li>
+  </ul>
+  <div class="end-links">
+    <p>서비스 <a id="site" href="landing.html">처음 화면</a></p>
+    <p>코드 <a href="https://github.com/tomchaccom/KOMPAS">github.com/tomchaccom/KOMPAS</a></p>
+  </div>
+</section>
+
+</div>
+
+<nav class="nav" aria-label="넘기기">
+  <button type="button" id="prev" aria-label="이전">←</button>
+  <span class="pg" id="pg"></span>
+  <button type="button" id="next" aria-label="다음">→</button>
+</nav>
+
+<!-- 코드에서 옮겨 적은 수. 바꾸면 node test/slide2.test.js 가 코드와 견준다 -->
+<script id="code-values">
+window.SLIDE2_CODE = {
+  "WEIGHTS": [1.0, 0.85, 0.7, 0.55, 0.4],
+  "CANCEL": 0.5,
+  "MIN_LEN": 0.25,
+  "MAX_LEN": 0.90,
+  "FULL": 3.0,
+  "TUTOR_MANY": 5,
+  "RETEST_DAYS": 60,
+  "AXES": ["count", "sep", "empty", "invisible", "boundary"],
+  "STEP_AXES": ["count", "empty", "boundary"],
+  "QUOTA_DEFAULT": 3,
+  "BUILD_RETRIES": 2
+};
+</script>
+<script src="slide2-data.js"></script>
+<script src="js/core/hangul.js"></script>
+<script src="js/core/compass.js"></script>
+<script src="js/core/onboard.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.SLIDE2_CODE, CC = window.CC;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  /* ── 설문 장 — 데이터 길이만큼 ─────────────────────── */
+  var GREYS = ['#000000', '#FFD400', '#FFFFFF', '#9A9A9A', '#FFF3A6'];
+  function bars(item) {
+    var box = el('div', 'bars');
+    item.options.forEach(function (o) {
+      var b = el('div', 'bar'), lab = el('div', 'lab');
+      lab.appendChild(el('span', null, o.label));
+      lab.appendChild(el('b', null, o.count + ' / ' + item.n));
+      b.appendChild(lab);
+      var w = item.n ? o.count / item.n * 100 : 0;
+      b.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="4" fill="#EDEDED"/><rect width="' + w + '" height="4" fill="#000"/></svg>');
+      box.appendChild(b);
+    });
+    return box;
+  }
+  function stack(item) {
+    var box = el('div', 'stack'), x = 0, s = '', keys = el('div', 'keys');
+    var shown = item.options.filter(function (o) { return o.count > 0; });
+    shown.forEach(function (o, i) {
+      var w = o.count / item.n * 1000, c = GREYS[i % GREYS.length];
+      s += '<rect x="' + x + '" y="1.5" width="' + w + '" height="117" fill="' + c + '" stroke="#000" stroke-width="3"/>';
+      if (w >= 80) s += '<text x="' + (x + w / 2) + '" y="78" font-size="56" font-weight="800" font-family="Archivo, sans-serif" text-anchor="middle" fill="' + (c === '#000000' ? '#fff' : '#000') + '">' + o.count + '</text>';
+      x += w;
+      var k = el('span'); k.innerHTML = '<i style="background:' + c + '"></i>' + esc(o.label) + ' ' + o.count;
+      keys.appendChild(k);
+    });
+    item.options.filter(function (o) { return !o.count; }).forEach(function (o) { keys.appendChild(el('span', 'small', o.label + ' 0')); });
+    box.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 1000 120" role="img" aria-label="' + esc(item.q) + '">' + s + '</svg>');
+    box.appendChild(keys);
+    return box;
+  }
+  /* 1–5 척도 — 이름표를 받기 전까지 숫자 축만. ends 가 있으면 양 끝에 쓴다 */
+  function scale(item) {
+    var box = el('div', 'scale'), X = function (v) { return 40 + (v - 1) * 230; }, s = '';
+    s += '<line x1="40" y1="160" x2="960" y2="160" stroke="#000" stroke-width="4"/>';
+    [1, 2, 3, 4, 5].forEach(function (v) {
+      s += '<line x1="' + X(v) + '" y1="148" x2="' + X(v) + '" y2="172" stroke="#000" stroke-width="4"/>' +
+        '<text x="' + X(v) + '" y="222" font-size="40" font-weight="800" font-family="Archivo, sans-serif" text-anchor="middle">' + v + '</text>';
+    });
+    var at = {};
+    item.points.forEach(function (p) {
+      var k = at[p.v] = (at[p.v] || 0) + 1;
+      var y = 160 - 34 - (k - 1) * 46;
+      s += '<circle cx="' + X(p.v) + '" cy="' + y + '" r="20" fill="#FFD400" stroke="#000" stroke-width="4"/>' +
+        '<text x="' + X(p.v) + '" y="' + (y + 8) + '" font-size="22" font-weight="700" text-anchor="middle">' + esc(p.who.slice(-1)) + '</text>';
+    });
+    if (item.ends) s += '<text x="40" y="262" font-size="26">' + esc(item.ends[0]) + '</text><text x="960" y="262" font-size="26" text-anchor="end">' + esc(item.ends[1]) + '</text>';
+    box.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 1000 270" role="img" aria-label="' + esc(item.q) + '">' + s + '</svg>');
+    return box;
+  }
+  function quotes(list) {
+    var box = el('div', 'quotes');
+    list.forEach(function (q) {
+      var d = el('div', 'quote' + (q.verdict === 'no' ? ' no' : '')), p = el('p');
+      if (q.verdict) p.appendChild(el('span', 'verdict ' + q.verdict, q.verdict === 'yes' ? '받아들임' : '받아들이지 않음'));
+      p.appendChild(document.createTextNode(q.text));
+      d.appendChild(p); d.appendChild(el('p', 'who', q.who));
+      box.appendChild(d);
+    });
+    return box;
+  }
+  function surveySlide(item, i, all) {
+    var sec = el('section', 'slide');
+    sec.setAttribute('aria-label', '설문 ' + (i + 1));
+    sec.appendChild(el('p', 'kick', '설문 ' + (i + 1) + ' / ' + all.length + (item.kind === 'multi' ? ' · 여러 개 고르기' : item.kind === 'scale' ? ' · 1–5' : '')));
+    var h = el('h2', null, item.q);
+    if (item.sample) h.appendChild(el('span', 'sample', '예시 데이터'));
+    var grid = el('div', 'sv'), left = el('div');
+    var qw = el('div', 'sv-q'); qw.appendChild(h); sec.appendChild(qw);
+    if (item.kind === 'choice') left.appendChild(stack(item));
+    else if (item.kind === 'multi') left.appendChild(bars(item));
+    else if (item.kind === 'scale') left.appendChild(scale(item));
+    else left.appendChild(quotes(item.quotes || []));
+    if (item.kind !== 'quote' && item.quotes && item.quotes.length) { var x = quotes(item.quotes); x.classList.add('extra-quote'); left.appendChild(x); }
+    left.appendChild(el('p', 'sv-n', '응답 ' + item.n + '명' + (item.kind === 'multi' ? ' · 막대는 그 보기를 고른 사람 수' : '')));
+    grid.appendChild(left);
+    var r = el('div', 'links'), ul = el('ul');
+    r.appendChild(el('p', 't', '이 결과 때문에 정한 것'));
+    (item.links || []).forEach(function (l) {
+      var li = el('li'); li.appendChild(el('p', 'ph', l.philosophy)); li.appendChild(el('p', 'ft', l.feature)); ul.appendChild(li);
+    });
+    r.appendChild(ul); grid.appendChild(r);
+    sec.appendChild(grid);
+    return sec;
+  }
+  var anchor = $('#survey-anchor');
+  (window.SLIDE2_SURVEY || []).forEach(function (it, i, all) { anchor.parentNode.insertBefore(surveySlide(it, i, all), anchor); });
+
+  /* ── 코드 값 ───────────────────────────────────────── */
+  var AXIS = { count: ['개수 변화', '자료 수가 달라진다'], sep: ['구분자 변화', '쉼표 대신 다른 기준'], empty: ['빈 결과', '걸리는 게 하나도 없다'],
+    invisible: ['보이지 않는 차이', '앞뒤 공백'], boundary: ['경계값', '기준과 정확히 같은 값 · 첫 · 마지막 · 0 · 길이 1'] };
+  K.AXES.forEach(function (a) {
+    var li = el('li', K.STEP_AXES.indexOf(a) >= 0 ? 'step' : '');
+    li.appendChild(el('b', null, AXIS[a][0])); li.appendChild(el('span', null, AXIS[a][1]));
+    $('#axes').appendChild(li);
+  });
+  $('#quota').textContent = K.QUOTA_DEFAULT + '개';
+  $('#retry-browser').textContent = '실행 검사에 걸리면 이유를 붙여 다시 만듭니다(최대 ' + K.BUILD_RETRIES + '번). 같은 생성 하나로 셉니다.';
+  $('#retest').textContent = '마지막 테스트 뒤 ' + K.RETEST_DAYS + '일이 지나면 강사에게 "레벨 테스트" 알림.';
+
+  /* ── 레벨 테스트 — 문항 · 보기만. 정답은 읽지도 그리지도 않는다 ── */
+  var PICK = { low: ['l5', 'l2'], mid: ['d1', 'd2'], high: ['h13', 'h3'] };
+  ['low', 'mid', 'high'].forEach(function (set) {
+    var col = el('div', 'set');
+    col.appendChild(el('h3', null, '문제지 ' + CC.onboard.SET_LABEL[set]));
+    var qs = CC.onboard.SETS[set];
+    PICK[set].forEach(function (id) {
+      var q = qs.filter(function (x) { return x.id === id; })[0];
+      if (!q) return;
+      var b = el('div', 'q');
+      b.appendChild(el('pre', null, q.code));
+      b.appendChild(el('p', 'ask', q.ask));
+      if (q.options) { var ol = el('ol'); q.options.forEach(function (o) { ol.appendChild(el('li', null, o)); }); b.appendChild(ol); }
+      else b.appendChild(el('p', 'blank', '한 낱말로 쓰기'));
+      col.appendChild(b);
+    });
+    $('#sets').appendChild(col);
+  });
+
+  /* ── 나침반 12칸 ───────────────────────────────────── */
+  var CHECKS = {
+    N: [['N1', '함정이 아닌 성공 조건을 골랐다', 0], ['N2', '성공 조건을 코드로 직접 옮겼다', 1], ['N3', '튜터에게 이해한 것을 설명하고 물었다', 1]],
+    E: [['E1', '설계 카드를 냈다', 0], ['E2', '설계 이유를 자기 말로 적었다', 1], ['E3', '실행해 본 뒤 설계를 고쳤다', 0]],
+    S: [['S1', '에러 없이 실행되는 코드가 있다', 0], ['S2', '에러가 난 뒤 스스로 고쳐 다시 돌렸다', 0], ['S3', '반례 자료까지 같은 코드로 돌렸다', 0]],
+    W: [['W1', '반례 자료를 직접 돌렸다', 0], ['W2', '판정 근거를 실제 실행 결과에 기댔다', 1], ['W3', '반례가 깨진 걸 보고 고쳤다', 0]]
+  };
+  'NESW'.split('').forEach(function (d) {
+    var col = el('div'), ul = el('ul');
+    col.appendChild(el('h3', null, CC.compass.SHAPE[d] + ' ' + CC.compass.DIRS[d]));
+    CHECKS[d].forEach(function (c) { var li = el('li', null, c[1]); if (c[2]) li.appendChild(el('span', 'ai', 'AI')); ul.appendChild(li); });
+    col.appendChild(ul); $('#checks').appendChild(col);
+  });
+
+  /* ── 바늘 — api/_compass.py cumulative() 를 보여 주기 위해 옮긴 계산(가중 평균 · 길이) ── */
+  var UNIT = { N: [0, 1], E: [1, 0], S: [0, -1], W: [-1, 0] };
+  function view(x, y) {
+    var mag = Math.hypot(x, y), deg = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
+    return { deg: deg, len: K.MIN_LEN + (K.MAX_LEN - K.MIN_LEN) * Math.min(mag, K.FULL) / K.FULL, mag: mag };
+  }
+  var MISSIONS = [   /* 최신부터 — 지어낸 예시 */
+    { N: 3, E: 2, S: 1, W: 0 }, { N: 2, E: 1, S: 2, W: 1 }, { N: 1, E: 2, S: 2, W: 0 }, { N: 2, E: 0, S: 1, W: 1 }, { N: 1, E: 1, S: 3, W: 0 }];
+  var one = MISSIONS[0], ox = one.E - one.W, oy = one.N - one.S;
+  var tw = 0, ax = 0, ay = 0;
+  MISSIONS.forEach(function (m, i) { var w = K.WEIGHTS[i]; tw += w; ax += w * (m.E - m.W); ay += w * (m.N - m.S); });
+  ax /= tw; ay /= tw;
+  var CAN = { N: 1, E: 3, S: 1, W: 3 };   /* 동 3 · 서 3, 북 1 · 남 1 → 크기 0 */
+  var f2 = function (v) { return (Math.round(v * 100) / 100).toString(); };
+  var dirName = function (deg) { return CC.compass.DIRS[CC.compass.dirOf(deg)]; };
+  var V = [
+    { deg: null, h: '미션 하나를 마치면', body: '<p>방향마다 세 칸 중 \'예\'가 몇 개인지가 그 방향 점수입니다(0–3).</p><table><tr><th></th><th>북</th><th>동</th><th>남</th><th>서</th></tr><tr><td>예 개수</td><td>' + one.N + '</td><td>' + one.E + '</td><td>' + one.S + '</td><td>' + one.W + '</td></tr></table>' },
+    { v: view(ox, oy), h: '마주 보는 방향끼리 뺍니다', body: '<p class="eq">x = 동 − 서 = ' + one.E + ' − ' + one.W + ' = ' + ox + '<br>y = 북 − 남 = ' + one.N + ' − ' + one.S + ' = ' + oy + '</p><p>이 미션 하나의 화살표입니다. 칸을 많이 채웠다고 길어지는 게 아니라, 한쪽으로 기울었을 때 길어집니다.</p>' },
+    { v: view(ax, ay), h: '최근 미션 ' + K.WEIGHTS.length + '개를 가중 평균', body: '<table><tr><th>미션</th><th>가중치</th><th>x</th><th>y</th></tr>' + MISSIONS.map(function (m, i) { return '<tr><td>' + (i ? i + '개 전' : '이번') + '</td><td>' + K.WEIGHTS[i] + '</td><td>' + (m.E - m.W) + '</td><td>' + (m.N - m.S) + '</td></tr>'; }).join('') + '</table><p class="eq">평균 (' + f2(ax) + ', ' + f2(ay) + ') → 바늘 길이 ' + K.MIN_LEN + '–' + K.MAX_LEN + '</p>' },
+    { deg: 90, len: K.MIN_LEN, cancel: true, h: '서로 지워지면 기계가 정하지 않습니다', body: '<table><tr><th></th><th>북</th><th>동</th><th>남</th><th>서</th></tr><tr><td>예 개수</td><td>' + CAN.N + '</td><td>' + CAN.E + '</td><td>' + CAN.S + '</td><td>' + CAN.W + '</td></tr></table><p>크기가 ' + K.CANCEL + '보다 작으면 강사에게 칭찬 타이밍 알림이 가고, 겹친 후보 중 하나를 강사가 고릅니다. 고르기 전에는 학생 바늘이 바뀌지 않습니다.</p><div class="cands"><span class="pick">◧ 동 · 설계</span><span>◇ 서 · 검증</span></div>' }
+  ];
+  V.forEach(function (s) { var d = el('div', 'vstep'); d.innerHTML = '<h3>' + esc(s.h) + '</h3>' + s.body; $('#vsteps').appendChild(d); $('#vpips').appendChild(el('i')); });
+  var lastDeg = 0;
+  function needle(k) {
+    var s = V[k], deg = s.v ? s.v.deg : s.deg, len = s.v ? s.v.len : s.len;
+    var box = $('#dial');
+    if (deg == null) { box.innerHTML = CC.compass.svg(null); $('#dial-read').textContent = '아직 바늘 없음'; return; }
+    box.innerHTML = CC.compass.svg(0, len);   /* 0도로 그린 뒤 CSS 로 돌린다 — 바늘이 도는 게 보이게 */
+    var g = $('.compass-needle', box), svg = $('svg', box);
+    svg.setAttribute('aria-label', dirName(deg));
+    g.style.transition = 'none'; g.style.transform = 'rotate(' + lastDeg + 'deg)';
+    g.getBoundingClientRect();
+    g.style.transition = ''; g.style.transform = 'rotate(' + deg + 'deg)';
+    lastDeg = deg;
+    $('#dial-read').textContent = s.cancel ? '강사가 고른 방향 · 가장 짧은 바늘' : dirName(deg) + ' · 길이 ' + f2(len);
+  }
+
+  /* ── 시연 ──────────────────────────────────────────── */
+  var IMG = 'docs/수업-흐름/';
+  var DEMO = [
+    /* t · s: docs/수업-흐름/ 그림, ty · sy: 비상 화면에서 그 그림의 몇 px 아래부터 보일지(그림 좌표) */
+    { now: '두 칸에 따로 로그인합니다 — 왼쪽 강사, 오른쪽 학생', t: 'a1-login', s: 'a1-login' },
+    { now: '학생: 내 교실에서 강사가 확정한 미션을 엽니다', t: 't2-students', s: 's3-missions', f: 's' },
+    { now: '01 문제 — 무엇을 해야 하는지만 읽습니다. 방법은 적혀 있지 않습니다', t: 't2-students', s: 's4-step1-problem', f: 's', sy: 200 },
+    { now: '02 성공 조건 — 함정이 섞인 보기에서 무엇이 성공인지 고르고 이유를 씁니다', t: 't2-students', s: 's5-step2-success', f: 's', sy: 300 },
+    { now: '03 설계 — 카드를 골라 순서를 정하고 이유 한 줄', t: 't2-students', s: 's6-step3-design', f: 's', sy: 350 },
+    { now: '04 코딩 — 튜터에게 묻습니다. 문법은 주고 풀이는 주지 않습니다', t: 't2-students', s: 's8-tutor', f: 's', sy: 500 },
+    { now: '04 반례 자료까지 돌리고, 결과를 학생이 직접 판정합니다', t: 't2-students', s: 's7-step4-code', f: 's', sy: 900 },
+    { now: '05 정리 — 자기 말로 한 문장', t: 't2-students', s: 's9-step5-wrap', f: 's', sy: 300 },
+    { now: '강사: 오른쪽에 칭찬 타이밍 알림 — 말은 강사가 합니다', t: 't8-finish-alert', s: 's9-step5-wrap', f: 't', sy: 300 },
+    { now: '강사: 학생 상세 — 나침반, 12칸, 튜터 질문', t: 't3-detail', s: 's9-step5-wrap', f: 't', ty: 380, sy: 300 },
+    { now: '강사가 한마디를 써서 보냅니다', t: 't3-detail', s: 's12-teacher-note', f: 't', ty: 1300 },
+    { now: '학생: 내 기록 — 누적 바늘 · 방위 · 선생님 한마디만', t: 't3-detail', s: 's11-my-compass', f: 's', ty: 1300 }
+  ];
+  var demo = $('#demo'), dk = 0, loaded = false;
+  function paintDemo() {
+    var s = DEMO[dk];
+    $('#demo-now').textContent = s.now;
+    $('#demo-cnt').textContent = (dk + 1) + ' / ' + DEMO.length;
+    place($('#pane-t img'), IMG + s.t + '.png', s.ty || 0);
+    place($('#pane-s img'), IMG + s.s + '.png', s.sy || 0);
+    $('#pane-t').classList.toggle('lit', s.f === 't');
+    $('#pane-s').classList.toggle('lit', s.f === 's');
+  }
+  /* 칸 너비에 맞춰 그림을 그리고 y px(그림 좌표) 아래부터 — 그림 끝을 넘겨 빈 곳이 보이지 않게 */
+  function place(img, src, y) {
+    img.dataset.y = y;
+    if (img.getAttribute('src') !== src) { img.onload = function () { shift(img); }; img.src = src; } else shift(img);
+  }
+  function shift(img) {
+    var pw = img.parentNode.clientWidth, ph = img.parentNode.clientHeight, nw = img.naturalWidth, nh = img.naturalHeight;
+    if (!nw || !pw) return;
+    var k = pw / nw, y = Math.max(0, Math.min(+img.dataset.y * k, nh * k - ph));
+    img.style.transform = 'translateY(' + -y + 'px)';
+  }
+  function reshift() { [].forEach.call(demo.querySelectorAll('.pane img'), shift); }
+  function loadFrames() {
+    if (loaded) return; loaded = true;
+    [].forEach.call(demo.querySelectorAll('iframe'), function (f) { f.src = f.dataset.src; });
+  }
+  [].forEach.call(demo.querySelectorAll('.tools button[data-v]'), function (b) {
+    b.addEventListener('click', function () {
+      $('#panes').className = 'panes' + (b.dataset.v ? ' ' + b.dataset.v : '');
+      [].forEach.call(demo.querySelectorAll('.tools button[data-v]'), function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      reshift();
+    });
+  });
+  function backup(on) {
+    on = on == null ? !demo.classList.contains('backup') : on;
+    demo.classList.toggle('backup', on);
+    reshift();
+    $('#bk-btn').setAttribute('aria-pressed', String(on));
+  }
+  $('#bk-btn').addEventListener('click', function () { backup(); });
+
+  /* ── 넘기기 ────────────────────────────────────────── */
+  var slides = [].slice.call(document.querySelectorAll('#stage > .slide'));
+  var cur = 0, sub = 0;
+  function steps(s) { return s === demo ? DEMO.length : +(s.dataset.steps || 1); }
+  function show(i, k) {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    var s = slides[cur];
+    sub = Math.max(0, Math.min(steps(s) - 1, k || 0));
+    slides.forEach(function (x) { x.classList.toggle('on', x === s); });
+    document.body.classList.toggle('full', s === demo);
+    if (s === demo) { loadFrames(); dk = sub; paintDemo(); }
+    if (s.id === 'vec-slide') {
+      [].forEach.call(document.querySelectorAll('.vstep'), function (d, j) { d.classList.toggle('on', j === sub); });
+      [].forEach.call(document.querySelectorAll('#vpips i'), function (d, j) { d.classList.toggle('on', j <= sub); });
+      needle(sub);
+    }
+    $('#pg').textContent = (cur + 1) + ' / ' + slides.length;
+    $('#prev').disabled = cur === 0 && sub === 0;
+    $('#next').disabled = cur === slides.length - 1 && sub === steps(s) - 1;
+    try { history.replaceState(null, '', '#' + (cur + 1) + (sub ? '.' + (sub + 1) : '')); } catch (e) { /* file:// 등 */ }
+    fit();
+  }
+  function next() { if (sub < steps(slides[cur]) - 1) show(cur, sub + 1); else if (cur < slides.length - 1) show(cur + 1, 0); }
+  function prev() { if (sub > 0) show(cur, sub - 1); else if (cur > 0) show(cur - 1, steps(slides[cur - 1]) - 1); }
+  $('#next').addEventListener('click', next);
+  $('#prev').addEventListener('click', prev);
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if ((e.key === 'b' || e.key === 'B') && slides[cur] === demo) backup();
+  });
+
+  /* 1920×1080 무대를 화면에 맞춘다 — 남는 쪽은 검은 띠 */
+  var stage = $('#stage');
+  function fit() {
+    if (document.body.classList.contains('full')) { stage.style.transform = ''; return; }
+    var k = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = 'translate(' + (innerWidth - 1920 * k) / 2 + 'px,' + (innerHeight - 1080 * k) / 2 + 'px) scale(' + k + ')';
+  }
+  addEventListener('resize', function () { fit(); reshift(); });
+  $('#site').textContent = location.protocol === 'file:' ? '처음 화면' : location.host;
+  var m = /^#(\d+)(?:\.(\d+))?$/.exec(location.hash);
+  show(m ? +m[1] - 1 : 0, m && m[2] ? +m[2] - 1 : 0);
+})();
+</script>
+</body>
+</html>

@@ -21,7 +21,7 @@ function launchOpts() {
 }
 
 /* index.html 은 landing.html 로 넘기는 리다이렉트뿐이라 landing 을 본다 */
-const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html','sentence.html','admin.html'];
+const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make.html','print.html','philosophy.html','sentence.html','admin.html','slide2.html'];
 (async () => {
   const b = await chromium.launch(launchOpts());
   let bad = 0;
@@ -46,10 +46,10 @@ const PAGES = ['landing.html','teacher.html','abstract.html','review.html','make
           };
         });
         const overflow = o.d > o.w + 1;
-        /* philosophy.html 은 '무엇을 안 만들었는지'를 설명하는 문서라 예외다.
-         * 검사 대상은 학생·교사가 실제로 쓰는 화면이다. */
+        /* philosophy.html 은 '무엇을 안 만들었는지'를 설명하는 문서라 예외다. slide2.html(발표)도
+         * "점수 · 랭킹을 만들지 않는다"를 설명해야 해서 같은 예외. 검사 대상은 학생·교사가 실제로 쓰는 화면이다. */
         const BANNED = /포인트|점수|정답률|랭킹|연속 출석|정답입니다|참 잘했|잘했어|훌륭|대단해|좋아요/;
-        const hit = f === 'philosophy.html' ? null : o.text.match(BANNED);
+        const hit = f === 'philosophy.html' || f === 'slide2.html' ? null : o.text.match(BANNED);
         if (errs.length || overflow || hit) {
           bad++;
           console.log(`✗ ${f} @${w} ${scheme}`

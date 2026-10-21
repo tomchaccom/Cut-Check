@@ -115,6 +115,7 @@ teacher.html    선생님 화면
 print.html      수업 준비물 (인쇄용)
 admin.html      관리자 화면 (강사별 생성 한도 · 최근 생성 기록, 관리자만)
 philosophy.html 철학 한 장 (리뷰·심사용)
+slide2.html     발표 슬라이드 (설문은 slide2-data.js, 시연 두 칸은 window.name 으로 세션을 나눈다)
 
 js/core/   판단의 규칙. 저장소도 네트워크도 화면도 모른다
   events.js     이벤트 계약 + "저장하지 않기로 한 필드" 차단
@@ -187,10 +188,11 @@ node test/hangul.test.js     # 조사
 node test/llmguard.test.js   # AI 출력 규칙 + 우리가 쓰는 문장이 그 규칙을 지키는지
 node test/layer.test.js      # 계층 경계 + 이벤트 계약 + 접기
 node test/alerts.test.js     # 교사 알림 — 종류별 한 번 · 첫 화면 기준선 · 사실 문장
-node test/smoke.js           # 9개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
+node test/smoke.js           # 10개 화면 × 3폭 × 2테마, JS 에러 / 가로 스크롤 / 금지 단어
 node test/robust.js          # 학생 자유 입력이 선생님 화면까지 안전하게 흐르는지
 node test/compass.test.js    # 미션 마침 알림은 학생·미션당 한 번 · 나침반 SVG · 방향 모양
 node test/shots.js           # 수업-흐름 그림 다시 찍기 (가짜 데이터)
+node test/slide2.test.js     # 발표(/slide2)에 옮겨 적은 수가 코드와 같은지 · 설문 데이터 꼴
 
 # 미션 생성 서버(api/*.py) — venv 없이 uv 가 pydantic 을 준비한다
 uv run --with-requirements requirements.txt python test/test_missionguard.py     # 생성 미션 검사 + 우리 미션 문장

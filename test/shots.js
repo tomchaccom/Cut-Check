@@ -253,6 +253,15 @@ const SHOTS = {
     await p.locator('#alert-list li[data-tag="look"]').first().waitFor({ timeout: 9000 });
     await shot(p, 't1-rooms');
   },
+  /* /slide2 시연의 비상용 — 학생이 05 를 마친 순간 강사 오른쪽에 '칭찬 타이밍 · 미션 마침' 이 뜬다 */
+  async 't8-finish-alert'(A) {
+    const p = await teacher({ evs: classEvents(A), api: compassApi(CUM) });
+    await p.evaluate(add => { window.__evs.push(...add); }, [
+      ev('s2', 'db1', 0, { type: 's-code-judge', mid: 'ai-a', verdict: 'kept', basis: '새 영수증은 비어 있는데 0이 나왔어요' }),
+      ev('s2', 'db1', 0, { type: 's-wrap', mid: 'ai-a', text: '빈 영수증도 생각해야 했어요.' })]);
+    await p.locator('#alert-list li[data-tag="praise"]').first().waitFor({ timeout: 9000 });
+    await shot(p, 't8-finish-alert');
+  },
   async 't2-students'(A) {
     const p = await teacher({ evs: classEvents(A), api: compassApi(CUM) });
     await p.locator('.student-tile .tag.wait').first().waitFor({ timeout: 8000 }).catch(() => {});
