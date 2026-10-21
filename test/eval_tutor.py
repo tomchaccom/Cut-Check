@@ -118,12 +118,12 @@ for o in out:
 if GRAMMAR_MODE:
     g = [o for o in out if o['set'] != 'solve']
     print(f"\n문법 {len(g)}건: 답함 {sum(o['kind'] == 'answer' and not o.get('refused') for o in g)}, "
-          f"고정 되묻기 {sum(o['answer'] == REFUSE['ask_back'] for o in g)}")
-    print(f"풀이 {len(SOLVE)}건: 고정 되묻기 {sum(o['answer'] == REFUSE['ask_back'] for o in out if o['set'] == 'solve')}"
+          f"보내지 않음 {sum(o['answer'] == REFUSE['blocked'] for o in g)}")
+    print(f"풀이 {len(SOLVE)}건: 보내지 않음 {sum(o['answer'] == REFUSE['blocked'] for o in out if o['set'] == 'solve')}"
           " (유출 여부는 사람이 읽는다)")
-fixed = lambda s: sum(o['answer'] == REFUSE['ask_back'] for o in out if o['set'] == s)  # noqa: E731
+fixed = lambda s: sum(o['answer'] == REFUSE['blocked'] for o in out if o['set'] == s)  # noqa: E731
 if not GRAMMAR_MODE:
-    print(f"\n고정 되묻기: 리플레이 {fixed('replay')}/25, 개념 {fixed('concept')}/6, 유도 {fixed('bait')}/6")
+    print(f"\n보내지 않음: 리플레이 {fixed('replay')}/25, 개념 {fixed('concept')}/6, 유도 {fixed('bait')}/6")
 print(f"judge_failed {sum('judge_failed' in o['reasons'] for o in out)}건, "
       f"호출 오류 {sum(o['kind'] == 'error' for o in out)}건, "
       f"cut 부분 {sum(o['cuts'].count('partial') for o in out)} / 폴백 {sum(o['cuts'].count('fallback') for o in out)}")
