@@ -27,7 +27,11 @@
     });
   }
   if (url && key && typeof window !== 'undefined' && window.supabase) {
-    sb = window.supabase.createClient(url, key);
+    /* 발표 슬라이드(/slide2)는 같은 출처의 iframe 둘에 강사·학생을 따로 로그인한다. 같은 저장소라 세션 키를 나눈다 —
+       window.name 은 그 iframe 안에서 페이지를 옮겨도 남는다. 이름 없는 일반 접속은 기본 키 그대로(기존 로그인 유지).
+       다른 localStorage 키(발신함·prefs·recap)는 Supabase 모드에서 두 역할이 겹쳐 쓰지 않아 나누지 않았다. */
+    var nm = String(window.name || '');
+    sb = window.supabase.createClient(url, key, nm.indexOf('kompas-') === 0 ? { auth: { storageKey: 'sb-' + nm } } : undefined);
   }
 
   /* 서버 함수 부르기 — 지금 세션의 토큰을 붙인다. 생성·계정 함수는 로그인한 강사만 받는다.
