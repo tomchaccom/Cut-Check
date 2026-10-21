@@ -43,7 +43,8 @@ test('두 칸은 서로 다른 세션 — 로그인하고 페이지를 옮겨도
   await expect.poll(() => frame('kompas-teacher').url(), { timeout: 10000 }).toContain('teacher.html');
   await expect.poll(() => frame('kompas-student').url(), { timeout: 10000 }).toContain('sentence.html');
 
-  const who = n => frame(n).evaluate(() => CC.sb.getUser().then(u => ({ name: window.name, key: window.__sbKey, id: u && u.id })));
+  /* url 은 문서가 바뀌자마자 바뀐다 — 스크립트가 CC 를 만들기 전에 부르면 "CC is not defined" (반쯤 실패하던 경합) */
+  const who = n => frame(n).waitForFunction(() => window.CC && CC.sb).then(() => frame(n).evaluate(() => CC.sb.getUser().then(u => ({ name: window.name, key: window.__sbKey, id: u && u.id }))));
   expect(await who('kompas-teacher')).toEqual({ name: 'kompas-teacher', key: 'sb-kompas-teacher', id: 't1' });
   expect(await who('kompas-student')).toEqual({ name: 'kompas-student', key: 'sb-kompas-student', id: 's1' });
 });

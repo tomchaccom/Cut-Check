@@ -508,13 +508,22 @@ test('다른 미션으로 바꾸면 앞 미션 코드가 남지 않는다', asyn
   expect(await page.locator('#code-editor').inputValue()).not.toContain('앞 미션');
 });
 
-/* 내 기록 — 지금 미션의 것만, 코드 단계 결과로 (2026-10-17 학생 계정 검증에서 엉뚱한 값이 보였다) */
+/* 내 기록 — 미션마다 카드 하나, 코드 단계 결과로 (2026-10-17 학생 계정 검증에서 엉뚱한 값이 보였다).
+ * 로컬 모드도 탭이 보여야 한다 — 숨기면 내 기록으로 가는 문이 없다 (2026-10-22) */
 async function openHistory(page) {
-  await page.evaluate(() => { document.querySelector('#main-tabs').hidden = false; });  // 로컬 모드는 탭을 숨긴다
   await page.locator('.main-tab[data-panel="panel-history"]').click();
 }
 
-test('내 기록에는 지금 미션 것만, 코드 실행 결과와 내 판단이 남는다', async ({ page }) => {
+test('로컬 모드 — 내 기록 탭이 보이고, 기록이 없으면 빈 안내가 보인다', async ({ page }) => {
+  await local(page.context());
+  await seedMission(page);
+  await expect(page.locator('.main-tab[data-panel="panel-history"]')).toBeVisible();
+  await expect(page.locator('.main-tab[data-panel="panel-missions"]')).toBeHidden();   // 교실 폴더는 서버에만
+  await openHistory(page);
+  await expect(page.locator('#history-empty')).toHaveText('아직 기록이 없어요. 미션을 풀면 여기에 남아요.');
+});
+
+test('내 기록에는 미션마다 카드 하나, 코드 실행 결과와 내 판단이 남는다', async ({ page }) => {
   test.setTimeout(120000);
   await local(page.context());
   await seedMission(page);
@@ -546,8 +555,12 @@ test('내 기록에는 지금 미션 것만, 코드 실행 결과와 내 판단�
   await page.locator('#reason-define').fill('둘째 미션 이유');
   await page.locator('#go-method').click();
   await openHistory(page);
-  await expect(rec).not.toContainText('앞 미션 정리');   // 다른 미션 기록이 섞이지 않는다
-  await expect(rec).not.toContainText('세 개가 나와서');
+  const cards = rec.locator('.record-card');
+  await expect(cards).toHaveCount(2);
+  const other = cards.filter({ hasNotText: '시험용 미션' });
+  await expect(other).toHaveCount(1);                       // 둘째 미션 카드가 따로 있다
+  await expect(other).not.toContainText('앞 미션 정리');   // 다른 미션 기록이 섞이지 않는다
+  await expect(other).not.toContainText('세 개가 나와서');
 });
 
 test('자료 3개로 실행 — 같은 코드를 자료마다 돌려 결과를 나란히 보인다', async ({ page }) => {
@@ -2444,6 +2457,32 @@ test('학생 — 호출이 실패하면 나침반 카드가 없고 에러도 없
   await expect(page.locator('#compass-cum')).toBeHidden();
   await expect(page.locator('#compass-mine')).toBeHidden();
   expect(errs).toEqual([]);
+});
+
+/* 운영 보고(2026-10-22): 로그인하고 바로 내 기록을 누르면 마친 미션이 있어도 "아직 기록이 없어요" — 지금 연 미션 하나만 그렸다 */
+test('학생 — 미션을 열지 않고 내 기록을 눌러도 지난 미션 카드와 선생님 한마디가 보인다', async ({ page }) => {
+  const errs = []; page.on('pageerror', e => errs.push(e.message));
+  await page.addInitScript(() => { window.__note = { teacher_note: '쪼갠 순서를 말로 설명했어요', sent_at: 't' }; });
+  await asStudent(page, [{ id: 'r1', name: '1학년 3반' }]);
+  await page.locator('.main-tab[data-panel="panel-history"]').click();
+  const cards = page.locator('#history-list .record-card');
+  await expect(cards).toHaveCount(2);                       // 푼 미션 · 하던 미션. 안 연 미션 · 진단은 카드가 없다
+  await expect(cards.nth(0)).toContainText('푼 미션');
+  await expect(cards.nth(0)).toContainText('끝');
+  await expect(cards.nth(0).locator('.rc-note')).toContainText('쪼갠 순서를 말로 설명했어요');
+  await expect(cards.nth(1)).toContainText('하던 미션');
+  await expect(page.locator('#history-empty')).toBeHidden();
+  await expect(page.locator('#compass-cum')).toBeVisible();
+  expect(errs).toEqual([]);
+});
+
+test('학생 — 기록도 나침반도 없으면 빈 안내 둘이 보인다', async ({ page }) => {
+  await page.addInitScript(() => { window.__evs = []; window.__compass = null; });
+  await asStudent(page);
+  await page.locator('.main-tab[data-panel="panel-history"]').click();
+  await expect(page.locator('#compass-cum')).toContainText('선생님이 곧 방향을 알려 주실 거예요.');
+  await expect(page.locator('#history-empty')).toHaveText('아직 기록이 없어요. 미션을 풀면 여기에 남아요.');
+  await expect(page.locator('#history-list .record-card')).toHaveCount(0);
 });
 
 test('학생 — 미션 카드에는 선생님 한마디만, 바늘도 방향도 없다', async ({ page }) => {
