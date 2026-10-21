@@ -198,7 +198,7 @@ details.more[open] > summary { margin-bottom: 16px; }
 
 /* ── 학생 한 명 ──────────────────────────────────────
  * 교사가 움직이는 순서로 위에서 아래: 지금 상태 → 먼저 물어볼 것 → 미션 → 나침반(본문 폭 전체)
- * → 시간순 기록(760px) → 튜터 대화 · 짚을 거리(760px). */
+ * → 시간순 기록 · 튜터 대화와 짚을 거리(본문이 넓으면 나란히). */
 .d-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; }
 .d-who { min-width: 0; }
 .detail .big-title { font-size: clamp(32px, 4vw, 48px); margin: 0; }
@@ -210,7 +210,7 @@ details.more[open] > summary { margin-bottom: 16px; }
 .mf { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: none; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
 .mf[aria-pressed="true"] { border: 2px solid var(--ink); font-weight: 600; }
 .mf .st { font-size: 12px; color: var(--ink-2); font-weight: 400; }
-.d-main, .d-tutor { min-width: 0; max-width: 760px; margin-top: 32px; }
+.d-main, .d-tutor { min-width: 0; margin-top: 32px; }
 .d-main h4, .d-tutor h4 { margin: 0; font-size: 17px; font-weight: 700; }
 .d-tutor h5 { margin: 20px 0 0; font-size: 15px; font-weight: 700; }
 .d-tutor .recap-go { margin-top: 12px; }
@@ -325,7 +325,7 @@ details.more[open] > summary { margin-bottom: 16px; }
 .d-pair .sub { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }
 
 /* 수업에서 짚을 거리 — 한 줄 point, 펼치면 이름 · 학생 질문 원문 */
-.recap-out { max-width: 760px; }
+.recap-out { max-width: 960px; }
 .recap-out .was, .recap-out .recap-fail { font-size: 14px; color: var(--ink-2); margin: 8px 0; }
 .recap-item { border-top: 1px solid var(--line); padding: 6px 0; }
 .recap-item > summary { cursor: pointer; min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; overflow-wrap: anywhere; }
@@ -334,7 +334,10 @@ details.more[open] > summary { margin-bottom: 16px; }
 .recap-item .who, .recap-item .quote { margin: 4px 0 8px; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
 .gen-left { font-size: 13px; color: var(--ink-3); }
 /* 관리자 화면 — 넓은 화면은 표, 휴대폰은 한 줄이 카드 하나(옆으로 밀지 않는다) */
-.shell-main.ad > * { max-width: 1000px; }
+.shell-main.ad > * { max-width: 1440px; }
+@container main (min-width: 1400px) {   /* 넓으면 한도 표와 생성 기록을 나란히 */
+  #ad-main:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; align-items: start; }
+}
 .ad-table { border-collapse: collapse; width: 100%; font-size: 16px; margin-top: 12px; }
 .ad-table th, .ad-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere; }
 .ad-table th { font-size: 15px; color: var(--ink-2); font-weight: 600; }
@@ -392,7 +395,7 @@ details.more[open] > summary { margin-bottom: 16px; }
 .student-tile .tag.wait { font-size: 11px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; margin-top: 4px; }
 
 /* ── 화면 틀 (2026-10-20 시안 Main · Folded · Mobile) ──────────
- * 왼쪽 사이드바(264 ↔ 72) · 한 열 본문(760) · 오른쪽 알림(340). 색은 sentence.css 토큰 그대로 — 어두운 테마도 같이 돈다. */
+ * 왼쪽 사이드바(264 ↔ 72) · 본문(남는 폭, 넓으면 두 칸) · 오른쪽 알림(340). 색은 sentence.css 토큰 그대로 — 어두운 테마도 같이 돈다. */
 body { font-size: 17px; }
 .shell { display: flex; min-height: 100vh; }
 .iconbtn { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 10px; border: 2px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-size: 18px; font-weight: 700; line-height: 1; cursor: pointer; }
@@ -437,11 +440,29 @@ body { font-size: 17px; }
   .side.folded #classroom-selector { display: flex; flex-direction: column; align-items: center; }
 }
 
-.shell-main { flex: 1 1 0; min-width: 0; padding: 0 48px 72px; }
-.shell-main > * { max-width: 760px; }
-.shell-main > #dashboard { max-width: none; }
-#dashboard > *, .dtab > * { max-width: 760px; }
-#dashboard > .dtab, .dtab > details.more { max-width: none; }   /* 분석 표처럼 넓어야 하는 것만 본문 폭 전체 */
+/* 본문은 남는 폭을 다 쓴다(상한 1760). 양옆 칸을 펴면 그만큼 줄고, 접으면 넓어진다.
+ * 넓어지면 한 열을 길게 늘이지 않고 두 칸으로 나눈다 — 판단은 본문 폭(@container)으로 한다, 창 폭이 아니라. */
+.shell-main { flex: 1 1 0; min-width: 0; padding: 0 48px 72px; container-type: inline-size; container-name: main; }
+.shell-main > * { max-width: 1760px; }
+.shell-main p, .shell-main .lead { max-width: 75ch; }   /* 줄 길이는 읽기 좋은 만큼만 */
+
+/* 미션: 만들기(왼쪽) · 만든 미션(오른쪽) */
+@container main (min-width: 1000px) {
+  #dtab-missions.active { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 0 32px; align-items: start; }
+  #dtab-missions > .panel { grid-column: 1; grid-row: 1 / span 2; }
+  #dtab-missions > .list-h { grid-column: 2; grid-row: 1; margin-top: 0; }
+  #dtab-missions > #mission-list { grid-column: 2; grid-row: 2; }
+  /* 학생 추가: 계정 만들기(왼쪽) · 등록된 학생(오른쪽) */
+  #dtab-invite.active { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 32px; align-items: start; }
+  #dtab-invite > .panel { grid-column: 1; grid-row: 1 / span 3; }
+  #dtab-invite > :not(.panel) { grid-column: 2; }
+  #dtab-invite > h3 { margin-top: 0 !important; }
+  /* 학생 상세: 시간순 기록 · 튜터 대화를 나란히 */
+  .detail:not([hidden]) { display: grid; grid-auto-flow: row dense; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 40px; align-items: start; }
+  .detail > * { grid-column: 1 / -1; }
+  .detail > .d-main { grid-column: 1; }
+  .detail > .d-tutor { grid-column: 2; }
+}
 .m-bar, .m-tabs { display: none; }
 .t-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 22px 0; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
 .t-head .big-title { font-size: 28px; margin: 0; letter-spacing: -.01em; }
