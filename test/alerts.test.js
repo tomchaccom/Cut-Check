@@ -142,5 +142,24 @@ t('cancel — 더 최근 미션에서 또 겹치면 다시 한 번', kinds(CC.al
 t('cancel — 처음 snap 에 이미 겹쳐 있으면 알리지 않는다', CC.alerts.diff(null, c1).length === 0);
 t('cancel — 문장에 칭찬 낱말 · 순번 · 숫자 없음', !/좋|잘|훌륭|대단|[0-9]/.test(CC.alerts.say({ kind: 'cancel', name: '태인', cands: ['N', 'S'] })));
 
+// 놓친 일 — 화면을 닫은 동안 마친 미션은 다음 첫 snap 에서 since(지난번 seenUpTo) 뒤에 생긴 것만
+{
+  const at = (type, mid, t, x) => Object.assign(ev(type, mid, x), { t });
+  const before = [at('s-code-judge', 'm1', 10)];
+  const seen = CC.alerts.seenUpTo(CC.alerts.snap([S('한결')], OPT(before)));
+  const after = before.concat([at('s-code-judge', 'm2', 20), at('s-redefine', 'm2', 25)]);
+  const m = CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(after)), seen);
+  t('missed — 닫은 동안 마친 미션은 알린다(운영: 다음 접속 때 "마쳤어요" 가 없던 버그)', seen === 10 && kinds(m) === 'finish,redefine' &&
+    CC.alerts.say(m[0]) === '한결이 급식 투표를 마쳤어요.' && m[0].at === 20);
+  t('missed — 이미 본 일은 다시 알리지 않는다', CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(after)), 25).length === 0);
+  t('missed — 이 브라우저에서 처음이면(since 없음) 기준선 그대로', CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(after)), null).length === 0);
+  t('missed — 같은 미션을 다시 판정해도 첫 판정 시각 — 한 번만', CC.alerts.missed(CC.alerts.snap([S('한결')], OPT(before.concat([at('s-code-judge', 'm1', 30)]))), 10).length === 0);
+  const sOpt = { server: true, eventsOf: () => [Object.assign(at('s-code-judge', 'm1', 1), { _missionDbId: 'db1', _at: 50 })], finishedOf: () => ['db1'], missionName: () => '분식집 주문' };
+  const sm = CC.alerts.missed(CC.alerts.snap([S('태인')], sOpt), 40);
+  t('missed 서버 — 학생 기기 시각이 아니라 서버 시각(_at)으로 가린다', sm.length === 1 && sm[0].dbId === 'db1' && sm[0].at === 50);
+  t('missed — 시각 없는 cancel 은 놓친 일로 치지 않는다', CC.alerts.missed(CC.alerts.snap([S('태인')], CO('db2', ['N', 'S'])), 0).length === 0);
+  t('seenUpTo — 아무 일도 없으면 null', CC.alerts.seenUpTo(CC.alerts.snap([S('태인')], OPT([]))) === null);
+}
+
 if (fail) console.log(fail + ' 실패');
 process.exit(fail ? 1 : 0);

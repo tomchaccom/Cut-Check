@@ -890,6 +890,19 @@
   /* Supabase 모드는 첫 기록을 받기 전까지 기준선을 만들지 않는다 (빈 목록이 기준선이 되면
    * 이미 있던 제출이 전부 새 알림이 된다). 교실을 고를 때마다 다시 시작한다. */
   var alertsLoaded = !(CC.sb && CC.sb.active());
+  /* 놓친 일 — 이 브라우저가 이 교실에서 마지막으로 본 일의 시각(CC.prefs, 기록이 아니라 보기 편의).
+   * 첫 snap 에서 그 뒤에 생긴 일만 목록에 올린다. 처음 여는 브라우저는 예전처럼 기준선만 잡는다 */
+  var alertRoom = 'local';
+  function seenKey() { return 'alertsSeen.' + alertRoom; }
+  function remember(snap) {
+    var u = CC.alerts.seenUpTo(snap), old = CC.prefs.get(seenKey(), null);
+    if (u == null && old == null) u = Date.now();   /* 아직 아무 일도 없던 교실 — 지금부터가 '본 것'. 시계가 조금 어긋나면 한 번 더 뜰 뿐이다 */
+    if (u != null && (old == null || u > old)) CC.prefs.set(seenKey(), u);
+  }
+  function firstSnap(snap) {
+    CC.alerts.missed(snap, CC.prefs.get(seenKey(), null)).forEach(function (a) { showAlert(a, true); });
+    remember(snap);
+  }
   /* 알림 재료 — 서버 모드는 DB id 로 끝낸 미션을 센다. 미션 이름은 학생 기록 안의 id 로 찾는다 */
   function alertOpt() {
     var on = serverOn();
@@ -902,7 +915,7 @@
     };
   }
   CC._resetAlerts = function () {
-    cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active());
+    cRoom = null; lastSnap = null; alertsLoaded = !(CC.sb && CC.sb.active()); alertRoom = 'local';
     $('#alert-list').innerHTML = ''; $('#moments-empty').hidden = false; alCount();   /* 다른 교실의 알림을 끌고 오지 않는다 */
   };
   /* 재테스트 — 쌓인 할 일이라 첫 화면에도 띄운다. 학생·마지막 테스트당 이 브라우저에서 한 번 (CC.seen + 이 화면의 기억).
@@ -925,7 +938,11 @@
     if (!document.querySelector('#alert-list li')) $('#moments-empty').hidden = false;
     alCount();
   };
-  CC._alertsLoaded = function (students) { alertsLoaded = true; if (!lastSnap) lastSnap = CC.alerts.snap(students || [], alertOpt()); };
+  CC._alertsLoaded = function (students, roomId) {
+    alertsLoaded = true;
+    if (roomId) alertRoom = roomId;
+    if (!lastSnap) firstSnap(lastSnap = CC.alerts.snap(students || [], alertOpt()));
+  };
 
   /* 오른쪽 알림 — 이름표 · 사실 문장 · 시각. 문장은 CC.alerts.say 그대로, 칭찬 문구는 쓰지 않는다.
    * 굵게 = 아직 안 누름. 읽음은 이 화면을 연 동안만 기억한다 (서버에 저장하지 않는다) */
@@ -943,10 +960,11 @@
       .map(function (k) { return CC.alerts.TAGS[k] + ' ' + n[k] + '개'; }).join(' · ');
     $('#alerts-count').textContent = t || '새 알림이 없어요';
   }
-  function showAlert(a) {
+  /* missed — 화면을 닫은 동안 생긴 일. 토스트 없이 목록에만, 시각은 그 일이 생긴 때 */
+  function showAlert(a, missed) {
     var text = CC.alerts.say(a);
     var host = $('#toasts');
-    if (host) {
+    if (host && !missed) {
       var toast = el('div', 'toast', text);
       host.appendChild(toast);
       setTimeout(function () { toast.remove(); }, 5000);
@@ -965,7 +983,7 @@
     b.appendChild(unread);
     b.appendChild(el('span', 'al-tag ' + tag, CC.alerts.TAGS[tag]));
     b.appendChild(el('span', 'al-say', text));
-    var at = Date.now(), tm = el('time', 'al-tm', ago(at));
+    var at = (missed && a.at) || Date.now(), tm = el('time', 'al-tm', ago(at));
     tm.dataset.at = at;
     tm.dateTime = new Date(at).toISOString();
     b.appendChild(tm);
@@ -1172,7 +1190,8 @@
 
     if (!alertsLoaded) return;
     var nowSnap = CC.alerts.snap(C.students, alertOpt());
-    CC.alerts.diff(lastSnap, nowSnap).forEach(showAlert);
+    if (lastSnap) { CC.alerts.diff(lastSnap, nowSnap).forEach(function (a) { showAlert(a); }); remember(nowSnap); }
+    else firstSnap(nowSnap);
     lastSnap = nowSnap;
     retestAlerts();
     renderFolders();
