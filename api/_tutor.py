@@ -17,6 +17,9 @@ from _tutorjudge import judge
 REFUSE = {
     'ask_back': '지금 코드를 실행하면 무엇이 나오고, 원하는 결과와 어디가 달라요?',
     'off_topic': '파이썬 질문만 받을 수 있어요. 코드에서 막힌 곳을 물어봐 주세요.',
+    # 같은 되묻기를 연달아 받은 학생은 무엇을 물어야 할지 모른다 (2026-10-17 실제 기록: 한 학생이 같은 문장을 7번 받고
+    # "그래서 뭐 우짜라는 거예요"). 두 번째부터는 물을 수 있는 꼴을 보여 준다 — 예시는 미션과 상관없는 문법이다
+    'ask_again': "막힌 문법을 '리스트에 값 넣는 법'처럼 물어볼래요?",
 }
 
 # 재답 시간 = min(10, 남은 - 판정 5 - 여유 1), 4초 미만이면 안 한다 → RETRY_NEEDS = 4+5+1 = 10.
@@ -73,6 +76,14 @@ def _refuse(reasons, retried=False, judged=False):
 
 
 def ask(question, ctx, call_llm, now=time.monotonic):
+    r = _ask(question, ctx, call_llm, now)
+    hist = ctx.get('history') or []
+    if r['answer'] == REFUSE['ask_back'] and hist and str(hist[-1].get('a', '')) in (REFUSE['ask_back'], REFUSE['ask_again']):
+        r['answer'] = REFUSE['ask_again']
+    return r
+
+
+def _ask(question, ctx, call_llm, now):
     t0 = now()
     msgs = _messages(question, ctx)
     raw = call_llm(msgs, SCHEMA, ANSWER_T)

@@ -975,7 +975,7 @@
       alCount();
       shell.alertsFull(false);
       var s = C.students.filter(function (x) { return x.id === a.id; })[0];
-      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined, a.kind === 'finish' || a.kind === 'cancel' ? 'compass' : a.kind === 'tutor-many' ? 'tutor' : undefined);
+      if (s) openDetail(s, (a.dbId && clientMid(s, a.dbId)) || a.mid || undefined, a.kind === 'finish' || a.kind === 'cancel' ? 'compass' : a.kind === 'tutor-many' || a.kind === 'tutor-stuck' ? 'tutor' : undefined);
     });
     li.appendChild(b);
     list.insertBefore(li, list.firstChild);
