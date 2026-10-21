@@ -1,11 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="KOMPAS">
-  <!-- KOMPAS — 목적지 없는 나침반. 네 끝은 북 이해 · 동 설계 · 남 구현 · 서 검증, 바늘은 북동(나아가는 쪽). docs/superpowers/specs/brand.md -->
-  <rect width="64" height="64" rx="14" fill="#0F172A"/>
-  <path d="M32 5 38 26 32 32 26 26Z" fill="#4F46E5"/>
-  <path d="M59 32 38 38 32 32 38 26Z" fill="#F59E0B"/>
-  <path d="M32 59 26 38 32 32 38 38Z" fill="#14B8A6"/>
-  <path d="M5 32 26 26 32 32 26 38Z" fill="#FB7185"/>
-  <path d="M49 15 35.5 35.5 28.5 28.5Z" fill="#FFFFFF"/>
-  <path d="M19 45 28.5 28.5 35.5 35.5Z" fill="#94A3B8"/>
-  <circle cx="32" cy="32" r="3.2" fill="#0F172A" stroke="#FFFFFF" stroke-width="1.6"/>
+  <!-- KOMPAS — 목적지 없는 나침반. 검은 4방위 위에 흰 바늘 하나가 북동(나아가는 쪽)을 가리킨다. 노랑·흰·검정 세 색만. docs/superpowers/specs/brand.md -->
+  <rect width="64" height="64" rx="14" fill="#FFD400"/>
+  <path d="M32 6 37 27 58 32 37 37 32 58 27 37 6 32 27 27Z" fill="#000000"/>
+  <path d="M53 11 40 40 24 24Z" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linejoin="round"/>
 </svg>
