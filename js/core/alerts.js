@@ -6,6 +6,8 @@
  *
  * 처음 화면을 열 때 이미 있던 제출은 알리지 않는다. 새로고침마다 알림이 쏟아지면
  * 교사는 알림을 끄고, 그 뒤로는 진짜 알림도 못 본다.
+ * 다만 화면을 닫은 동안 생긴 일은 놓친 일이다 — missed(snap, since) 가 '지난번 화면이 마지막으로 본 일'
+ * (seenUpTo) 뒤에 생긴 것만 돌려준다. since 가 없으면(이 브라우저에서 처음) 예전처럼 아무것도 없다.
  */
 (function (CC) {
   'use strict';
@@ -39,33 +41,37 @@
         (by[e.mid] = by[e.mid] || []).push(e);
         if (e._missionDbId) { dbOf[e.mid] = e._missionDbId; midOf[e._missionDbId] = e.mid; }
       });
-      var add = function (kind, mid, extra, key) {
+      /* at — 그 일이 생긴 시각(서버 시각 _at 이 있으면 그것). 놓친 일을 가릴 때만 쓴다 */
+      var add = function (kind, mid, extra, key, at) {
         var k = kind + ':' + (key || mid);
-        if (!(k in keys)) keys[k] = Object.assign({ kind: kind, mid: mid, dbId: dbOf[mid] || null, mission: name(mid), compass: !!opt.server }, extra);
+        if (!(k in keys)) keys[k] = Object.assign({ kind: kind, mid: mid, dbId: dbOf[mid] || null, mission: name(mid), compass: !!opt.server, at: at || null }, extra);
       };
+      var tOf = function (e) { return e._at || e.t || null; };
 
       if (opt.finishedOf) (opt.finishedOf(s) || []).forEach(function (db) {
-        add('finish', midOf[db] || '', { dbId: db }, db);
+        var first = (evs || []).filter(function (e) { return e.type === 's-code-judge' && e._missionDbId === db; })[0];
+        add('finish', midOf[db] || '', { dbId: db }, db, first && tOf(first));
       });
       Object.keys(by).forEach(function (mid) {
         var list = by[mid], bad = null, tutor = 0;
         list.forEach(function (e) {
-          if (e.type === 's-code-judge' && !opt.finishedOf) add('finish', mid);
-          if (e.type === 's-redefine') add('redefine', mid);
-          if (e.type === 's-tutor' && ++tutor >= TUTOR_MANY) add('tutor-many', mid);
+          var at = tOf(e);
+          if (e.type === 's-code-judge' && !opt.finishedOf) add('finish', mid, null, null, at);
+          if (e.type === 's-redefine') add('redefine', mid, null, null, at);
+          if (e.type === 's-tutor' && ++tutor >= TUTOR_MANY) add('tutor-many', mid, null, null, at);
           if (e.type !== 's-code') return;
           if (e.error) bad = e.code;
-          else if (bad !== null && e.code !== bad) add('fixed', mid);
+          else if (bad !== null && e.code !== bad) add('fixed', mid, null, null, at);
         });
         var m = missionOf && CC.facts && CC.fold && missionOf(mid);
         var v = m && list.some(function (e) { return e.type === 's-code'; }) && CC.fold.fold(list, { id: s.id, name: s.name });
-        if (v && CC.facts.of(v, m).some(function (f) { return f.kind === 'hardcode'; })) add('hardcode', mid);
+        if (v && CC.facts.of(v, m).some(function (f) { return f.kind === 'hardcode'; })) add('hardcode', mid);   /* 시각 없음 — 사실이 언제 생겼는지 기록에 없다. 놓친 일로 다시 띄우지 않는다 */
       });
       var cc = opt.cancelOf && opt.cancelOf(s);
       if (cc && cc.dbId) add('cancel', midOf[cc.dbId] || '', { dbId: cc.dbId, cands: cc.cands || [] }, cc.dbId);   /* 학생·가장 최근 미션당 한 번 */
       if (s.onboard && !s.onboard.skipped) {
         var L = CC.onboard && CC.onboard.LABEL;
-        add('level', '', { level: (L && s.onboard.stage && L[s.onboard.stage]) || '' }, s.onboard.t);   /* 재테스트를 마치면 한 번 더 */
+        add('level', '', { level: (L && s.onboard.stage && L[s.onboard.stage]) || '' }, s.onboard.t, s.onboard.t);   /* 재테스트를 마치면 한 번 더 */
       }
       o[s.id] = { name: s.name, design: s.sDesignCount || 0, judged: hasFinish ? null : (s.sCodeJudges || []).length, keys: keys };
     });
@@ -81,13 +87,34 @@
       Object.keys(a.keys).forEach(function (k) { if (!(k in b.keys)) b.keys[k] = a.keys[k]; });   /* 알린 키는 사라져도 남긴다 — hardcode 는 사실이 숨었다 돌아올 수 있다 */
       if (b.design > a.design) out.push({ id: id, name: b.name, kind: 'design', tag: TAG_OF.design });
       Object.keys(b.keys).forEach(function (k) {
-        if (k in a.keys) return;
-        var x = b.keys[k];
-        out.push({ id: id, name: b.name, mid: x.mid, dbId: x.dbId, kind: x.kind, tag: TAG_OF[x.kind], mission: x.mission, compass: x.compass, level: x.level, cands: x.cands });
+        if (!(k in a.keys)) out.push(item(id, b, b.keys[k]));
       });
       if (b.judged != null && b.judged > (a.judged || 0)) out.push({ id: id, name: b.name, kind: 'code', tag: TAG_OF.code });
     });
     return out;
+  }
+  function item(id, b, x) {
+    return { id: id, name: b.name, mid: x.mid, dbId: x.dbId, kind: x.kind, tag: TAG_OF[x.kind], mission: x.mission, compass: x.compass, level: x.level, cands: x.cands, at: x.at };
+  }
+
+  /* 화면을 닫은 동안 생긴 일 — 첫 snap 에서 since(지난번 seenUpTo) 뒤에 생긴 키만, 오래된 것부터.
+   * 시각 없는 키(hardcode · cancel · 옛 design/code)는 놓친 일로 치지 않는다 — 기준선 그대로 */
+  function missed(snap, since) {
+    if (since == null) return [];
+    var out = [];
+    Object.keys(snap || {}).forEach(function (id) {
+      var b = snap[id];
+      Object.keys(b.keys).forEach(function (k) { var x = b.keys[k]; if (x.at && x.at > since) out.push(item(id, b, x)); });
+    });
+    return out.sort(function (x, y) { return x.at - y.at; });
+  }
+  /* 이 snap 이 본 가장 늦은 일의 시각 — 다음에 열 때 missed 의 since. 아무것도 없으면 null */
+  function seenUpTo(snap) {
+    var m = null;
+    Object.keys(snap || {}).forEach(function (id) {
+      Object.keys(snap[id].keys).forEach(function (k) { var at = snap[id].keys[k].at; if (at && (m == null || at > m)) m = at; });
+    });
+    return m;
   }
 
   /* 재테스트 — 시각으로 생기는 일이라 diff(새로 생긴 일)가 아니라 '쌓인 할 일' 이다.
@@ -129,5 +156,5 @@
     return who + ' 코드 결과를 판정했어요.';
   }
 
-  CC.alerts = { snap: snap, diff: diff, say: say, retest: retest, TAGS: TAGS, TUTOR_MANY: TUTOR_MANY, RETEST_DAYS: RETEST_DAYS };
+  CC.alerts = { snap: snap, diff: diff, missed: missed, seenUpTo: seenUpTo, say: say, retest: retest, TAGS: TAGS, TUTOR_MANY: TUTOR_MANY, RETEST_DAYS: RETEST_DAYS };
 })(window.CC = window.CC || {});

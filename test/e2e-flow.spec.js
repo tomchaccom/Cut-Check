@@ -2976,3 +2976,20 @@ test('철학 틈 — 이유 두 글자 · 다시 고른 성공 조건은 처음 
   expect(evs[0]).toHaveProperty('trap');
   await expect(page.locator('#help-btn')).toBeHidden();
 });
+
+test('선생님 화면을 닫은 동안 마친 미션은 다음에 열 때 알린다 — 한 번만', async ({ context, page }) => {
+  await local(context);
+  await page.goto(BASE + '/teacher.html');          // 먼저 한 번 연다 — 이때 있던 일은 이미 본 것
+  await expect(page.locator('#alert-list li')).toHaveCount(0);
+  await page.goto(BASE + '/sentence.html');         // 화면을 떠난 동안 학생이 마친다
+  await page.evaluate(() => {
+    localStorage.setItem('cutcheck.log.v1', JSON.stringify([
+      { v: 1, type: 's-code-judge', verdict: '지켰다', basis: '반례도 돌려 봤다', t: Date.now(), mid: 'sm1' }
+    ]));
+  });
+  await page.goto(BASE + '/teacher.html');
+  await expect(page.locator('#alert-list')).toContainText('마쳤어요');
+  await expect(page.locator('#toasts .toast')).toHaveCount(0);   // 놓친 일은 목록에만 — 열자마자 토스트가 쏟아지지 않게
+  await page.reload();
+  await expect(page.locator('#alert-list li')).toHaveCount(0);  // 이미 보여 준 일은 다시 알리지 않는다
+});
