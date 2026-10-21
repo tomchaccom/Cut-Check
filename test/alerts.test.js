@@ -64,6 +64,12 @@ d = run('한결', tu(4), tu(5));
 t('tutor-many 문장 — look, 5번', d[0].tag === 'look' && CC.alerts.say(d[0]) === '한결이 분식집 주문에서 튜터에게 5번 물었어요.');
 t('tutor-many 미션별로 센다', run('민지', tu(4), tu(4).concat([ev('s-tutor', 'm2')])).length === 0);
 
+// tutor-stuck — 연달아 거절 3번. 사이에 답을 받으면 다시 센다
+const no = () => ev('s-tutor', 'm1', { refused: true }), yes = () => ev('s-tutor', 'm1', { refused: false });
+d = run('한결', [no(), no()], [no(), no(), no()]);
+t('tutor-stuck 2→3 — look, 문장', kinds(d) === 'tutor-stuck' && d[0].tag === 'look' && CC.alerts.say(d[0]) === '한결이 분식집 주문에서 튜터에게 3번 연달아 답을 못 받았어요.');
+t('tutor-stuck 사이에 답을 받으면 안 센다', run('한결', [], [no(), no(), yes(), no()]).length === 0);
+
 // level
 CC.onboard = { LABEL: { combine: '중' } };
 const lv = { onboard: { stage: 'combine', skipped: false } };

@@ -185,6 +185,13 @@ llm = fake({'kind': 'answer', 'answer': '문자열은 따옴표로 감싼 글자
 r = ask('문자열이 뭐고', CTX, llm)
 t('판정 실패 → ask_back', r['kind'] == 'ask_back' and 'judge_failed' in r['reasons'] and r['answer'] == REFUSE['ask_back'], r)
 
+again = {**CTX, 'history': [{'q': '모르겟어요', 'a': REFUSE['ask_back']}]}
+r = ask('아니 모르개서요', again, fake({'kind': 'answer', 'answer': '`x`'}, '판정 아님'))
+t('고정 되묻기를 연달아 받으면 물을 꼴을 보여 준다', r['answer'] == REFUSE['ask_again'] and r['refused'], r)
+r = ask('또 몰라요', {**CTX, 'history': [{'q': 'a', 'a': REFUSE['ask_again']}]}, fake({'kind': 'answer', 'answer': '`x`'}, '판정 아님'))
+t('그다음에도 같은 안내', r['answer'] == REFUSE['ask_again'], r)
+t('안내 문장 — ? 로 끝나고 80자 이하', REFUSE['ask_again'].endswith('?') and len(REFUSE['ask_again']) <= 80)
+
 llm = fake({'kind': 'ask_back', 'answer': '지금 print(data) 결과는 글자 한 줄인가요, 목록인가요?'}, OK)
 r = ask('모르겠어요', CTX, llm)
 t('되묻기도 판정한다', r['kind'] == 'ask_back' and r['answer'].endswith('?') and r['judged'] and not r['refused'] and len(llm.calls) == 2, r)

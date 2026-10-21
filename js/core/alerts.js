@@ -11,8 +11,9 @@
   'use strict';
 
   var TAGS = { praise: '칭찬 타이밍', look: '살펴볼 것', info: '레벨 테스트' };
-  var TAG_OF = { finish: 'praise', redefine: 'praise', fixed: 'praise', hardcode: 'look', 'tutor-many': 'look', level: 'info', retest: 'info', cancel: 'praise', design: 'look', code: 'look' };
+  var TAG_OF = { finish: 'praise', redefine: 'praise', fixed: 'praise', hardcode: 'look', 'tutor-many': 'look', 'tutor-stuck': 'look', level: 'info', retest: 'info', cancel: 'praise', design: 'look', code: 'look' };
   var TUTOR_MANY = 5;   /* 한 미션에서 튜터에게 이만큼 물으면 알린다 */
+  var TUTOR_STUCK = 3;  /* 연달아 이만큼 답을 못 받으면 알린다 — 2026-10-17 한 학생이 10분 동안 13번 묻고 10번 거절당했는데 아무도 몰랐다 */
   var RETEST_DAYS = 60; /* 마지막 레벨 테스트 뒤 이만큼 지나면 다시 볼 때라고 알린다 (2026-10-20 사람이 정함 "2개월") */
 
   /* snap 의 opt (모두 선택)
@@ -48,11 +49,12 @@
         add('finish', midOf[db] || '', { dbId: db }, db);
       });
       Object.keys(by).forEach(function (mid) {
-        var list = by[mid], bad = null, tutor = 0;
+        var list = by[mid], bad = null, tutor = 0, stuck = 0;
         list.forEach(function (e) {
           if (e.type === 's-code-judge' && !opt.finishedOf) add('finish', mid);
           if (e.type === 's-redefine') add('redefine', mid);
           if (e.type === 's-tutor' && ++tutor >= TUTOR_MANY) add('tutor-many', mid);
+          if (e.type === 's-tutor' && (stuck = e.refused ? stuck + 1 : 0) >= TUTOR_STUCK) add('tutor-stuck', mid);
           if (e.type !== 's-code') return;
           if (e.error) bad = e.code;
           else if (bad !== null && e.code !== bad) add('fixed', mid);
@@ -116,6 +118,7 @@
       case 'redefine': return who + ' 성공 조건을 스스로 바꿨어요.';
       case 'fixed': return who + ' 에러가 난 뒤 스스로 고쳐 다시 돌렸어요.';
       case 'hardcode': return a.name + ' — 새로 온 자료에서도 첫 자료와 결과가 같아요. 하드코딩일 수 있어요.';
+      case 'tutor-stuck': return who + ' ' + m + '에서 튜터에게 ' + TUTOR_STUCK + '번 연달아 답을 못 받았어요.';
       case 'tutor-many': return who + ' ' + m + '에서 튜터에게 ' + TUTOR_MANY + '번 물었어요.';
       case 'level': return who + ' 레벨 테스트를 마쳤어요.' + (a.level ? ' 레벨 ' + a.level + '.' : '');
       case 'cancel': {
@@ -129,5 +132,5 @@
     return who + ' 코드 결과를 판정했어요.';
   }
 
-  CC.alerts = { snap: snap, diff: diff, say: say, retest: retest, TAGS: TAGS, TUTOR_MANY: TUTOR_MANY, RETEST_DAYS: RETEST_DAYS };
+  CC.alerts = { snap: snap, diff: diff, say: say, retest: retest, TAGS: TAGS, TUTOR_MANY: TUTOR_MANY, TUTOR_STUCK: TUTOR_STUCK, RETEST_DAYS: RETEST_DAYS };
 })(window.CC = window.CC || {});
