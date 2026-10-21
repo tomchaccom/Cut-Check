@@ -210,7 +210,10 @@ details.more[open] > summary { margin-bottom: 16px; }
 .mf { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: none; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
 .mf[aria-pressed="true"] { border: 2px solid var(--ink); font-weight: 600; }
 .mf .st { font-size: 12px; color: var(--ink-2); font-weight: 400; }
-.d-main, .d-tutor { min-width: 0; max-width: 760px; margin-top: 32px; }
+.d-main, .d-tutor { min-width: 0; margin-top: 32px; }
+.d-cols { display: flex; flex-wrap: wrap; gap: 0 56px; }
+.d-main { flex: 999 1 560px; }
+.d-tutor { flex: 1 1 320px; }
 .d-main h4, .d-tutor h4 { margin: 0; font-size: 17px; font-weight: 700; }
 .d-tutor h5 { margin: 20px 0 0; font-size: 15px; font-weight: 700; }
 .d-tutor .recap-go { margin-top: 12px; }
@@ -438,9 +441,9 @@ body { font-size: 17px; }
 }
 
 .shell-main { flex: 1 1 0; min-width: 0; padding: 0 48px 72px; }
-.shell-main > * { max-width: 760px; }
+.shell-main > * { max-width: 1240px; }   /* 넓은 화면을 쓴다 — 글줄 길이는 72ch 로 따로 묶는다 */
 .shell-main > #dashboard { max-width: none; }
-#dashboard > *, .dtab > * { max-width: 760px; }
+#dashboard > *, .dtab > * { max-width: 1240px; }
 #dashboard > .dtab, .dtab > details.more { max-width: none; }   /* 분석 표처럼 넓어야 하는 것만 본문 폭 전체 */
 .m-bar, .m-tabs { display: none; }
 .t-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 22px 0; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
@@ -552,3 +555,15 @@ body { font-size: 17px; }
 .gp-result { margin-top: 14px; font-size: 16px; }
 .list-h { font-size: 16px; font-weight: 700; margin: 20px 0 10px; }
 @media (max-width: 600px) { .seg { display: flex; } #dtab-missions .panel .seg-b { flex: 1; padding: 0 8px; } .gp-sum { flex-wrap: wrap; } }
+
+/* ── 넓은 화면 전용 배치 (2026-10-21 사람 요청 "세로로만 늘어놓지 말고 넓은 화면은 따로") ──
+ * 좁은 화면 배치를 늘리지 않고, 1400px 이상에서만 옆으로 놓는다. 글씨는 본문만 화면 폭에 맞춰 키운다 —
+ * 사이드바·알림은 높이가 100vh 라 키우면 넘친다 */
+@media (min-width: 1400px) {
+  #dtab-missions.active { display: grid; grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); grid-template-rows: auto 1fr; column-gap: 40px; align-items: start; }
+  #dtab-missions > .panel { grid-row: 1 / span 2; margin: 0; }
+  #dtab-missions > .list-h { grid-column: 2; margin-top: 0; }
+  #dtab-missions > #mission-list { grid-column: 2; grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 1600px) { .shell-main { zoom: 1.0625; } }
+@media (min-width: 1880px) { .shell-main { zoom: 1.125; } }
