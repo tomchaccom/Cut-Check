@@ -898,3 +898,15 @@ body.tutor-full { overflow: hidden; }
 /* 로고 — 나침반 아이콘 그림이 칸을 채운다 */
 span.mark.icon { background: none; padding: 0; overflow: hidden; }
 span.mark.icon img { display: block; width: 100%; height: 100%; }
+
+/* ── 넓은 화면 전용 배치 (2026-10-21 사람 요청) — 내 기록은 나침반 옆에 기록, 기록 칸은 두 단 ── */
+@media (min-width: 1200px) {
+  #panel-history.active:has(#compass-cum:not([hidden])) { display: grid; grid-template-columns: minmax(280px, 2fr) minmax(0, 3fr); column-gap: 40px; align-items: start; }
+  #panel-history > .step-title { grid-column: 1 / -1; }
+  #panel-history > #compass-cum { margin: 0; grid-template-columns: minmax(0, 1fr); }
+  #panel-history > #history-list, #panel-history > #history-empty { grid-column: 2; }
+  .record-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; align-items: start; }
+  .record-card > .rc-title, .record-card > .rc-brief { grid-column: 1 / -1; }
+}
+@media (min-width: 1600px) { .page { zoom: 1.0625; } }
+@media (min-width: 1880px) { .page { zoom: 1.125; } }

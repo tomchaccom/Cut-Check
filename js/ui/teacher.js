@@ -753,7 +753,9 @@
     }
     if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
     main.appendChild(dl);
-    d.appendChild(main);
+    var cols = el('div', 'd-cols');   /* 넓은 화면은 기록 · 튜터 두 단 (시안 TeacherStudent) */
+    cols.appendChild(main);
+    d.appendChild(cols);
     levelRecords(d, all);
 
     var side = el('section', 'd-tutor');
@@ -791,7 +793,7 @@
     });
     if (!v.sTutor.length) qs.appendChild(el('p', 'emptyrow', '아직 없어요.'));
     side.appendChild(qs);
-    d.appendChild(side);
+    cols.appendChild(side);
 
     $('#dashboard').hidden = true;
     d.hidden = false;
