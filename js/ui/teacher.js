@@ -195,14 +195,17 @@
   }
 
   /* 한 줄 = 시각 · 무엇 · 내용. 시각을 맨 앞에 둬서 위에서 아래로 훑으면 순서가 읽힌다 */
-  function row(dl, label, t, fill) {
+  function row(dl, label, t, fill, step) {
     var r = el('div', 'row');
+    r.dataset.step = step || 0;
+    r.dataset.t = t || 0;   /* 단계별 묶음 — 0 은 블록 미션 · 예전 기록 */
     r.appendChild(el('span', 'tm', hm(t)));
     r.appendChild(el('dt', null, label));
     var dd = el('dd');
     fill(dd);
     r.appendChild(dd);
     if (dd.querySelector('.mark')) r.classList.add('moment');   /* 고친 순간 — 줄 왼쪽에 노란 선 */
+    if (dd.querySelector('.mark.look')) r.classList.add('look');   /* 살펴볼 것 — 선 대신 테두리 색 */
     dl.appendChild(r);
   }
   /* 코드는 줄마다 한 칸 — 줄 번호는 CSS 가 센다. 긴 줄은 접어서 서랍이 옆으로 밀리지 않는다 */
@@ -211,7 +214,7 @@
     String(src || '').replace(/\n+$/, '').split('\n').forEach(function (line) { pre.appendChild(el('span', 'ln', line)); });
     return pre;
   }
-  function mark(dd, txt) { dd.appendChild(el('span', 'mark', txt)); }
+  function mark(dd, txt, look) { dd.appendChild(el('span', look ? 'mark look' : 'mark', txt)); }
   function was(dd, txt) { if (txt) dd.appendChild(el('span', 'was', txt)); }
 
   /* ── 수업에서 짚을 거리 — 누를 때만 서버에 간다. 학생 질문 원문(quote)은 글자로만 붙인다.
@@ -256,6 +259,7 @@
    * 점수로 정렬·평균·순위를 만들지 않는다 — 명단에는 "한마디 기다림" 꼬리표 하나뿐.
    * 바늘이 서로 지워지면(cancel) 기계가 고르지 않는다 — 겹친 후보만 버튼으로 두고 선생님이 고른다 */
   var cRoom = null, cRows = null, cTried = {}, cDraw = {}, cSyncing = false, cListFail = false, cListFailAt = 0, cSeq = 0;
+  var cMore = {};   /* 학생별 12칸 표를 펼쳤는지 */
   var cCum = {}, cCumFail = {}, cPick = {}, cInit = false, cDraft = {}, cSending = {}, cFail = {};   /* cDraft — 쓰던 한마디(학생·미션별), 다시 그려도 지키고 보내면 지운다 */
   var COMPASS_FAIL = '지금은 읽지 못했어요. 잠시 뒤 다시 눌러 주세요.';
   var CHECKS = [
@@ -361,6 +365,47 @@
     });
   }
 
+  /* 두드러지는 것 — 표에 있는 예·아니오를 사실 문장 몇 줄로. 점수·순위·반 평균은 쓰지 않는다.
+   * 바늘이 지워졌을 땐(cancel) 예가 많은 쪽을 말하지 않는다 — 고르는 건 선생님이다 (CLAUDE.md 예외 둘) */
+  function compassGist(rows, cu) {
+    var D = CC.compass.DIRS, SH = CC.compass.SHAPE, DS = ['N', 'E', 'S', 'W'];
+    var ok = function (r, c) { return !!((r.checks || {})[c[1]] || {}).ok; };
+    var ul = el('ul', 'compass-gist');
+    ul.setAttribute('aria-label', '두드러지는 것');
+    var line = function (k, body) {
+      var li = el('li');
+      li.appendChild(el('span', 'gk', k));
+      var b = el('span', 'gv');
+      if (typeof body === 'string') b.textContent = body; else b.appendChild(body);
+      li.appendChild(b);
+      ul.appendChild(li);
+    };
+    var yes = { N: 0, E: 0, S: 0, W: 0 };
+    CHECKS.forEach(function (c) { rows.forEach(function (r) { if (ok(r, c)) yes[c[0]]++; }); });
+    if (!cu.cancel) {
+      var hi = Math.max.apply(null, DS.map(function (d) { return yes[d]; })), lo = Math.min.apply(null, DS.map(function (d) { return yes[d]; }));
+      var names = function (n) { return DS.filter(function (d) { return yes[d] === n; }).map(function (d) { return SH[d] + ' ' + D[d]; }).join(', '); };
+      if (hi === lo) line('네 방향', '예가 같은 만큼 나왔어요');
+      else { line('예가 가장 많은 쪽', names(hi)); line('예가 가장 적은 쪽', names(lo)); }
+    }
+    var many = rows.length > 1;
+    var items = function (list) {
+      var u = el('ul', 'gist-items');
+      list.forEach(function (c) {
+        var li = el('li', null, c[2]);
+        var q = rows.map(function (r) { return ((r.checks || {})[c[1]] || {}).quote; }).filter(Boolean)[0];   /* 가장 최근 근거 */
+        if (q) li.appendChild(el('span', 'q', '“' + q + '”'));
+        u.appendChild(li);
+      });
+      return u;
+    };
+    var allYes = CHECKS.filter(function (c) { return rows.every(function (r) { return ok(r, c); }); });
+    var allNo = many ? CHECKS.filter(function (c) { return rows.every(function (r) { return !ok(r, c); }); }) : [];
+    if (allYes.length) line(many ? '미션 ' + rows.length + '개 모두 예' : '예로 나온 항목', items(allYes));
+    if (allNo.length) line('미션 ' + rows.length + '개 모두 아니오', items(allNo));
+    return ul;
+  }
+
   /* 학생 한 명의 나침반 카드. mid — 서랍의 미션 알약으로 고른 미션(없으면 끝낸 미션 전부의 한마디 칸) */
   function compassCard(st, mid, nameOf) {
     var card = el('section', 'compass-card');
@@ -414,8 +459,13 @@
           top.appendChild(say);
         }
         card.appendChild(top);
+        card.appendChild(compassGist(rows, cu));   /* 바늘 바로 아래 — 표를 펴지 않아도 보이게 */
 
         /* 12칸 — 줄 = 항목, 열 = 최근 미션(왼쪽이 가장 최근). 예 ✓ / 아니오 –, 근거 인용은 글자 그대로 */
+        var more = el('details', 'compass-more');
+        more.open = !!cMore[st.id];   /* 다시 그려도 펼친 채로 */
+        more.addEventListener('toggle', function () { cMore[st.id] = more.open; });
+        more.appendChild(el('summary', null, '항목 12개 표 — 미션별 예 · 아니오와 근거'));
         var wrap = el('div', 'compass-tablewrap');
         var tb = el('table', 'compass-table');
         tb.appendChild(el('caption', 'sr-only', '최근 미션 ' + rows.length + '개의 체크 항목'));
@@ -441,7 +491,7 @@
           });
           tbody.appendChild(tr);
         });
-        tb.appendChild(tbody); wrap.appendChild(tb); card.appendChild(wrap);
+        tb.appendChild(tbody); wrap.appendChild(tb); more.appendChild(wrap); card.appendChild(more);
 
         /* 튜터에게 물은 것을 네 방향으로 나눈 분포 — 참고 자료일 뿐 점수에 더하지 않는다 */
         var tot = { N: 0, E: 0, S: 0, W: 0 };
@@ -610,8 +660,8 @@
     var main = el('section', 'd-main');
     main.setAttribute('aria-label', '기록');
     main.appendChild(el('h4', null, '이 학생이 한 것 — 순서대로'));
-    main.appendChild(el('p', 'lead', '노란 표시는 말 걸기 좋은 순간이에요.'));
-    var dl = el('dl', 'd-rows');
+    main.appendChild(el('p', 'lead', '노란 표시는 말 걸기 좋은 순간, 붉은 표시는 살펴볼 것이에요.'));
+    var dl = el('div');   /* 줄을 모았다가 아래에서 단계별로 나눠 담는다 */
 
     /* 문장형 미션 */
     if (v.sDefine) {
@@ -624,7 +674,7 @@
           was(dd, '고친 횟수 ' + (v.sDefineVer - 1) + '번' + (first && first !== v.sDefine.choice ? ' · 처음: “' + first + '”' : ''));
         }
         if (v.sDefine.reason) was(dd, '이유 “' + v.sDefine.reason + '”');
-      });
+      }, 2);
     }
     var paired = !!(v.sMethod && v.sCodes.length);   /* 설계 카드와 마지막 코드를 나란히 — 판단은 강사가 한다 */
     if (v.sMethod) {
@@ -647,14 +697,20 @@
         } else dd.appendChild(document.createTextNode(cardTexts.join(' → ')));
         if (v.sMethodVer > 1) was(dd, '고친 횟수 ' + (v.sMethodVer - 1) + '번');
         if (v.sMethod.reason) was(dd, '이유 “' + v.sMethod.reason + '”');
-      });
+      }, 3);
     }
     if (v.sCodes.length) {
       var lastCode = v.sCodes[v.sCodes.length - 1];
-      row(dl, '코드 실행', lastCode.t, function (dd) {
-        dd.appendChild(el('span', 'sub', paired ? '실행 ' + v.sCodes.length + '번' : '마지막으로 실행한 코드 · 실행 ' + v.sCodes.length + '번'));
-        if (!paired) dd.appendChild(codeBlock(lastCode.code));
+      /* 에러가 난 뒤 다른 코드로 에러 없이 돌렸는가 — 알림의 '스스로 고침'(core/alerts.js)과 같은 규칙 */
+      var bad = null, fixed = false, errs = 0;
+      v.sCodes.forEach(function (c) {
+        if (c.error) { bad = c.code; errs++; } else if (bad !== null && c.code !== bad) fixed = true;
       });
+      row(dl, '코드 실행', lastCode.t, function (dd) {
+        dd.appendChild(el('span', 'sub', (paired ? '' : '마지막으로 실행한 코드 · ') + '실행 ' + v.sCodes.length + '번' + (errs ? ' · 에러 ' + errs + '번' : '')));
+        if (fixed) mark(dd, '에러 뒤 스스로 고침');
+        if (!paired) dd.appendChild(codeBlock(lastCode.code));
+      }, 4);
       /* 자료마다 마지막 결과 — dataId 에는 자료 값이 들어 있다 (sentence.js lastResults 와 같은 규칙) */
       var byData = {}, order = [];
       v.sCodes.forEach(function (c) {
@@ -677,7 +733,7 @@
           tr.appendChild(el('td', 'mono out' + (byData[val].err ? ' err' : ''), byData[val].out));
         });
         dd.appendChild(tb);
-      });
+      }, 4);
     }
     /* 코드 사실 — 실행·구조로 확실한 것만, 한 줄에 하나. 판정이나 점수가 아니다 (미션 하나가 정해졌을 때만) */
     var fm = v.sCodes.length && missionOf(mid || (ms.length === 1 ? ms[0] : null));
@@ -685,7 +741,10 @@
       var facts = CC.facts.of(v, fm);
       if (facts.length) {
         facts.forEach(function (f) {
-          row(dl, '코드 사실', v.sProbe ? v.sProbe.t : (v.sCodes.length ? v.sCodes[v.sCodes.length - 1].t : null), function (dd) { dd.textContent = f.text; });
+          row(dl, '코드 사실', v.sProbe ? v.sProbe.t : (v.sCodes.length ? v.sCodes[v.sCodes.length - 1].t : null), function (dd) {
+            dd.textContent = f.text;
+            if (f.kind === 'hardcode') mark(dd, '하드코딩일 수 있어요', true);
+          }, 4);
         });
       }
     }
@@ -703,15 +762,27 @@
         judges.forEach(function (j) {
           was(dd, (j.t ? hm(j.t) + ' · ' : '') + j.verdict + (j.basis ? ' “' + j.basis + '”' : ''));
         });
-      });
+      }, 4);
     }
     if (v.sHelps) row(dl, '도움 요청', lastT(evs, ['s-help']), function (dd) {
       dd.textContent = v.sHelps + '번';
       var h = evs.filter(function (e) { return e.type === 's-help'; }).pop() || {};
       if (h.expected) was(dd, '기대한 결과 “' + h.expected + '”');
       if (h.stuck) was(dd, '막힌 곳 “' + h.stuck + '”');
+    }, 4);
+    if (v.sWrap) row(dl, '정리', lastT(evs, ['s-wrap']), function (dd) { dd.textContent = '“' + v.sWrap + '”'; }, 5);
+    /* 단계마다 튜터에게 물은 횟수 — 질문 내용은 오른쪽(아래) 튜터 칸에 그대로 있다.
+     * 한 미션에서 TUTOR_MANY 번을 넘으면 알림과 같은 기준으로 붉은 표시 */
+    var perMid = {}, many = 0, TM = (CC.alerts && CC.alerts.TUTOR_MANY) || 5;
+    v.sTutor.forEach(function (x) { perMid[x.mid] = (perMid[x.mid] || 0) + 1; many = Math.max(many, perMid[x.mid]); });
+    var tsteps = [1, 2, 3, 4, 5].filter(function (st) { return v.sTutor.some(function (x) { return Number(x.step) === st; }); });
+    tsteps.forEach(function (st, i) {
+      var xs = v.sTutor.filter(function (x) { return Number(x.step) === st; });
+      row(dl, '튜터 질문', xs[xs.length - 1].t, function (dd) {
+        dd.textContent = xs.length + '번 물었어요';
+        if (many >= TM && i === tsteps.length - 1) mark(dd, '한 미션에서 ' + many + '번 물음', true);   /* 표시는 한 번만 */
+      }, st);
     });
-    if (v.sWrap) row(dl, '정리', lastT(evs, ['s-wrap']), function (dd) { dd.textContent = '“' + v.sWrap + '”'; });
 
     /* 블록 미션 (01·02·03·06) · 04 · 05 · 졸업 과제 — 예전 기록도 그대로 보인다 */
     if (!mid) {
@@ -751,8 +822,30 @@
       });
       if (s.wrap) row(dl, '오늘 이 학생이 말할 문장', null, function (dd) { dd.textContent = s.wrap; });
     }
-    if (!dl.children.length) dl.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
-    main.appendChild(dl);
+    /* 눈에 띄는 것 — 아래 줄에 붙은 표시를 한곳에 모은다. 표시가 없는 학생은 이 줄이 없다 */
+    var flags = el('ul', 'd-flags'), seenFlag = {};
+    flags.setAttribute('aria-label', '눈에 띄는 것');
+    Array.prototype.forEach.call(dl.querySelectorAll('.mark'), function (m) {
+      if (seenFlag[m.textContent]) return;
+      seenFlag[m.textContent] = 1;
+      flags.appendChild(el('li', m.className, m.textContent));
+    });
+    if (flags.children.length) main.appendChild(flags);
+    /* 단계별로 묶는다 — 학생 화면의 01~05 단계 이름 그대로. 단계 안은 기록 순서 */
+    var box = el('div', 'd-rows');
+    [[1, '01 문제'], [2, '02 성공'], [3, '03 설계'], [4, '04 코딩'], [5, '05 정리'], [0, '다른 미션 기록']].forEach(function (g) {
+      var rs = Array.prototype.filter.call(dl.children, function (r) { return Number(r.dataset.step) === g[0]; })
+        .sort(function (a, b) { return (Number(a.dataset.t) || 0) - (Number(b.dataset.t) || 0) || 0; });   /* 시각 없는 줄(예전 기록)은 0 — 안정 정렬로 제자리 */
+      if (!rs.length) return;
+      var sec = el('section', 'd-step');
+      sec.appendChild(el('h5', 'd-step-h', g[1]));
+      var gl = el('dl');
+      rs.forEach(function (r) { gl.appendChild(r); });
+      sec.appendChild(gl);
+      box.appendChild(sec);
+    });
+    if (!box.children.length) box.appendChild(el('p', 'emptyrow', '아직 기록이 없어요.'));
+    main.appendChild(box);
     d.appendChild(main);
     levelRecords(d, all);
 
