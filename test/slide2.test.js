@@ -30,40 +30,42 @@ t('새 강사 기본 한도 = 마이그레이션 default', K.QUOTA_DEFAULT === n
 t('실행 검사 재요청 횟수 = genflow.js RETRIES', K.BUILD_RETRIES === num(R('js/ui/genflow.js'), /var RETRIES = (\d+)/));
 const pyTuple = (src, name) => { const m = new RegExp('^' + name + ' = \\(([^)]*)\\)', 'm').exec(src); return m ? m[1].split(',').map(x => x.trim().replace(/'/g, '')).filter(Boolean) : null; };
 t('AI 칸 = _compass.py AI_ITEMS', eq(K.AI_ITEMS, pyTuple(compassPy, 'AI_ITEMS')));
-// 12칸 이름 — 강사 화면(teacher.js CHECKS) 그대로, 순서는 _compass.py ITEMS
-const rows = src => { const m = /var CHECKS = \[([\s\S]*?)\n  \];/.exec(src); return m ? JSON.parse('[' + m[1].replace(/'/g, '"') + ']') : null; };
-const slideChecks = rows(html);
-t('12칸 이름 = teacher.js CHECKS', !!slideChecks && eq(slideChecks, rows(R('js/ui/teacher.js'))));
-t('12칸 순서 = _compass.py ITEMS', !!slideChecks && eq(slideChecks.map(c => c[1]), pyTuple(compassPy, 'ITEMS')));
+// 12칸 목록은 2026-10-22 나침반을 한 장으로 합치며 슬라이드에서 뺐다 — 이름 대조도 같이 뺐다
 
-// 설문 데이터 — 화면이 그리는 꼴. 응답자는 '응답자 X' 로만
+// 설문 데이터 — 화면이 그리는 꼴. 강사는 '응답자 X', 학생은 '학생 X' 로만
 global.window = {};
 require('../slide2-data.js');
-const S = global.window.SLIDE2_SURVEY;
-t('설문은 배열이고 비지 않는다', Array.isArray(S) && S.length > 0);
-const ids = new Set();
-S.forEach(it => {
-  const ok = it.id && !ids.has(it.id) && typeof it.q === 'string' && it.q && Number.isInteger(it.n) && it.n > 0 &&
-    ['choice', 'multi', 'scale', 'quote'].includes(it.kind) && Array.isArray(it.links) && it.links.every(l => l.philosophy && l.feature);
-  ids.add(it.id);
-  let shape = true;
-  if (it.kind === 'choice') shape = it.options.reduce((a, o) => a + o.count, 0) === it.n;
-  if (it.kind === 'multi') shape = it.options.every(o => o.count >= 0 && o.count <= it.n);
-  if (it.kind === 'scale') shape = it.points.length <= it.n && it.points.every(p => p.v >= 1 && p.v <= 5);
-  if (it.kind === 'quote') shape = it.quotes.length > 0;
-  const who = [].concat(it.quotes || [], it.points || []).every(q => /^응답자 [A-Z]$/.test(q.who));
-  t('설문 ' + it.id + ' — 꼴 · 합계 · 응답자 이름표', ok && shape && who);
-  t('설문 ' + it.id + ' — show 는 true/false', typeof it.show === 'boolean');
-  if (it.signal != null) {
-    const labels = (it.options || []).map(o => o.label);
-    const picked = (it.options || []).filter(o => (it.pick || []).includes(o.label));
-    const top = Math.max(...(it.options || []).map(o => o.count));
-    t('신호 ' + it.id + ' — head · made · pick 이 보기에 있다', !!(it.head && it.made && it.pick && it.pick.length && it.pick.every(l => labels.includes(l))));
-    if (/1위/.test(it.head)) t('신호 ' + it.id + ' — "1위" 는 정말 혼자 가장 많이 고른 보기', picked.length === 1 && picked[0].count === top && it.options.filter(o => o.count === top).length === 1);
-  }
-});
-const sig = S.filter(it => it.signal != null).map(it => it.signal).sort();
-t('신호 순번은 1부터 빈 칸 없이', sig.length > 0 && sig.every((v, i) => v === i + 1));
+for (const [name, S, who] of [['강사', global.window.SLIDE2_SURVEY, '응답자'], ['학생', global.window.SLIDE2_STUDENT, '학생']]) {
+  t(name + ' 설문은 배열이고 비지 않는다', Array.isArray(S) && S.length > 0);
+  const ids = new Set();
+  const nos = [];
+  S.forEach(it => {
+    const ok = it.id && !ids.has(it.id) && typeof it.q === 'string' && it.q && Number.isInteger(it.n) && it.n > 0 &&
+      ['choice', 'multi', 'scale', 'quote'].includes(it.kind) && Array.isArray(it.links) && it.links.every(l => l.philosophy && l.feature);
+    ids.add(it.id);
+    let shape = true;
+    if (it.kind === 'choice') shape = it.options.reduce((a, o) => a + o.count, 0) === it.n;
+    if (it.kind === 'multi') shape = it.options.every(o => o.count >= 0 && o.count <= it.n);
+    if (it.kind === 'scale') shape = it.points.length <= it.n && it.points.every(p => p.v >= 1 && p.v <= 5);
+    if (it.kind === 'quote') shape = Array.isArray(it.quotes) && it.quotes.length <= it.n;   // 아무도 안 적은 서술 문항도 목록에는 나온다
+    const named = [].concat(it.quotes || [], it.points || []).every(q => new RegExp('^' + who + ' [A-Z]$').test(q.who));
+    t(name + ' 설문 ' + it.id + ' — 꼴 · 합계 · 응답자 이름표', ok && shape && named);
+    t(name + ' 설문 ' + it.id + ' — show 는 true/false', typeof it.show === 'boolean');
+    if (it.aside) t(name + ' 설문 ' + it.id + ' — aside 는 short 이름이 있다', !!it.short);
+    (it.signals || []).forEach(g => {
+      nos.push(g.no);
+      const labels = (it.options || []).map(o => o.label);
+      const picked = (it.options || []).filter(o => (g.pick || []).includes(o.label));
+      const top = Math.max(...(it.options || []).map(o => o.count));
+      t(name + ' 신호 ' + it.id + '#' + g.no + ' — head · made · pick 이 보기에 있다', !!(g.head && g.made && g.pick && g.pick.length && g.pick.every(l => labels.includes(l))));
+      if (/1위/.test(g.head)) t(name + ' 신호 ' + it.id + ' — "1위" 는 정말 혼자 가장 많이 고른 보기', picked.length === 1 && picked[0].count === top && it.options.filter(o => o.count === top).length === 1);
+    });
+  });
+  nos.sort();
+  t(name + ' 신호 순번은 1부터 빈 칸 없이', nos.length > 0 && nos.every((v, i) => v === i + 1));
+}
+// 학생 원본의 타임스탬프 · 이름 이니셜은 옮기지 않는다
+t('slide2-data.js 에 타임스탬프 · 이름 이니셜 열이 없다', !/타임스탬프|이름 이니셜/.test(R('slide2-data.js').replace(/^ \*.*$/gm, '')));
 
 // 레벨 테스트 장은 정답표를 읽지 않는다
 t('slide2.html 은 onboard 정답(KEY · marks · stage)을 부르지 않는다', !/onboard\.(KEY|marks|stage)\b/.test(html));

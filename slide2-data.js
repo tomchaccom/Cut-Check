@@ -1,10 +1,14 @@
 /* /slide2 설문 데이터 — 어떤 문항이 화면에 나올지는 이 파일만 고쳐 정한다. slide2.html 은 고치지 않는다.
  *
- * 화면에 나오는 길은 둘이다(2026-10-22 — "설문이 너무 많다" 피드백. 문항은 지우지 않고 끈다).
- *   signal  1 · 2 · 3 …  "이 서비스가 필요하다는 신호" 한 장에 그 순서로 나온다. 없으면 그 장에 안 나온다.
- *           head  신호 한 줄 · pick  더할 보기 이름(큰 수 = 그 보기들의 count 합 / n) · unit  큰 수 아래 한 마디
- *           made  그래서 만든 것 한 줄
- *   show    true 면 문항 하나가 그래프 + "이 결과 때문에 정한 것" 한 장으로, 신호 장 바로 뒤에 나온다(지금은 전부 false).
+ * 설문은 둘 — 강사(SLIDE2_SURVEY)와 학생(SLIDE2_STUDENT). 둘 다 같은 형식, 같은 코드로 그린다.
+ * 모든 문항은 "무엇을 물었나" 목록 한 장에 배열 순서대로 나온다(인적 문항 — 동의 · 성함 · 이름 · 학년 · 담당 수업 — 은 넣지 않는다).
+ * 그 밖에 화면에 나오는 길은 둘이다(2026-10-22 — "설문이 너무 많다" 피드백. 문항은 지우지 않고 끈다).
+ *   signals [{ no, head, pick, unit, made }]  목록 다음 "문제 셋" 한 장에 no 순서로 나온다. 한 문항에서 여럿 나올 수 있다.
+ *           head  신호 한 줄 · pick  보기 이름 · unit  큰 수 아래 한 마디 · made  그래서 만든 것 한 줄
+ *           큰 수 — choice 는 pick 보기들의 count 합 / n. multi 는 pick 보기 중 가장 큰 count / n
+ *           (사람별 응답을 옮기지 않아 합집합을 모른다 — 더하면 한 사람을 두 번 셀 수 있다).
+ *   aside   true 면 문제 셋 장 아래에 한 줄로(short: 앞에 붙일 짧은 이름). multi 는 보기별 count/n, quote 는 인용.
+ *   show    true 면 문항 하나가 그래프 + "이 결과 때문에 정한 것" 한 장으로, 강사 문제 셋 장 바로 뒤에 나온다(강사 설문만, 지금은 전부 false).
  *
  * JSON 이 아니라 JS 인 이유: file:// 에서 fetch 가 막힌다(저장소 규칙 — ES 모듈 · 번들러 없음).
  * 원본 xlsx 는 저장소에 넣지 않는다(이름이 들어 있다). 응답자는 원본 행 순서대로 응답자 A–E.
@@ -17,7 +21,7 @@
  *           'scale' 1–5 척도(숫자 축 위 응답자 점) · 'quote' 서술(인용 카드)
  *   n       응답자 수
  *   show    true/false — 문항 한 장을 띄울지
- *   signal  신호 장 순번(선택) — head · pick · unit · made 와 같이 쓴다
+ *   signals 문제 셋 장에 낼 신호(선택) — 위 설명
  *   options [{ label, count }]            choice · multi
  *   points  [{ who, v }]                  scale — ends: ['1 쪽 이름표', '5 쪽 이름표'] 를 주면 축 양 끝에 쓴다(없으면 숫자만)
  *   quotes  [{ who, text, verdict? }]     어느 kind 든 옆에 붙는 인용. verdict: 'yes' 받아들인 제안 · 'no' 거절한 제안
@@ -30,19 +34,20 @@
  *     links: [{ philosophy: '…', feature: '…' }] }
  *
  * 원본: 강사용 "파이썬 수업에서 학생의 '의도' 확인하기", 2026-10-18~20, 강사 5명.
+ *       학생용 "설계도 써보니 어땠나요", 학생 2명(중1 · 중2) — 타임스탬프 · 이름 열은 옮기지 않았다. 학생 A · B.
  */
 window.SLIDE2_SURVEY = [
   { id: 'explain',
-    signal: 1, head: '코드는 돌아가는데, 왜 그렇게 짰는지 설명하지 못한다', pick: ['거의 매 수업', '자주 (매주)'], unit: '매주 이상',
-    made: '03 설계에서 카드마다 이유 한 줄 — 설명을 코드 앞에 둔다',
+    signals: [{ no: 1, head: '코드는 돌아가는데, 왜 그렇게 짰는지 설명하지 못한다', pick: ['거의 매 수업', '자주 (매주)'], unit: '매주 이상',
+      made: '03 설계에서 카드마다 이유 한 줄 — 설명을 코드 앞에 둔다' }],
     q: '코드는 돌아가는데, 학생이 왜 그렇게 짰는지 설명하지 못하는 경우가 얼마나 자주 있나요?', kind: 'choice', n: 5, show: false,
     options: [{ label: '거의 매 수업', count: 3 }, { label: '자주 (매주)', count: 2 }, { label: '가끔 (한 달에 몇 번)', count: 0 }],
     links: [{ philosophy: '설명을 코드 앞에 둔다', feature: '03 설계 — 카드마다 이유 한 줄' },
       { philosophy: '끝난 뒤에도 자기 말로', feature: '05 정리 — 마무리 문장' }] },
 
   { id: 'misread',
-    signal: 2, head: '다 짠 뒤에야, 문제를 다르게 이해했다는 걸 안다', pick: ['거의 매 수업', '자주 (매주)'], unit: '매주 이상',
-    made: '02 성공 조건 — 코드 전에 무엇이 성공인지 먼저 고른다',
+    signals: [{ no: 2, head: '다 짠 뒤에야, 문제를 다르게 이해했다는 걸 안다', pick: ['거의 매 수업', '자주 (매주)'], unit: '매주 이상',
+      made: '02 성공 조건 — 코드 전에 무엇이 성공인지 먼저 고른다' }],
     q: '코드를 다 짠 뒤에야 학생이 문제를 다르게 이해했다는 걸 알게 된 경우가 얼마나 자주 있나요?', kind: 'choice', n: 5, show: false,
     options: [{ label: '거의 매 수업', count: 2 }, { label: '자주 (매주)', count: 2 }, { label: '가끔 (한 달에 몇 번)', count: 1 }],
     quotes: [{ who: '응답자 B', text: '다풀고 설명해보라고 하였을때 문제의 핵심 개념부터 잘 모르고있어 그 개념부터 다시 설명해줌' }],
@@ -54,8 +59,8 @@ window.SLIDE2_SURVEY = [
       { philosophy: '설계를 고친 일도 기록이다', feature: '나침반 동쪽 · 설계' }] },
 
   { id: 'point',
-    signal: 3, head: '가장 자주 지적하는 것 1위, 문제 해석 자체가 다름', pick: ['문제 해석 자체가 다름'], unit: '여럿 고르기 — 다음 보기들은 3 이하',
-    made: '마지막 자료는 늘 반례 — 다르게 읽은 것이 실행 결과로 드러난다',
+    signals: [{ no: 3, head: '가장 자주 지적하는 것 1위, 문제 해석 자체가 다름', pick: ['문제 해석 자체가 다름'], unit: '여럿 고르기 — 다음 보기들은 3 이하',
+      made: '마지막 자료는 늘 반례 — 다르게 읽은 것이 실행 결과로 드러난다' }],
     q: '학생 코드에 코멘트할 때 가장 자주 지적하시는 것은?', kind: 'multi', n: 5, show: false,
     options: [{ label: '문제 해석 자체가 다름', count: 4 }, { label: '조건·예외 상황 누락', count: 3 },
       { label: '하드코딩 (특정 입력에서만 맞는 코드)', count: 3 }, { label: '반복문·조건문 구조', count: 3 },
@@ -107,4 +112,47 @@ window.SLIDE2_SURVEY = [
       { who: '응답자 E', text: '학생들은 승부욕이 강해서 점수를 매기는것도 나쁘지 않다고 생각한다. 만약 본인이 90점이라면 100을 채우기 위해 노력할 것이다.', verdict: 'no' }],
     links: [{ philosophy: '받아들였다 — 튜터', feature: '문법은 주고 풀이는 안 준다' },
       { philosophy: '받아들이지 않았다 — 학생 점수', feature: '점수를 보면 학생은 결과를 맞히러 간다. 대신 방향(나침반)만 보여 준다' }] }
+];
+
+/* 학생 설문 — 응답 2명뿐(n = 2). 화면에 n 을 그대로 쓴다. 학년 · 배운 기간은 목록 장 위 한 줄로만. */
+window.SLIDE2_STUDENT = [
+  { id: 'forget', q: '배운 내용을 보통 얼마나 지나면 까먹나요?', kind: 'choice', n: 2, show: false,
+    options: [{ label: '1주일쯤 지나면', count: 1 }, { label: '2주~한 달 지나면', count: 1 }], links: [] },
+
+  { id: 'hesitate', q: '코드를 쓰기 전에 망설이게 되는 이유를 모두 골라주세요.', kind: 'multi', n: 2, show: false,
+    options: [{ label: '뭐부터 써야 할지 모르겠어요', count: 2 }, { label: '문법이 기억 안 나요', count: 2 },
+      { label: '어떤 순서로 풀지 모르겠어요', count: 1 }, { label: '에러가 나면 어떻게 고칠지 몰라요', count: 1 }],
+    signals: [
+      { no: 1, head: '"뭐부터 써야 할지 모르겠어요"', pick: ['뭐부터 써야 할지 모르겠어요'], unit: '둘 다 골랐다',
+        made: '01 문제 → 02 성공 조건 → 03 설계 카드로 시작을 대신 열어 준다' },
+      { no: 2, head: '"문법이 기억 안 나요"', pick: ['문법이 기억 안 나요'], unit: '둘 다 골랐다 · 배운 걸 1주~한 달이면 까먹는다',
+        made: '튜터는 문법은 바로 알려 준다' },
+      { no: 3, head: '"어떤 순서로 풀지 모르겠어요" · "에러가 나면 어떻게 고칠지 몰라요"', pick: ['어떤 순서로 풀지 모르겠어요', '에러가 나면 어떻게 고칠지 몰라요'], unit: '한 명이 둘 다 골랐다',
+        made: '설계 카드 순서 맞추기 · 에러는 몇 번 줄인지와 사실만' }],
+    links: [] },
+
+  { id: 'hard', q: '화면이나 문제에서 알아보기 힘들었던 부분을 모두 골라주세요.', kind: 'multi', n: 2, show: false,
+    options: [{ label: '문제 설명', count: 1 }, { label: '순서 정하는 부분', count: 1 }, { label: '없었어요', count: 1 }], links: [] },
+
+  { id: 'why', q: '설계도가 도움이 될 것 같은 이유를 적어주세요.', kind: 'quote', n: 2, show: false,
+    quotes: [{ who: '학생 A', text: '코드를 미리생각해볼수있다' }, { who: '학생 B', text: '그냥 도움이 되요' }], links: [] },
+
+  { id: 'whynot', q: '그래도 설계도를 안 쓴다면, 그 이유는 뭘까요?', kind: 'choice', n: 2, show: false,
+    options: [{ label: '안 쓸 이유 없어요', count: 2 }], links: [] },
+
+  { id: 'whynot2', q: '굳이 하나 더 적는다면, 안 쓸 것 같은 이유는? (안 적어도 돼요)', kind: 'quote', n: 2, show: false,
+    quotes: [], links: [] },
+
+  { id: 'want', q: '이런 기능이 나오면 쓸 건가요? 줄마다 O 또는 X', kind: 'multi', n: 2, show: false,
+    aside: true, short: '쓰고 싶은 기능(O)',
+    options: [{ label: 'AI 튜터', count: 2 }, { label: '설계도 저장 · 복습', count: 2 }, { label: '선생님 코멘트', count: 2 },
+      { label: '자주 틀리는 부분 정리', count: 2 }, { label: '레벨 · 뱃지', count: 1 }, { label: '내 코드가 앱으로 동작', count: 1 }],
+    links: [] },
+
+  { id: 'tutor', q: 'AI 튜터는 어디까지 도와주면 좋겠나요?', kind: 'choice', n: 2, show: false,
+    aside: true, short: 'AI 튜터는 어디까지',
+    options: [{ label: '틀린 부분을 짚어줘요', count: 1 }, { label: '힌트까지 알려줘요', count: 1 }], links: [] },
+
+  { id: 'more', q: '이런 기능이 있으면 또 쓸 것 같다! 하는 게 있으면 적어주세요. (안 적어도 돼요)', kind: 'quote', n: 2, show: false,
+    quotes: [{ who: '학생 A', text: '뒤로가기버튼' }], links: [] }
 ];

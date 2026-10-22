@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
   /slide2 — 산학협력실무 발표 (설계: docs/superpowers/specs/2026-10-21-slide2-design.md)
-  순서: 표지 → 설계 철학 → 이름 → 설문 신호 셋 → 핵심 플로우(레벨 테스트 · 미션 만들기 · 나침반 두 장) → 시연 → 만들지 않은 것.
+  순서: 표지 → 설계 철학 → 이름 → 강사 설문 문항 목록 → 뾰족한 문제 셋 → 학생 설문 문항 목록 → 학생이 가장 어려워한 것 → 핵심 플로우(레벨 테스트 · 미션 만들기 · 나침반 한 장) → 시연 → 만들지 않은 것.
   설문 문항은 slide2-data.js 에만 있다 — 어느 문항이 나올지(signal · show)도 거기서 정한다. 이 파일은 고치지 않는다.
   나침반 그림은 화면과 같은 js/core/compass.js 로 그린다.
   아래 SLIDE2_CODE 의 수는 코드에서 옮겨 적은 것 — 갈라지면 node test/slide2.test.js 가 깨진다.
@@ -127,6 +127,9 @@ code, .code { font-family: var(--mono); }
 .signal .sd { font-size: 24px; color: var(--ink-2); margin-top: 14px; }
 .signal h3 { font-size: 40px; line-height: 1.3; letter-spacing: -.025em; margin-top: 28px; }
 .signal .made { margin-top: auto; background: var(--yellow); padding: 20px 24px; font-size: 28px; line-height: 1.4; font-weight: 600; }
+.signals.tight { margin-top: 36px; }
+.tight .signal .sn b { font-size: 150px; }
+.tight .signal h3 { font-size: 34px; margin-top: 20px; }
 .signal .made span { display: block; font-size: 22px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
 
 /* 핵심 플로우 — 학생 줄 · 강사 줄 */
@@ -151,35 +154,33 @@ code, .code { font-family: var(--mono); }
 .shot ul { padding: 0; margin: 12px 0 22px; }
 .shot li { list-style: none; font-size: 26px; color: var(--ink-2); }
 
-/* 나침반 */
-.checks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px; margin-top: 56px; }
-.checks h3 { font-size: 36px; border-bottom: 4px solid var(--ink); padding-bottom: 10px; }
-.checks li { list-style: none; font-size: 24px; line-height: 1.4; padding: 14px 0; border-bottom: 1px solid var(--line); }
-.checks ul { padding: 0; }
-.checks .sees { font-size: 28px; font-weight: 600; line-height: 1.35; margin: 16px 0 6px; min-height: 2.7em; }
-.checks .id { font-family: var(--mono); font-size: 20px; color: var(--ink-3); margin-right: 10px; }
-.checks .ai, .rule-line .ai { display: inline-block; font-size: 18px; font-weight: 700; background: var(--yellow); padding: 0 8px; margin-right: 10px; vertical-align: 3px; }
-.rule-line { font-size: 26px; color: var(--ink-2); margin-top: auto; line-height: 1.5; max-width: 72ch; }
-.rule-line .ai { margin: 0 6px 0 0; vertical-align: 2px; }
-.vec { display: grid; grid-template-columns: 560px minmax(0, 1fr); gap: 96px; margin-top: 40px; flex: 1; min-height: 0; align-items: start; }
+/* 설문 문항 목록 — 두 단, 번호는 설문지 순서. 노란 번호 = 다음 장의 신호 */
+.qs { columns: 2; column-gap: 80px; margin-top: 44px; padding: 0; flex: 1; min-height: 0; }
+.qs li { list-style: none; break-inside: avoid; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 0 18px; padding: 14px 0 16px; border-top: 1px solid var(--line); }
+.qs .qn { font-family: var(--disp); font-weight: 800; font-size: 30px; line-height: 1.2; text-align: center; align-self: start; padding: 2px 0; font-variant-numeric: tabular-nums; }
+.qs li.sig .qn { background: var(--yellow); }
+.qs .qt { font-size: 29px; line-height: 1.4; }
+.qs .qk { display: inline-block; font-size: 22px; font-weight: 600; color: var(--ink-2); border: 2px solid var(--ink-3); padding: 0 8px; margin-left: 10px; vertical-align: 2px; white-space: nowrap; }
+.qs-note { font-size: 24px; color: var(--ink-2); border-top: 4px solid var(--ink); padding-top: 18px; display: flex; gap: 48px; }
+.asides { display: grid; gap: 6px; margin-top: 28px; font-size: 24px; color: var(--ink-2); }
+.asides b { color: var(--ink); font-weight: 700; margin-right: 14px; }
+.asides:empty { display: none; }
+.qs-note i { display: inline-block; width: 26px; height: 26px; background: var(--yellow); vertical-align: -5px; margin-right: 10px; }
+
+/* 나침반 — 정적인 한 장. 왼쪽 바늘, 오른쪽 규칙 넷 */
+.vec { display: grid; grid-template-columns: 500px minmax(0, 1fr); gap: 96px; margin-top: 40px; flex: 1; min-height: 0; align-items: start; }
 .vec .dial { color: var(--ink); }
-.vec .dial svg { width: 560px; height: 560px; overflow: visible; }
-.vec .dial .compass-needle { transform-box: view-box; transform-origin: 60px 60px; transition: transform .9s cubic-bezier(.3, .7, .2, 1); }
-.vec .dial .read { font-size: 30px; font-weight: 600; text-align: center; margin-top: 12px; min-height: 1.5em; }
-.vstep { display: none; }
-.vstep.on { display: block; }
-.vstep h3 { font-size: 44px; letter-spacing: -.02em; }
-.vstep p { margin-top: 16px; color: var(--ink-2); }
-.vstep .eq { font-family: var(--mono); font-size: 32px; margin-top: 26px; color: var(--ink); line-height: 1.6; }
-.vstep table { border-collapse: collapse; margin-top: 26px; font-size: 28px; }
-.vstep th, .vstep td { padding: 10px 22px 10px 0; text-align: left; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-.vstep th { font-weight: 600; color: var(--ink-2); font-size: 22px; }
-.cands { display: flex; gap: 18px; margin-top: 26px; }
-.cands span { font-size: 30px; font-weight: 700; border: 3px solid var(--ink); padding: 10px 26px; }
-.cands span.pick { background: var(--yellow); }
-.pips { position: absolute; left: 120px; bottom: 56px; display: flex; gap: 10px; }
-.pips i { width: 44px; height: 6px; background: var(--line); }
-.pips i.on { background: var(--ink); }
+.vec .dial svg { width: 500px; height: 500px; overflow: visible; display: block; }
+.vec .dial .read { font-size: 26px; color: var(--ink-2); text-align: center; margin-top: 18px; }
+.dirs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; padding: 0; }
+.dirs li { list-style: none; border-top: 4px solid var(--ink); padding-top: 12px; font-size: 24px; line-height: 1.4; color: var(--ink-2); }
+.dirs b { display: block; font-size: 34px; color: var(--ink); letter-spacing: -.02em; margin-bottom: 6px; }
+.rules { padding: 0; margin-top: 36px; }
+.rules li { list-style: none; display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 32px; padding: 18px 0; border-top: 1px solid var(--line); align-items: baseline; }
+.rules .eq { font-size: 34px; font-weight: 700; letter-spacing: -.02em; line-height: 1.35; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rules span { font-size: 26px; line-height: 1.45; color: var(--ink-2); }
+.rules li.who { background: var(--yellow); border-top: 0; padding-left: 20px; padding-right: 20px; }
+.rules li.who span { color: var(--ink); }
 
 /* 시연 — 화면 전체 */
 .slide.demo { padding: 0; background: #000; }
@@ -203,11 +204,19 @@ code, .code { font-family: var(--mono); }
 .demo .bk { display: none; position: absolute; right: 12px; top: 6px; z-index: 2; font-size: 13px; font-weight: 700; background: var(--ink); color: var(--yellow); padding: 3px 10px; }
 .demo.backup .bk { display: block; }
 
-/* 마무리 */
-.nots { padding: 0; margin-top: 48px; border-top: 4px solid var(--ink); }
-.nots li { list-style: none; display: grid; grid-template-columns: 560px minmax(0, 1fr); gap: 40px; padding: 18px 0; border-bottom: 1px solid var(--line); }
-.nots b { font-size: 32px; }
-.nots span { font-size: 28px; color: var(--ink-2); }
+/* 마무리 — 왼쪽 일부러 하지 않은 것, 오른쪽 다음 일정(순서가 있어 번호) */
+.close { display: grid; margin-top: 24px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 112px; }
+.close h2 { font-size: 56px; }
+.nots { padding: 0; margin-top: 40px; }
+.nots li { list-style: none; font-size: 32px; line-height: 1.45; padding: 22px 0; border-top: 1px solid var(--line); }
+.nots li:first-child { border-top: 4px solid var(--ink); }
+.next { padding: 0; margin-top: 40px; counter-reset: n; }
+.next li { list-style: none; counter-increment: n; display: grid; grid-template-columns: 72px minmax(0, 1fr); padding: 20px 0; border-top: 1px solid var(--line); }
+.next li:first-child { border-top: 4px solid var(--ink); }
+.next li::before { content: counter(n); grid-row: span 2; font-family: var(--disp); font-weight: 800; font-size: 44px; line-height: 1; }
+.next li:first-child::before { background: var(--yellow); width: 52px; text-align: center; padding: 4px 0; }
+.next b { font-size: 34px; letter-spacing: -.02em; }
+.next span { font-size: 26px; color: var(--ink-2); margin-top: 4px; }
 .end-links { display: flex; gap: 80px; margin-top: auto; font-size: 30px; }
 .end-links a { color: var(--ink); font-weight: 600; }
 
@@ -219,7 +228,6 @@ code, .code { font-family: var(--mono); }
 body.full .nav { top: 8px; bottom: auto; right: 16px; }
 .demo .cap { padding-right: 220px; }
 button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outline-offset: 2px; box-shadow: 0 0 0 7px var(--ink); }
-@media (prefers-reduced-motion: reduce) { .vec .dial .compass-needle { transition: none; } }
 </style>
 </head>
 <body>
@@ -258,14 +266,36 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outlin
   <p class="small rose-note">한 문제를 푸는 순서가 나침반을 시계 방향으로 한 바퀴 돕니다. 아이콘에는 지도도, 도착 핀도 없습니다. COMPASS 는 흔한 낱말이라 묻혀서, 나침반인 줄 알아보면서도 이름처럼 보이는 K 로 씁니다.</p>
 </section>
 
-<section class="slide" aria-label="설문 — 필요하다는 신호">
-  <p class="kick">만들기 전에 강사 다섯 명에게 물었습니다 · 2026년 10월 18–20일</p>
-  <h2>이 서비스가 필요하다는 신호 셋</h2>
+<section class="slide" aria-label="강사 설문 — 무엇을 물었나">
+  <p class="kick">만들기 전에 강사 다섯 명에게 물었습니다 · 2026년 10월 18–20일 · 초·중등 파이썬 · 엔트리 · SQL 등을 가르치는 강사</p>
+  <h2>강사에게는 무엇을 물었나</h2>
+  <ol class="qs" id="qs"></ol>
+  <p class="qs-note"><span><i></i>다음 장 — 가장 뾰족하게 드러난 문제 셋</span><span>객관식 하나 고르기 · 여러 개 고르기 · 1–5 척도 · 서술</span></p>
+</section>
+
+<section class="slide" aria-label="강사 설문 — 가장 뾰족한 문제 셋">
+  <p class="kick">강사 설문에서 · 다섯 명 중 몇 명이 그렇다고 답했나</p>
+  <h2>가장 뾰족하게 드러난 문제 셋</h2>
   <div class="signals" id="signals"></div>
 </section>
 
-<!-- show: true 인 설문 문항은 여기에 한 장씩 들어간다(slide2-data.js) -->
+<!-- show: true 인 강사 설문 문항은 여기에 한 장씩 들어간다(slide2-data.js) -->
 <template id="survey-anchor"></template>
+
+<section class="slide" aria-label="학생 설문 — 무엇을 물었나">
+  <p class="kick">설계도를 써 본 학생에게 물었습니다 · 응답 2명(n = 2) · 중1 · 중2 · 파이썬 3–6개월 · 6개월 넘음</p>
+  <h2>학생에게는 무엇을 물었나</h2>
+  <ol class="qs" id="qs-s"></ol>
+  <p class="qs-note"><span><i></i>다음 장 — 학생이 가장 어려워한 것</span><span>두 명뿐이라 경향만 봅니다</span></p>
+</section>
+
+<section class="slide" aria-label="학생 설문 — 가장 어려워한 것">
+  <p class="kick">학생 설문에서 · 두 명 중 몇 명이 골랐나 · n = 2</p>
+  <h2>학생이 가장 어려워한 것</h2>
+  <div class="signals tight" id="signals-s"></div>
+  <p class="asides" id="asides-s"></p>
+</section>
+
 
 <section class="slide" aria-label="핵심 플로우">
   <p class="kick">수업 한 번 · 시연에서 이 순서 그대로 봅니다</p>
@@ -315,21 +345,16 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outlin
   </div>
 </section>
 
-<section class="slide" aria-label="나침반 방향별 의미">
-  <p class="kick">강사 · 학생 상세 · 미션 하나를 마칠 때마다 예 / 아니오 12칸</p>
-  <h2>방향마다 세 칸 — 코드가 여덟, AI 가 넷</h2>
-  <div class="checks" id="checks"></div>
-  <p class="rule-line"><span class="ai">AI</span> 칸은 학생 기록에 글자 그대로 있는 인용이 있어야 '예'. 인용이 기록에 없으면 서버가 '아니오'로 바꿉니다. 방향 점수는 '예'의 개수(0–3). 저장하는 건 원본 판정뿐이고, 칸 · 점수 · 인용은 강사 화면에만 있습니다.</p>
-</section>
-
-<section class="slide" aria-label="바늘이 정해지는 순서" data-steps="5" id="vec-slide">
-  <p class="kick">강사 화면과 같은 그림 · js/core/compass.js · 수는 api/_compass.py</p>
-  <h2>방향 점수 → 벡터 → 가중 평균 → 바늘</h2>
+<section class="slide" aria-label="나침반">
+  <p class="kick">강사 · 학생 상세 · 미션 하나를 마칠 때마다 · 그림은 강사 화면과 같은 js/core/compass.js</p>
+  <h2>나침반은 벡터로 움직인다</h2>
   <div class="vec">
     <div class="dial"><div id="dial"></div><p class="read" id="dial-read"></p></div>
-    <div id="vsteps"></div>
+    <div>
+      <ul class="dirs" id="dirs"></ul>
+      <ol class="rules" id="rules"></ol>
+    </div>
   </div>
-  <div class="pips" id="vpips"></div>
 </section>
 
 <section class="slide demo" aria-label="시연" id="demo">
@@ -351,15 +376,25 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outlin
 </section>
 
 <section class="slide" aria-label="마무리">
-  <p class="kick">한 번씩 좋은 아이디어로 제안됐다가 거절한 것</p>
-  <h2>만들지 않은 것</h2>
-  <ul class="nots">
-    <li><b>학생 점수 · 포인트 · 레벨</b><span>칭찬을 기계에 넘기면 사람의 격려가 싸구려가 됩니다.</span></li>
-    <li><b>정답 블록 순서와 대조하는 채점</b><span>채점하는 순간 학생은 우리 답을 추측하기 시작합니다.</span></li>
-    <li><b>다음에 할 일 추천</b><span>판단 대행의 가장 흔한 형태입니다.</span></li>
-    <li><b>정답률 · 순위 · 소요 시간 랭킹</b><span>숫자를 띄우면 교사가 줄을 세우고, 학생은 결과를 맞히러 갑니다.</span></li>
-    <li><b>AI 가 쓰는 칭찬 문구</b><span>알림은 타이밍만 알려 줍니다. 말은 선생님이 합니다.</span></li>
-  </ul>
+  <div class="close">
+    <div>
+      <h2>일부러 하지 않은 것</h2>
+      <ul class="nots">
+        <li>점수와 순위는 일부러 뺐어요. 숫자가 보이면 학생은 결과를 맞히러 가니까요.</li>
+        <li>정답 순서와 맞춰 보는 채점도 없어요. 채점하는 순간 학생은 우리 답을 추측하기 시작해요.</li>
+        <li>칭찬은 AI 가 쓰지 않아요. 알림은 지금이 그때라는 것만 알리고, 말은 선생님이 해요.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>다음에 할 것</h2>
+      <ol class="next">
+        <li><b>10명 실제 수업 · 10/27–31</b><span>사전·사후 설문과 관찰 기록</span></li>
+        <li><b>나침반 가중치 · 상쇄 기준 조정</b><span>실제 수업 기록으로</span></li>
+        <li><b>튜터 · 레벨 테스트 실사용 점검</b><span>튜터가 답을 보내지 않은 비율, 문제지 난이도</span></li>
+        <li><b>결과를 11월 보고서에 반영</b></li>
+      </ol>
+    </div>
+  </div>
   <div class="end-links">
     <p>서비스 <a id="site" href="landing.html">처음 화면</a></p>
     <p>코드 <a href="https://github.com/tomchaccom/KOMPAS">github.com/tomchaccom/KOMPAS</a></p>
@@ -491,19 +526,47 @@ window.SLIDE2_CODE = {
   var anchor = $('#survey-anchor');
   SURVEY.filter(function (it) { return it.show; }).forEach(function (it, i, all) { anchor.parentNode.insertBefore(surveySlide(it, i, all), anchor); });
 
-  /* 신호 장 — signal 순번이 있는 문항만. 큰 수 = pick 보기들의 합 / n */
-  SURVEY.filter(function (it) { return it.signal; }).sort(function (a, b) { return a.signal - b.signal; }).forEach(function (it) {
-    var got = it.options.filter(function (o) { return it.pick.indexOf(o.label) >= 0; });
-    var sum = got.reduce(function (a, o) { return a + o.count; }, 0);
-    var col = el('div', 'signal');
-    col.insertAdjacentHTML('beforeend', '<p class="sn"><b>' + sum + '</b> / ' + it.n + '</p>');
-    var parts = got.length > 1 ? ' — ' + got.map(function (o) { return o.label.replace(/^.*\((.*)\)$/, '$1') + ' ' + o.count; }).join(' · ') : '';
-    col.appendChild(el('p', 'sd', (it.unit || '') + parts));
-    col.appendChild(el('h3', null, it.head));
-    var m = el('p', 'made'); m.appendChild(el('span', null, '그래서 만든 것')); m.appendChild(document.createTextNode(it.made));
-    col.appendChild(m);
-    $('#signals').appendChild(col);
-  });
+  /* 문항 목록 — 데이터 순서 그대로(문항을 더하면 여기에도 나온다). 인적 문항은 데이터에 넣지 않는다 */
+  var KIND = { choice: '객관식', multi: '여러 개', scale: '1–5', quote: '서술' };
+  function qlist(list, box) {
+    list.forEach(function (it, i) {
+      var li = el('li', it.signals ? 'sig' : null), t = el('p', 'qt', it.q);
+      t.appendChild(el('span', 'qk', KIND[it.kind]));
+      li.appendChild(el('span', 'qn', String(i + 1))); li.appendChild(t); box.appendChild(li);
+    });
+  }
+  /* 신호 장 — signals 가 있는 문항만, no 순서로. 큰 수: choice 는 pick 합, multi 는 pick 중 최대(합집합을 모른다 — slide2-data.js) */
+  function signals(list, box) {
+    var all = [];
+    list.forEach(function (it) { (it.signals || []).forEach(function (g) { all.push({ it: it, g: g }); }); });
+    all.sort(function (a, b) { return a.g.no - b.g.no; }).forEach(function (x) {
+      var it = x.it, g = x.g;
+      var got = it.options.filter(function (o) { return g.pick.indexOf(o.label) >= 0; });
+      var big = it.kind === 'multi' ? Math.max.apply(null, got.map(function (o) { return o.count; }))
+        : got.reduce(function (a, o) { return a + o.count; }, 0);
+      var col = el('div', 'signal');
+      col.insertAdjacentHTML('beforeend', '<p class="sn"><b>' + big + '</b> / ' + it.n + '</p>');
+      var parts = got.length > 1 && it.kind === 'choice' ? ' — ' + got.map(function (o) { return o.label.replace(/^.*\((.*)\)$/, '$1') + ' ' + o.count; }).join(' · ') : '';
+      col.appendChild(el('p', 'sd', (g.unit || '') + parts));
+      col.appendChild(el('h3', null, g.head));
+      var m = el('p', 'made'); m.appendChild(el('span', null, '그래서 만든 것')); m.appendChild(document.createTextNode(g.made));
+      col.appendChild(m);
+      box.appendChild(col);
+    });
+  }
+  /* 신호 장 아래 한 줄 — aside 문항 */
+  function asides(list, box) {
+    list.filter(function (it) { return it.aside; }).forEach(function (it) {
+      var line = el('span');
+      line.appendChild(el('b', null, it.short));
+      line.appendChild(document.createTextNode(it.kind === 'quote' ? it.quotes.map(function (q) { return '"' + q.text + '"'; }).join(' · ')
+        : it.options.map(function (o) { return o.label + ' ' + o.count + '/' + it.n; }).join(' · ')));
+      box.appendChild(line);
+    });
+  }
+  var STUDENT = window.SLIDE2_STUDENT || [];
+  qlist(SURVEY, $('#qs')); signals(SURVEY, $('#signals'));
+  qlist(STUDENT, $('#qs-s')); signals(STUDENT, $('#signals-s')); asides(STUDENT, $('#asides-s'));
 
   /* ── 코드 값 ───────────────────────────────────────── */
   var AXIS = { count: '개수 변화', sep: '구분자 변화', empty: '빈 결과', invisible: '보이지 않는 차이', boundary: '경계값' };
@@ -512,65 +575,31 @@ window.SLIDE2_CODE = {
   $('#retry-browser').textContent = '실행 검사 최대 ' + K.BUILD_RETRIES + '번 다시';
   $('#retest').textContent = '마지막 테스트 뒤 ' + K.RETEST_DAYS + '일이 지나면 강사에게 "레벨 테스트" 알림.';
 
-  /* ── 나침반 12칸 — 이름은 강사 화면(js/ui/teacher.js CHECKS) 그대로, AI 칸은 api/_compass.py AI_ITEMS ── */
-  var CHECKS = [
-    ['N', 'N1', '함정이 아닌 성공 조건을 골랐어요'], ['N', 'N2', '성공 조건을 코드로 직접 옮겼어요'], ['N', 'N3', '튜터에게 이해한 것을 설명하고 물었어요'],
-    ['E', 'E1', '설계 카드를 냈어요'], ['E', 'E2', '설계 이유를 자기 말로 적었어요'], ['E', 'E3', '실행해 본 뒤 설계를 고쳤어요'],
-    ['S', 'S1', '에러 없이 실행되는 코드가 있어요'], ['S', 'S2', '에러가 난 뒤 스스로 고쳐 다시 돌렸어요'], ['S', 'S3', '반례 자료까지 같은 코드로 돌렸어요'],
-    ['W', 'W1', '반례 자료를 직접 돌렸어요'], ['W', 'W2', '판정 근거를 실제 실행 결과에 기댔어요'], ['W', 'W3', '반례가 깨진 걸 보고 고쳤어요']
-  ];
+  /* ── 나침반 한 장 — 방향 넷 + 규칙 넷. 수는 SLIDE2_CODE(= api/_compass.py) ── */
   /* 방향마다 무엇을 보는지 — docs/superpowers/specs/brand.md 3.1 의 정의 */
   var SEES = { N: '문제가 무엇을 요구하는지, 조건을 정확히 파악했나?', E: '접근법을 세우고 순서를 정했나?', S: '설계를 정확한 코드로 옮겼나?', W: '엣지 케이스로 확인하고 돌아봤나?' };
   'NESW'.split('').forEach(function (d) {
-    var col = el('div'), ul = el('ul');
-    col.appendChild(el('h3', null, CC.compass.SHAPE[d] + ' ' + CC.compass.DIRS[d]));
-    col.appendChild(el('p', 'sees', SEES[d]));
-    CHECKS.filter(function (c) { return c[0] === d; }).forEach(function (c) {
-      var li = el('li'); li.appendChild(el('code', 'id', c[1]));
-      if (K.AI_ITEMS.indexOf(c[1]) >= 0) li.appendChild(el('span', 'ai', 'AI'));
-      li.appendChild(document.createTextNode(c[2]));
-      ul.appendChild(li);
-    });
-    col.appendChild(ul); $('#checks').appendChild(col);
+    var li = el('li'); li.appendChild(el('b', null, CC.compass.SHAPE[d] + ' ' + CC.compass.DIRS[d].replace('쪽', '')));
+    li.appendChild(document.createTextNode(SEES[d])); $('#dirs').appendChild(li);
   });
-
-  /* ── 바늘 — api/_compass.py cumulative() 를 보여 주기 위해 옮긴 계산(가중 평균 · 길이) ── */
-  function view(x, y) {
-    var mag = Math.hypot(x, y), deg = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
-    return { deg: deg, len: K.MIN_LEN + (K.MAX_LEN - K.MIN_LEN) * Math.min(mag, K.FULL) / K.FULL, mag: mag };
-  }
-  var MISSIONS = [   /* 최신부터 — 지어낸 예시 */
-    { N: 3, E: 2, S: 1, W: 0 }, { N: 2, E: 1, S: 2, W: 1 }, { N: 1, E: 2, S: 2, W: 0 }, { N: 2, E: 0, S: 1, W: 1 }, { N: 1, E: 1, S: 3, W: 0 }];
-  var one = MISSIONS[0], ox = one.E - one.W, oy = one.N - one.S;
+  var nAI = K.AI_ITEMS.length;
+  [
+    ['예 / 아니오 3칸 → 0–3', '방향마다 세 칸, \'예\'의 개수가 그 방향 점수. 12칸 중 코드가 ' + (12 - nAI) + '칸, AI 가 ' + nAI + '칸 — AI 칸은 기록에 글자 그대로 있는 인용이 있어야 \'예\'.'],
+    ['x = 동 − 서\ny = 북 − 남', '마주 보는 방향끼리 뺀 화살표 하나. 칸을 많이 채워서가 아니라 한쪽으로 기울어서 길어집니다.'],
+    ['최근 ' + K.WEIGHTS.length + '개 가중 평균', '가중치 ' + K.WEIGHTS.join(' · ') + ' — 최근 미션일수록 무겁게. 평균의 방향이 바늘, 크기가 바늘 길이(' + K.MIN_LEN + '–' + K.MAX_LEN + ').'],
+    ['크기 < ' + K.CANCEL + ' → 강사', '방향이 맞서 상쇄되면 기계가 정하지 않습니다. 강사에게 알림이 가고, 겹친 후보 중 하나를 강사가 고릅니다.', 'who']
+  ].forEach(function (r) {
+    var li = el('li', r[2]), eq = el('p', 'eq');
+    r[0].split('\n').forEach(function (t, i) { if (i) eq.appendChild(el('br')); eq.appendChild(document.createTextNode(t)); });
+    li.appendChild(eq); li.appendChild(el('span', null, r[1])); $('#rules').appendChild(li);
+  });
+  /* 바늘 — api/_compass.py cumulative() 와 같은 계산을 지어낸 예시(최신부터)에 */
+  var MISSIONS = [{ N: 3, E: 2, S: 1, W: 0 }, { N: 2, E: 1, S: 2, W: 1 }, { N: 1, E: 2, S: 2, W: 0 }, { N: 2, E: 0, S: 1, W: 1 }, { N: 1, E: 1, S: 3, W: 0 }];
   var tw = 0, sx = 0, sy = 0;
   MISSIONS.forEach(function (m, i) { var w = K.WEIGHTS[i]; tw += w; sx += w * (m.E - m.W); sy += w * (m.N - m.S); });
-  var ax = sx / tw, ay = sy / tw, avg = view(ax, ay);
-  var CAN = { N: 1, E: 3, S: 1, W: 3 };   /* 동 3 · 서 3, 북 1 · 남 1 → 크기 0 */
-  var f2 = function (v) { return (Math.round(v * 100) / 100).toString(); };
-  var dirName = function (deg) { return CC.compass.DIRS[CC.compass.dirOf(deg)]; };
-  var row = function (o, lab) { return '<table><tr><th></th><th>북</th><th>동</th><th>남</th><th>서</th></tr><tr><td>' + lab + '</td><td>' + o.N + '</td><td>' + o.E + '</td><td>' + o.S + '</td><td>' + o.W + '</td></tr></table>'; };
-  var V = [
-    { deg: null, h: '1. 방향 점수 — 예 개수', body: '<p>미션 하나를 마치면 방향마다 세 칸 중 \'예\'가 몇 개인지 셉니다(0–3).</p>' + row(one, '예 개수') },
-    { v: view(ox, oy), h: '2. 마주 보는 방향끼리 뺍니다', body: '<p class="eq">x = 동 − 서 = ' + one.E + ' − ' + one.W + ' = ' + ox + '<br>y = 북 − 남 = ' + one.N + ' − ' + one.S + ' = ' + oy + '</p><p>이 미션 하나의 화살표입니다. 칸을 많이 채웠다고 길어지지 않고, 한쪽으로 기울었을 때 길어집니다.</p>' },
-    { v: avg, h: '3. 최근 미션 ' + K.WEIGHTS.length + '개를 가중 평균', body: '<table><tr><th>미션</th><th>가중치</th><th>x</th><th>y</th></tr>' + MISSIONS.map(function (m, i) { return '<tr><td>' + (i ? i + '개 전' : '이번') + '</td><td>' + K.WEIGHTS[i] + '</td><td>' + (m.E - m.W) + '</td><td>' + (m.N - m.S) + '</td></tr>'; }).join('') + '</table><p class="eq">x = ' + f2(sx) + ' ÷ ' + f2(tw) + ' = ' + f2(ax) + '<br>y = ' + f2(sy) + ' ÷ ' + f2(tw) + ' = ' + f2(ay) + '</p>' },
-    { v: avg, h: '4. 각도와 길이', body: '<p class="eq">크기 = √(' + f2(ax) + '² + ' + f2(ay) + '²) = ' + f2(avg.mag) + '<br>각도 = atan2(x, y) = ' + Math.round(avg.deg) + '° → ' + dirName(avg.deg) + '<br>길이 = ' + K.MIN_LEN + ' + (' + K.MAX_LEN + ' − ' + K.MIN_LEN + ') × ' + f2(Math.min(avg.mag, K.FULL)) + ' ÷ ' + K.FULL + ' = ' + f2(avg.len) + '</p><p>길이는 ' + K.MIN_LEN + '–' + K.MAX_LEN + '. 크기 ' + K.FULL + '(한 방향 만점)이면 가장 깁니다. 크기 ' + f2(avg.mag) + '는 ' + K.CANCEL + ' 이상이라 기계가 바늘을 정합니다.</p>' },
-    { deg: 90, len: K.MIN_LEN, cancel: true, h: '5. 크기가 ' + K.CANCEL + '보다 작으면 강사가 고릅니다', body: '<p>최근 미션의 가중 평균 점수가 이렇게 맞서면</p>' + row(CAN, '평균 점수') + '<p class="eq">x = 3 − 3 = 0 · y = 1 − 1 = 0 · 크기 0</p><p>강사에게 칭찬 타이밍 알림이 가고, 겹친 후보 중 하나를 강사가 고릅니다. 고르기 전에는 학생 바늘이 바뀌지 않습니다.</p><div class="cands"><span class="pick">◧ 동 · 설계</span><span>◇ 서 · 검증</span></div>' }
-  ];
-  V.forEach(function (s) { var d = el('div', 'vstep'); d.innerHTML = '<h3>' + esc(s.h) + '</h3>' + s.body; $('#vsteps').appendChild(d); $('#vpips').appendChild(el('i')); });
-  var lastDeg = 0;
-  function needle(k) {
-    var s = V[k], deg = s.v ? s.v.deg : s.deg, len = s.v ? s.v.len : s.len;
-    var box = $('#dial');
-    if (deg == null) { box.innerHTML = CC.compass.svg(null); $('#dial-read').textContent = '아직 바늘 없음'; return; }
-    box.innerHTML = CC.compass.svg(0, len);   /* 0도로 그린 뒤 CSS 로 돌린다 — 바늘이 도는 게 보이게 */
-    var g = $('.compass-needle', box), svg = $('svg', box);
-    svg.setAttribute('aria-label', dirName(deg));
-    g.style.transition = 'none'; g.style.transform = 'rotate(' + lastDeg + 'deg)';
-    g.getBoundingClientRect();
-    g.style.transition = ''; g.style.transform = 'rotate(' + deg + 'deg)';
-    lastDeg = deg;
-    $('#dial-read').textContent = s.cancel ? '강사가 고른 방향 · 가장 짧은 바늘' : dirName(deg) + ' · 길이 ' + f2(len);
-  }
+  var ax = sx / tw, ay = sy / tw, mag = Math.hypot(ax, ay), deg = (Math.atan2(ax, ay) * 180 / Math.PI + 360) % 360;
+  $('#dial').innerHTML = CC.compass.svg(deg, K.MIN_LEN + (K.MAX_LEN - K.MIN_LEN) * Math.min(mag, K.FULL) / K.FULL);
+  $('#dial-read').textContent = '예시 학생 (' + ax.toFixed(2) + ', ' + ay.toFixed(2) + ') → ' + CC.compass.DIRS[CC.compass.dirOf(deg)].replace('쪽', '');
 
   /* ── 시연 ──────────────────────────────────────────── */
   var IMG = 'docs/수업-흐름/';
@@ -633,7 +662,7 @@ window.SLIDE2_CODE = {
   /* ── 넘기기 ────────────────────────────────────────── */
   var slides = [].slice.call(document.querySelectorAll('#stage > .slide'));
   var cur = 0, sub = 0;
-  function steps(s) { return s === demo ? DEMO.length : +(s.dataset.steps || 1); }
+  function steps(s) { return s === demo ? DEMO.length : 1; }
   function show(i, k) {
     cur = Math.max(0, Math.min(slides.length - 1, i));
     var s = slides[cur];
@@ -641,11 +670,6 @@ window.SLIDE2_CODE = {
     slides.forEach(function (x) { x.classList.toggle('on', x === s); });
     document.body.classList.toggle('full', s === demo);
     if (s === demo) { loadFrames(); dk = sub; paintDemo(); }
-    if (s.id === 'vec-slide') {
-      [].forEach.call(document.querySelectorAll('.vstep'), function (d, j) { d.classList.toggle('on', j === sub); });
-      [].forEach.call(document.querySelectorAll('#vpips i'), function (d, j) { d.classList.toggle('on', j <= sub); });
-      needle(sub);
-    }
     $('#pg').textContent = (cur + 1) + ' / ' + slides.length;
     $('#prev').disabled = cur === 0 && sub === 0;
     $('#next').disabled = cur === slides.length - 1 && sub === steps(s) - 1;
