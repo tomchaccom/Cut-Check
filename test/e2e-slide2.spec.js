@@ -1,4 +1,4 @@
-/* test/e2e-slide2.spec.js — 발표 슬라이드(/slide2) 구성: 설문조사(표지 → 강사 문항 목록 → 문제 셋 → 학생 문항 목록 → 어려워한 것) → 철학 → 서비스화(그래서 만든 것 → 이름 → 레벨 → 나침반 → 시연 → 마무리)
+/* test/e2e-slide2.spec.js — 발표 슬라이드(/slide2) 구성: 설문조사(표지 → 강사 문항 목록 → 문제 셋 → 학생 문항 목록 → 어려워한 것) → 철학 → 서비스화(그래서 만든 것 → 이름 → 레벨 → 나침반 → 시연 → 마무리 → 감사합니다)
  * 설문은 slide2-data.js 의 signal · show 로만 켜고 끈다. 시연 장의 넘김 버튼은 학생 칸을 가리지 않는다.
  *   npx playwright test test/e2e-slide2.spec.js */
 const { test, expect } = require('@playwright/test');
@@ -12,7 +12,7 @@ test('장 순서 — 설문조사 → 철학 → 서비스화, 신호는 셋', a
   const labels = await page.$$eval('#stage > .slide', s => s.map(x => x.getAttribute('aria-label')));
   expect(labels).toEqual(['표지', '강사 설문 — 무엇을 물었나', '강사 설문 — 가장 뾰족한 문제 셋',
     '학생 설문 — 무엇을 물었나', '학생 설문 — 가장 어려워한 것', '설계 철학', '그래서 만든 것', '이름', '레벨 테스트',
-    '나침반', '시연', '마무리']);
+    '나침반', '시연', '마무리', '감사합니다']);
   // ① 설명 못 함 5 · ② 문제 해석(두 근거 합친 한 칸) 4 · ③ 하드코딩 · 예외 누락 3 — 여러 개 고르기라 둘 중 큰 수
   expect(await page.$$eval('#signals .sn b', b => b.map(x => x.textContent))).toEqual(['5', '4', '3']);
   // 표지는 무엇인지 한 줄, 그래서 만든 것 장은 실제 화면 그림 둘
@@ -46,7 +46,7 @@ test('show: true 인 문항만 신호 장 뒤에 한 장씩 생긴다', async ({
   });
   await page.goto(BASE + '/slide2.html');
   const labels = await page.$$eval('#stage > .slide', s => s.map(x => x.getAttribute('aria-label')));
-  expect(labels.length).toBe(13);
+  expect(labels.length).toBe(14);
   expect(labels[3]).toBe('설문 1');
 });
 
