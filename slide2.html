@@ -11,7 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
   /slide2 — 산학협력실무 발표 (설계: docs/superpowers/specs/2026-10-21-slide2-design.md)
-  순서: 표지 → 설계 철학 → 이름 → 강사 설문 문항 목록 → 뾰족한 문제 셋 → 학생 설문 문항 목록 → 학생이 가장 어려워한 것 → 핵심 플로우(레벨 테스트 · 미션 만들기 · 나침반 한 장) → 시연 → 만들지 않은 것.
+  순서: 설문조사(표지 → 강사 문항 목록 → 뾰족한 문제 셋 → 학생 문항 목록 → 학생이 가장 어려워한 것) → 설계 철학 →
+  서비스화(그래서 만든 것: KOMPAS → 이름 → 레벨 테스트 → 나침반 한 장 → 시연 → 마무리).
   설문 문항은 slide2-data.js 에만 있다 — 어느 문항이 나올지(signal · show)도 거기서 정한다. 이 파일은 고치지 않는다.
   나침반 그림은 화면과 같은 js/core/compass.js 로 그린다.
   아래 SLIDE2_CODE 의 수는 코드에서 옮겨 적은 것 — 갈라지면 node test/slide2.test.js 가 깨진다.
@@ -53,6 +54,7 @@ code, .code { font-family: var(--mono); }
 .cover { background: var(--yellow); justify-content: space-between; }
 .cover .mark { font-family: var(--disp); font-weight: 500; font-size: 330px; line-height: .82; letter-spacing: -.055em; }
 .cover .sub { font-size: 56px; font-weight: 600; letter-spacing: -.03em; margin-top: 36px; }
+.cover .what { font-size: 36px; font-weight: 500; letter-spacing: -.02em; margin-top: 14px; }
 .cover .meta { font-size: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
 .cover svg { width: 220px; height: 220px; }
 
@@ -92,20 +94,6 @@ code, .code { font-family: var(--mono); }
 .motto p.big { font-size: 104px; font-weight: 700; letter-spacing: -.045em; line-height: 1.18; }
 .motto mark { background: var(--yellow); color: var(--ink); padding: 0 .1em; }
 
-/* 미션 만들기 — 상자 다섯이 화살표로 */
-.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; margin-top: 60px; align-items: stretch; }
-.box { border: 3px solid var(--ink); padding: 26px 24px; position: relative; display: flex; flex-direction: column; }
-.box.y { background: var(--yellow); }
-.box .w { font-size: 22px; color: var(--ink-2); font-weight: 600; }
-.box h3 { font-size: 32px; margin-top: 8px; letter-spacing: -.02em; line-height: 1.25; }
-.box ul { padding: 0; margin-top: 16px; }
-.box li { list-style: none; font-size: 23px; line-height: 1.4; padding: 7px 0; border-top: 1px solid var(--line); }
-.box + .box::before { content: ""; position: absolute; left: -31px; top: 50%; width: 28px; height: 3px; background: var(--ink); }
-.box + .box::after { content: ""; position: absolute; left: -12px; top: calc(50% - 8px); border: 9px solid transparent; border-left: 12px solid var(--ink); border-right: 0; }
-.facts { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 40px; margin-top: auto; border-top: 4px solid var(--ink); padding-top: 22px; }
-.facts p { font-size: 26px; line-height: 1.4; color: var(--ink-2); }
-.facts b { display: block; font-size: 30px; color: var(--ink); margin-bottom: 4px; }
-
 /* 이름 — 아이콘 크게, 뜻은 brand.md 그대로 */
 .name-grid { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 88px; align-items: center; margin-top: 36px; }
 .name-grid img { width: 400px; height: 400px; display: block; }
@@ -132,18 +120,21 @@ code, .code { font-family: var(--mono); }
 .tight .signal h3 { font-size: 34px; margin-top: 20px; }
 .signal .made span { display: block; font-size: 22px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
 
-/* 핵심 플로우 — 학생 줄 · 강사 줄 */
-.lanes { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 56px 24px; flex: 1; align-content: center; align-items: stretch; }
-.lane-who { font-size: 34px; font-weight: 700; padding-top: 20px; }
-.lane { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; padding: 0; }
-.lane.t { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.lane li { list-style: none; border: 3px solid var(--ink); padding: 28px 26px 34px; position: relative; display: flex; flex-direction: column; gap: 10px; }
-.lane.t li { background: var(--yellow); }
-.lane b { font-size: 40px; letter-spacing: -.02em; line-height: 1.2; }
-.lane span { font-size: 27px; line-height: 1.4; color: var(--ink-2); }
+/* 그래서 만든 것 — 왼쪽 학생 · 강사 두 줄(위에서 아래로 순서), 오른쪽 실제 화면 둘 */
+.kompas .lead { max-width: none; margin-top: 16px; }
+.made-grid { display: grid; grid-template-columns: minmax(0, 1fr) 640px; gap: 72px; margin-top: 40px; flex: 1; min-height: 0; }
+.lanes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+.lane-who { font-size: 30px; font-weight: 700; padding-bottom: 10px; border-bottom: 4px solid var(--ink); }
+.lane { padding: 0; }
+.lane li { list-style: none; padding: 14px 0 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+.lane.t li { background: var(--yellow); padding-left: 18px; padding-right: 18px; border-bottom-color: var(--ink); }
+.lane b { font-size: 34px; letter-spacing: -.02em; line-height: 1.25; }
+.lane span { font-size: 24px; line-height: 1.4; color: var(--ink-2); }
 .lane.t span { color: var(--ink); }
-.lane li + li::before { content: ""; position: absolute; left: -31px; top: 50%; width: 28px; height: 3px; background: var(--ink); }
-.lane li + li::after { content: ""; position: absolute; left: -12px; top: calc(50% - 8px); border: 9px solid transparent; border-left: 12px solid var(--ink); border-right: 0; }
+.pics { display: grid; grid-template-rows: 1fr 1fr; gap: 28px; min-height: 0; }
+.pics figure { display: flex; flex-direction: column; min-height: 0; margin: 0; }
+.pics img { flex: 1; min-height: 0; width: 100%; object-fit: cover; object-position: top left; border: 3px solid var(--ink); display: block; }
+.pics figcaption { font-size: 22px; color: var(--ink-2); margin-top: 8px; }
 
 /* 레벨 테스트 — 학생 화면 · 강사 화면 */
 .shots { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 64px; margin-top: 48px; flex: 1; min-height: 0; }
@@ -237,33 +228,12 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outlin
   <div>
     <h1 class="mark">KOMPAS</h1>
     <p class="sub">의도를 코드로 옮긴다</p>
+    <p class="what">중학생이 모호한 요청을 코드로 옮기는 파이썬 수업 도구</p>
   </div>
   <div class="meta">
     <p>산학협력실무 발표 · 2026년 10월</p>
     <svg viewBox="0 0 64 64" role="img" aria-label="KOMPAS 아이콘"><path d="M32 6 37 27 58 32 37 37 32 58 27 37 6 32 27 27Z" fill="#000"/><path d="M53 11 40 40 24 24Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="round"/></svg>
   </div>
-</section>
-
-<section class="slide motto" aria-label="설계 철학">
-  <p class="kick">기능마다 이 질문 하나로 거릅니다</p>
-  <p class="big">시작은 대신해주고,<br><mark>판단은 하나도 대신하지 않는다.</mark></p>
-  <p class="lead">이건 시작 비용을 줄이는 건가, 판단을 대신하는 건가? 판단을 대신하는 쪽이면 아무리 친절해 보여도 만들지 않습니다.</p>
-</section>
-
-<section class="slide name" aria-label="이름">
-  <p class="kick">이름은 왜 KOMPAS 인가</p>
-  <div class="name-grid">
-    <img src="favicon.svg" alt="KOMPAS 아이콘 — 노란 바탕, 검은 네 방위, 북동을 가리키는 흰 바늘 하나">
-    <div>
-      <h2>목적지는 몰라도, 방향은 안다.</h2>
-      <p class="lead">나침반은 목적지를 알려주지 않고 오직 방향만 가리킵니다. KOMPAS 는 학생이 어디에 도달할지 정해주지 않지만, 지금 어느 쪽으로 나아가야 하는지는 분명히 알려줍니다.</p>
-      <p class="lead">바늘은 어디에 서 있든, 길이 어떻게 바뀌든 같은 쪽을 가리킵니다 — <b>계획은 바뀌어도 의도는 흔들리지 않는다.</b></p>
-    </div>
-  </div>
-  <ol class="rose">
-    <li><b>▲ 북</b> 이해</li><li><b>◧ 동</b> 설계</li><li><b>○ 남</b> 구현</li><li><b>◇ 서</b> 검증</li>
-  </ol>
-  <p class="small rose-note">한 문제를 푸는 순서가 나침반을 시계 방향으로 한 바퀴 돕니다. 아이콘에는 지도도, 도착 핀도 없습니다. COMPASS 는 흔한 낱말이라 묻혀서, 나침반인 줄 알아보면서도 이름처럼 보이는 K 로 씁니다.</p>
 </section>
 
 <section class="slide" aria-label="강사 설문 — 무엇을 물었나">
@@ -297,26 +267,55 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outlin
 </section>
 
 
-<section class="slide" aria-label="핵심 플로우">
-  <p class="kick">수업 한 번 · 시연에서 이 순서 그대로 봅니다</p>
-  <h2>학생은 다섯 단계, 강사는 그 옆에서</h2>
-  <div class="lanes">
-    <p class="lane-who">학생</p>
-    <ol class="lane">
-      <li><b>01 문제</b><span>무엇을 할지만 읽는다. 방법은 없다</span></li>
-      <li><b>02 성공</b><span>함정 섞인 보기에서 성공을 고른다</span></li>
-      <li><b>03 설계</b><span>카드 순서와 이유 한 줄</span></li>
-      <li><b>04 코딩</b><span>튜터는 문법만 준다. 반례까지 실행</span></li>
-      <li><b>05 정리</b><span>자기 말로 한 문장</span></li>
-    </ol>
-    <p class="lane-who">강사</p>
-    <ol class="lane t">
-      <li><b>미션 만들기</b><span>AI 초안 · 실행 검사 · 강사가 확정</span></li>
-      <li><b>알림</b><span>칭찬 타이밍만 알린다</span></li>
-      <li><b>학생 상세 · 나침반</b><span>12칸 체크 · 바늘 · 튜터 질문</span></li>
-      <li><b>한마디</b><span>말은 강사가 한다</span></li>
-    </ol>
+<section class="slide motto" aria-label="설계 철학">
+  <p class="kick">기능마다 이 질문 하나로 거릅니다</p>
+  <p class="big">시작은 대신해주고,<br><mark>판단은 하나도 대신하지 않는다.</mark></p>
+  <p class="lead">이건 시작 비용을 줄이는 건가, 판단을 대신하는 건가? 판단을 대신하는 쪽이면 아무리 친절해 보여도 만들지 않습니다.</p>
+</section>
+
+<section class="slide kompas" aria-label="그래서 만든 것">
+  <p class="kick">서비스화 · 수업 한 번, 시연에서 이 순서 그대로 봅니다</p>
+  <h2>그래서 만든 것: KOMPAS</h2>
+  <p class="lead">중학생이 모호한 요청을 받아 성공을 정하고, 설계하고, 코드로 옮기고, 스스로 판정하는 파이썬 수업 도구</p>
+  <div class="made-grid">
+    <div class="lanes">
+      <div><p class="lane-who">학생</p>
+        <ol class="lane">
+          <li><b>01 문제</b><span>무엇을 할지만 읽는다. 방법은 없다</span></li>
+          <li><b>02 성공</b><span>함정 섞인 보기에서 성공을 고른다</span></li>
+          <li><b>03 설계</b><span>카드 순서와 이유 한 줄</span></li>
+          <li><b>04 코딩</b><span>튜터는 문법만 준다. 반례까지 실행</span></li>
+          <li><b>05 정리</b><span>자기 말로 한 문장</span></li>
+        </ol></div>
+      <div><p class="lane-who">강사</p>
+        <ol class="lane t">
+          <li><b>미션 만들기</b><span>AI 초안 · 실행 검사 · 강사가 확정</span></li>
+          <li><b>알림</b><span>칭찬 타이밍만 알린다</span></li>
+          <li><b>나침반</b><span>12칸 체크 · 바늘 · 튜터 질문</span></li>
+          <li><b>한마디</b><span>말은 강사가 한다</span></li>
+        </ol></div>
+    </div>
+    <div class="pics">
+      <figure><img src="docs/수업-흐름/s5-step2-success.png" style="object-position: 0 75%" alt="학생 화면 — 02 성공 조건 고르기"><figcaption>학생 · 02 성공 조건</figcaption></figure>
+      <figure><img src="docs/수업-흐름/t8-finish-alert.png" alt="강사 화면 — 오른쪽에 칭찬 타이밍 알림"><figcaption>강사 · 칭찬 타이밍 알림</figcaption></figure>
+    </div>
   </div>
+</section>
+
+<section class="slide name" aria-label="이름">
+  <p class="kick">이름은 왜 KOMPAS 인가</p>
+  <div class="name-grid">
+    <img src="favicon.svg" alt="KOMPAS 아이콘 — 노란 바탕, 검은 네 방위, 북동을 가리키는 흰 바늘 하나">
+    <div>
+      <h2>목적지는 몰라도, 방향은 안다.</h2>
+      <p class="lead">나침반은 목적지를 알려주지 않고 오직 방향만 가리킵니다. KOMPAS 는 학생이 어디에 도달할지 정해주지 않지만, 지금 어느 쪽으로 나아가야 하는지는 분명히 알려줍니다.</p>
+      <p class="lead">바늘은 어디에 서 있든, 길이 어떻게 바뀌든 같은 쪽을 가리킵니다 — <b>계획은 바뀌어도 의도는 흔들리지 않는다.</b></p>
+    </div>
+  </div>
+  <ol class="rose">
+    <li><b>▲ 북</b> 이해</li><li><b>◧ 동</b> 설계</li><li><b>○ 남</b> 구현</li><li><b>◇ 서</b> 검증</li>
+  </ol>
+  <p class="small rose-note">한 문제를 푸는 순서가 나침반을 시계 방향으로 한 바퀴 돕니다. 아이콘에는 지도도, 도착 핀도 없습니다. COMPASS 는 흔한 낱말이라 묻혀서, 나침반인 줄 알아보면서도 이름처럼 보이는 K 로 씁니다.</p>
 </section>
 
 <section class="slide" aria-label="레벨 테스트">
@@ -325,23 +324,6 @@ button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outlin
   <div class="shots">
     <div class="shot"><h3>학생 화면</h3><ul><li>문제만 나옵니다. 문제지 이름 · 맞음 · 점수가 없습니다.</li></ul><img src="docs/수업-흐름/s2-onboard.png" alt="학생 레벨 테스트 화면"></div>
     <div class="shot"><h3>강사 화면</h3><ul><li>학생별 레벨과 문항별 기록. 반 분포로 문제 난이도를 맞춥니다.</li><li id="retest"></li></ul><img class="fit" src="docs/수업-흐름/t7-level-record.png" alt="강사 화면의 레벨 기록"></div>
-  </div>
-</section>
-
-<section class="slide" aria-label="AI 문제 생성">
-  <p class="kick">강사 · 미션 만들기 · 수업 내용 → 개념 확인 → 이야기 고르기 → 문제 확인, 단계마다 강사가 넘깁니다</p>
-  <h2>AI 가 셈한 정답은 쓰지 않습니다</h2>
-  <div class="flow">
-    <div class="box"><span class="w">서버</span><h3>LLM 이 초안을 씁니다</h3><ul><li>문제 · 자료 3개</li><li>성공 보기 · 설계 카드</li><li>모범 답안 코드</li></ul></div>
-    <div class="box"><span class="w">서버 · 실행 없이</span><h3>형식 검사</h3><ul><li>마지막 자료는 반례</li><li>성공 보기에 자료별 답 금지</li></ul></div>
-    <div class="box"><span class="w">강사 브라우저</span><h3>모범 답안을 자료마다 실행</h3><ul><li>에러 · 시간 초과</li><li>반례 결과가 첫 자료와 같은지</li></ul></div>
-    <div class="box"><span class="w">강사 브라우저</span><h3>자료별 정답 = 실행한 값</h3></div>
-    <div class="box y"><span class="w">강사</span><h3>고치고 확정</h3><ul><li>확정한 미션만 학생에게 보입니다</li></ul></div>
-  </div>
-  <div class="facts">
-    <p><b>반례 다섯 축</b><span id="axes"></span></p>
-    <p><b id="retry-browser"></b><span>걸리면 이유를 붙여 다시 만듭니다</span></p>
-    <p><b id="quota"></b><span>성공했을 때만 하나를 씁니다</span></p>
   </div>
 </section>
 
@@ -420,9 +402,6 @@ window.SLIDE2_CODE = {
   "TUTOR_MANY": 5,
   "RETEST_DAYS": 60,
   "AXES": ["count", "sep", "empty", "invisible", "boundary"],
-  "STEP_AXES": ["count", "empty", "boundary"],
-  "QUOTA_DEFAULT": 3,
-  "BUILD_RETRIES": 2,
   "AI_ITEMS": ["N2", "N3", "E2", "W2"]
 };
 </script>
@@ -530,7 +509,7 @@ window.SLIDE2_CODE = {
   var KIND = { choice: '객관식', multi: '여러 개', scale: '1–5', quote: '서술' };
   function qlist(list, box) {
     list.forEach(function (it, i) {
-      var li = el('li', it.signals ? 'sig' : null), t = el('p', 'qt', it.q);
+      var li = el('li', it.signals || it.ground ? 'sig' : null), t = el('p', 'qt', it.q);
       t.appendChild(el('span', 'qk', KIND[it.kind]));
       li.appendChild(el('span', 'qn', String(i + 1))); li.appendChild(t); box.appendChild(li);
     });
@@ -569,10 +548,6 @@ window.SLIDE2_CODE = {
   qlist(STUDENT, $('#qs-s')); signals(STUDENT, $('#signals-s')); asides(STUDENT, $('#asides-s'));
 
   /* ── 코드 값 ───────────────────────────────────────── */
-  var AXIS = { count: '개수 변화', sep: '구분자 변화', empty: '빈 결과', invisible: '보이지 않는 차이', boundary: '경계값' };
-  $('#axes').textContent = K.AXES.map(function (a) { return AXIS[a]; }).join(' · ');
-  $('#quota').textContent = '새 강사 생성 한도 ' + K.QUOTA_DEFAULT + '개';
-  $('#retry-browser').textContent = '실행 검사 최대 ' + K.BUILD_RETRIES + '번 다시';
   $('#retest').textContent = '마지막 테스트 뒤 ' + K.RETEST_DAYS + '일이 지나면 강사에게 "레벨 테스트" 알림.';
 
   /* ── 나침반 한 장 — 방향 넷 + 규칙 넷. 수는 SLIDE2_CODE(= api/_compass.py) ── */

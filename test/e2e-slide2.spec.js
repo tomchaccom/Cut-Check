@@ -1,4 +1,4 @@
-/* test/e2e-slide2.spec.js — 발표 슬라이드(/slide2) 구성: 철학 → 이름 → 강사 문항 목록 → 문제 셋 → 학생 문항 목록 → 어려워한 것 → 핵심 플로우 → 나침반 한 장 → 시연
+/* test/e2e-slide2.spec.js — 발표 슬라이드(/slide2) 구성: 설문조사(표지 → 강사 문항 목록 → 문제 셋 → 학생 문항 목록 → 어려워한 것) → 철학 → 서비스화(그래서 만든 것 → 이름 → 레벨 → 나침반 → 시연 → 마무리)
  * 설문은 slide2-data.js 의 signal · show 로만 켜고 끈다. 시연 장의 넘김 버튼은 학생 칸을 가리지 않는다.
  *   npx playwright test test/e2e-slide2.spec.js */
 const { test, expect } = require('@playwright/test');
@@ -6,14 +6,18 @@ const BASE = process.env.CC_BASE || 'http://localhost:8123';
 
 const blank = r => r.fulfill({ contentType: 'text/html', body: '<body></body>' });
 
-test('장 순서 — 철학으로 시작해 시연까지, 신호는 셋', async ({ page }) => {
+test('장 순서 — 설문조사 → 철학 → 서비스화, 신호는 셋', async ({ page }) => {
   await page.route('**/auth.html', blank);
   await page.goto(BASE + '/slide2.html');
   const labels = await page.$$eval('#stage > .slide', s => s.map(x => x.getAttribute('aria-label')));
-  expect(labels).toEqual(['표지', '설계 철학', '이름', '강사 설문 — 무엇을 물었나', '강사 설문 — 가장 뾰족한 문제 셋',
-    '학생 설문 — 무엇을 물었나', '학생 설문 — 가장 어려워한 것', '핵심 플로우', '레벨 테스트', 'AI 문제 생성',
+  expect(labels).toEqual(['표지', '강사 설문 — 무엇을 물었나', '강사 설문 — 가장 뾰족한 문제 셋',
+    '학생 설문 — 무엇을 물었나', '학생 설문 — 가장 어려워한 것', '설계 철학', '그래서 만든 것', '이름', '레벨 테스트',
     '나침반', '시연', '마무리']);
-  expect(await page.$$eval('#signals .sn b', b => b.map(x => x.textContent))).toEqual(['5', '4', '4']);
+  // ① 설명 못 함 5 · ② 문제 해석(두 근거 합친 한 칸) 4 · ③ 하드코딩 · 예외 누락 3 — 여러 개 고르기라 둘 중 큰 수
+  expect(await page.$$eval('#signals .sn b', b => b.map(x => x.textContent))).toEqual(['5', '4', '3']);
+  // 표지는 무엇인지 한 줄, 그래서 만든 것 장은 실제 화면 그림 둘
+  await expect(page.locator('.cover .what')).toContainText('파이썬 수업 도구');
+  expect(await page.$$eval('.kompas .pics img', l => l.length)).toBe(2);
   // 학생은 두 명 — 한 문항에서 신호 셋, 여러 개 고르기는 합이 아니라 가장 큰 수
   expect(await page.$$eval('#signals-s .sn', b => b.map(x => x.textContent))).toEqual(['2 / 2', '2 / 2', '1 / 2']);
   expect(await page.$$eval('#asides-s > span', l => l.length)).toBe(2);
@@ -25,7 +29,7 @@ test('장 순서 — 철학으로 시작해 시연까지, 신호는 셋', async 
 
 test('문항 목록은 데이터에서 — 문항을 더하면 목록에도, 신호 문항은 노랑', async ({ page }) => {
   await page.route('**/auth.html', blank);
-  await page.goto(BASE + '/slide2.html#4');
+  await page.goto(BASE + '/slide2.html#2');
   const [n, ns] = await page.evaluate(() => [window.SLIDE2_SURVEY.length, window.SLIDE2_STUDENT.length]);
   expect(await page.$$eval('#qs li', l => l.length)).toBe(n);
   expect(await page.$$eval('#qs li.sig .qn', l => l.map(x => x.textContent))).toEqual(['1', '2', '4']);
@@ -42,13 +46,13 @@ test('show: true 인 문항만 신호 장 뒤에 한 장씩 생긴다', async ({
   });
   await page.goto(BASE + '/slide2.html');
   const labels = await page.$$eval('#stage > .slide', s => s.map(x => x.getAttribute('aria-label')));
-  expect(labels.length).toBe(14);
-  expect(labels[5]).toBe('설문 1');
+  expect(labels.length).toBe(13);
+  expect(labels[3]).toBe('설문 1');
 });
 
 test('나침반 장은 한 번에 넘어간다', async ({ page }) => {
   await page.route('**/auth.html', blank);
-  await page.goto(BASE + '/slide2.html#11');
+  await page.goto(BASE + '/slide2.html#10');
   await expect(page.locator('.slide.on')).toHaveAttribute('aria-label', '나침반');
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('#demo')).toBeVisible();
@@ -58,7 +62,7 @@ for (const vp of [{ width: 1920, height: 1080 }, { width: 1280, height: 720 }]) 
   test(`시연 장 — 넘김 버튼이 두 칸을 가리지 않는다 ${vp.width}`, async ({ page }) => {
     await page.setViewportSize(vp);
     await page.route('**/auth.html', blank);
-    await page.goto(BASE + '/slide2.html#12');
+    await page.goto(BASE + '/slide2.html#11');
     const nav = await page.locator('.nav').boundingBox();
     for (const id of ['#pane-s', '#pane-t']) {
       const p = await page.locator(id).boundingBox();
